@@ -434,7 +434,7 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /else if \(qLower\.includes\('ხარჯი'\)\) answer = expensesVerifiedForReports/);
   assert.match(admin, /expensesError && <p className="mt-1">ჩატვირთვის შეცდომა:/);
   assert.match(admin, /onClick=\{\(\) => void fetchExpenses\(\)\} aria-busy=\{expensesLoading\} className="admin-finance-retry/);
-  assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 \? totalProductRevenue - totalCogs : null/);
+  assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 && unreconciledDeliveredOrders === 0 \? totalProductRevenue - totalCogs : null/);
   assert.match(admin, /const netProfit = grossProfit === null \? null : grossProfit \+ totalDeliveryRevenue - totalExpenses/);
   assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
   assert.match(admin, /setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\)/);

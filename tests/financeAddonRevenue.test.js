@@ -18,7 +18,7 @@ test('finance uses checkout snapshots to split base product and add-on amounts',
 test('un-costed add-on revenue is disclosed separately and excluded from calculated profit', () => {
   assert.match(admin, /totalProductRevenue \+= revenueSplit\.productRevenue/);
   assert.match(admin, /totalAddonRevenue,\s*totalExpenses, totalCogs, grossProfit, netProfit/);
-  assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 \? totalProductRevenue - totalCogs : null/);
+  assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 && unreconciledDeliveredOrders === 0 \? totalProductRevenue - totalCogs : null/);
   assert.match(admin, /const netProfit = grossProfit === null \? null : grossProfit \+ totalDeliveryRevenue - totalExpenses/);
   assert.match(admin, /დამატებითი მომსახურებების შემოსავალი \(მოგებაში არ არის ჩათვლილი\)/);
   assert.match(admin, /პროდუქტი, დამატებითი მომსახურება და მიწოდება/);
@@ -29,4 +29,11 @@ test('historical order purchase-cost snapshot remains preferred over current cat
   assert.match(admin, /if \(hasSnapshotCost\) itemCost = Number\(snapshotCost\)/);
   assert.match(admin, /else if \(isEstimatedCost\)/);
   assert.match(admin, /estimatedCogsItems \+= quantity/);
+});
+
+test('confirmed checkout delivery and per-order revenue must reconcile before profit', () => {
+  assert.match(admin, /getFinancialDeliveryCharge\(order\)/);
+  assert.match(admin, /isReconciledOrderRevenue\(orderTotal, revenueSplit, order\.checkoutBreakdown\)/);
+  assert.match(admin, /unreconciledDeliveredOrders === 0/);
+  assert.match(admin, /financialOverview\.unreconciledDeliveredOrders/);
 });

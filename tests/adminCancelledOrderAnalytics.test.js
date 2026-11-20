@@ -23,3 +23,8 @@ test('completed and shipped orders cannot be rolled back as a substitute for a r
   assert.match(orderStatusSql, /v_order\.status in \('დასრულებული', 'ჩაბარებულია'\)[\s\S]*?p_new_status not in \('დასრულებული', 'ჩაბარებულია'\)/);
   assert.match(orderStatusSql, /v_order\.status in \('გაგზავნილი', 'გზაშია'\)[\s\S]*?p_new_status not in \('გაგზავნილი', 'გზაშია', 'დასრულებული', 'ჩაბარებულია'\)/);
 });
+
+test('cancelled orders count by transition date, falling back to historic creation date', () => {
+  assert.match(admin, /const closed = isCancelled\(order\) \|\| isDelivered\(order\)/);
+  assert.match(admin, /getFinancialOrderEventDate\(order, closed\)/);
+});

@@ -14,6 +14,7 @@ import { validateProductVariants, validateSizeColorInventoryVariants } from '../
 import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
+import { getFinancialOrderEventDate, getFinancialDeliveryCharge, isReconciledOrderRevenue } from '../utils/financeOrderReconciliation.js';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
 import { getAuthenticatedExpenseHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
@@ -2544,11 +2545,8 @@ export default function AdminDashboardPro({
     };
 
     const periodOrders = (orders || []).filter(order => {
-      const delivered = !isCancelled(order) && isDelivered(order);
-      const reportingDate = delivered
-        ? (order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date)
-        : (order.created_at || order.createdAt || order.date);
-      return inPeriod(reportingDate);
+      const closed = isCancelled(order) || isDelivered(order);
+      return inPeriod(getFinancialOrderEventDate(order, closed));
     });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
     const cancelledOrders = periodOrders.filter(isCancelled);
@@ -2575,6 +2573,7 @@ export default function AdminDashboardPro({
     let totalCogs = 0;
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
+    let unreconciledDeliveredOrders = 0;
     const incomeTotals = new Map();
     const productProfitTotals = new Map();
     const vendorProfitTotals = new Map();
@@ -2586,9 +2585,11 @@ export default function AdminDashboardPro({
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
-      const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
+      const deliveryCharge = getFinancialDeliveryCharge(order);
       const revenueSplit = splitOrderRevenue(items, orderTotal, deliveryCharge);
+      if (!isReconciledOrderRevenue(orderTotal, revenueSplit, order.checkoutBreakdown)) {
+        unreconciledDeliveredOrders += 1;
+      }
       totalDeliveryRevenue += revenueSplit.deliveryRevenue;
       totalProductRevenue += revenueSplit.productRevenue;
       totalAddonRevenue += revenueSplit.addonRevenue;
@@ -2658,7 +2659,7 @@ export default function AdminDashboardPro({
     const trendBuckets = new Map();
     const useDailyTrend = analyticsPeriod === '30' || analyticsPeriod === '90';
     deliveredOrders.forEach(order => {
-      const date = parseDate(order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date);
+      const date = parseDate(getFinancialOrderEventDate(order, true));
       if (!date) return;
       const key = useDailyTrend
         ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
@@ -2678,7 +2679,7 @@ export default function AdminDashboardPro({
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     // Add-on revenue is disclosed separately but excluded from profit until
     // its fulfilment costs can be recorded. Delivery is tracked separately.
-    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
+    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 && unreconciledDeliveredOrders === 0 ? totalProductRevenue - totalCogs : null;
     const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
     periodExpenses.forEach(expense => {
@@ -2691,7 +2692,7 @@ export default function AdminDashboardPro({
 
     return {
       periodOrders, deliveredOrders, cancelledOrders, cancelledOrderValue, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
-      deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
+      deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking, unreconciledDeliveredOrders,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue, totalAddonRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
@@ -2789,9 +2790,10 @@ export default function AdminDashboardPro({
         ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.estimatedCogsItems ? 'შეფასებულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
         ['უცნობი თვითღირებულების ერთეულები', financialOverview.unknownCogsItems],
-        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.grossProfit.toFixed(2)],
+        ['შემოსავლების გაყოფით შეუსაბამო ჩაბარებული შეკვეთები', financialOverview.unreconciledDeliveredOrders],
+        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება არასრულია ან შეკვეთების თანხები არ ემთხვევა' : financialOverview.grossProfit.toFixed(2)],
         ['ოპერაციული ხარჯები', financialOverview.totalExpenses.toFixed(2)],
-        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.netProfit.toFixed(2)]
+        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება არასრულია ან შეკვეთების თანხები არ ემთხვევა' : financialOverview.netProfit.toFixed(2)]
       ]);
     exportCsv(`geostore-product-profitability-${periodLabel}.csv`,
       ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
@@ -5414,9 +5416,12 @@ export default function AdminDashboardPro({
                 {hasExpensesPermission && <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-finance-retry mt-2 min-h-11 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold">ხელახლა გადამოწმება</button>}
               </div>
             )}
-            {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
+            {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0 || financialOverview.unreconciledDeliveredOrders > 0) && (
               <div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
-                <strong className="block mb-1">ისტორიული შეკვეთების მონაცემების შენიშვნა</strong>
+                <strong className="block mb-1">შეკვეთების ფინანსური მონაცემების შემოწმება</strong>
+                {financialOverview.unreconciledDeliveredOrders > 0 && (
+                  <span className="block">{financialOverview.unreconciledDeliveredOrders} ჩაბარებულ შეკვეთაზე დადასტურებული ჯამი არ ემთხვევა პროდუქტის, მომსახურებისა და მიწოდების შემოსავლების გაყოფას. მოგება დროებით არ ითვლება; შეამოწმეთ შეკვეთების დეტალები.</span>
+                )}
                 {financialOverview.deliveredOrdersMissingStatusDate > 0 && (
                   <span className="block">{financialOverview.deliveredOrdersMissingStatusDate} ჩაბარებულ შეკვეთას სტატუსის ცვლილების თარიღი არ აქვს; პერიოდისთვის გამოყენებულია შეკვეთის შექმნის თარიღი.</span>
                 )}
@@ -5434,7 +5439,7 @@ export default function AdminDashboardPro({
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> მთლიანი მოგება</p>
                 <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-cyan-400">{financialOverview.grossProfit === null ? '—' : financialOverview.grossProfit.toFixed(2) + ' ₾'}</p>
-                <span className="admin-analytics-note text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
+                <span className="admin-analytics-note text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unreconciledDeliveredOrders > 0 ? 'შეკვეთების თანხების შეუსაბამობა' : financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-400" /> სულ ხარჯები</p>
@@ -5464,7 +5469,7 @@ export default function AdminDashboardPro({
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
                 <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-amber-400">{!expensesVerifiedForReports || financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
-                <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{!expensesVerifiedForReports ? 'ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
+                <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{!expensesVerifiedForReports ? 'ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — თვითღირებულება ან შეკვეთების გაყოფა არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
               </div>
             </div>
 
