@@ -194,7 +194,14 @@ try {
           minOrderFilterHeight: Math.min(...orderFilterButtons.map(node => node.getBoundingClientRect().height)),
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
-          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize)
+          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
+          orderSearchFontRules: [...document.styleSheets].flatMap(sheet => {
+            try { return [...sheet.cssRules].flatMap(rule => rule.cssRules ? [...rule.cssRules] : [rule]); }
+            catch { return []; }
+          }).filter(rule => {
+            try { return rule.selectorText && orderSearch.matches(rule.selectorText) && rule.style.fontSize; }
+            catch { return false; }
+          }).map(rule => ({ selector: rule.selectorText.slice(0, 200), fontSize: rule.style.fontSize, priority: rule.style.getPropertyPriority('font-size') })).slice(-16)
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
