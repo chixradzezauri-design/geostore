@@ -5851,16 +5851,16 @@ export default function AdminDashboardPro({
                       </div>
                       
                       <div className="admin-support-ticket-controls flex items-center gap-2.5 flex-wrap">
-                        <div className="admin-support-status-actions flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20">
-                          <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
-                          <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
+                        <div className="admin-support-status-actions flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20" role="group" aria-label={`ტიკეტი #${t.id} — სტატუსი`}>
+                          <button type="button" aria-pressed={t.status === 'ღია'} onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
+                          <button type="button" aria-pressed={t.status === 'მუშავდება'} onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                          <button type="button" aria-pressed={t.status === 'მოგვარებული'} onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
                         </div>
                         <button type="button" onClick={() => {
                           const ticketId = String(t.id);
                           if (String(selectedSupportTicketId) === ticketId) setSelectedSupportTicketId(null);
                           else { setSelectedSupportTicketId(ticketId); fetchSupportTicketThread(ticketId); }
-                        }} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
+                        }} aria-expanded={String(selectedSupportTicketId) === String(t.id)} aria-controls={`admin-support-thread-${t.id}`} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
                           {String(selectedSupportTicketId) === String(t.id) ? 'მიმოწერის დამალვა' : 'მიმოწერის ნახვა'}
                         </button>
                       </div>
@@ -5881,7 +5881,7 @@ export default function AdminDashboardPro({
                     )}
 
                     {String(selectedSupportTicketId) === String(t.id) && (
-                      <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
+                      <div id={`admin-support-thread-${t.id}`} role="region" aria-label={`ტიკეტი #${t.id} — მიმოწერის ისტორია`} className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <b className="text-cyan-200 text-xs">მიმოწერის სრული ისტორია</b>
                           <button type="button" onClick={() => fetchSupportTicketThread(t.id)} className="text-cyan-300 underline underline-offset-2">განახლება</button>
@@ -5913,6 +5913,7 @@ export default function AdminDashboardPro({
                       <input 
                         type="text" 
                         placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
+                        aria-label={`ტიკეტი #${t.id} — პასუხის ტექსტი`}
                         maxLength={4000}
                         value={replyInputs[t.id] !== undefined ? replyInputs[t.id] : ''}
                         onChange={e => setReplyInputs({...replyInputs, [t.id]: e.target.value})}
@@ -5921,6 +5922,7 @@ export default function AdminDashboardPro({
                       <button 
                         type="button"
                         onClick={() => handleSendTicketReply(t.id)}
+                        aria-label={`ტიკეტი #${t.id} — პასუხის გაგზავნა`}
                         disabled={!!replySending[String(t.id)] || !String(replyInputs[t.id] || '').trim()}
                         aria-busy={!!replySending[String(t.id)]}
                         className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
