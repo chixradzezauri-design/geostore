@@ -4689,13 +4689,13 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
-          <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
-            <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
-              <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+          <section className="admin-command-center space-y-3 sm:space-y-5" aria-labelledby="admin-command-title">
+            <div className="admin-command-hero rounded-2xl border border-emerald-400/25 p-3 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] sm:text-xs font-black uppercase tracking-[.22em] text-emerald-300">GEOSTORE / OPERATIONS</p>
-                  <h3 id="admin-command-title" className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-white">მთავარი მართვის ცენტრი</h3>
-                  <p className="mt-2 max-w-2xl text-xs sm:text-sm leading-6 text-slate-300">მაღაზიის ყოველდღიური ოპერაციები ერთ სივრცეში — შეკვეთები, მხარდაჭერა, მარაგი და აქციები.</p>
+                  <h3 id="admin-command-title" className="mt-1 text-lg sm:text-2xl font-black tracking-tight text-white">მთავარი მართვის ცენტრი</h3>
+                  <p className="mt-1 max-w-2xl text-[11px] sm:text-xs leading-5 text-slate-300">მაღაზიის ყოველდღიური ოპერაციები ერთ სივრცეში — შეკვეთები, მხარდაჭერა, მარაგი და აქციები.</p>
                 </div>
                 <button type="button" onClick={() => setAdminTab('analytics')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-slate-950/50 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/10">
                   <BarChart3 className="h-4 w-4" /> ფინანსური ანალიტიკა
@@ -4703,26 +4703,26 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            <div className="admin-command-kpis grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4">
-              <button type="button" onClick={() => setAdminTab('orders')} className="admin-command-kpi group text-left rounded-2xl border border-emerald-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
-                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-5 w-5 text-emerald-300" /></span>
-                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterNewOrders.length}</strong>
-                <span className="mt-2 block text-[11px] text-slate-400">მოლოდინში სულ {commandCenterPendingOrders.length} შეკვეთა · გახსნა</span>
+            <div className="admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3">
+              <button type="button" onClick={() => setAdminTab('orders')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-emerald-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
+                <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-4 w-4 shrink-0 text-emerald-300" /></span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterNewOrders.length}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მოლოდინში სულ {commandCenterPendingOrders.length} შეკვეთა · გახსნა</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('support')} className="admin-command-kpi group text-left rounded-2xl border border-amber-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-amber-300/60">
-                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-5 w-5 text-amber-300" /></span>
-                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterOverdueTickets.length}</strong>
-                <span className="mt-2 block text-[11px] text-slate-400">ღია ტიკეტი 24 საათზე მეტი ხნით · გახსნა</span>
+              <button type="button" onClick={() => setAdminTab('support')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-amber-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-amber-300/60">
+                <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-4 w-4 shrink-0 text-amber-300" /></span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterOverdueTickets.length}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">ღია ტიკეტი 24 საათზე მეტი ხნით · გახსნა</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('replenishment')} className="admin-command-kpi group text-left rounded-2xl border border-rose-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-rose-300/60">
-                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-5 w-5 text-rose-300" /></span>
-                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{replenishmentPositions.filter(position => position.isLowStock).length}</strong>
-                <span className="mt-2 block text-[11px] text-slate-400">პოზიცია/ვარიანტი საჭიროებს შევსების დაგეგმვას · გახსნა</span>
+              <button type="button" onClick={() => setAdminTab('replenishment')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-rose-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-rose-300/60">
+                <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-4 w-4 shrink-0 text-rose-300" /></span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{replenishmentPositions.filter(position => position.isLowStock).length}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">პოზიცია/ვარიანტი საჭიროებს შევსების დაგეგმვას · გახსნა</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group text-left rounded-2xl border border-sky-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-sky-300/60">
-                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-5 w-5 text-sky-300" /></span>
-                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
-                <span className="mt-2 block text-[11px] text-slate-400">მომდევნო 24 საათში · გახსნა</span>
+              <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-sky-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-sky-300/60">
+                <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-4 w-4 shrink-0 text-sky-300" /></span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მომდევნო 24 საათში · გახსნა</span>
               </button>
             </div>
 
