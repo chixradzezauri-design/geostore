@@ -20374,3 +20374,18 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     min-height: max(150px, calc(var(--gs-banner-height, 220px) * .85)) !important;
   }
 }
+
+/* GEOSTORE — Stage 43.3 compatibility for Visual Studio (PR #142).
+   Keep Flash Sale cards readable on narrow phones even with multiple products.
+   This rule follows the editor's CSS so the older forced two-column phone grid
+   cannot override the safe minimum card width. */
+@media (max-width: 640px) {
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
