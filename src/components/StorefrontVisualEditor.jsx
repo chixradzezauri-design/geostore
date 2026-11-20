@@ -384,6 +384,17 @@ export default function StorefrontVisualEditor({
     setSelectedElement(null);
   }, [siteSettings?.visualDesign]);
 
+  // Warn on browser navigation only when the local draft has unsaved edits.
+  useEffect(() => {
+    const warnBeforeUnload = event => {
+      if (!localDesignDirtyRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, []);
+
   const updateGroup = (group, key, value) => {
     if (previewMode !== 'desktop' && ['layout', 'theme', 'typography'].includes(group)) {
       commitDesign({
@@ -627,6 +638,7 @@ export default function StorefrontVisualEditor({
     historyIndexRef.current = nextIndex;
     designRef.current = next;
     localDesignDirtyRef.current = true;
+    localEditRevisionRef.current += 1;
     setHistoryIndex(nextIndex);
     setDesign(next);
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: next }));
@@ -640,6 +652,7 @@ export default function StorefrontVisualEditor({
     historyIndexRef.current = nextIndex;
     designRef.current = next;
     localDesignDirtyRef.current = true;
+    localEditRevisionRef.current += 1;
     setHistoryIndex(nextIndex);
     setDesign(next);
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: next }));
