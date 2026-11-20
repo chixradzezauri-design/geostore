@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isConfirmedExpenseInsert, isConfirmedExpenseDelete } from '../src/utils/expenseMutationSafety.js';
+import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../src/utils/expenseMutationSafety.js';
 
 const expense = {
   id: 'exp-safe-123',
@@ -37,4 +37,12 @@ test('expense deletion requires exactly one returned row with the requested id',
   assert.equal(isConfirmedExpenseDelete({ id: expense.id }, expense.id), false);
   assert.equal(isConfirmedExpenseDelete([null], expense.id), false);
   assert.equal(isConfirmedExpenseDelete([{ id: expense.id }], ''), false);
+});
+
+test('expense authorization rejects 401/403 without conflating network or server errors', () => {
+  assert.equal(isExpenseAccessDeniedStatus(401), true);
+  assert.equal(isExpenseAccessDeniedStatus(403), true);
+  for (const status of [0, 200, 204, 400, 404, 408, 409, 429, 500, undefined, '403']) {
+    assert.equal(isExpenseAccessDeniedStatus(status), false);
+  }
 });

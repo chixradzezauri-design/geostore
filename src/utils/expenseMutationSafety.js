@@ -22,3 +22,7 @@ export function isConfirmedExpenseDelete(rows, expectedId) {
   const id = String(expectedId ?? '').trim();
   return id.length > 0 && String(rows[0].id ?? '') === id;
 }
+
+export function isExpenseAccessDeniedStatus(status) {
+  return status === 401 || status === 403;
+}

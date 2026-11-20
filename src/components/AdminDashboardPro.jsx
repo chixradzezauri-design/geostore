@@ -15,7 +15,7 @@ import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt }
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
-import { isConfirmedExpenseInsert, isConfirmedExpenseDelete } from '../utils/expenseMutationSafety.js';
+import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
@@ -1333,6 +1333,13 @@ export default function AdminDashboardPro({
     { role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  // Discard scheduled financial replies when the admin session ends or this view unmounts.
+  const aiResponseVersionRef = useRef(0);
+  const aiResponseInFlightRef = useRef(false);
+  useEffect(() => () => {
+    aiResponseVersionRef.current += 1;
+    aiResponseInFlightRef.current = false;
+  }, []);
 
   const fetchInventoryReplenishmentSettings = async () => {
     const requestSessionVersion = adminSessionVersion.current;
@@ -1602,6 +1609,15 @@ export default function AdminDashboardPro({
     };
   }, [adminLoggedIn, hasCrmPermission]);
 
+  // A denied server request overrides any earlier successful ledger snapshot.
+  // Cached finance data must not stay on screen after a 401/403 response.
+  const discardUnauthorizedExpenseData = () => {
+    setExpenses([]);
+    setExpensesReady(false);
+    setExpensesLastVerifiedAt(null);
+    setExpenseMutationNotice(null);
+  };
+
   const fetchExpenses = async (requestMode = 'manual') => {
     const requestSessionVersion = adminSessionVersion.current;
     if (!isCurrentAdminSession(requestSessionVersion) || !hasExpensesPermission) return false;
@@ -1633,7 +1649,10 @@ export default function AdminDashboardPro({
           { headers }
         );
         if (!isLatestExpenseRequest()) return false;
-        if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+        if (!res.ok) {
+          if (isExpenseAccessDeniedStatus(res.status)) discardUnauthorizedExpenseData();
+          throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+        }
         const page = await res.json();
         if (!isLatestExpenseRequest()) return false;
         if (!Array.isArray(page)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
@@ -1681,6 +1700,10 @@ export default function AdminDashboardPro({
       setExpensesReady(false);
       setExpensesLoading(false);
       setExpensesLastVerifiedAt(null);
+      setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+      setExpenseSearchQuery('');
+      setExpenseCategoryFilter('all');
+      setExpensePage(1);
       return undefined;
     }
 
@@ -2300,6 +2323,15 @@ export default function AdminDashboardPro({
     setExpensesReady(false);
     setExpensesLoading(false);
     setExpensesLastVerifiedAt(null);
+    setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+    setExpenseSearchQuery('');
+    setExpenseCategoryFilter('all');
+    setExpensePage(1);
+    aiResponseVersionRef.current += 1;
+    aiResponseInFlightRef.current = false;
+    setAiQuery('');
+    setAiChatLogs([{ role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }]);
+    setIsAiThinking(false);
     setServerCustomers([]);
     setCrmLoading(false);
     setCrmError('');
@@ -2712,13 +2744,17 @@ export default function AdminDashboardPro({
 
   const handleAiAsk = async (e) => {
     e.preventDefault();
-    if (!aiQuery.trim() || isAiThinking) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isOwner || !isCurrentAdminSession(requestSessionVersion) || !aiQuery.trim() || aiResponseInFlightRef.current) return;
+    const responseVersion = ++aiResponseVersionRef.current;
+    aiResponseInFlightRef.current = true;
     const userQuestion = aiQuery.trim();
     setAiQuery('');
     setAiChatLogs(prev => [...prev, { role: 'user', text: userQuestion }]);
     setIsAiThinking(true);
 
     setTimeout(() => {
+      if (!isCurrentAdminSession(requestSessionVersion) || responseVersion !== aiResponseVersionRef.current) return;
       let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${!expensesVerifiedForReports ? 'ვერ განისაზღვრება — ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
       if (qLower.includes('მომსახურ') || qLower.includes('შეფუთვა') || qLower.includes('დაზღვევა')) answer = `✨ დამატებითი მომსახურებების შემოსავალია ${financialOverview.totalAddonRevenue.toFixed(2)} ₾. ეს თანხა ცალკეა ნაჩვენები და მოგებაში არ შედის, რადგან მომსახურების თვითღირებულება ჯერ არ აღირიცხება.`;
@@ -2731,6 +2767,7 @@ export default function AdminDashboardPro({
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
       setIsAiThinking(false);
+      aiResponseInFlightRef.current = false;
     }, 800);
   };
 
@@ -2800,7 +2837,15 @@ export default function AdminDashboardPro({
         body: JSON.stringify(newExp)
       });
       if (!isCurrentMutation()) return;
-      if (!res.ok) throw new Error(`შენახვა ვერ დადასტურდა (HTTP ${res.status}).`);
+      if (!res.ok) {
+        if (isExpenseAccessDeniedStatus(res.status)) {
+          discardUnauthorizedExpenseData();
+          const error = new Error('ხარჯის შენახვის უფლება არ დადასტურდა.');
+          error.expenseAccessDenied = true;
+          throw error;
+        }
+        throw new Error(`შენახვა ვერ დადასტურდა (HTTP ${res.status}).`);
+      }
       const rows = await res.json().catch(() => null);
       if (!isCurrentMutation()) return;
       if (!isConfirmedExpenseInsert(rows, newExp)) {
@@ -2816,7 +2861,9 @@ export default function AdminDashboardPro({
       setExpenseMutationNotice({
         type: 'error',
         action: 'create',
-        text: `შენახვა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. ჩანაწერი შესაძლოა მაინც შეიქმნა. ხელახლა დამატებამდე გადაამოწმეთ განახლებული ისტორია, რათა დუბლიკატი არ გაჩნდეს.`
+        text: error?.expenseAccessDenied
+          ? 'ხარჯის შენახვა სერვერმა უარყო. გადაამოწმეთ ანგარიშის სესია და ხარჯების ნებართვა.'
+          : `შენახვა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. ჩანაწერი შესაძლოა მაინც შეიქმნა. ხელახლა დამატებამდე გადაამოწმეთ განახლებული ისტორია, რათა დუბლიკატი არ გაჩნდეს.`
       });
     } finally {
       if (isCurrentMutation()) {
@@ -2850,7 +2897,15 @@ export default function AdminDashboardPro({
         headers
       });
       if (!isCurrentMutation()) return;
-      if (!res.ok) throw new Error(`ხარჯის წაშლა ვერ დადასტურდა (HTTP ${res.status}).`);
+      if (!res.ok) {
+        if (isExpenseAccessDeniedStatus(res.status)) {
+          discardUnauthorizedExpenseData();
+          const error = new Error('ხარჯის წაშლის უფლება არ დადასტურდა.');
+          error.expenseAccessDenied = true;
+          throw error;
+        }
+        throw new Error(`ხარჯის წაშლა ვერ დადასტურდა (HTTP ${res.status}).`);
+      }
       const deletedRows = await res.json().catch(() => null);
       if (!isCurrentMutation()) return;
       if (!isConfirmedExpenseDelete(deletedRows, normalizedId)) {
@@ -2866,7 +2921,9 @@ export default function AdminDashboardPro({
       setExpenseMutationNotice({
         type: 'error',
         action: 'delete',
-        text: `წაშლა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. წაშლის ხელახლა ცდამდე გადაამოწმეთ ხარჯების ისტორია.`
+        text: error?.expenseAccessDenied
+          ? 'ხარჯის წაშლა სერვერმა უარყო. გადაამოწმეთ ანგარიშის სესია და ხარჯების ნებართვა.'
+          : `წაშლა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. წაშლის ხელახლა ცდამდე გადაამოწმეთ ხარჯების ისტორია.`
       });
     } finally {
       if (isCurrentMutation()) {
