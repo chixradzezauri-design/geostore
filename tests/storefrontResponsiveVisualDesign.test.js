@@ -470,3 +470,10 @@ test('selected preview content reads its declared design field instead of a hard
   assert.ok(valueSelector.includes('design[selectedElement.group]?.[selectedElement.key]'));
   assert.ok(!valueSelector.includes("selectedElement.group === 'hero'"));
 });
+
+test('image and spacing reset controls use localized property labels', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  for (const key of ['paddingX', 'paddingY', 'objectFit', 'objectPositionX', 'objectPositionY', 'textDecoration', 'fontStyle', 'minHeight']) {
+    assert.ok(editor.includes(key + ": '"));
+  }
+});
