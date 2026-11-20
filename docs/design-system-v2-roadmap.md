@@ -79,3 +79,11 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Product and vendor profitability records now expose a distinct semantic article with its subject as an accessible label. Section regions have accessible names.
 - Scoped CSS does not change saved visual-editor tokens, chart calculations, CSV export, Supabase data, permissions, financial logic or production.
 - Node regression plus Chromium fixtures at 320–1440px check four panels, long labels, amount wrapping and narrow layout. Authentication and real financial source reconciliation remain a separate release gate. Keep PR #146 Draft.
+
+
+## Phase 12 — expense entry and calculator form polish
+- The existing owner/staff expense entry form now has visible, connected category, GEL amount, date and description labels. Native amount constraints (0.01–1,000,000,000 with 2 decimal places), required date, and description length cap (300) mirror the **pre-existing** `handleAddExpense` validation, without changing POST/DELETE requests or server permissions. Existing error alerts and Supabase result handling are untouched.
+- The existing four sales/profit calculator inputs now have native associated labels. No changes to `calcForm`, `calculatedSalesMetrics`, currency math, profit margins, or profitability rules.
+- Form layout, minimum 44px touch targets, large-number result wrapping and mobile 16px focus-safe typography are scoped to the old selectors. On ≤380px phones, calculator fields and results stack to remain readable.
+- Added Node assertions that the original mutation/calculation pathways remain present and a Chromium CSS fixture at 320–1440px to check control height, font size and horizontal overflow. Exact PR HEAD CI and authenticated admin/manual financial operations must be verified before merge.
+- **No database, RLS, staff authorization, stored visual-editor changes, live expense write/delete operations, main branch or Production deployment.** Keep Draft PR #146 pending separate release approval.
