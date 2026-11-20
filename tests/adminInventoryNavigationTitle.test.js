@@ -225,7 +225,7 @@ test('replenishment conflict responses retain local edits and require user revie
   assert.match(dashboard, /const hasConflict = Boolean\(replenishmentConflictKeys\[position\.key\]\)/);
   assert.match(dashboard, /კონფლიქტი: სერვერის ვერსიის ჩატვირთვა გააუქმებს ამ პოზიციის ძველ ადგილობრივ ცვლილებებს/);
   assert.match(dashboard, /\|\| !hasProductsPermission \|\| hasConflict/);
-  assert.match(dashboard, /setReplenishmentConflictKeys\(current => \{ const next = \{ \.\.\.current \}; delete next\[position\.key\]; return next; \}\)/);
+  assert.match(dashboard, /setReplenishmentConflictKeys\(current => \{\s*const next = \{ \.\.\.current \};\s*delete next\[positionKey\];\s*return next;\s*\}\)/);
 });
 
 test('conflict recovery retains drafts if server reload fails and discards only after success', () => {
