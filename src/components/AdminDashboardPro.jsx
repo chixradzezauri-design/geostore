@@ -1343,8 +1343,8 @@ export default function AdminDashboardPro({
     const threshold = Number(draft.threshold ?? position.threshold);
     const target = Number(draft.target ?? position.target);
     if (!Number.isSafeInteger(threshold) || threshold < 0 ||
-        !Number.isSafeInteger(target) || target <= threshold || target > 1000000) {
-      setReplenishmentError('სამიზნე მარაგი უნდა აღემატებოდეს დაბალი მარაგის ზღვარს.');
+        threshold > 100000 || !Number.isSafeInteger(target) || target <= threshold || target > 1000000) {
+      setReplenishmentError('დაბალი მარაგის ზღვარი უნდა იყოს 0–100000, ხოლო სამიზნე — მასზე მეტი და არაუმეტეს 1000000.');
       return;
     }
     setReplenishmentSavingKey(position.key);
@@ -4947,7 +4947,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment') && (
-          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
+          <section className="admin-inventory-panel space-y-4 rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-5 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title" aria-busy={replenishmentLoading}>
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY PLANNING</p>
@@ -4962,7 +4962,7 @@ export default function AdminDashboardPro({
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">სულ შესავსები ერთეულები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{replenishmentPositions.reduce((sum, position) => sum + position.suggestedQuantity, 0)}</strong></div>
             </div>
             {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">პარამეტრების შენახვა/ჩატვირთვა ვერ მოხერხდა: {replenishmentError}</div>}
-            {replenishmentLoading && <p className="rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">შევსების პარამეტრები იტვირთება…</p>}
+            {replenishmentLoading && <p role="status" className="rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">შევსების პარამეტრები იტვირთება…</p>}
             <div className="space-y-3">
               {filteredReplenishmentPositions.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center"><Truck className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 text-sm font-black text-white">შესაბამისი მარაგის პოზიცია ვერ მოიძებნა</p><p className="mt-1 text-xs text-slate-400">შეამოწმეთ ძიება ან დაამატეთ პროდუქტის მარაგი.</p></div>
@@ -4971,13 +4971,13 @@ export default function AdminDashboardPro({
                 const thresholdValue = draft.threshold ?? position.threshold;
                 const targetValue = draft.target ?? position.target;
                 return (
-                  <article key={position.key} className="admin-replenishment-row grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-4">
-                    <div className="admin-replenishment-product min-w-0"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : position.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : position.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
+                  <article key={position.key} className="admin-replenishment-row grid min-w-0 grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-2 sm:gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 sm:p-4">
+                    <div className="admin-replenishment-product col-span-2 min-w-0 xl:col-span-1"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : position.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : position.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400">არსებული მარაგი</label><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{position.isLowStock ? Math.max(0, Number(targetValue) - position.stock) : 0}</strong></div>
-                    <div className="admin-replenishment-save flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !hasProductsPermission} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
+                    <div className="admin-replenishment-save col-span-2 flex items-center xl:col-span-1"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !hasProductsPermission} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
                   </article>
                 );
               })}
