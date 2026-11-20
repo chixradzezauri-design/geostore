@@ -392,7 +392,7 @@ test('visual preview selection mode can be exited using Escape', async () => {
   const end = editor.indexOf('const selectElementFromTree =', start);
   assert.ok(start >= 0 && end > start);
   const handler = editor.slice(start, end);
-  assert.ok(handler.includes("event.key !== 'Escape'"));
+  assert.ok(handler.includes("event.key === 'Escape'"));
   assert.ok(handler.includes('setSelectionMode(false)'));
   assert.ok(editor.includes('onKeyDownCapture={handlePreviewKeyDown}'));
   assert.ok(editor.includes('tabIndex={selectionMode ? 0 : undefined}'));
