@@ -430,3 +430,10 @@ test('individual visual style reset options have understandable Georgian labels'
   assert.ok(editor.includes("marginTop: 'ზედა გარე დაშორება'"));
   assert.ok(editor.includes('ELEMENT_STYLE_LABELS[key] || key'));
 });
+
+test('visual selection preview highlights hovered and keyboard-focused targets', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.ok(editor.includes('.gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target]:hover'));
+  assert.ok(editor.includes('.gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target]:focus-visible'));
+  assert.ok(editor.includes('outline: 2px dashed #10b981'));
+});
