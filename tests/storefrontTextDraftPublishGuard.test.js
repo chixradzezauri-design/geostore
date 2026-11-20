@@ -17,3 +17,17 @@ test('publish refuses unsaved storefront changes', () => {
   assert.match(publish[1], /if \(localDesignDirtyRef\.current\) \{/);
   assert.match(publish[1], /return;/);
 });
+
+test('draft save includes pending text and detects edits made while saving', () => {
+  assert.match(source, /pendingTextEditsRef\.current\s*=\s*\{\s*\.\.\.pendingTextEditsRef\.current,\s*\[key\]: value\s*\}/);
+  assert.match(source, /const snapshotRevision = localEditRevisionRef\.current/);
+  assert.match(source, /\.\.\.pendingTextEditsRef\.current, visualDesign: snapshotDesign/);
+  assert.match(source, /localEditRevisionRef\.current !== snapshotRevision/);
+  assert.match(source, /if \(saved === true && !hasNewerLocalChanges\)/);
+});
+
+test('restoring a saved version discards obsolete pending text edits', () => {
+  const restore = source.match(/const restoreSelectedStorefrontVersion = async \(\) => \{([\s\S]*?)\n  \};/);
+  assert.ok(restore);
+  assert.match(restore[1], /pendingTextEditsRef\.current = \{\}/);
+});
