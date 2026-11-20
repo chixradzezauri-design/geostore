@@ -30,6 +30,21 @@ const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex fl
   '<div class="admin-command-kpis"><button class="admin-command-kpi"><span>ახალი შეკვეთები</span><strong>120</strong></button></div>' +
   '</div></section>';
 
+const adminProductFixture =
+  '<section class="admin-products-panel"><div class="admin-product-row flex flex-col sm:flex-row justify-between gap-4">' +
+  '<div class="admin-product-identity flex min-w-0 items-center gap-3.5">' +
+  '<div style="width:56px;height:56px;flex-shrink:0"></div><div>' +
+  '<h4>გრძელი დასახელების ქართული პროდუქტი სხვადასხვა ზომით და ფერით</h4>' +
+  '<p>კატეგორია: ტანსაცმელი | SKU: GEO-VERY-LONG-SKU-00001</p></div></div>' +
+  '<div class="admin-product-controls flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">' +
+  '<div class="flex items-center gap-2"><span>COGS:</span><input aria-label="თვითღირებულება" type="number" class="w-20" value="99"></div>' +
+  '<div class="flex items-center gap-2"><span>ფასი:</span><input aria-label="ფასი" type="number" class="w-24" value="120"></div>' +
+  '<div class="flex items-center gap-2"><span>მარაგი:</span><input aria-label="მარაგი" type="number" class="w-16" value="10"><span>მარაგშია</span></div>' +
+  '<button type="button">გამოქვეყნება</button><button type="button">რედაქტირება</button>' +
+  '<button type="button">წაშლა</button></div></div>' +
+  '<nav class="admin-product-pagination"><button type="button">წინა</button>' +
+  '<button type="button">1</button><button type="button">შემდეგი</button></nav></section>';
+
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
   '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
@@ -88,7 +103,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -108,6 +123,12 @@ try {
         const checkoutInput = document.querySelector('.gs-checkout-form input');
         const checkoutError = document.querySelector('.gs-checkout-error');
         const checkoutSubmit = document.querySelector('.gs-checkout-submit-area button');
+        const adminProductRow = document.querySelector('.admin-product-row');
+        const adminProductControls = document.querySelector('.admin-product-controls');
+        const adminProductButtons = [...adminProductControls.querySelectorAll('button')];
+        const adminPaginationButtons = [...document.querySelectorAll('.admin-product-pagination button')];
+        const adminProductPrice = adminProductControls.querySelector('input');
+
         return {
           scrollWidth: document.documentElement.scrollWidth,
           width: window.innerWidth,
@@ -137,7 +158,13 @@ try {
           checkoutDialogHeight: checkoutDialog.getBoundingClientRect().height,
           checkoutInputFontSize: parseFloat(getComputedStyle(checkoutInput).fontSize),
           checkoutErrorRight: checkoutError.getBoundingClientRect().right,
-          checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height
+          checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height,
+          adminProductRowRight: adminProductRow.getBoundingClientRect().right,
+          adminProductControlsRight: adminProductControls.getBoundingClientRect().right,
+          adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
+          adminProductPaginationMinHeight: Math.min(...adminPaginationButtons.map(button => button.getBoundingClientRect().height)),
+          adminProductPriceFontSize: parseFloat(getComputedStyle(adminProductPrice).fontSize),
+          adminProductColumns: getComputedStyle(adminProductControls).gridTemplateColumns.split(/\\s+/).filter(Boolean).length
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -157,6 +184,14 @@ try {
       assert.ok(layout.checkoutErrorRight <= width + 2, width + 'px checkout error overflow: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutDialogHeight <= 822, width + 'px checkout dialog height: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutSubmitHeight >= 43, width + 'px checkout action must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.adminProductRowRight <= width + 2, width + 'px admin product row overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.adminProductControlsRight <= width + 2, width + 'px admin product controls overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.adminProductButtonMinHeight >= 43, width + 'px admin product buttons must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.adminProductPaginationMinHeight >= 43, width + 'px product pages must be touch-sized: ' + JSON.stringify(layout));
+      if (width <= 639) {
+        assert.ok(layout.adminProductPriceFontSize >= 16, width + 'px admin product inputs must avoid iOS zoom: ' + JSON.stringify(layout));
+        assert.equal(layout.adminProductColumns, 2, width + 'px admin quick controls should use two columns');
+      }
       if (width <= 640) assert.ok(layout.checkoutInputFontSize >= 16, width + 'px checkout should avoid iOS zoom: ' + JSON.stringify(layout));
       assert.ok(layout.kpiFontSize >= 17 && layout.kpiFontSize <= 25,
         width + 'px compact KPI value should be 17–25px: ' + JSON.stringify(layout));
