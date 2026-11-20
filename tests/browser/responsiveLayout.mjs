@@ -130,6 +130,7 @@ const adminFinancialDetailsFixture =
 
 const adminExpenseHistoryFixture =
   '<section class="admin-expense-history-panel p-6">' +
+  '<p class="admin-expense-mutation-notice" role="alert">წაშლის დასტური არ დაბრუნდა — გადაამოწმეთ ისტორია, სანამ ისევ ცდით. გრძელიშეცდომისმონაცემებიდამატებითტექსტით</p>' +
   '<div class="admin-expense-history-heading flex flex-wrap items-center justify-between gap-3">' +
   '<div><h3 id="fixture-expense-history-title">ხარჯების ისტორია (120)</h3><p>ძებნა მხოლოდ სიას ცვლის</p></div>' +
   '<button class="admin-expense-refresh" type="button" aria-busy="true">ახლდება… ხელახლა შემოწმება</button></div>' +
@@ -153,7 +154,7 @@ const adminExpenseHistoryFixture =
     '<span class="admin-expense-date">2026-11-20</span></div>' +
     '<div class="admin-expense-actions flex items-center gap-3">' +
     '<span class="admin-expense-amount whitespace-nowrap">-123456789012.34 ₾</span>' +
-    '<button type="button" class="admin-expense-delete">წაშლა</button></div></article>'
+    '<button type="button" class="admin-expense-delete" disabled>წაშლა</button></div></article>'
   ).join('') + '</div>' +
   '<nav class="admin-expense-pagination flex flex-wrap items-center justify-between gap-3">' +
   '<p>ნაჩვენებია 1–10 / 120</p>' +
@@ -195,8 +196,10 @@ const adminFinanceFormsFixture =
   '<input id="fixture-expense-date" type="date" value="2026-11-20"></div></div>' +
   '<div class="admin-expense-field"><label for="fixture-expense-description">ხარჯის აღწერა</label>' +
   '<input id="fixture-expense-description" type="text" value="სარეკლამო კამპანია"></div>' +
-  '<button class="admin-expense-submit" type="submit">+ ხარჯის დამატება ბაზაში</button>' +
-  '</form></div>' + adminExpenseHistoryFixture + '</section>';
+  '<button class="admin-expense-submit" type="submit" disabled>ხარჯის შენახვა მოწმდება…</button>' +
+  '</form>' +
+  '<p class="admin-expense-mutation-notice" role="alert">ხარჯის დადასტურება ვერ მოხერხდა. სერვერის პასუხი არ არის დადასტურებული.</p>' +
+  '</div>' + adminExpenseHistoryFixture + '</section>';
 
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
@@ -319,6 +322,8 @@ try {
         const expenseHistoryCards = [...expenseHistoryPanel.querySelectorAll('.admin-expense-row')];
         const expenseSyncNotice = expenseHistoryPanel.querySelector('.admin-expense-sync-state');
         const expenseRetry = expenseHistoryPanel.querySelector('.admin-expense-error-retry');
+        const mutationNotices = [...document.querySelectorAll('.admin-expense-mutation-notice')];
+        const expenseDeleteButtons = [...expenseHistoryPanel.querySelectorAll('.admin-expense-delete')];
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -406,7 +411,12 @@ try {
           expenseSyncStatusVisible: expenseSyncNotice.getBoundingClientRect().height > 0,
           expenseSyncStatusRight: expenseSyncNotice.getBoundingClientRect().right,
           expenseSyncRetryHeight: expenseRetry.getBoundingClientRect().height,
-          expenseSyncRetryRight: expenseRetry.getBoundingClientRect().right
+          expenseSyncRetryRight: expenseRetry.getBoundingClientRect().right,
+          expenseMutationNoticeRight: Math.max(...mutationNotices.map(node => node.getBoundingClientRect().right)),
+          expenseMutationNoticeCount: mutationNotices.length,
+          expenseMutationDeleteMinHeight: Math.min(...expenseDeleteButtons.map(node => node.getBoundingClientRect().height)),
+          expenseMutationSubmitDisabled: expenseSubmit.disabled,
+          expenseMutationDeleteDisabled: expenseDeleteButtons.every(node => node.disabled)
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -445,6 +455,11 @@ try {
       assert.ok(layout.expenseSyncStatusRight <= width + 2, width + 'px expense verification status overflow: ' + JSON.stringify(layout));
       assert.ok(layout.expenseSyncRetryHeight >= 43, width + 'px expense error retry should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.expenseSyncRetryRight <= width + 2, width + 'px expense error retry overflow: ' + JSON.stringify(layout));
+      assert.equal(layout.expenseMutationNoticeCount, 2, width + 'px create and delete notices must render');
+      assert.ok(layout.expenseMutationNoticeRight <= width + 2, width + 'px expense mutation notice overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseMutationSubmitDisabled, width + 'px in-flight expense submit should be disabled');
+      assert.ok(layout.expenseMutationDeleteDisabled, width + 'px in-flight expense deletes should be disabled');
+      assert.ok(layout.expenseMutationDeleteMinHeight >= 43, width + 'px delete targets should remain accessible');
       assert.equal(layout.expenseHistoryRenderedRows, 10, width + 'px expense history fixture must show exactly one page');
       assert.ok(layout.expenseHistoryFilterMinHeight >= 43, width + 'px expense search/filter must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.expenseHistoryMinButtonHeight >= 43, width + 'px expense pagination and refresh must be touch-sized: ' + JSON.stringify(layout));
