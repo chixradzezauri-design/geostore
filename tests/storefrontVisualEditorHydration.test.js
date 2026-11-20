@@ -102,3 +102,8 @@ test('save and publish errors are visually distinct from successful status', () 
   assert.match(editor, /border-emerald-400\/20 bg-slate-950\/70 text-emerald-200/);
   assert.match(editor, /aria-live="polite"/);
 });
+
+test('error feedback uses assertive alerts while normal updates remain polite', () => {
+  assert.match(editor, /role=\{\/ვერ .*?\.test\(saveMessage\) \? 'alert' : 'status'\}/);
+  assert.match(editor, /aria-live=\{\/ვერ .*?\.test\(saveMessage\) \? 'assertive' : 'polite'\}/);
+});
