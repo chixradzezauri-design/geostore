@@ -110,3 +110,9 @@ test('remote draft conflicts notify once per remote version without replacing un
   assert.ok(refresh.indexOf('storefrontRemoteConflictRef.current = remoteUpdatedAt') < refresh.indexOf('setCategoriesList(nextSnapshot.categories)'));
   assert.match(refresh, /if \(storefrontDraftLocalDirtyRef\.current \|\| latestSnapshot !== storefrontDraftBaselineRef\.current\)/);
 });
+
+test('persistent draft conflict banner remains mobile-readable and does not overlap toast', () => {
+  assert.match(app, /max-h-\[35vh\] max-w-2xl overflow-y-auto/);
+  assert.match(app, /sm:px-4 sm:py-3 sm:text-sm/);
+  assert.match(app, /storefrontRemoteConflict && activeTab === 'admin' \? 'bottom-4 right-3 left-3/);
+});
