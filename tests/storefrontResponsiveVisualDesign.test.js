@@ -373,3 +373,15 @@ test('device-wide visual reset requires confirmation and keeps undo history', as
   assert.ok(reset.includes('commitDesign({ ...design, responsive })'), 'reset must remain undoable');
   assert.ok(reset.includes("previewMode === 'desktop'"), 'desktop base design must not be cleared by device reset');
 });
+
+test('visual preview selection blocks navigation even when clicking an untagged child', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const handlePreviewSelect = event => {');
+  const end = editor.indexOf('const selectElementFromTree =', start);
+  assert.ok(start >= 0 && end > start);
+  const handler = editor.slice(start, end);
+  assert.ok(handler.indexOf('if (!selectionMode) return;') < handler.indexOf('event.preventDefault();'));
+  assert.ok(handler.indexOf('event.preventDefault();') < handler.indexOf('if (!target) return;'));
+  assert.ok(handler.indexOf('event.stopPropagation();') < handler.indexOf('if (!target) return;'));
+  assert.ok(editor.includes('onClickCapture={handlePreviewSelect}'));
+});
