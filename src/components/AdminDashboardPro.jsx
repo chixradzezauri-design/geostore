@@ -4996,7 +4996,8 @@ export default function AdminDashboardPro({
                 const draft = replenishmentDrafts[position.key] || {};
                 const thresholdValue = draft.threshold ?? position.threshold;
                 const targetValue = draft.target ?? position.target;
-                const validTarget = String(targetValue).trim() !== '' && Number.isSafeInteger(Number(targetValue)) && Number(targetValue) > 0 && Number(targetValue) <= 1000000;
+                const validThreshold = String(thresholdValue).trim() !== '' && Number.isSafeInteger(Number(thresholdValue)) && Number(thresholdValue) >= 0 && Number(thresholdValue) <= 100000;
+                const validTarget = validThreshold && String(targetValue).trim() !== '' && Number.isSafeInteger(Number(targetValue)) && Number(targetValue) > Number(thresholdValue) && Number(targetValue) <= 1000000;
                 const hasUnsavedChanges = Object.prototype.hasOwnProperty.call(replenishmentDrafts, position.key);
                 return (
                   <article key={position.key} className="admin-replenishment-row grid min-w-0 grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-2 sm:gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 sm:p-4">
