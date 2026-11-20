@@ -141,3 +141,12 @@ test('hero image data URL must match the selected file MIME type', () => {
   assert.match(handler, /allowedTypes\.includes\(file\.type\)/);
   assert.match(handler, /reader\.result\.startsWith\(`data:\$\{file\.type\};base64,`\)/);
 });
+
+test('aborted hero image reads report an accessible error only for current selection', () => {
+  const handler = editor.split('const handleHeroFileChange = event =>')[1]?.split('const undo = () =>')[0] || '';
+  assert.match(handler, /reader\.onabort = \(\) => \{/);
+  assert.match(handler, /requestId === heroImageReadRequestRef\.current\) setSaveMessage\('ფოტოს წაკითხვა შეწყდა/);
+  const status = editor.split('{saveMessage && <p')[1]?.split('</p>}')[0] || '';
+  assert.match(status, /ფოტოს წაკითხვა შეწყდა/);
+  assert.match(status, /'alert' : 'status'/);
+});
