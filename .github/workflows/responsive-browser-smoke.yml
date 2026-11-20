@@ -41,3 +41,5 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify phone, tablet, desktop widths
         run: node tests/browser/responsiveLayout.mjs
+      - name: Open the built GEOSTORE SPA and verify navigation across devices
+        run: node tests/browser/realStorefrontSmoke.mjs
