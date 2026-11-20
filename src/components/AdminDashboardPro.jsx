@@ -1313,6 +1313,8 @@ export default function AdminDashboardPro({
   const [expenses, setExpenses] = useState([]);
   const [expensesError, setExpensesError] = useState('');
   const [expensesReady, setExpensesReady] = useState(false);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [expensesLastVerifiedAt, setExpensesLastVerifiedAt] = useState(null);
   // A slow 15-second poll must never replace a newer refresh or post-mutation ledger.
   const expenseFetchRequestRef = useRef(0);
   const expenseFetchInFlightRef = useRef(false);
@@ -1603,6 +1605,7 @@ export default function AdminDashboardPro({
     if (requestMode === 'poll' && expenseFetchInFlightRef.current) return false;
     const requestId = ++expenseFetchRequestRef.current;
     expenseFetchInFlightRef.current = true;
+    setExpensesLoading(true);
     const isLatestExpenseRequest = () =>
       isCurrentAdminSession(requestSessionVersion) && requestId === expenseFetchRequestRef.current;
     try {
@@ -1640,6 +1643,7 @@ export default function AdminDashboardPro({
       setExpenses(allExpenses);
       setExpensesError('');
       setExpensesReady(true);
+      setExpensesLastVerifiedAt(new Date().toISOString());
       return true;
     } catch (error) {
       if (!isLatestExpenseRequest()) return false;
@@ -1648,7 +1652,10 @@ export default function AdminDashboardPro({
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
     } finally {
-      if (requestId === expenseFetchRequestRef.current) expenseFetchInFlightRef.current = false;
+      if (requestId === expenseFetchRequestRef.current) {
+        expenseFetchInFlightRef.current = false;
+        if (isCurrentAdminSession(requestSessionVersion)) setExpensesLoading(false);
+      }
     }
   };
 
@@ -1660,6 +1667,8 @@ export default function AdminDashboardPro({
       setExpenses([]);
       setExpensesError('');
       setExpensesReady(false);
+      setExpensesLoading(false);
+      setExpensesLastVerifiedAt(null);
       return undefined;
     }
 
@@ -1669,6 +1678,7 @@ export default function AdminDashboardPro({
       clearInterval(interval);
       expenseFetchRequestRef.current += 1;
       expenseFetchInFlightRef.current = false;
+      // Invalidate a pending request; a future effect owns its loading state.
     };
   }, [adminLoggedIn, hasExpensesPermission]);
 
@@ -2272,6 +2282,8 @@ export default function AdminDashboardPro({
     setExpenses([]);
     setExpensesError('');
     setExpensesReady(false);
+    setExpensesLoading(false);
+    setExpensesLastVerifiedAt(null);
     setServerCustomers([]);
     setCrmLoading(false);
     setCrmError('');
@@ -5213,12 +5225,13 @@ export default function AdminDashboardPro({
               </div>
             </div>
             {!expensesVerifiedForReports && (
-              <div role="alert" className="admin-finance-data-warning rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
-                <strong className="block mb-1">ხარჯების სრული ისტორია არ არის დადასტურებული</strong>
+              <div role={expensesError || !hasExpensesPermission ? 'alert' : 'status'} aria-live="polite" className="admin-finance-data-warning rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block mb-1">{expensesLoading ? 'ხარჯების სრული ისტორია მოწმდება' : 'ხარჯების სრული ისტორია არ არის დადასტურებული'}</strong>
                 <p>ხარჯები და წმინდა მოგება დროებით არ ჩანს, ხოლო ფინანსური CSV ექსპორტი დაცულია, სანამ Supabase-დან სრული ხარჯების ისტორია წარმატებით არ ჩაიტვირთება.</p>
                 {expensesError && <p className="mt-1">ჩატვირთვის შეცდომა: {expensesError}</p>}
                 {!hasExpensesPermission && <p className="mt-1">ფინანსური მონაცემების წაკითხვის უფლება საჭიროა.</p>}
-                {hasExpensesPermission && <button type="button" onClick={() => void fetchExpenses()} className="admin-finance-retry mt-2 min-h-11 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold">ხარჯების ისტორიის განახლება</button>}
+                {expensesLastVerifiedAt && <p className="mt-1">ბოლო წარმატებული შემოწმება: <time dateTime={expensesLastVerifiedAt}>{new Date(expensesLastVerifiedAt).toLocaleString('ka-GE')}</time></p>}
+                {hasExpensesPermission && <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-finance-retry mt-2 min-h-11 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold">ხელახლა გადამოწმება</button>}
               </div>
             )}
             {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
@@ -5589,8 +5602,13 @@ export default function AdminDashboardPro({
                   <h3 id="admin-expense-history-title" className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
                   <p className="mt-1 text-[10px] text-slate-400">ძებნა და გვერდები მხოლოდ ამ სიას ცვლის — ფინანსური ჯამები და CSV იყენებს სრულ ისტორიას.</p>
                 </div>
-                <button type="button" onClick={() => void fetchExpenses()} className="admin-expense-refresh min-h-11 rounded-xl border border-emerald-500/25 px-4 py-2 text-xs font-bold text-emerald-300">ისტორიის განახლება</button>
+                <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-expense-refresh min-h-11 rounded-xl border border-emerald-500/25 px-4 py-2 text-xs font-bold text-emerald-300">{expensesLoading ? 'ახლდება… ხელახლა შემოწმება' : 'ისტორიის განახლება'}</button>
               </div>
+              <p className="admin-expense-sync-state text-[11px] leading-relaxed text-slate-400" role="status" aria-live="polite">
+                {expensesLoading ? 'მიმდინარეობს სრული ისტორიის შემოწმება… ' : expensesError ? 'ისტორია ვერ განახლდა. ' : expensesReady ? 'ისტორია სრულად დადასტურებულია. ' : 'ისტორია ჯერ არ არის დადასტურებული. '}
+                {expensesLastVerifiedAt && <>ბოლო წარმატებული შემოწმება: <time dateTime={expensesLastVerifiedAt}>{new Date(expensesLastVerifiedAt).toLocaleString('ka-GE')}</time>.</>}
+                {!expensesReady && expenses.length > 0 && <span className="block text-amber-300">ნაჩვენები ძველი ჩანაწერები დროებით დაუდასტურებელია.</span>}
+              </p>
               <div className="admin-expense-history-filters grid grid-cols-1 sm:grid-cols-2 gap-2" role="search" aria-label="ხარჯების ისტორიის ფილტრები">
                 <div className="min-w-0">
                   <label htmlFor="admin-expense-history-search" className="mb-1 block text-[10px] font-bold text-slate-300">მოძებნე ხარჯი</label>
@@ -5608,14 +5626,14 @@ export default function AdminDashboardPro({
               </div>
               <p className="text-[11px] text-slate-400" role="status" aria-live="polite">ნაპოვნია {filteredExpenses.length} / {expenses.length} ჩანაწერი</p>
               {expensesError && (
-                <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-3 text-xs leading-relaxed text-rose-200">
+                <div role="alert" className="admin-expense-load-error rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-3 text-xs leading-relaxed text-rose-200">
                   ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული ჩანაწერები შენარჩუნებულია. დეტალი: {expensesError}
-                  <button type="button" onClick={fetchExpenses} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
+                  <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-expense-error-retry ml-2 underline underline-offset-2">ხელახლა ცდა</button>
                 </div>
               )}
               <div className="admin-expense-history-list space-y-3" aria-labelledby="admin-expense-history-title">
                 {filteredExpenses.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-4">{expenses.length === 0 ? 'ხარჯები ჯერ არ არის დამატებული.' : 'მითითებული ფილტრებით ხარჯი ვერ მოიძებნა.'}</p>
+                  <p className="text-slate-500 text-xs text-center py-4">{!expensesReady && expenses.length === 0 ? (expensesLoading ? 'ხარჯების ისტორია იტვირთება…' : 'ხარჯების ისტორია ჯერ არ არის დადასტურებული.') : expenses.length === 0 ? 'ხარჯები ჯერ არ არის დამატებული.' : 'მითითებული ფილტრებით ხარჯი ვერ მოიძებნა.'}</p>
                 ) : (
                   paginatedExpenses.map(exp => (
                     <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 text-xs shadow-inner">
