@@ -153,13 +153,8 @@ begin
 end;
 $function$;
 
-create or replace function private.publish_storefront_config(p_snapshot jsonb, p_version_label text default null)
-returns jsonb language plpgsql security definer set search_path = ''
-as $function$
-begin
-  raise exception 'განახლებული გამოქვეყნების RPC აუცილებელია. განაახლეთ გვერდი და სცადეთ თავიდან.' using errcode = '40001';
-end;
-$function$;
+-- Compatibility: leave the existing two-argument RPC implementations unchanged until
+-- all deployed clients migrate. The legacy API remains last-write-wins.
 
 create or replace function public.publish_storefront_config(
   p_snapshot jsonb, p_version_label text, p_expected_draft_updated_at timestamptz
@@ -175,3 +170,6 @@ grant execute on function private.publish_storefront_config(jsonb, text, timesta
 revoke all on function public.publish_storefront_config(jsonb, text) from public, anon;
 revoke all on function public.publish_storefront_config(jsonb, text, timestamptz) from public, anon;
 grant execute on function public.publish_storefront_config(jsonb, text, timestamptz) to authenticated;
+
+-- Refresh exposed PostgREST function signatures after adding the new overload.
+NOTIFY pgrst, 'reload schema';
