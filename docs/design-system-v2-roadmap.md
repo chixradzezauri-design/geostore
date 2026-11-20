@@ -33,3 +33,12 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 - Keep numeric inputs legible on iOS, preserve 44px touch targets and protect long names and SKUs from forcing horizontal overflow.
 - Add a targeted Node regression test. No database, RLS, payment, cart, save or publication workflow changes.
 - Verify CI and authenticated admin editor workflow before any merge; avoid inferring authenticated coverage from public browser smoke.
+
+
+## Phase 7 — order operations first pass
+- Reuse the already-tested `getPaginationItems` bounded page-number window for order pages, instead of rendering one button for every page. Existing five-order page size and page-by-status memory are unchanged.
+- Label order search, grouped status filters and order-specific detail/invoice controls; expose pressed filter state to assistive technology.
+- Add scoped, responsive touch-height rules for order filters, status controls, action buttons and pagination; keep phone search inputs at 16px to avoid Safari focus zoom.
+- Add Node regressions and a Chromium fixture exercising these controls at 320–1440px.
+- Out of scope: status transitions, reactivation rules, stock restoration, invoices, exports, Supabase data, customer data, RLS, payment handling or publication.
+- Require exact-HEAD build and Chromium success plus authenticated admin validation before release.
