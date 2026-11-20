@@ -108,7 +108,7 @@ test('replenishment save blocks duplicate submissions and preserves drafts on fa
   assert.match(save, /const refreshed = await fetchInventoryReplenishmentSettings\(\)/);
   assert.match(save, /if \(!refreshed\) throw new Error/);
   assert.ok(save.indexOf('if (!refreshed) throw') < save.indexOf('setReplenishmentDrafts(current =>'));
-  assert.match(dashboard, /disabled=\{Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission\}/);
+  assert.match(dashboard, /disabled=\{Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission \|\| hasConflict\}/);
 });
 
 test('replenishment save rejects blank values and locks inputs during save', () => {
@@ -160,7 +160,7 @@ test('replenishment only displays server lists after validating their structure'
 });
 test('replenishment cards visibly distinguish unsaved local edits', () => {
   assert.match(dashboard, /Object\.prototype\.hasOwnProperty\.call\(replenishmentDrafts, position\.key\)/);
-  assert.match(dashboard, /hasUnsavedChanges && <div className="flex flex-wrap items-center gap-2">/);
+  assert.match(dashboard, /\(hasUnsavedChanges \|\| hasConflict\) && <div className="flex flex-wrap items-center gap-2">/);
   assert.match(dashboard, /<span className="text-\[10px\] text-amber-200" role="status">შეუნახავი ცვლილება<\/span>/);
 });
 
@@ -211,4 +211,16 @@ test('synchronous lock prevents double-click save races before React re-renders'
   assert.match(save, /replenishmentSavingRef\.current = true/);
   assert.match(save, /finally \{\s*replenishmentSavingRef\.current = false/);
   assert.ok(save.indexOf('replenishmentSavingRef.current = true') < save.indexOf('await getSupabaseHeaders()'));
+});
+
+test('replenishment conflict responses retain local edits and require user review', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /payload\?\.code === '40001'/);
+  assert.match(save, /setReplenishmentConflictKeys\(current => \(\{ \.\.\.current, \[position\.key\]: true \}\)\)/);
+  assert.match(dashboard, /const hasConflict = Boolean\(replenishmentConflictKeys\[position\.key\]\)/);
+  assert.match(dashboard, /კონფლიქტი: დააჭირეთ „განახლება“, შემდეგ გააუქმეთ ძველი რედაქტირება/);
+  assert.match(dashboard, /\|\| !hasProductsPermission \|\| hasConflict/);
+  assert.match(dashboard, /setReplenishmentConflictKeys\(current => \{ const next = \{ \.\.\.current \}; delete next\[position\.key\]; return next; \}\)/);
 });
