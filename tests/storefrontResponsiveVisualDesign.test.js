@@ -450,3 +450,13 @@ test('keyboard selection supports Enter and Space without activating preview con
   assert.ok(handler.includes('event.preventDefault();'));
   assert.ok(handler.includes('setSelectedElement({ id: targetId, ...metadata })'));
 });
+
+test('keyboard preview selection blocks untagged button activation', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const handlePreviewKeyDown = event => {');
+  const end = editor.indexOf('const selectElementFromTree =', start);
+  assert.ok(start >= 0 && end > start);
+  const handler = editor.slice(start, end);
+  assert.ok(handler.indexOf('event.preventDefault();', handler.indexOf("event.key !== 'Enter'")) < handler.indexOf('if (!metadata) return;'));
+  assert.ok(handler.indexOf('event.stopPropagation();', handler.indexOf("event.key !== 'Enter'")) < handler.indexOf('if (!metadata) return;'));
+});
