@@ -450,6 +450,33 @@ export default function StorefrontVisualEditor({
     });
   };
 
+  const resetSelectedElementStyleProperty = key => {
+    if (!selectedElement || !key) return;
+    if (previewMode !== 'desktop') {
+      const responsive = { ...(design.responsive || {}) };
+      const viewport = { ...(responsive[previewMode] || {}) };
+      const elementStyles = { ...(viewport.elementStyles || {}) };
+      const style = { ...(elementStyles[selectedElement.id] || {}) };
+      if (!Object.prototype.hasOwnProperty.call(style, key)) return;
+      delete style[key];
+      if (Object.keys(style).length) elementStyles[selectedElement.id] = style;
+      else delete elementStyles[selectedElement.id];
+      if (Object.keys(elementStyles).length) viewport.elementStyles = elementStyles;
+      else delete viewport.elementStyles;
+      if (Object.keys(viewport).length) responsive[previewMode] = viewport;
+      else delete responsive[previewMode];
+      commitDesign({ ...design, responsive });
+      return;
+    }
+    const elementStyles = { ...(design.elementStyles || {}) };
+    const style = { ...(elementStyles[selectedElement.id] || {}) };
+    if (!Object.prototype.hasOwnProperty.call(style, key)) return;
+    delete style[key];
+    if (Object.keys(style).length) elementStyles[selectedElement.id] = style;
+    else delete elementStyles[selectedElement.id];
+    commitDesign({ ...design, elementStyles });
+  };
+
   const clearSelectedElementColors = () => {
     if (!selectedElement) return;
     const keys = ['textColor', 'backgroundColor', 'borderColor'];
@@ -970,6 +997,13 @@ export default function StorefrontVisualEditor({
                   ) : <p className="text-[10px] leading-4 text-slate-400">შეინახეთ ღილაკის, სათაურის, ბარათის ან სხვა ელემენტის სტილი და გამოიყენეთ სხვა მონიშნულ კომპონენტზეც.</p>}
                   <p className="text-[9px] leading-4 text-slate-500">სტილები ინახება საერთო ვიზუალურ მონახაზში და ხელმისაწვდომია ყველა მოწყობილობაზე. მაქსიმუმ 20 ჩანაწერი.</p>
                 </div>
+                <label className="block text-[10px] font-bold text-slate-300">
+                  ერთი პარამეტრის დაბრუნება {previewMode === 'desktop' ? 'საწყის მნიშვნელობაზე' : 'ძირითადი დიზაინიდან'}
+                  <select aria-label="ელემენტის ცალკეული პარამეტრის განულება" defaultValue="" key={`${selectedElement.id}-${previewMode}`} onChange={event => { resetSelectedElementStyleProperty(event.target.value); event.target.value = ''; }} className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-2 text-[11px] text-white">
+                    <option value="">აირჩიეთ პარამეტრი…</option>
+                    {Object.keys((previewMode === 'desktop' ? design.elementStyles : activeResponsive.elementStyles)?.[selectedElement.id] || {}).map(key => <option key={key} value={key}>{key}</option>)}
+                  </select>
+                </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button type="button" onClick={clearSelectedElementColors} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
                   <button type="button" onClick={resetSelectedElementStyle} className="w-full rounded-lg border border-rose-500/40 px-3 py-2 text-[10px] font-bold text-rose-200">ამ ელემენტის სტილის სრულად განულება</button>
