@@ -36,12 +36,13 @@ export const validateReplenishmentSettingsResponse = result => {
 };
 
 /** Require the server to acknowledge exactly the product, variant and values requested. */
-export const validateReplenishmentSaveResponse = (result, position, threshold, target) => {
+export const validateReplenishmentSaveResponse = (result, position, threshold, target, expectedUpdatedAt = null) => {
   const setting = result?.setting;
   if (result?.success !== true || !isValidSetting(setting) ||
       setting.product_id !== String(position.productId) ||
       setting.variant_id !== (position.variantId ?? null) ||
-      setting.low_stock_threshold !== threshold || setting.target_stock !== target) {
+      setting.low_stock_threshold !== threshold || setting.target_stock !== target ||
+      (expectedUpdatedAt != null && setting.updated_at === expectedUpdatedAt)) {
     throw new Error(INVALID_SAVE_MESSAGE);
   }
   return setting;
