@@ -114,3 +114,11 @@ test('invalid image upload warning uses the accessible error presentation', () =
   assert.match(status, /აირჩიეთ JPG/);
   assert.match(status, /'alert' : 'status'/);
 });
+
+test('stale hero image file reads cannot overwrite the latest selection', () => {
+  const handler = editor.split('const handleHeroFileChange = event =>')[1]?.split('const undo = () =>')[0] || '';
+  assert.match(editor, /const heroImageReadRequestRef = useRef\(0\)/);
+  assert.match(handler, /const requestId = \+\+heroImageReadRequestRef\.current/);
+  assert.match(handler, /if \(requestId !== heroImageReadRequestRef\.current\) return/);
+  assert.match(handler, /requestId === heroImageReadRequestRef\.current\) setSaveMessage/);
+});
