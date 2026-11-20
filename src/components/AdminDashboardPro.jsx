@@ -1328,7 +1328,10 @@ export default function AdminDashboardPro({
       }
       const result = await response.json();
       if (requestId !== replenishmentRequestRef.current) return;
-      setReplenishmentSettings(Array.isArray(result?.items) ? result.items : []);
+      if (!Array.isArray(result?.items) || result?.has_more === true) {
+        throw new Error('მარაგის პარამეტრების სია არასრულია ან არასწორია. მონაცემები არ განახლებულა; დაუკავშირდით ადმინისტრატორს.');
+      }
+      setReplenishmentSettings(result.items);
       return true;
     } catch (error) {
       if (requestId !== replenishmentRequestRef.current) return;
