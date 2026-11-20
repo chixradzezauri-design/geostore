@@ -15,6 +15,7 @@ import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt }
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
+import { isConfirmedExpenseInsert, isConfirmedExpenseDelete } from '../utils/expenseMutationSafety.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
@@ -1315,6 +1316,10 @@ export default function AdminDashboardPro({
   const [expensesReady, setExpensesReady] = useState(false);
   const [expensesLoading, setExpensesLoading] = useState(false);
   const [expensesLastVerifiedAt, setExpensesLastVerifiedAt] = useState(null);
+  const [expenseMutationBusy, setExpenseMutationBusy] = useState('');
+  const [expenseMutationNotice, setExpenseMutationNotice] = useState(null);
+  const expenseMutationInFlightRef = useRef(false);
+  const expenseMutationVersionRef = useRef(0);
   // A slow 15-second poll must never replace a newer refresh or post-mutation ledger.
   const expenseFetchRequestRef = useRef(0);
   const expenseFetchInFlightRef = useRef(false);
@@ -1600,6 +1605,9 @@ export default function AdminDashboardPro({
   const fetchExpenses = async (requestMode = 'manual') => {
     const requestSessionVersion = adminSessionVersion.current;
     if (!isCurrentAdminSession(requestSessionVersion) || !hasExpensesPermission) return false;
+    // A mutation may have committed but not yet reconciled. Never publish a
+    // previous ledger as complete until that write's outcome is checked.
+    if (expenseMutationInFlightRef.current) return false;
     // A slow full-ledger fetch may exceed the polling period. Skip overlapping
     // timer ticks; explicit refresh and post-mutation refresh can supersede it.
     if (requestMode === 'poll' && expenseFetchInFlightRef.current) return false;
@@ -1662,6 +1670,10 @@ export default function AdminDashboardPro({
   useEffect(() => {
     // Do not poll private finance data without a live session and expenses permission.
     if (!adminLoggedIn || !hasExpensesPermission) {
+      expenseMutationVersionRef.current += 1;
+      expenseMutationInFlightRef.current = false;
+      setExpenseMutationBusy('');
+      setExpenseMutationNotice(null);
       expenseFetchRequestRef.current += 1;
       expenseFetchInFlightRef.current = false;
       setExpenses([]);
@@ -2277,6 +2289,10 @@ export default function AdminDashboardPro({
     if (adminLoggedIn) return;
 
     // Clear private admin snapshots before the logged-out UI is painted.
+    expenseMutationVersionRef.current += 1;
+    expenseMutationInFlightRef.current = false;
+    setExpenseMutationBusy('');
+    setExpenseMutationNotice(null);
     expenseFetchRequestRef.current += 1;
     expenseFetchInFlightRef.current = false;
     setExpenses([]);
@@ -2720,6 +2736,7 @@ export default function AdminDashboardPro({
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
+    if (expenseMutationInFlightRef.current) return;
     const amountText = String(expenseForm.amount ?? '').trim();
     const description = String(expenseForm.description ?? '').trim();
     const category = String(expenseForm.category ?? '').trim();
@@ -2762,65 +2779,99 @@ export default function AdminDashboardPro({
       description
     };
 
+    // Prevent duplicate POSTs and invalidate any read that started before
+    // this write. The report stays unverified until full reconciliation.
+    const mutationVersion = ++expenseMutationVersionRef.current;
+    expenseMutationInFlightRef.current = true;
+    setExpenseMutationBusy('create');
+    setExpenseMutationNotice(null);
+    expenseFetchRequestRef.current += 1;
+    expenseFetchInFlightRef.current = false;
+    setExpensesReady(false);
+    const isCurrentMutation = () =>
+      mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
+      const headers = new Headers(await getSupabaseHeaders());
+      if (!isCurrentMutation()) return;
+      headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
-        headers: await getSupabaseHeaders(),
+        headers,
         body: JSON.stringify(newExp)
       });
-
-      if (!isCurrentAdminSession(mutationSession)) return;
-      if (res.ok) {
-        // Reject any prior poll: local write is provisional until the complete
-        // authoritative ledger has been reloaded after the server commit.
-        expenseFetchRequestRef.current += 1;
-        expenseFetchInFlightRef.current = false;
-        setExpensesReady(false);
-        setExpensesError('');
-        setExpenses(prev => [newExp, ...prev]);
-        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
-        logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
-        void fetchExpenses();
-        alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
-      } else {
-        alert('შეცდომა ბაზაში შენახვისას');
+      if (!isCurrentMutation()) return;
+      if (!res.ok) throw new Error(`შენახვა ვერ დადასტურდა (HTTP ${res.status}).`);
+      const rows = await res.json().catch(() => null);
+      if (!isCurrentMutation()) return;
+      if (!isConfirmedExpenseInsert(rows, newExp)) {
+        throw new Error('სერვერმა შექმნილი ხარჯის ზუსტი ჩანაწერი არ დააბრუნა.');
       }
-    } catch {
-      if (!isCurrentAdminSession(mutationSession)) return;
-      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+      setExpenses(prev => [newExp, ...prev]);
+      setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+      setExpenseMutationNotice({ type: 'success', text: 'ხარჯის შენახვა დადასტურებულია სერვერის მიერ. სრული ისტორია ახლდება.' });
+      logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
+    } catch (error) {
+      if (!isCurrentMutation()) return;
+      console.error('GEOSTORE expense insert failed or not confirmed:', error);
+      setExpenseMutationNotice({
+        type: 'error',
+        text: `შენახვა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. ჩანაწერი შესაძლოა მაინც შეიქმნა. ხელახლა დამატებამდე გადაამოწმეთ განახლებული ისტორია, რათა დუბლიკატი არ გაჩნდეს.`
+      });
+    } finally {
+      if (isCurrentMutation()) {
+        expenseMutationInFlightRef.current = false;
+        setExpenseMutationBusy('');
+        void fetchExpenses();
+      }
     }
   };
 
   const handleDeleteExpense = async (id) => {
     const normalizedId = String(id ?? '').trim();
-    if (!normalizedId || !window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
+    if (!normalizedId || expenseMutationInFlightRef.current || !window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
     const mutationSession = adminSessionVersion.current;
     if (!hasExpensesPermission || !isCurrentAdminSession(mutationSession)) return;
+    const mutationVersion = ++expenseMutationVersionRef.current;
+    expenseMutationInFlightRef.current = true;
+    setExpenseMutationBusy(`delete:${normalizedId}`);
+    setExpenseMutationNotice(null);
+    expenseFetchRequestRef.current += 1;
+    expenseFetchInFlightRef.current = false;
+    setExpensesReady(false);
+    const isCurrentMutation = () =>
+      mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
       const headers = new Headers(await getSupabaseHeaders());
+      if (!isCurrentMutation()) return;
       headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(normalizedId)}&select=id`, {
         method: 'DELETE',
         headers
       });
-      if (!res.ok) throw new Error(`ხარჯის წაშლა ვერ მოხერხდა (HTTP ${res.status}).`);
-      const deletedRows = await res.json();
-      if (!isCurrentAdminSession(mutationSession)) return;
-      if (!Array.isArray(deletedRows) || deletedRows.length !== 1 || String(deletedRows[0]?.id) !== normalizedId) {
-        throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა. სია უცვლელი დარჩა; განაახლეთ ისტორია.');
+      if (!isCurrentMutation()) return;
+      if (!res.ok) throw new Error(`ხარჯის წაშლა ვერ დადასტურდა (HTTP ${res.status}).`);
+      const deletedRows = await res.json().catch(() => null);
+      if (!isCurrentMutation()) return;
+      if (!isConfirmedExpenseDelete(deletedRows, normalizedId)) {
+        throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა.');
       }
-      expenseFetchRequestRef.current += 1;
-      expenseFetchInFlightRef.current = false;
-      setExpensesReady(false);
       setExpenses(prev => prev.filter(expense => String(expense.id) !== normalizedId));
       setExpensesError('');
+      setExpenseMutationNotice({ type: 'success', text: 'ხარჯის წაშლა სერვერმა დაადასტურა. სრული ისტორია ახლდება.' });
       logActivity(`წაიშალა ხარჯი (ID: ${normalizedId})`);
-      void fetchExpenses();
-      alert('✅ ხარჯი წარმატებით წაიშალა!');
     } catch (error) {
-      if (!isCurrentAdminSession(mutationSession)) return;
+      if (!isCurrentMutation()) return;
       console.error('GEOSTORE expense delete failed:', error);
-      alert(error?.message || 'ხარჯის წაშლისას ქსელის შეცდომა მოხდა.');
+      setExpenseMutationNotice({
+        type: 'error',
+        text: `წაშლა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. წაშლის ხელახლა ცდამდე გადაამოწმეთ ხარჯების ისტორია.`
+      });
+    } finally {
+      if (isCurrentMutation()) {
+        expenseMutationInFlightRef.current = false;
+        setExpenseMutationBusy('');
+        void fetchExpenses();
+      }
     }
   };
 
