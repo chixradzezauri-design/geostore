@@ -1288,3 +1288,52 @@
     width: 100%;
   }
 }
+
+
+/* Stage 17 — expense verification status and retry accessibility.
+ * Only visible refresh / stale-data notices are styled. Finance amounts,
+ * editor-controlled colors and persistence remain unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses :is(
+  .admin-expense-sync-state,
+  .admin-expense-load-error,
+  .admin-expense-error-retry
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-sync-state {
+  line-height: 1.5;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-sync-state time,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning time {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-error-retry,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-error-retry:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-error-retry {
+    display: block;
+    width: 100%;
+    margin-inline-start: 0 !important;
+    margin-block-start: 8px;
+  }
+}
