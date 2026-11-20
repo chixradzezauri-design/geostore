@@ -124,6 +124,33 @@ const adminFinancialDetailsFixture =
   '<div class="admin-profitability-results flex justify-between gap-2"><b>მოგება: 9876.54 ₾</b><span>მარჟა: 8.1%</span></div>' +
   '<p>მიმდინარე ფასით შეფასებულია 3 ერთეული; მოგება დადასტურებული არ არის.</p></article></div></div>';
 
+const adminExpenseHistoryFixture =
+  '<section class="admin-expense-history-panel p-6">' +
+  '<div class="admin-expense-history-heading flex flex-wrap items-center justify-between gap-3">' +
+  '<div><h3 id="fixture-expense-history-title">ხარჯების ისტორია (120)</h3><p>ძებნა მხოლოდ სიას ცვლის</p></div>' +
+  '<button class="admin-expense-refresh" type="button">ისტორიის განახლება</button></div>' +
+  '<div class="admin-expense-history-filters grid grid-cols-1 sm:grid-cols-2 gap-2" role="search">' +
+  '<div><label for="fixture-expense-history-search">მოძებნე ხარჯი</label>' +
+  '<input id="fixture-expense-history-search" type="search" placeholder="აღწერა, კატეგორია, თარიღი ან თანხა"></div>' +
+  '<div><label for="fixture-expense-history-category">კატეგორიის ფილტრი</label>' +
+  '<select id="fixture-expense-history-category"><option>ყველა კატეგორია</option></select></div></div>' +
+  '<p role="status">ნაპოვნია 120 / 120 ჩანაწერი</p>' +
+  '<div class="admin-expense-history-list">' +
+  Array.from({ length: 10 }, (_, i) =>
+    '<article class="admin-expense-row"><div class="admin-expense-details">' +
+    '<div class="admin-expense-heading"><b class="admin-expense-description">გრძელიდასახელებისსარეკლამოხარჯი' + i + '</b>' +
+    '<span class="admin-expense-category">(რეკლამა &amp; მარკეტინგი)</span></div>' +
+    '<span class="admin-expense-date">2026-11-20</span></div>' +
+    '<div class="admin-expense-actions flex items-center gap-3">' +
+    '<span class="admin-expense-amount whitespace-nowrap">-123456789012.34 ₾</span>' +
+    '<button type="button" class="admin-expense-delete">წაშლა</button></div></article>'
+  ).join('') + '</div>' +
+  '<nav class="admin-expense-pagination flex flex-wrap items-center justify-between gap-3">' +
+  '<p>ნაჩვენებია 1–10 / 120</p>' +
+  '<div class="admin-expense-pagination-controls flex flex-wrap items-center gap-1.5">' +
+  '<button type="button">წინა</button><button type="button">1</button>' +
+  '<button type="button">2</button><button type="button">შემდეგი</button></div></nav></section>';
+
 const adminFinanceFormsFixture =
   '<section class="admin-profit-calculator">' +
   '<div class="admin-calculator-layout grid grid-cols-1 lg:grid-cols-2 gap-6">' +
@@ -149,7 +176,7 @@ const adminFinanceFormsFixture =
   '<div class="admin-expense-field"><label for="fixture-expense-description">ხარჯის აღწერა</label>' +
   '<input id="fixture-expense-description" type="text" value="სარეკლამო კამპანია"></div>' +
   '<button class="admin-expense-submit" type="submit">+ ხარჯის დამატება ბაზაში</button>' +
-  '</form></div></section>';
+  '</form></div>' + adminExpenseHistoryFixture + '</section>';
 
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
@@ -260,6 +287,11 @@ try {
         const calcInputs = [...calcFields.querySelectorAll('input')];
         const calcGrid = calcFields.querySelector('.admin-calculator-field-grid');
         const calcResults = document.querySelector('.admin-calculator-results');
+        const expenseHistoryPanel = document.querySelector('.admin-expense-history-panel');
+        const expenseHistoryFilters = expenseHistoryPanel.querySelector('.admin-expense-history-filters');
+        const expenseHistoryInputs = [...expenseHistoryFilters.querySelectorAll('input, select')];
+        const expenseHistoryButtons = [...expenseHistoryPanel.querySelectorAll('.admin-expense-pagination button, .admin-expense-refresh')];
+        const expenseHistoryCards = [...expenseHistoryPanel.querySelectorAll('.admin-expense-row')];
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -329,7 +361,14 @@ try {
           calculatorMinInputHeight: Math.min(...calcInputs.map(node => node.getBoundingClientRect().height)),
           calculatorMinInputFontSize: Math.min(...calcInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
           calculatorColumns: getComputedStyle(calcGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
-          calculatorResultsRight: calcResults.getBoundingClientRect().right
+          calculatorResultsRight: calcResults.getBoundingClientRect().right,
+          expenseHistoryPanelRight: expenseHistoryPanel.getBoundingClientRect().right,
+          expenseHistoryFilterMinHeight: Math.min(...expenseHistoryInputs.map(node => node.getBoundingClientRect().height)),
+          expenseHistoryFilterMinFont: Math.min(...expenseHistoryInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
+          expenseHistoryMinButtonHeight: Math.min(...expenseHistoryButtons.map(node => node.getBoundingClientRect().height)),
+          expenseHistoryFilterColumns: getComputedStyle(expenseHistoryFilters).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          expenseHistoryRenderedRows: expenseHistoryCards.length,
+          expenseHistoryCardRight: Math.max(...expenseHistoryCards.map(node => node.getBoundingClientRect().right))
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -359,6 +398,15 @@ try {
       assert.ok(layout.analyticsChartRight <= width + 2, width + 'px chart scroll viewport overflow: ' + JSON.stringify(layout));
       assert.equal(layout.financePanelCount, 4, width + 'px all four finance detail panels must remain visible');
       assert.ok(layout.expenseFormRight <= width + 2, width + 'px expense form overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseHistoryPanelRight <= width + 2, width + 'px expense history panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseHistoryCardRight <= width + 2, width + 'px expense history rows overflow: ' + JSON.stringify(layout));
+      assert.equal(layout.expenseHistoryRenderedRows, 10, width + 'px expense history fixture must show exactly one page');
+      assert.ok(layout.expenseHistoryFilterMinHeight >= 43, width + 'px expense search/filter must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseHistoryMinButtonHeight >= 43, width + 'px expense pagination and refresh must be touch-sized: ' + JSON.stringify(layout));
+      if (width <= 640) {
+        assert.ok(layout.expenseHistoryFilterMinFont >= 16, width + 'px expense history filters must avoid iOS zoom: ' + JSON.stringify(layout));
+        assert.equal(layout.expenseHistoryFilterColumns, 1, width + 'px expense history filters should stack');
+      }
       assert.ok(layout.calculatorRight <= width + 2, width + 'px calculator input overflow: ' + JSON.stringify(layout));
       assert.ok(layout.calculatorResultsRight <= width + 2, width + 'px calculator results overflow: ' + JSON.stringify(layout));
       assert.ok(layout.expenseFormMinInputHeight >= 43, width + 'px expense inputs must be touch sized: ' + JSON.stringify(layout));
