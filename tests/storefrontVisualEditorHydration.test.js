@@ -122,3 +122,10 @@ test('stale hero image file reads cannot overwrite the latest selection', () => 
   assert.match(handler, /if \(requestId !== heroImageReadRequestRef\.current\) return/);
   assert.match(handler, /requestId === heroImageReadRequestRef\.current\) setSaveMessage/);
 });
+
+test('hero image file input resets even when reading throws synchronously', () => {
+  const handler = editor.split('const handleHeroFileChange = event =>')[1]?.split('const undo = () =>')[0] || '';
+  assert.match(handler, /try \{\s*reader\.readAsDataURL\(file\)/);
+  assert.match(handler, /catch \(error\) \{/);
+  assert.match(handler, /finally \{\s*event\.target\.value = ''/);
+});
