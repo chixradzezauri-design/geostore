@@ -194,7 +194,36 @@ try {
           minOrderFilterHeight: Math.min(...orderFilterButtons.map(node => node.getBoundingClientRect().height)),
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
-          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize)
+          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
+          orderSearchElement: orderSearch.outerHTML.slice(0, 320),
+          orderSearchInlineStyle: orderSearch.style.cssText,
+          orderSearchFontCascade: [...document.styleSheets].flatMap(sheet => {
+            const visit = (rules, parentConditions = []) => {
+              const found = [];
+              for (const rule of rules) {
+                if (rule.cssRules) {
+                  const condition = rule.conditionText || rule.name || '';
+                  const enabled = rule.conditionText ? matchMedia(rule.conditionText).matches : true;
+                  found.push(...visit([...rule.cssRules], parentConditions.concat(condition + ':' + enabled)));
+                } else if (rule.selectorText) {
+                  try {
+                    if (orderSearch.matches(rule.selectorText) &&
+                        (rule.style.fontSize || rule.style.font)) {
+                      found.push({
+                        selector: rule.selectorText.slice(0, 170),
+                        fontSize: rule.style.fontSize,
+                        font: rule.style.font,
+                        important: rule.style.getPropertyPriority('font-size'),
+                        conditions: parentConditions
+                      });
+                    }
+                  } catch {}
+                }
+              }
+              return found;
+            };
+            try { return visit([...sheet.cssRules]); } catch { return []; }
+          }).slice(-24)
 
         };
       });
