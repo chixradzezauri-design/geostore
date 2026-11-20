@@ -1396,9 +1396,20 @@ export default function AdminDashboardPro({
         throw new Error(message || `HTTP ${response.status}`);
       }
       const saveResult = await response.json();
-      validateReplenishmentSaveResponse(saveResult, position, savedThreshold, savedTarget, expectedUpdatedAt);
+      const savedSetting = validateReplenishmentSaveResponse(saveResult, position, savedThreshold, savedTarget, expectedUpdatedAt);
       const refreshed = await fetchInventoryReplenishmentSettings();
-      if (!refreshed) throw new Error('პარამეტრები შენახულია, მაგრამ განახლებული მონაცემების ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.');
+      if (!refreshed) {
+        // The save was confirmed. Preserve the authoritative returned version for this
+        // row instead of leaving an old revision behind after a failed list refresh.
+        setReplenishmentSettings(current => [
+          ...current.filter(item =>
+            String(item.product_id) !== String(position.productId) ||
+            (item.variant_id ?? null) !== (position.variantId ?? null)
+          ),
+          savedSetting
+        ]);
+        setReplenishmentError('პარამეტრი შენახულია, მაგრამ სრული სიის განახლება ვერ მოხერხდა. დანარჩენი მონაცემების გადასამოწმებლად დააჭირეთ „განახლება“.');
+      }
       setReplenishmentDrafts(current => {
         const next = { ...current };
         delete next[position.key];
