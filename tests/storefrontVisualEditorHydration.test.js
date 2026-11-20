@@ -107,3 +107,10 @@ test('error feedback uses assertive alerts while normal updates remain polite', 
   assert.match(editor, /role=\{\/ვერ .*?\.test\(saveMessage\) \? 'alert' : 'status'\}/);
   assert.match(editor, /aria-live=\{\/ვერ .*?\.test\(saveMessage\) \? 'assertive' : 'polite'\}/);
 });
+
+test('invalid image upload warning uses the accessible error presentation', () => {
+  assert.match(editor, /setSaveMessage\('აირჩიეთ JPG, PNG, WEBP ან GIF ფოტო/);
+  const status = editor.split('{saveMessage && <p')[1]?.split('</p>}')[0] || '';
+  assert.match(status, /აირჩიეთ JPG/);
+  assert.match(status, /'alert' : 'status'/);
+});
