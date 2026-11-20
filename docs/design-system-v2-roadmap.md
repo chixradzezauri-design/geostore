@@ -62,3 +62,12 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Preserve the existing notice that the CRM restriction marker is not an Auth account block. Never imply otherwise.
 - A targeted Node regression and a Chromium fixture for 320–1440px phone/tablet/desktop widths validate the presentation. Live authenticated CRM actions and RLS must be reviewed separately before merge.
 - Keep all stages in Draft PR #146; do not publish to main/Production until an independently confirmed release decision.
+
+
+## Phase 10 — analytics and financial presentation
+- Keep the owner's existing financial filters, revenue/profit/expense calculations, historical-data uncertainty warnings and CSV export handlers untouched.
+- Add an explicit accessible name and label for the report period. Group period selection and CSV export into mobile-friendly 44px controls without changing their behavior.
+- Make the eight read-only KPI figures and caveats adapt to available width; preserve existing visual editor-owned colors and content fields.
+- Preserve every revenue trend data point while keeping densely labelled sales bars inside a keyboard-focusable, horizontally scrollable chart region, with accessible labels including period/revenue/order count. The graph never expands the page width.
+- Extend the Node regression and Chromium fixture (320–1440px). Unauthenticated fixture tests are not evidence of real owner-only financial-data access or correct production figures.
+- PR #146 stays Draft. Exact-HEAD CI and later authenticated owner review are required before any independently authorized production release.
