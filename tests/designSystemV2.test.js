@@ -295,3 +295,30 @@ test('stage 10 analytics controls and chart remain accessible without changing r
   assert.match(layoutBrowser, /analyticsChartClientWidth/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 11 finance breakdown preserves amount calculations and uncertainty notes', () => {
+  assert.match(admin, /className="admin-finance-sources-panel/);
+  assert.match(admin, /className="admin-finance-expenses-panel/);
+  assert.match(admin, /className="admin-finance-products-panel/);
+  assert.match(admin, /className="admin-finance-vendors-panel/);
+  assert.equal((admin.match(/className="admin-finance-breakdown-row /g) || []).length, 2);
+  assert.match(admin, /className="admin-finance-recent-row /);
+  assert.equal((admin.match(/className="admin-profitability-row /g) || []).length, 2);
+  assert.equal((admin.match(/className="admin-profitability-metrics /g) || []).length, 2);
+  assert.equal((admin.match(/className="admin-profitability-results /g) || []).length, 2);
+  assert.match(admin, /incomeSources\.map\(source =>/);
+  assert.match(admin, /expenseBreakdown\.map\(expense =>/);
+  assert.match(admin, /financialOverview\.periodExpenses\.slice\(0,5\)\.map/);
+  assert.match(admin, /financialOverview\.productProfitability\.map\(item =>/);
+  assert.match(admin, /financialOverview\.vendorProfitability\.map\(item =>/);
+  assert.match(admin, /item\.grossProfit === null \? '—'/);
+  assert.match(admin, /item\.margin === null \? '—'/);
+  assert.match(admin, /item\.unknownCostItems > 0/);
+  assert.match(admin, /item\.estimatedCostItems > 0/);
+  assert.match(design, /Stage 11 — finance breakdown detail readability/);
+  assert.match(design, /\.admin-finance-breakdown-row,/);
+  assert.match(design, /\.admin-profitability-metrics/);
+  assert.match(layoutBrowser, /financeRowMaxRight/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
