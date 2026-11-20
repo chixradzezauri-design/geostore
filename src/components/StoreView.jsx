@@ -5,7 +5,7 @@ import { getPaginationItems } from '../utils/pagination.js';
 import { buildStorefrontElementStyle, normalizeStorefrontCustomSections } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
-import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown } from '../utils/flashSaleTime.js';
+import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown, getFlashSaleNextTickDelay } from '../utils/flashSaleTime.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -103,9 +103,30 @@ export default function StoreView({
   const [flashSaleClock, setFlashSaleClock] = useState(() => Date.now());
 
   useEffect(() => {
-    const timer = setInterval(() => setFlashSaleClock(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    let timer = null;
+    const schedule = (now) => {
+      // No active or scheduled promotion: do not rerender the whole store every second.
+      if (document.visibilityState === 'hidden') return;
+      const delay = getFlashSaleNextTickDelay(activeProducts, now);
+      if (delay !== null) timer = window.setTimeout(tick, delay);
+    };
+    const tick = () => {
+      const now = Date.now();
+      setFlashSaleClock(now);
+      schedule(now);
+    };
+    const refreshWhenVisible = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = null;
+      if (document.visibilityState === 'visible') tick();
+    };
+    tick();
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [activeProducts]);
 
   const [allReviews, setAllReviews] = useState(() => {
     try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }

@@ -15,9 +15,10 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 ## Planned phases (not implemented yet)
 1. Product detail presentation: **Stage 2 in progress** — responsive gallery, readable mobile options, visible purchase CTA, accessible labelled modal with Escape/focus recovery. Inventory validation and cart handlers unchanged.
 2. Cart and checkout: **Stage 3 in progress** — enlarge quantity controls, compact cart summary/coupon layout, constrain checkout modal on phone, improve checkout error semantics and keep ≥16px mobile inputs. Order/price/payment RPC logic unchanged.
-3. Extract duplicated legacy CSS into reviewed modules, one component at a time; preserve the author-defined `--gs-*`/admin visual editor variables and run visual/browser QA per extraction.
-4. Runtime performance, image decoding, Web Vitals and SEO, based on measured baselines.
-5. Admin operations enhancements, export/bulk actions and permissions only after server-side safety checks.
+3. Legacy CSS extraction: **Stage 4 first pass** — move the compact responsive compatibility tail from `index.css` into `responsiveCompatibility.css` at the exact original import order (no cascade reordering), with mobile/desktop browser QA. Continue isolated sections only after tests.
+4. Runtime performance: **Stage 4 first pass** — stop the storefront-wide Flash Sale 1-second rerender when no promotion is active, correctly wake future scheduled sales, pause hidden tabs and resume on visibility.
+5. Image decoding, Web Vitals and SEO based on measured baselines (Lighthouse/field data not yet verified).
+6. Admin operations enhancements, export/bulk actions and permissions only after server-side safety checks.
 
 ## Acceptance and release rules
 - Existing frontend/admin behavior, saved presets, Supabase rows and RLS must remain intact.

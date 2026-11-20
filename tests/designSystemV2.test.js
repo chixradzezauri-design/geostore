@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+const legacyIndex = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+const compatibility = readFileSync(new URL('../src/responsiveCompatibility.css', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
 const design = readFileSync(new URL('../src/designSystemV2.css', import.meta.url), 'utf8');
 const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
@@ -115,4 +117,27 @@ test('cart quantity touch targets and checkout shell have responsive browser che
   assert.match(layoutBrowser, /cartQtyMinHeight/);
   assert.match(layoutBrowser, /checkoutDialogRight/);
   assert.match(layoutBrowser, /checkoutInputFontSize/);
+});
+
+
+test('stage 4 extracts legacy responsive compatibility rules in original cascade order', () => {
+  const oldMarker = 'GEOSTORE compact responsive pass 2026-11-20';
+  assert.ok(!legacyIndex.includes(oldMarker), 'Extracted rules should not be duplicated in index.css');
+  assert.ok(compatibility.includes(oldMarker), 'Extracted responsive rules remain present');
+  assert.ok(compatibility.includes('admin-command-kpis'));
+  assert.ok(compatibility.includes('geostore-footer-links'));
+  assert.ok(compatibility.includes('gs-catalog-product-grid'));
+  assert.ok(main.indexOf("import './responsiveCompatibility.css'") > main.indexOf("import './index.css'"));
+  assert.ok(main.indexOf("import './responsiveCompatibility.css'") < main.indexOf("import './adminDashboard.css'"));
+  assert.ok(main.indexOf("import './responsiveCompatibility.css'") < main.indexOf("import './designSystemV2.css'"));
+});
+
+test('stage 4 pauses idle flash-sale renders and resumes upon visibility or product update', () => {
+  assert.match(store, /getFlashSaleNextTickDelay\(activeProducts, now\)/);
+  assert.match(store, /window\.setTimeout\(tick, delay\)/);
+  assert.match(store, /document\.visibilityState === 'hidden'/);
+  assert.match(store, /document\.addEventListener\('visibilitychange', refreshWhenVisible\)/);
+  assert.match(store, /document\.removeEventListener\('visibilitychange', refreshWhenVisible\)/);
+  assert.match(store, /\}, \[activeProducts\]\);/);
+  assert.doesNotMatch(store, /setInterval\(\(\) => setFlashSaleClock/);
 });

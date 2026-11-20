@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
+// Exact legacy tail extracted in its original stylesheet position.
+import './responsiveCompatibility.css'
 import './adminDashboard.css'
 import './adminDashboardSections.css'
 import './adminDashboardModals.css'
