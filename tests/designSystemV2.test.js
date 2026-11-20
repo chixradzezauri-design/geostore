@@ -211,3 +211,12 @@ test('stage 7 order management retains bounded pagination and existing order ope
   assert.match(design, /\.admin-orders-panel \.admin-orders-search input\s*\{\s*font-size: 16px !important/);
   assert.match(design, /\.admin-orders-panel \.admin-order-status-actions > button,/);
 });
+
+
+test('stage 7 owner visual editor font precedence maintains accessible operational fields', () => {
+  assert.match(design, /Stage 7 — visual-editor input precedence/);
+  assert.match(design, /\[data-admin-visual-design="enabled"\] \.admin-orders-panel \.admin-orders-search input/);
+  assert.match(design, /\[data-admin-visual-design="enabled"\] \.admin-products-panel \.admin-product-controls input/);
+  assert.match(design, /max\(16px, var\(--admin-vd-inputFontSize-active, 16px\)\) !important/);
+  assert.match(design, /@media \(max-width: 640px\)/);
+});
