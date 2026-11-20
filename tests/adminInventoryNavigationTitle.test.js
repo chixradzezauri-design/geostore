@@ -147,7 +147,7 @@ test('replenishment saves cannot start during a server refresh', () => {
 
 test('replenishment settings explain manual cross-device refresh and last-write-wins behavior', () => {
   assert.match(dashboard, /სხვა მოწყობილობაზე შეცვლილი პარამეტრების სანახავად გამოიყენეთ „განახლება“/);
-  assert.match(dashboard, /ერთდროული რედაქტირებისას სერვერზე ბოლოს შენახული მნიშვნელობა მოქმედებს/);
+  assert.match(dashboard, /მოძველებული ვერსიით შენახვა დაიბლოკება/);
 });
 
 test('replenishment settings reject incomplete or malformed server responses', () => {
