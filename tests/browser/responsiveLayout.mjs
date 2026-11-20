@@ -91,7 +91,7 @@ try {
       assert.ok(layout.purchaseRight <= width + 2, width + 'px purchase CTA overflow: ' + JSON.stringify(layout));
       assert.ok(layout.productDialogMaxHeight <= 820 + 2, width + 'px product dialog height: ' + JSON.stringify(layout));
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
-      assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets');
+      assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets: ' + JSON.stringify(layout.optionMetrics));
       assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');
       assert.ok(layout.kpiFontSize >= 17 && layout.kpiFontSize <= 25,
         width + 'px compact KPI value should be 17–25px: ' + JSON.stringify(layout));
