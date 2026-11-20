@@ -1292,7 +1292,7 @@
 
 /* Stage 17 — expense verification status and retry accessibility.
  * Only visible refresh / stale-data notices are styled. Finance amounts,
- * editor-controlled colors and persistence remain unchanged. */
+ * editor-controlled colors and saved settings remain unchanged. */
 .admin-dashboard-pro.admin-dashboard-shell .admin-expenses :is(
   .admin-expense-sync-state,
   .admin-expense-load-error,
