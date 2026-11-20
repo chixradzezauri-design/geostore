@@ -1,5 +1,9 @@
 -- Additive optimistic-concurrency RPC; the existing four-argument API remains unchanged.
 -- Deploy this migration before deploying the client that calls the five-argument RPC.
+-- IMPORTANT: The legacy four-argument public RPC still permits last-write-wins saves.
+-- Once all clients use the versioned RPC, revoke EXECUTE on the legacy four-argument
+-- public RPC in a separate coordinated rollout. Do not revoke it while old Production
+-- clients still depend on it; until then this is a client-side conflict safeguard only.
 BEGIN;
 
 CREATE OR REPLACE FUNCTION private.save_inventory_replenishment_setting(
