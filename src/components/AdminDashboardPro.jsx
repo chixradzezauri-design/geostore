@@ -4960,7 +4960,10 @@ export default function AdminDashboardPro({
                 <h3 id="admin-replenishment-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის შევსების გეგმა</h3>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის დაბალი მარაგის ზღვარი, სამიზნე რაოდენობა და შესავსები ერთეულების რეკომენდაცია. სისტემა მარაგს ავტომატურად არ ცვლის.</p>
               </div>
-              <input type="search" value={replenishmentQuery} onChange={event => { setReplenishmentQuery(event.target.value); setReplenishmentPage(1); }} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="w-full xl:max-w-sm min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
+              <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row xl:max-w-lg">
+                <input type="search" value={replenishmentQuery} onChange={event => { setReplenishmentQuery(event.target.value); setReplenishmentPage(1); }} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="min-w-0 flex-1 min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
+                <button type="button" onClick={() => void fetchInventoryReplenishmentSettings()} disabled={replenishmentLoading || Boolean(replenishmentSavingKey)} className="min-h-11 rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-200 transition hover:border-emerald-400 disabled:opacity-50">{replenishmentLoading ? 'იტვირთება…' : 'განახლება'}</button>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">დაბალი მარაგის პოზიციები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{replenishmentPositions.filter(position => position.isLowStock).length}</strong></div>
