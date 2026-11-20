@@ -8,6 +8,15 @@ export class ExpenseAccessDeniedError extends Error {
   }
 }
 
+// A mounted admin view is bound to a specific App user; a fresh Supabase
+// session for a different principal must not authorize requests for that view.
+export function requireExpensePrincipal(expectedUserId) {
+  if (typeof expectedUserId !== 'string' || !expectedUserId.trim()) {
+    throw new ExpenseAccessDeniedError('ფინანსური სესიის მომხმარებელი ვერ დადასტურდა.');
+  }
+  return expectedUserId;
+}
+
 // Keep expense REST requests attached to one real authenticated user, even
 // during token refresh and when the app switches between different accounts.
 export async function getAuthenticatedExpenseHeaders({ loadSession, apiKey, expectedUserId } = {}) {

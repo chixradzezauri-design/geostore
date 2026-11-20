@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const admin = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
 test('expense read and mutations discard cached ledger on explicit 401/403', () => {
   assert.match(admin, /const discardUnauthorizedExpenseData = \(\) => \{[\s\S]*?setExpenses\(\[\]\);[\s\S]*?setExpensesReady\(false\);[\s\S]*?setExpensesLastVerifiedAt\(null\);/);
@@ -44,4 +45,18 @@ test('expense writes recheck server permission before any POST/DELETE', () => {
     assert.ok(operation.indexOf('await requireExpensePermission(') < operation.indexOf('const res = await fetch('));
     assert.match(operation, /if \(error\?\.expenseAccessDenied\) discardUnauthorizedExpenseData\(\);/);
   }
+});
+
+test('expense reads and writes pin Supabase session to current App admin user', () => {
+  const mountStart = app.indexOf('<AdminDashboardPro');
+  assert.ok(mountStart > 0);
+  const dashboardMount = app.slice(mountStart, mountStart + 500);
+  assert.match(dashboardMount, /adminUserId=\{currentUser\?\.id \|\| null\}/);
+  assert.match(admin, /adminUserId = null,/);
+  assert.match(admin, /expectedUserId: requireExpensePrincipal\(expectedUserId\)/);
+  const read = admin.slice(admin.indexOf("  const fetchExpenses = async (requestMode = 'manual') => {"), admin.indexOf('  useEffect(() => {\n    // Do not poll private finance data'));
+  assert.match(read, /const initialExpenseSession = await getExpenseSessionHeaders\(adminUserId\)/);
+  assert.match(read, /getExpenseSessionHeaders\(initialExpenseSession\.userId\)/);
+  const writes = admin.slice(admin.indexOf('  const handleAddExpense = async (e) => {'), admin.indexOf('  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess))'));
+  assert.equal((writes.match(/getExpenseSessionHeaders\(adminUserId\)/g) || []).length, 2);
 });

@@ -16,7 +16,7 @@ import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, col
 import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
-import { getAuthenticatedExpenseHeaders, requireExpensePermission } from '../utils/expenseRequestSecurity.js';
+import { getAuthenticatedExpenseHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
@@ -91,7 +91,7 @@ const getExpenseSessionHeaders = (expectedUserId) =>
   getAuthenticatedExpenseHeaders({
     loadSession: () => supabase.auth.getSession(),
     apiKey: SUPABASE_ANON_KEY,
-    expectedUserId
+    expectedUserId: requireExpensePrincipal(expectedUserId)
   });
 
 const PRODUCT_IMAGE_BUCKET = 'storefront-media';
@@ -905,6 +905,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
 export default function AdminDashboardPro({
   adminLoggedIn,
+  adminUserId = null,
   adminAccess = EMPTY_ADMIN_ACCESS,
   setAdminLoggedIn,
   adminLoginForm,
@@ -1644,7 +1645,7 @@ export default function AdminDashboardPro({
     try {
       // RLS may return HTTP 200 with [] when a staff permission is revoked.
       // Verify authorization on the server before trusting any zero-row ledger.
-      const initialExpenseSession = await getExpenseSessionHeaders();
+      const initialExpenseSession = await getExpenseSessionHeaders(adminUserId);
       if (!isLatestExpenseRequest()) return false;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: initialExpenseSession.headers, fetchImpl: fetch });
       if (!isLatestExpenseRequest()) return false;
@@ -2849,7 +2850,7 @@ export default function AdminDashboardPro({
     const isCurrentMutation = () =>
       mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
-      const { headers: verifiedHeaders } = await getExpenseSessionHeaders();
+      const { headers: verifiedHeaders } = await getExpenseSessionHeaders(adminUserId);
       if (!isCurrentMutation()) return;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
       if (!isCurrentMutation()) return;
@@ -2914,7 +2915,7 @@ export default function AdminDashboardPro({
     const isCurrentMutation = () =>
       mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
-      const { headers: verifiedHeaders } = await getExpenseSessionHeaders();
+      const { headers: verifiedHeaders } = await getExpenseSessionHeaders(adminUserId);
       if (!isCurrentMutation()) return;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
       if (!isCurrentMutation()) return;
