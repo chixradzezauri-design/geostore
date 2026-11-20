@@ -37,8 +37,8 @@ const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-modal-body"><div class="grid">' +
   '<div class="gs-product-gallery"><div class="gs-product-detail-image-stage">სურათი</div>' +
   '<div class="gs-product-gallery-thumbnails"><button class="gs-product-gallery-thumb">1</button></div></div>' +
-  '<div class="gs-product-detail-info"><div class="gs-size-options-grid">' +
-  '<button class="gs-size-option">M</button><button class="gs-size-option">L</button></div>' +
+  '<div class="gs-product-detail-info"><div class="gs-size-selector"><div class="gs-size-options-grid">' +
+  '<button class="gs-size-option">M</button><button class="gs-size-option">L</button></div></div>' +
   '<div class="gs-color-selector"><div class="flex"><button class="gs-color-option">ბეჟი</button></div></div>' +
   '</div></div></div><div class="gs-product-modal-purchase-bar">' +
   '<button class="gs-modal-add-to-cart"><span>🛍</span>' +
@@ -81,6 +81,7 @@ try {
           productDialogMaxHeight: productDialog.getBoundingClientRect().height,
           purchaseRight: purchase.getBoundingClientRect().right,
           minOptionHeight: Math.min(...productOptions.map(element => element.getBoundingClientRect().height)),
+          optionMetrics: productOptions.map(element => ({ type: element.className, height: element.getBoundingClientRect().height, display: getComputedStyle(element).display, minHeight: getComputedStyle(element).minHeight, minBlockSize: getComputedStyle(element).minBlockSize })),
           purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0
         };
       });
