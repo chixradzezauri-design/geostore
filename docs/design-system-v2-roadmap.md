@@ -29,7 +29,7 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 
 ## Phase 6 — admin product operations, first pass
 - Ensure price, cost, stock and product-specific icon actions have meaningful accessible names; make edit/delete actions readable with text.
-- Organize the existing product-row quick actions in a two-column layout on phones, with stock and publish controls spanning the full width.
+- Organize existing product-row quick actions into two columns at 381–639px and one column on ultra-narrow 320–380px phones, preserving the older responsive safety layout; stock/publish span full width in the two-column mode.
 - Keep numeric inputs legible on iOS, preserve 44px touch targets and protect long names and SKUs from forcing horizontal overflow.
 - Add a targeted Node regression test. No database, RLS, payment, cart, save or publication workflow changes.
 - Verify CI and authenticated admin editor workflow before any merge; avoid inferring authenticated coverage from public browser smoke.
