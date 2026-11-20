@@ -198,6 +198,23 @@ try {
 
         };
       });
+      if (width === 320 && layout.orderSearchFontSize < 16) {
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send('DOM.enable');
+        await cdp.send('CSS.enable');
+        const { root } = await cdp.send('DOM.getDocument');
+        const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '.admin-orders-search input' });
+        const matching = await cdp.send('CSS.getMatchedStylesForNode', { nodeId });
+        const declarations = (matching.matchedCSSRules || [])
+          .flatMap(({ rule }) => {
+            const selector = rule.selectorList?.text || '';
+            return (rule.style?.cssProperties || [])
+              .filter(property => property.name === 'font-size' || property.name === 'font')
+              .map(property => ({ selector: selector.slice(0, 140), property: property.name, value: property.value, important: property.important, origin: rule.origin }));
+          });
+        process.stdout.write('DIAG ORDER SEARCH 320px ' + JSON.stringify({ computed: layout.orderSearchFontSize, declarations: declarations.slice(-30) }) + '\\n');
+        await cdp.detach();
+      }
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
       assert.ok(layout.welcomeRight <= width + 2, width + 'px header overflow ' + JSON.stringify(layout));
       assert.ok(layout.productDialogRight <= width + 2, width + 'px product dialog overflow: ' + JSON.stringify(layout));
