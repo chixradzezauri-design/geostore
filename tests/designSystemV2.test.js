@@ -192,3 +192,22 @@ test('stage 6 admin product quick controls stay accessible and usable on narrow 
   assert.match(design, /\.admin-product-search input\s*\{\s*font-size: 16px !important/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 7 order management retains bounded pagination and existing order operations', () => {
+  assert.match(admin, /const orderPaginationItems = getPaginationItems\(safeOrderPage, totalOrderPages\)/);
+  assert.match(admin, /\{orderPaginationItems\.map\(\(page, index\) => page === '…'/);
+  assert.doesNotMatch(admin, /Array\.from\(\{ length: totalOrderPages \}/);
+  assert.match(admin, /<nav aria-label="შეკვეთების გვერდები"/);
+  assert.match(admin, /aria-label="შეკვეთების ძებნა"/);
+  assert.match(admin, /aria-label="შეკვეთების სტატუსის ფილტრები"/);
+  assert.match(admin, /aria-pressed=\{orderStatusFilter === st\}/);
+  assert.match(admin, /aria-label=\{`შეკვეთა #\$\{o\.id\} — სრული დეტალები`\}/);
+  assert.match(admin, /aria-label=\{`შეკვეთა #\$\{o\.id\} — ინვოისის ბეჭდვა`\}/);
+  assert.match(admin, /onClick=\{\(\) => handleUpdateOrderStatus\(o\.id, 'გაუქმებული'\)\}/);
+  assert.match(admin, /onClick=\{\(\) => handlePrintInvoice\(o\)\}/);
+  assert.match(admin, /onClick=\{handleExportOrders\}/);
+  assert.match(design, /Stage 7 — admin orders readability/);
+  assert.match(design, /\.admin-orders-panel \.admin-orders-search input\s*\{\s*font-size: 16px !important/);
+  assert.match(design, /\.admin-orders-panel \.admin-order-status-actions > button,/);
+});
