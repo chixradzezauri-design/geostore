@@ -231,3 +231,22 @@ test('stage 7 mobile editor input typography prevents focus zoom without locking
   assert.match(layoutBrowser, /orderSearchFontSize >= 16/);
   assert.match(layoutBrowser, /adminProductPriceFontSize >= 16/);
 });
+
+
+test('stage 8 support controls expose status, conversation and reply affordances', () => {
+  assert.match(admin, /role="group" aria-label=\{`ტიკეტი #\$\{t\.id\} — სტატუსი`\}/);
+  assert.match(admin, /aria-pressed=\{t\.status === 'ღია'\}/);
+  assert.match(admin, /aria-pressed=\{t\.status === 'მუშაობდება'\}|aria-pressed=\{t\.status === 'მუშავდება'\}/);
+  assert.match(admin, /aria-pressed=\{t\.status === 'მოგვარებული'\}/);
+  assert.match(admin, /aria-expanded=\{String\(selectedSupportTicketId\) === String\(t\.id\)\}/);
+  assert.match(admin, /aria-controls=\{`admin-support-thread-\$\{t\.id\}`\}/);
+  assert.match(admin, /role="region" aria-label=\{`ტიკეტი #\$\{t\.id\} — მიმოწერის ისტორია`\}/);
+  assert.match(admin, /aria-label=\{`ტიკეტი #\$\{t\.id\} — პასუხის ტექსტი`\}/);
+  assert.match(admin, /aria-label=\{`ტიკეტი #\$\{t\.id\} — პასუხის გაგზავნა`\}/);
+  assert.match(admin, /handleSendTicketReply\(t\.id\)/);
+  assert.match(admin, /fetchSupportTicketThread\(ticketId\)/);
+  assert.match(design, /Stage 8 — accessible support tickets/);
+  assert.match(design, /\.admin-support-panel \.admin-support-status-actions > button/);
+  assert.match(design, /min-block-size: 44px !important/);
+  assert.match(design, /\.admin-support-panel \.admin-support-reply-form > input/);
+});
