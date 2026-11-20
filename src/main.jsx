@@ -6,6 +6,8 @@ import './adminDashboard.css'
 import './adminDashboardSections.css'
 import './adminDashboardModals.css'
 import './adminDashboardPolish.css'
+// Incremental GEOSTORE Design System 2.0 refinements, ordered after legacy styles.
+import './designSystemV2.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

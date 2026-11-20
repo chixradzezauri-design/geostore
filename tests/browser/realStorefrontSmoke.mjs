@@ -52,8 +52,13 @@ try {
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu opens at ' + width + 'px');
       await page.locator('#geostore-main-menu').waitFor({ state: 'visible' });
+      await page.keyboard.press('Escape');
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'Escape closes menu at ' + width + 'px');
+      assert.ok(await toggle.evaluate(node => document.activeElement === node), 'Escape restores menu-toggle focus at ' + width + 'px');
       await toggle.click();
-      assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'Menu closes at ' + width + 'px');
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu reopens at ' + width + 'px');
+      await toggle.click();
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'Menu closes by clicking at ' + width + 'px');
       assert.equal(pageErrors.length, 0, 'Uncaught browser errors at ' + width + 'px: ' + pageErrors.join('; '));
       console.log('PASS real SPA at ' + width + 'px' +
         ' (catalog state present, no overflow, menu toggle works)');

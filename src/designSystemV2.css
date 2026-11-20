@@ -1,0 +1,110 @@
+/*
+ * GEOSTORE Design System 2.0 — Stage 1: density, text wrapping and focus.
+ *
+ * Applied after legacy style imports. Keep storefront visual-editor inline styles
+ * and administrator-selected color/type/size variables authoritative.
+ * Future phases will migrate legacy rules into components, not duplicate them.
+ */
+
+.geostore-fashion-store,
+.admin-dashboard-pro.admin-dashboard-shell {
+  --gs-v2-space-1: 4px;
+  --gs-v2-space-2: 8px;
+  --gs-v2-space-3: 12px;
+  --gs-v2-space-4: 16px;
+  --gs-v2-space-5: 24px;
+  --gs-v2-control-target: 44px;
+  --gs-v2-focus-offset: 3px;
+}
+
+/* Long translated labels must wrap instead of widening the page or clipping.
+ * Leave color, font, size and position controls to the existing visual editor. */
+.geostore-fashion-store .gs-site-announcement > span,
+.geostore-fashion-store .gs-menu-brand,
+.geostore-fashion-store .gs-menu-section,
+.geostore-fashion-store .gs-menu-footer,
+.geostore-fashion-store .gs-brand-wordmark {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .gs-main-menu .gs-menu-link > span:not(.gs-menu-count):not(.gs-menu-category-dot),
+.geostore-fashion-store .gs-main-menu .gs-menu-account > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .gs-site-header-inner,
+.geostore-fashion-store .gs-header-search-row,
+.geostore-fashion-store .gs-header-search,
+.geostore-fashion-store .gs-header-search input {
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .gs-main-menu {
+  overscroll-behavior-y: contain;
+  max-inline-size: calc(100vw - 16px);
+}
+
+/* A consistent visible focus ring is useful with tab, switch and keyboard input.
+ * Existing palette variables and inline brand customizations remain untouched. */
+.geostore-fashion-store :where(.gs-site-header, .geostore-storefront, .geostore-site-footer)
+  :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--gs-accent, #92785f);
+  outline-offset: var(--gs-v2-focus-offset);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell
+  :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--admin-accent, #6ee7b7);
+  outline-offset: var(--gs-v2-focus-offset);
+}
+
+/* Command-center controls are not part of the owner's editable hero/logo
+ * targets, so compact them without overriding any visual-editor settings. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-center {
+  min-inline-size: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi {
+  min-inline-size: 0;
+  padding: clamp(10px, 1.15vw, 14px) !important;
+  text-wrap: pretty;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+  font-size: clamp(18px, 1.9vw, 25px) !important;
+  line-height: 1.18 !important;
+  margin-top: var(--gs-v2-space-2) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > span:first-child,
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-panel :where(h4, p, button) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-panels > .admin-command-panel {
+  min-inline-size: 0;
+  padding: clamp(11px, 1.2vw, 16px) !important;
+}
+
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-main-menu {
+    max-inline-size: calc(100vw - 16px);
+    padding-bottom: max(var(--gs-v2-space-3), env(safe-area-inset-bottom));
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpis {
+    gap: var(--gs-v2-space-2) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+    font-size: clamp(17px, 5.5vw, 23px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi {
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

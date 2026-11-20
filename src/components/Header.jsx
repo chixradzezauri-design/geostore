@@ -40,6 +40,7 @@ export default function Header({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef(null);
+  const menuToggleRef = useRef(null);
   const t = translations[currentLang] || translations.ka;
 
   const closeMenu = () => setMenuOpen(false);
@@ -69,7 +70,11 @@ export default function Header({
       if (headerRef.current && !headerRef.current.contains(event.target)) closeMenu();
     };
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') closeMenu();
+      if (event.key === 'Escape') {
+        closeMenu();
+        // Return keyboard users to the control that opened the navigation.
+        menuToggleRef.current?.focus();
+      }
     };
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
@@ -127,6 +132,7 @@ export default function Header({
 
         <button
           type="button"
+          ref={menuToggleRef}
           data-visual-editor-target="header.menu.toggle" style={visualStyle('header.menu.toggle')} className="gs-menu-toggle"
           onClick={() => setMenuOpen((open) => !open)}
           aria-label={menuToggleLabel}
