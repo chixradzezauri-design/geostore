@@ -28,7 +28,8 @@ test('local visual edits, undo and redo are protected from late remote hydration
 test('only a successful save of the latest local design clears the dirty guard', () => {
   const save = editor.split('const saveDraft = async () =>')[1]?.split('const publish = async () =>')[0] || '';
   assert.match(save, /const snapshotDesign = design/);
-  assert.match(save, /saved === true && JSON\.stringify\(designRef\.current\) === JSON\.stringify\(snapshotDesign\)/);
+  assert.match(save, /const hasNewerLocalChanges = JSON\.stringify\(designRef\.current\) !== JSON\.stringify\(snapshotDesign\)/);
+  assert.match(save, /saved === true && !hasNewerLocalChanges/);
   assert.match(save, /localDesignDirtyRef\.current = false/);
   assert.ok(save.indexOf('saved === true &&') < save.indexOf('localDesignDirtyRef.current = false'));
 });
