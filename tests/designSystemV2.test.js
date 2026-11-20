@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const main = readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
 const design = readFileSync(new URL('../src/designSystemV2.css', import.meta.url), 'utf8');
+const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
 const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.url), 'utf8');
 const browser = readFileSync(new URL('./browser/realStorefrontSmoke.mjs', import.meta.url), 'utf8');
 const admin = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
@@ -52,4 +53,30 @@ test('focus and reduced-motion protections are scoped to storefront and admin', 
   assert.match(design, /:focus-visible\s*\{/);
   assert.match(design, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(design, /--gs-v2-focus-offset: 3px/);
+});
+
+
+test('product detail dialog is labelled, modal and keyboard closable without altering the purchase handler', () => {
+  assert.match(store, /role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title"/);
+  assert.match(store, /id="gs-product-dialog-title"/);
+  assert.match(store, /ref=\{productCloseButtonRef\}/);
+  assert.match(store, /productCloseButtonRef\.current\?\.focus\(\)/);
+  assert.match(store, /returnTarget\?\.isConnected/);
+  assert.match(store, /document\.addEventListener\('keydown', handleProductDialogKeyDown\)/);
+  assert.match(store, /event\.key !== 'Escape'/);
+  assert.match(store, /if \(isSmartSizeModalOpen\) setIsSmartSizeModalOpen\(false\)/);
+  assert.match(store, /else if \(isSizeGuideOpen\) setIsSizeGuideOpen\(false\)/);
+  assert.match(store, /currentAvailableStock <= 0 \|\| \(hasCustomProductVariants\(selectedProduct\)/);
+  assert.match(store, /addToCart\(\{/);
+});
+
+test('stage 2 product modal selectors preserve visual-editor customization and responsive stock UI', () => {
+  assert.match(store, /data-visual-editor-target="product\.detail\.purchase"/);
+  assert.match(store, /data-visual-editor-target="product\.detail\.variants"/);
+  assert.match(store, /aria-pressed=\{selectedSize === size\}/);
+  assert.match(store, /aria-pressed=\{selectedColor === colName\}/);
+  assert.match(design, /Stage 2 — product dialog usability/);
+  assert.match(design, /\.gs-product-modal-body\s*\{\s*flex: 1 1 auto/);
+  assert.match(design, /\.gs-modal-add-to-cart\s*\{\s*display: grid;\s*grid-template-columns: auto minmax\(0, 1fr\) auto/);
+  assert.match(design, /--gs-v2-control-target/);
 });

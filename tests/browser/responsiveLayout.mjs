@@ -30,13 +30,28 @@ const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex fl
   '<div class="admin-command-kpis"><button class="admin-command-kpi"><span>ახალი შეკვეთები</span><strong>120</strong></button></div>' +
   '</div></section>';
 
+const productDialog = '<div class="gs-product-modal fixed inset-0">' +
+  '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
+  '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
+  '<button class="gs-product-modal-close" aria-label="დახურვა">×</button></div>' +
+  '<div class="gs-product-modal-body"><div class="grid">' +
+  '<div class="gs-product-gallery"><div class="gs-product-detail-image-stage">სურათი</div>' +
+  '<div class="gs-product-gallery-thumbnails"><button class="gs-product-gallery-thumb">1</button></div></div>' +
+  '<div class="gs-product-detail-info"><div class="gs-size-options-grid">' +
+  '<button class="gs-size-option">M</button><button class="gs-size-option">L</button></div>' +
+  '<div class="gs-color-selector"><div class="flex"><button class="gs-color-option">ბეჟი</button></div></div>' +
+  '</div></div></div><div class="gs-product-modal-purchase-bar">' +
+  '<button class="gs-modal-add-to-cart"><span>🛍</span>' +
+  '<span class="gs-modal-add-label">კალათაში დამატება · M / ბეჟი</span>' +
+  '<span class="gs-modal-add-price">199.00 ₾</span></button></div></div></div>';
+
 const browser = await chromium.launch({ headless: true });
 try {
   for (const width of [320, 359, 375, 430, 640, 768, 1024, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront + admin + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', productDialog + '</main>') + admin + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -45,6 +60,10 @@ try {
         const buttons = [...links.querySelectorAll('button')];
         const sidebar = document.querySelector('.admin-dashboard-pro > div:first-child');
         const welcome = document.querySelector('[data-admin-visual-header="true"]');
+        const productDialog = document.querySelector('.gs-product-dialog');
+        const productBody = document.querySelector('.gs-product-modal-body');
+        const purchase = document.querySelector('.gs-modal-add-to-cart');
+        const productOptions = [...document.querySelectorAll('.gs-size-option, .gs-color-option')];
         return {
           scrollWidth: document.documentElement.scrollWidth,
           width: window.innerWidth,
@@ -56,11 +75,23 @@ try {
           sidebarOverflowY: getComputedStyle(sidebar).overflowY,
           sidebarHeight: sidebar.getBoundingClientRect().height,
           welcomeRight: welcome.getBoundingClientRect().right,
-          kpiFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-command-kpi > strong')).fontSize)
+          kpiFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-command-kpi > strong')).fontSize),
+          productDialogRight: productDialog.getBoundingClientRect().right,
+          productBodyScrollable: ['auto', 'scroll'].includes(getComputedStyle(productBody).overflowY),
+          productDialogMaxHeight: productDialog.getBoundingClientRect().height,
+          purchaseRight: purchase.getBoundingClientRect().right,
+          minOptionHeight: Math.min(...productOptions.map(element => element.getBoundingClientRect().height)),
+          purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
       assert.ok(layout.welcomeRight <= width + 2, width + 'px header overflow ' + JSON.stringify(layout));
+      assert.ok(layout.productDialogRight <= width + 2, width + 'px product dialog overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.purchaseRight <= width + 2, width + 'px purchase CTA overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.productDialogMaxHeight <= 820 + 2, width + 'px product dialog height: ' + JSON.stringify(layout));
+      assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
+      assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets');
+      assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');
       assert.ok(layout.kpiFontSize >= 17 && layout.kpiFontSize <= 25,
         width + 'px compact KPI value should be 17–25px: ' + JSON.stringify(layout));
       if (width <= 359) assert.equal(layout.gridTracks, 1, width + 'px catalog');

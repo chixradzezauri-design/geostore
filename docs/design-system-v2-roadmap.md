@@ -13,7 +13,7 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 - New styles intentionally **do not** override visual-editor properties addressed by `data-visual-editor-target`.
 
 ## Planned phases (not implemented yet)
-1. Product detail presentation: image/gallery arrangement, mobile option picker and purchase action accessibility, ensuring variant stock checks remain authoritative.
+1. Product detail presentation: **Stage 2 in progress** — responsive gallery, readable mobile options, visible purchase CTA, accessible labelled modal with Escape/focus recovery. Inventory validation and cart handlers unchanged.
 2. Checkout: improve field errors, step hierarchy, responsive layout and keyboard flow without changing order/payment business logic.
 3. Extract duplicated legacy CSS into reviewed modules, one component at a time; preserve the author-defined `--gs-*`/admin visual editor variables and run visual/browser QA per extraction.
 4. Runtime performance, image decoding, Web Vitals and SEO, based on measured baselines.
