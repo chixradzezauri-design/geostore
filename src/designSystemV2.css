@@ -419,62 +419,62 @@
 
 /* Stage 6 — product-operations usability. Existing quick-save handlers,
  * publish permissions and owner-controlled visual styles remain untouched. */
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-row,
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-identity,
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-identity > div,
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls,
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters {
+.admin-products-panel .admin-product-row,
+.admin-products-panel .admin-product-identity,
+.admin-products-panel .admin-product-identity > div,
+.admin-products-panel .admin-product-controls,
+.admin-products-panel .admin-product-list-filters {
   min-inline-size: 0;
 }
 
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-row {
+.admin-products-panel .admin-product-row {
   padding: clamp(12px, 1.5vw, 17px) !important;
-  gap: var(--gs-v2-space-3);
+  gap: var(--gs-v2-space-3, 12px);
 }
 
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-identity {
+.admin-products-panel .admin-product-identity {
   flex: 1 1 220px;
 }
 
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-identity :is(h4, p) {
+.admin-products-panel .admin-product-identity :is(h4, p) {
   overflow-wrap: anywhere;
 }
 
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls {
-  gap: var(--gs-v2-space-2) !important;
+.admin-products-panel .admin-product-controls {
+  gap: var(--gs-v2-space-2, 8px) !important;
 }
 
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls > button,
-.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-pagination button {
-  min-block-size: var(--gs-v2-control-target);
+.admin-products-panel .admin-product-controls > button,
+.admin-products-panel .admin-product-pagination button {
+  min-block-size: var(--gs-v2-control-target, 44px);
   touch-action: manipulation;
 }
 
 @media (max-width: 639px) {
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-row {
+  .admin-products-panel .admin-product-row {
     align-items: stretch;
   }
 
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls {
+  .admin-products-panel .admin-product-controls {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     inline-size: 100%;
     align-items: stretch;
   }
 
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls > div {
+  .admin-products-panel .admin-product-controls > div {
     min-inline-size: 0;
     justify-content: space-between;
     gap: 6px;
   }
 
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls > div:nth-child(3),
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls > button:first-of-type {
+  .admin-products-panel .admin-product-controls > div:nth-child(3),
+  .admin-products-panel .admin-product-controls > button:first-of-type {
     grid-column: 1 / -1;
   }
 
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls input,
-  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-search input {
+  .admin-products-panel .admin-product-controls input,
+  .admin-products-panel .admin-product-search input {
     font-size: 16px !important;
     min-block-size: 44px;
   }
