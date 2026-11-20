@@ -81,3 +81,12 @@ test('draft saves use an in-flight guard and always release it', () => {
   assert.match(save, /draftSaveInFlightRef\.current = true/);
   assert.match(save, /finally \{\s*draftSaveInFlightRef\.current = false/);
 });
+
+test('publish blocks overlapping draft saves and duplicate publish requests', () => {
+  const publish = editor.split('const publish = async () =>')[1]?.split('const resetDesign = () =>')[0] || '';
+  assert.match(editor, /const publishInFlightRef = useRef\(false\)/);
+  assert.match(publish, /draftSaveInFlightRef\.current \|\| publishInFlightRef\.current/);
+  assert.match(publish, /publishInFlightRef\.current = true/);
+  assert.match(publish, /finally \{\s*publishInFlightRef\.current = false/);
+  assert.ok(publish.indexOf('window.confirm(') < publish.indexOf('publishInFlightRef.current = true'));
+});
