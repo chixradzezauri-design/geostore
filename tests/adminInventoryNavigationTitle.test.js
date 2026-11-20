@@ -198,3 +198,13 @@ test('existing replenishment settings without a revision cannot be saved blindly
   assert.match(save, /შენახულ პარამეტრს ვერსიის ინფორმაცია აკლია/);
   assert.ok(save.indexOf('position.hasCustomSetting && !expectedUpdatedAt') < save.indexOf('setReplenishmentSavingKey(position.key)'));
 });
+
+test('replenishment refresh rejects rows missing a version or with invalid stock thresholds', () => {
+  const start = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
+  const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
+  const fetcher = dashboard.slice(start, end);
+  assert.match(fetcher, /result\.items\.some\(item =>/);
+  assert.match(fetcher, /!item\.updated_at/);
+  assert.match(fetcher, /Number\(item\.target_stock\) <= Number\(item\.low_stock_threshold\)/);
+  assert.ok(fetcher.indexOf('result.items.some(item =>') < fetcher.indexOf('setReplenishmentSettings(result.items)'));
+});
