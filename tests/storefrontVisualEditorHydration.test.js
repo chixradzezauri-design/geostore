@@ -77,7 +77,7 @@ test('unsuccessful save and publish responses never imply success', () => {
 test('draft saves use an in-flight guard and always release it', () => {
   const save = editor.split('const saveDraft = async () =>')[1]?.split('const publish = async () =>')[0] || '';
   assert.match(editor, /const draftSaveInFlightRef = useRef\(false\)/);
-  assert.match(save, /draftSaveInFlightRef\.current\) return/);
+  assert.match(save, /draftSaveInFlightRef\.current \|\| publishInFlightRef\.current\) return/);
   assert.match(save, /draftSaveInFlightRef\.current = true/);
   assert.match(save, /finally \{\s*draftSaveInFlightRef\.current = false/);
 });
