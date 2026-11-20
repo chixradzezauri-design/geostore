@@ -26,7 +26,9 @@ const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex fl
   '<div class="flex-1 w-full"><div data-admin-visual-header="true" class="flex flex-col lg:flex-row p-5 gap-3">' +
   '<div><h2>მოგესალმებით, მთავარო ადმინისტრატორო</h2></div>' +
   '<div class="grid grid-cols-2 gap-2"><button>მონახაზის შენახვა</button><button>ცვლილებების გამოქვეყნება</button></div>' +
-  '</div><div class="admin-command-hero"><h3>მთავარი მართვის ცენტრი</h3></div></div></section>';
+  '</div><div class="admin-command-hero"><h3>მთავარი მართვის ცენტრი</h3></div>' +
+  '<div class="admin-command-kpis"><button class="admin-command-kpi"><span>ახალი შეკვეთები</span><strong>120</strong></button></div>' +
+  '</div></section>';
 
 const browser = await chromium.launch({ headless: true });
 try {
@@ -53,11 +55,14 @@ try {
           sidebarPosition: getComputedStyle(sidebar).position,
           sidebarOverflowY: getComputedStyle(sidebar).overflowY,
           sidebarHeight: sidebar.getBoundingClientRect().height,
-          welcomeRight: welcome.getBoundingClientRect().right
+          welcomeRight: welcome.getBoundingClientRect().right,
+          kpiFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-command-kpi > strong')).fontSize)
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
       assert.ok(layout.welcomeRight <= width + 2, width + 'px header overflow ' + JSON.stringify(layout));
+      assert.ok(layout.kpiFontSize >= 17 && layout.kpiFontSize <= 25,
+        width + 'px compact KPI value should be 17–25px: ' + JSON.stringify(layout));
       if (width <= 359) assert.equal(layout.gridTracks, 1, width + 'px catalog');
       if (width >= 375 && width <= 640) assert.equal(layout.gridTracks, 2, width + 'px catalog');
       if (width <= 640) {

@@ -52,6 +52,10 @@ try {
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu opens at ' + width + 'px');
       await page.locator('#geostore-main-menu').waitFor({ state: 'visible' });
+      const firstMenuLink = page.locator('#geostore-main-menu .gs-menu-link').first();
+      await firstMenuLink.focus();
+      assert.ok(await firstMenuLink.evaluate(node => document.activeElement === node),
+        'Menu link receives focus before Escape at ' + width + 'px');
       await page.keyboard.press('Escape');
       assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'Escape closes menu at ' + width + 'px');
       assert.ok(await toggle.evaluate(node => document.activeElement === node), 'Escape restores menu-toggle focus at ' + width + 'px');
