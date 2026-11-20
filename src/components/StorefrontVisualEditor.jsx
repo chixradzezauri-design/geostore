@@ -770,7 +770,13 @@ export default function StorefrontVisualEditor({
     const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign };
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: snapshotDesign }));
     setSaveMessage('მონახაზის შენახვა მიმდინარეობს…');
-    const saved = await onSaveStorefrontDraft(snapshot);
+    let saved = false;
+    try {
+      saved = await onSaveStorefrontDraft(snapshot);
+    } catch (error) {
+      setSaveMessage('მონახაზის შენახვა ვერ მოხერხდა. ცვლილებები შეუნახავია; სცადეთ ხელახლა.');
+      return;
+    }
     const hasNewerLocalChanges = JSON.stringify(designRef.current) !== JSON.stringify(snapshotDesign);
     if (saved === true && !hasNewerLocalChanges) {
       localDesignDirtyRef.current = false;
