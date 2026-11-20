@@ -188,7 +188,7 @@ test('stage 6 admin product quick controls stay accessible and usable on narrow 
   assert.match(admin, /handleToggleProductPublished\(p\.id\)/);
   assert.match(design, /Stage 6 — product-operations usability/);
   assert.match(design, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(design, /\.admin-product-pagination button\s*\{\s*min-block-size: var\(--gs-v2-control-target\)/);
+  assert.match(design, /\.admin-product-pagination button\s*\{\s*min-block-size: var\(--gs-v2-control-target, 44px\)/);
   assert.match(design, /\.admin-product-search input\s*\{\s*font-size: 16px !important/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
