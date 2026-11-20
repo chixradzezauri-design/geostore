@@ -324,11 +324,11 @@ try {
           expenseFormMinInputHeight: Math.min(...expenseInputs.map(node => node.getBoundingClientRect().height)),
           expenseFormMinInputFontSize: Math.min(...expenseInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
           expenseSubmitHeight: expenseSubmit.getBoundingClientRect().height,
-          expenseFormColumns: getComputedStyle(expenseGrid).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+          expenseFormColumns: getComputedStyle(expenseGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
           calculatorRight: calcFields.getBoundingClientRect().right,
           calculatorMinInputHeight: Math.min(...calcInputs.map(node => node.getBoundingClientRect().height)),
           calculatorMinInputFontSize: Math.min(...calcInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
-          calculatorColumns: getComputedStyle(calcGrid).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+          calculatorColumns: getComputedStyle(calcGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
           calculatorResultsRight: calcResults.getBoundingClientRect().right
         };
       });
