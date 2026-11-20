@@ -598,6 +598,9 @@ export default function StorefrontVisualEditor({
     reader.onerror = () => {
       if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
     };
+    reader.onabort = () => {
+      if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა შეწყდა. სცადეთ ხელახლა.');
+    };
     try {
       reader.readAsDataURL(file);
     } catch (error) {
