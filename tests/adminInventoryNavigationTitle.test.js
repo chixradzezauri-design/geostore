@@ -135,3 +135,12 @@ test('replenishment settings can be refreshed from the server without a page rel
   assert.match(panel, /disabled=\{replenishmentLoading \|\| Boolean\(replenishmentSavingKey\)\}/);
   assert.match(panel, /replenishmentLoading \? 'იტვირთება…' : 'განახლება'/);
 });
+
+test('replenishment saves cannot start during a server refresh', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /!hasProductsPermission \|\| replenishmentSavingKey \|\| replenishmentLoading/);
+  assert.match(save, /p_low_stock_threshold: savedThreshold/);
+  assert.match(save, /p_target_stock: savedTarget/);
+});
