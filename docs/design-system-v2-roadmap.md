@@ -45,3 +45,12 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 
 ### Phase 7 visual-editor precedence safety note
 On phones (≤640px), the existing owner visual editor can set an operational input font smaller than Safari's 16px focus threshold via a highly specific `!important` rule. A targeted, equally specific responsive rule for order search and product quick-edit/search fields uses `max(16px, var(--admin-vd-inputFontSize-active, 16px))`, retaining any owner-selected size larger than 16px. Saved preferences, desktop typography, all other editor targets and server behavior are unchanged. Browser regression requires the real editor-enabled admin fixture to compute at least 16px.
+
+
+## Phase 8 — support experience and mobile accessibility
+- Status choices now expose their selected state; ticket identity is part of their accessible group label.
+- Conversation visibility uses `aria-expanded` and references its labelled history region, without changing when support history is fetched.
+- Per-ticket reply input/send actions are labelled for assistive technology; existing send eligibility, busy handling, and server functions are untouched.
+- Narrow screens get scannable ticket text, scrollable status choices and 44px action targets, without overriding the visual editor's colors.
+- Regression tests protect the new labels and existing reply/thread handlers.
+- Release gates: exact-HEAD full Node tests and build, responsive Chromium, CodeQL and dependency audit; authenticated support and server-side permissions still need review before merging.
