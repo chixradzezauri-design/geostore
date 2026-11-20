@@ -166,7 +166,8 @@ test('replenishment cards visibly distinguish unsaved local edits', () => {
 });
 
 test('replenishment saves send the revision captured when editing began', () => {
-  assert.match(dashboard, /p_expected_updated_at: Object\.prototype\.hasOwnProperty\.call\(draft, 'expectedUpdatedAt'\)/);
+  assert.match(dashboard, /const expectedUpdatedAt = Object\.prototype\.hasOwnProperty\.call\(draft, 'expectedUpdatedAt'\)/);
+  assert.match(dashboard, /p_expected_updated_at: expectedUpdatedAt/);
   assert.match(dashboard, /expectedUpdatedAt: Object\.prototype\.hasOwnProperty\.call\(current\[position\.key\] \|\| \{\}, 'expectedUpdatedAt'\)/);
   assert.match(dashboard, /ცვლილების გაუქმება/);
 });
@@ -187,4 +188,13 @@ test('replenishment save requires matching server acknowledgment before clearing
   assert.match(save, /!saveResult\?\.setting\?\.updated_at/);
   assert.match(save, /String\(saveResult\.setting\.product_id\) !== String\(position\.productId\)/);
   assert.ok(save.indexOf('const saveResult = await response.json()') < save.indexOf('setReplenishmentDrafts(current =>'));
+});
+
+test('existing replenishment settings without a revision cannot be saved blindly', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /position\.hasCustomSetting && !expectedUpdatedAt/);
+  assert.match(save, /შენახულ პარამეტრს ვერსიის ინფორმაცია აკლია/);
+  assert.ok(save.indexOf('position.hasCustomSetting && !expectedUpdatedAt') < save.indexOf('setReplenishmentSavingKey(position.key)'));
 });
