@@ -101,4 +101,6 @@ AS $function$
 $function$;
 REVOKE ALL ON FUNCTION public.admin_save_inventory_replenishment_setting(text,text,integer,integer,timestamptz) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_save_inventory_replenishment_setting(text,text,integer,integer,timestamptz) TO authenticated;
+-- New RPC overloads must be visible to PostgREST before the client uses them.
+NOTIFY pgrst, 'reload schema';
 COMMIT;
