@@ -1209,3 +1209,42 @@
     flex-wrap: wrap;
   }
 }
+
+
+/* Stage 14 — fully editable profit calculator inputs.
+ * The existing four previously hidden cost/quantity variables are now
+ * visible; no calculation or default parameter is modified. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields > div:first-child,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields > .admin-calculator-field-grid {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields > div:first-child :is(h4, p),
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields > p,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > p {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields .admin-calculator-field-grid > div {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields input {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields input {
+    font-size: 16px !important;
+  }
+}
