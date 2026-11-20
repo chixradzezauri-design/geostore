@@ -1368,3 +1368,63 @@
   border: 0 !important;
   box-shadow: none !important;
 }
+
+/* Mobile admin compactness: prevent oversized saved visual settings or inherited
+   flex sizing from creating empty space above navigation and action buttons. */
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-self: stretch !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > button:last-child {
+    flex: 0 0 auto;
+    margin-top: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-items: flex-start;
+    gap: 10px !important;
+  }
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    padding: 12px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:first-child {
+    padding-bottom: 9px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    padding: 12px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+    align-items: stretch;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 7px !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div:last-child {
+    grid-column: 1 / -1;
+    min-height: 32px !important;
+    padding: 7px 9px !important;
+  }
+}

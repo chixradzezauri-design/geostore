@@ -112,3 +112,11 @@ test('narrow mobile admin typography never falls below 11px for readable labels 
   assert.match(stage111, /min-height:\s*40px !important/);
   assert.match(stage111, /font-size:\s*16px !important/);
 });
+
+test('mobile admin navigation and welcome header avoid oversized blank regions', () => {
+  assert.match(polish, /Mobile admin compactness/);
+  assert.match(polish, /max-height: none !important/);
+  assert.match(polish, /justify-content: flex-start/);
+  assert.match(polish, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(polish, /grid-column: 1 \/ -1/);
+});

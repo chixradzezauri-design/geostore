@@ -650,6 +650,8 @@ export default function App() {
   const storefrontDraftUpdatedAtRef = useRef(null);
   const storefrontDraftBaselineRef = useRef(null);
   const storefrontDraftLocalDirtyRef = useRef(false);
+  const storefrontRemoteConflictRef = useRef('');
+  const [storefrontRemoteConflict, setStorefrontRemoteConflict] = useState(false);
   // Read the latest rendered editor values after asynchronous network responses.
   const storefrontCurrentSnapshotRef = useRef(null);
   storefrontCurrentSnapshotRef.current = JSON.stringify({ categories, banners: bannersList, siteSettings });
@@ -952,6 +954,8 @@ export default function App() {
         };
         storefrontDraftBaselineRef.current = JSON.stringify(sharedSnapshot);
         storefrontDraftLocalDirtyRef.current = false;
+        storefrontRemoteConflictRef.current = '';
+        setStorefrontRemoteConflict(false);
         setCategoriesList(sharedSnapshot.categories);
         setBannersList(sharedSnapshot.banners);
         setSiteSettings(sharedSnapshot.siteSettings);
@@ -976,7 +980,7 @@ export default function App() {
     const refreshSharedStorefrontDraft = async () => {
       if (!active || document.visibilityState !== 'visible' || inFlight ||
           storefrontSaveLock.current || storefrontPublishLock.current ||
-          storefrontDraftLocalDirtyRef.current || !storefrontDraftBaselineRef.current) return;
+          !storefrontDraftBaselineRef.current) return;
       inFlight = true;
       try {
         const response = await fetch(
@@ -989,8 +993,16 @@ export default function App() {
         const remoteUpdatedAt = typeof row?.draft_updated_at === 'string' ? row.draft_updated_at : null;
         if (!row?.draft_config || typeof row.draft_config !== 'object' || Array.isArray(row.draft_config) ||
             !remoteUpdatedAt || remoteUpdatedAt === storefrontDraftUpdatedAtRef.current) return;
-        // Recheck after the network request: never replace edits made while the request was in flight.
+        // Warn about a newer remote draft without overwriting unsaved local edits.
+        // De-duplicate warnings for the same remote revision.
         const latestSnapshot = storefrontCurrentSnapshotRef.current;
+        if (storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current) {
+          if (active && storefrontRemoteConflictRef.current !== remoteUpdatedAt) {
+            storefrontRemoteConflictRef.current = remoteUpdatedAt;
+            setStorefrontRemoteConflict(true);
+          }
+          return;
+        }
         if (!active || storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current ||
             storefrontSaveLock.current || storefrontPublishLock.current) return;
         const draft = row.draft_config;
@@ -1002,6 +1014,8 @@ export default function App() {
         storefrontDraftUpdatedAtRef.current = remoteUpdatedAt;
         storefrontDraftBaselineRef.current = JSON.stringify(nextSnapshot);
         storefrontDraftLocalDirtyRef.current = false;
+        storefrontRemoteConflictRef.current = '';
+        setStorefrontRemoteConflict(false);
         setCategoriesList(nextSnapshot.categories);
         setBannersList(nextSnapshot.banners);
         setSiteSettings(nextSnapshot.siteSettings);
@@ -1450,6 +1464,8 @@ export default function App() {
         throw new Error('მონახაზი სერვერმა შეინახა, მაგრამ მისი ახალი ვერსიის დრო ვერ დადასტურდა. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
       }
       storefrontDraftUpdatedAtRef.current = savedDraftUpdatedAt;
+      storefrontRemoteConflictRef.current = '';
+      setStorefrontRemoteConflict(false);
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: draftCategories, banners: draftBanners, siteSettings: draftSiteSettings });
       const editsArrivedDuringSave = storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart;
       storefrontDraftLocalDirtyRef.current = editsArrivedDuringSave;
@@ -1525,6 +1541,8 @@ export default function App() {
         throw new Error('აღდგენის პასუხი არასრულია. განაახლეთ გვერდი, რათა საერთო მონახაზის მიმდინარე ვერსია ჩაიტვირთოს.');
       }
       storefrontDraftUpdatedAtRef.current = result.draft_updated_at;
+      storefrontRemoteConflictRef.current = '';
+      setStorefrontRemoteConflict(false);
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: restoredCategories, banners: restoredBanners, siteSettings: restoredSettings });
       storefrontDraftLocalDirtyRef.current = false;
       setCategoriesList(restoredCategories);
@@ -1626,6 +1644,8 @@ export default function App() {
         throw new Error('საიტი გამოქვეყნდა, თუმცა ახალი საერთო ვერსიის დრო ვერ დადასტურდა. ატვირთული ფაილები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი.');
       }
       storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at;
+      storefrontRemoteConflictRef.current = '';
+      setStorefrontRemoteConflict(false);
       // Publishing also advances the shared draft version; keep the local baseline in sync.
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings });
       const editsArrivedDuringPublish = storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart;
@@ -3418,8 +3438,14 @@ export default function App() {
 
   return (
     <div className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
+      {activeTab === 'admin' && hasSettingsAccess && storefrontRemoteConflict && (
+        <div role="alert" className="fixed top-2 left-2 right-2 z-[60] mx-auto max-h-[35vh] max-w-2xl overflow-y-auto rounded-xl border border-amber-400 bg-amber-950 px-3 py-2 text-xs leading-relaxed text-amber-50 shadow-xl sm:top-3 sm:left-3 sm:right-3 sm:px-4 sm:py-3 sm:text-sm" aria-live="assertive">
+          <strong className="block font-bold">სხვა მოწყობილობაზე ახალი მონახაზია შენახული</strong>
+          <span>თქვენი შეუნახავი ცვლილებები შენარჩუნებულია. თავიდან ჩატვირთვამდე გადაამოწმეთ ვერსიები; შენახვისას კონფლიქტისგან დაცვა მოქმედებს.</span>
+        </div>
+      )}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
+        <div className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-6 right-6'} z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs`} >
           {toastMessage}
         </div>
       )}

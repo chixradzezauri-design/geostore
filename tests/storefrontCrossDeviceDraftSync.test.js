@@ -98,3 +98,37 @@ test('edits made during an in-flight publish stay unpublished in the editor', ()
   assert.match(publish, /storefrontDraftLocalDirtyRef\.current = editsArrivedDuringPublish/);
   assert.ok(publish.indexOf('if (editsArrivedDuringPublish)') < publish.indexOf('setCategoriesList(publishedCategories)'));
 });
+
+test('remote draft conflicts notify once per remote version without replacing unsaved local edits', () => {
+  const refresh = app.split('const refreshSharedStorefrontDraft = async () =>')[1]?.split('const handleVisibilityChange')[0] || '';
+  assert.match(refresh, /storefrontRemoteConflictRef\.current !== remoteUpdatedAt/);
+  assert.match(refresh, /storefrontRemoteConflictRef\.current = remoteUpdatedAt/);
+  assert.match(refresh, /setStorefrontRemoteConflict\(true\)/);
+  assert.match(app, /storefrontRemoteConflict && \(/);
+  assert.match(app, /role="alert"/);
+  assert.match(refresh, /setStorefrontRemoteConflict\(false\)/);
+  assert.ok(refresh.indexOf('storefrontRemoteConflictRef.current = remoteUpdatedAt') < refresh.indexOf('setCategoriesList(nextSnapshot.categories)'));
+  assert.match(refresh, /if \(storefrontDraftLocalDirtyRef\.current \|\| latestSnapshot !== storefrontDraftBaselineRef\.current\)/);
+});
+
+test('persistent draft conflict banner remains mobile-readable and does not overlap toast', () => {
+  assert.match(app, /max-h-\[35vh\] max-w-2xl overflow-y-auto/);
+  assert.match(app, /sm:px-4 sm:py-3 sm:text-sm/);
+  assert.match(app, /storefrontRemoteConflict && activeTab === 'admin' \? 'bottom-4 right-3 left-3/);
+});
+
+test('remote conflict banner clears after successful draft hydration, save, restore and publish', () => {
+  const load = app.split('const loadStorefrontDraft = async () =>')[1]?.split('}, [hasSettingsAccess]')[0] || '';
+  const refresh = app.split('const refreshSharedStorefrontDraft = async () =>')[1]?.split('const handleVisibilityChange')[0] || '';
+  const save = app.split('const handleSaveStorefrontDraft = async (')[1]?.split('const handleRestoreStorefrontVersion = async (')[0] || '';
+  const restore = app.split('const handleRestoreStorefrontVersion = async (')[1]?.split('const handlePublishStorefront = async () =>')[0] || '';
+  const publish = app.split('const handlePublishStorefront = async () =>')[1]?.split('  useEffect(() => {')[0] || '';
+  for (const section of [load, refresh, save, restore, publish]) {
+    assert.match(section, /storefrontRemoteConflictRef\.current = ''/);
+    assert.match(section, /setStorefrontRemoteConflict\(false\)/);
+  }
+  assert.ok(refresh.indexOf('setStorefrontRemoteConflict(false)') > refresh.indexOf('storefrontDraftBaselineRef.current = JSON.stringify(nextSnapshot)'));
+  assert.ok(save.indexOf('setStorefrontRemoteConflict(false)') > save.indexOf('const savedDraftUpdatedAt = savedDraftState?.draft_updated_at'));
+  assert.ok(restore.indexOf('setStorefrontRemoteConflict(false)') > restore.indexOf('storefrontDraftUpdatedAtRef.current = result.draft_updated_at'));
+  assert.ok(publish.indexOf('setStorefrontRemoteConflict(false)') > publish.indexOf('storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at'));
+});

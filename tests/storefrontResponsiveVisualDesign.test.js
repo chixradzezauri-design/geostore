@@ -328,7 +328,7 @@ test('direct-edit storefront text targets stay connected to rendered settings an
 
   assert.ok(editor.includes('siteSettings?.[selectedElement.settingKey]'));
   assert.ok(editor.includes('setSiteSettings(current => ({ ...(current || {}), [key]: value }))'));
-  assert.ok(editor.includes('const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign }'));
+  assert.ok(editor.includes('const snapshot = { ...(siteSettings || {}), ...pendingTextEditsRef.current, visualDesign: snapshotDesign }'));
   assert.ok(editor.includes('onSaveStorefrontDraft(snapshot)'));
 });
 
@@ -480,7 +480,7 @@ test('image and spacing reset controls use localized property labels', async () 
 
 test('draft save warns about edits made while the save request was pending', async () => {
   const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
-  assert.ok(editor.includes('const hasNewerLocalChanges = JSON.stringify(designRef.current) !== JSON.stringify(snapshotDesign);'));
+  assert.ok(editor.includes('const hasNewerLocalChanges = localEditRevisionRef.current !== snapshotRevision;'));
   assert.ok(editor.includes('saved === true && !hasNewerLocalChanges'));
   assert.ok(editor.includes('ხელახლა შეინახეთ ბოლო ცვლილებები.'));
 });

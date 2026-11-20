@@ -229,6 +229,8 @@ export default function StorefrontVisualEditor({
   const [design, setDesign] = useState(initialDesign);
   const designRef = useRef(initialDesign);
   const localDesignDirtyRef = useRef(false);
+  const localEditRevisionRef = useRef(0);
+  const pendingTextEditsRef = useRef({});
   const draftSaveInFlightRef = useRef(false);
   const publishInFlightRef = useRef(false);
   const heroImageReadRequestRef = useRef(0);
@@ -303,6 +305,8 @@ export default function StorefrontVisualEditor({
         const restoredDesign = normalizeStorefrontVisualDesign(selectedVersionSnapshot.snapshot?.siteSettings?.visualDesign);
         designRef.current = restoredDesign;
         localDesignDirtyRef.current = false;
+        pendingTextEditsRef.current = {};
+        localEditRevisionRef.current += 1;
         historyRef.current = [restoredDesign];
         historyIndexRef.current = 0;
         setHistory([restoredDesign]);
@@ -352,6 +356,7 @@ export default function StorefrontVisualEditor({
     const next = normalizeStorefrontVisualDesign(nextValue);
     designRef.current = next;
     localDesignDirtyRef.current = true;
+    localEditRevisionRef.current += 1;
     const nextHistory = [...historyRef.current.slice(0, historyIndexRef.current + 1), next].slice(-40);
     historyRef.current = nextHistory;
     historyIndexRef.current = nextHistory.length - 1;
@@ -379,6 +384,17 @@ export default function StorefrontVisualEditor({
     setSelectedElement(null);
   }, [siteSettings?.visualDesign]);
 
+  // Warn on browser navigation only when the local draft has unsaved edits.
+  useEffect(() => {
+    const warnBeforeUnload = event => {
+      if (!localDesignDirtyRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, []);
+
   const updateGroup = (group, key, value) => {
     if (previewMode !== 'desktop' && ['layout', 'theme', 'typography'].includes(group)) {
       commitDesign({
@@ -397,6 +413,11 @@ export default function StorefrontVisualEditor({
   };
 
   const updateSiteText = (key, value) => {
+    // Text changes must obey the same save-before-publish guard as visual styles.
+    // Otherwise a text-only edit could be published without saving the draft.
+    localDesignDirtyRef.current = true;
+    localEditRevisionRef.current += 1;
+    pendingTextEditsRef.current = { ...pendingTextEditsRef.current, [key]: value };
     if (typeof setSiteSettings === 'function') setSiteSettings(current => ({ ...(current || {}), [key]: value }));
     setSaveMessage('ტექსტის ცვლილებები მონახაზში ჯერ არ შენახულა.');
   };
@@ -617,6 +638,7 @@ export default function StorefrontVisualEditor({
     historyIndexRef.current = nextIndex;
     designRef.current = next;
     localDesignDirtyRef.current = true;
+    localEditRevisionRef.current += 1;
     setHistoryIndex(nextIndex);
     setDesign(next);
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: next }));
@@ -630,6 +652,7 @@ export default function StorefrontVisualEditor({
     historyIndexRef.current = nextIndex;
     designRef.current = next;
     localDesignDirtyRef.current = true;
+    localEditRevisionRef.current += 1;
     setHistoryIndex(nextIndex);
     setDesign(next);
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: next }));
@@ -786,8 +809,9 @@ export default function StorefrontVisualEditor({
   const saveDraft = async () => {
     if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current || publishInFlightRef.current) return;
     draftSaveInFlightRef.current = true;
-    const snapshotDesign = design;
-    const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign };
+    const snapshotDesign = designRef.current;
+    const snapshotRevision = localEditRevisionRef.current;
+    const snapshot = { ...(siteSettings || {}), ...pendingTextEditsRef.current, visualDesign: snapshotDesign };
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: snapshotDesign }));
     setSaveMessage('მონახაზის შენახვა მიმდინარეობს…');
     let saved = false;
@@ -799,9 +823,10 @@ export default function StorefrontVisualEditor({
     } finally {
       draftSaveInFlightRef.current = false;
     }
-    const hasNewerLocalChanges = JSON.stringify(designRef.current) !== JSON.stringify(snapshotDesign);
+    const hasNewerLocalChanges = localEditRevisionRef.current !== snapshotRevision;
     if (saved === true && !hasNewerLocalChanges) {
       localDesignDirtyRef.current = false;
+      pendingTextEditsRef.current = {};
     }
     setSaveMessage(saved === true
       ? (hasNewerLocalChanges
