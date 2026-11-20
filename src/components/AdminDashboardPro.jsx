@@ -1312,6 +1312,7 @@ export default function AdminDashboardPro({
 
   const [expenses, setExpenses] = useState([]);
   const [expensesError, setExpensesError] = useState('');
+  const [expensesReady, setExpensesReady] = useState(false);
   const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
   const [expensePage, setExpensePage] = useState(1);
@@ -1628,10 +1629,12 @@ export default function AdminDashboardPro({
       if (!isCurrentAdminSession(requestSessionVersion)) return false;
       setExpenses(allExpenses);
       setExpensesError('');
+      setExpensesReady(true);
       return true;
     } catch (error) {
       if (!isCurrentAdminSession(requestSessionVersion)) return false;
       console.error('GEOSTORE expense history fetch failed:', error);
+      setExpensesReady(false);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
     }
@@ -1642,6 +1645,7 @@ export default function AdminDashboardPro({
     if (!hasExpensesPermission) {
       setExpenses([]);
       setExpensesError('');
+      setExpensesReady(false);
       return undefined;
     }
 
@@ -2595,6 +2599,9 @@ export default function AdminDashboardPro({
   }, [orders, expenses, products, analyticsPeriod]);
 
   const financialOverview = analyticsData;
+  // Never describe missing, inaccessible or stale expense data as verified profit.
+  // Computed finance datasets remain unchanged; this gates report presentation/export.
+  const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError;
   const lowStockGroups = useMemo(
     () => groupLowStockInventory(financialOverview.lowStockProducts),
     [financialOverview.lowStockProducts]
@@ -2621,6 +2628,10 @@ export default function AdminDashboardPro({
   };
 
   const handleExportAnalytics = () => {
+    if (!expensesVerifiedForReports) {
+      alert('ფინანსური CSV ვერ მომზადდება: ხარჯების სრული ისტორია არ არის დადასტურებული. გადაამოწმეთ ფინანსების წვდომა და განაახლეთ ხარჯების ისტორია.');
+      return;
+    }
     const periodLabel = analyticsPeriod === 'all' ? 'all-period' : 'last-' + analyticsPeriod + '-days';
     exportCsv(`geostore-financial-summary-${periodLabel}.csv`,
       ['მაჩვენებელი', 'თანხა (GEL)'],
@@ -2659,13 +2670,15 @@ export default function AdminDashboardPro({
     setIsAiThinking(true);
 
     setTimeout(() => {
-      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
+      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${!expensesVerifiedForReports ? 'ვერ განისაზღვრება — ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
       if (qLower.includes('მომსახურ') || qLower.includes('შეფუთვა') || qLower.includes('დაზღვევა')) answer = `✨ დამატებითი მომსახურებების შემოსავალია ${financialOverview.totalAddonRevenue.toFixed(2)} ₾. ეს თანხა ცალკეა ნაჩვენები და მოგებაში არ შედის, რადგან მომსახურების თვითღირებულება ჯერ არ აღირიცხება.`;
       else if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
-      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
+      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${!expensesVerifiedForReports ? 'ვერ განისაზღვრება — ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
       else if (qLower.includes('გაუქმ')) answer = `🛑 გაუქმებულია ${financialOverview.cancelledOrders.length} შეკვეთა, ნომინალური ღირებულებით ${financialOverview.cancelledOrderValue.toFixed(2)} ₾. ეს თანხა არ ითვლება გაყიდვად ან დადასტურებულ დაბრუნებად.`;
-      else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
+      else if (qLower.includes('ხარჯი')) answer = expensesVerifiedForReports
+        ? `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`
+        : '📉 ხარჯების სრული ისტორია არ არის დადასტურებული. გადაამოწმეთ ფინანსების წვდომა ან სცადეთ ისტორიის განახლება.';
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
       setIsAiThinking(false);
@@ -5159,6 +5172,15 @@ export default function AdminDashboardPro({
                 </button>
               </div>
             </div>
+            {!expensesVerifiedForReports && (
+              <div role="alert" className="admin-finance-data-warning rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block mb-1">ხარჯების სრული ისტორია არ არის დადასტურებული</strong>
+                <p>ხარჯები და წმინდა მოგება დროებით არ ჩანს, ხოლო ფინანსური CSV ექსპორტი დაცულია, სანამ Supabase-დან სრული ხარჯების ისტორია წარმატებით არ ჩაიტვირთება.</p>
+                {expensesError && <p className="mt-1">ჩატვირთვის შეცდომა: {expensesError}</p>}
+                {!hasExpensesPermission && <p className="mt-1">ფინანსური მონაცემების წაკითხვის უფლება საჭიროა.</p>}
+                {hasExpensesPermission && <button type="button" onClick={() => void fetchExpenses()} className="admin-finance-retry mt-2 min-h-11 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold">ხარჯების ისტორიის განახლება</button>}
+              </div>
+            )}
             {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
               <div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
                 <strong className="block mb-1">ისტორიული შეკვეთების მონაცემების შენიშვნა</strong>
@@ -5183,7 +5205,7 @@ export default function AdminDashboardPro({
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-400" /> სულ ხარჯები</p>
-                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.totalExpenses.toFixed(2)} ₾</p>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-rose-400">{expensesVerifiedForReports ? financialOverview.totalExpenses.toFixed(2) + ' ₾' : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
@@ -5208,8 +5230,8 @@ export default function AdminDashboardPro({
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
-                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-amber-400">{financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
-                <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-amber-400">{!expensesVerifiedForReports || financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
+                <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{!expensesVerifiedForReports ? 'ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
               </div>
             </div>
 
