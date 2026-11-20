@@ -181,10 +181,6 @@ try {
           checkoutErrorRight: checkoutError.getBoundingClientRect().right,
           checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height,
           adminProductRowRight: adminProductRow.getBoundingClientRect().right,
-          adminProductWithinPanel: !!adminProductControls.closest('.admin-products-panel'),
-          adminProductWithinAdmin: !!adminProductControls.closest('.admin-dashboard-pro.admin-dashboard-shell'),
-          adminProductDisplay: getComputedStyle(adminProductControls).display,
-          adminProductPanelParent: String(adminProductControls.closest('.admin-products-panel')?.parentElement?.className || '').slice(0,180),
           adminProductControlsRight: adminProductControls.getBoundingClientRect().right,
           adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
           adminProductPaginationMinHeight: Math.min(...adminPaginationButtons.map(button => button.getBoundingClientRect().height)),
@@ -194,56 +190,9 @@ try {
           minOrderFilterHeight: Math.min(...orderFilterButtons.map(node => node.getBoundingClientRect().height)),
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
-          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
-          orderSearchElement: orderSearch.outerHTML.slice(0, 320),
-          orderSearchInlineStyle: orderSearch.style.cssText,
-          orderSearchFontCascade: [...document.styleSheets].flatMap(sheet => {
-            const visit = (rules, parentConditions = []) => {
-              const found = [];
-              for (const rule of rules) {
-                if (rule.cssRules) {
-                  const condition = rule.conditionText || rule.name || '';
-                  const enabled = rule.conditionText ? matchMedia(rule.conditionText).matches : true;
-                  found.push(...visit([...rule.cssRules], parentConditions.concat(condition + ':' + enabled)));
-                } else if (rule.selectorText) {
-                  try {
-                    if (orderSearch.matches(rule.selectorText) &&
-                        (rule.style.fontSize || rule.style.font)) {
-                      found.push({
-                        selector: rule.selectorText.slice(0, 170),
-                        fontSize: rule.style.fontSize,
-                        font: rule.style.font,
-                        important: rule.style.getPropertyPriority('font-size'),
-                        conditions: parentConditions
-                      });
-                    }
-                  } catch {}
-                }
-              }
-              return found;
-            };
-            try { return visit([...sheet.cssRules]); } catch { return []; }
-          }).slice(-24)
-
+          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize)
         };
       });
-      if (width === 320 && layout.orderSearchFontSize < 16) {
-        const cdp = await page.context().newCDPSession(page);
-        await cdp.send('DOM.enable');
-        await cdp.send('CSS.enable');
-        const { root } = await cdp.send('DOM.getDocument');
-        const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '.admin-orders-search input' });
-        const matching = await cdp.send('CSS.getMatchedStylesForNode', { nodeId });
-        const declarations = (matching.matchedCSSRules || [])
-          .flatMap(({ rule }) => {
-            const selector = rule.selectorList?.text || '';
-            return (rule.style?.cssProperties || [])
-              .filter(property => property.name === 'font-size' || property.name === 'font')
-              .map(property => ({ selector: selector.slice(0, 140), property: property.name, value: property.value, important: property.important, origin: rule.origin }));
-          });
-        process.stdout.write('DIAG ORDER SEARCH 320px ' + JSON.stringify({ computed: layout.orderSearchFontSize, declarations: declarations.slice(-30) }) + '\\n');
-        await cdp.detach();
-      }
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
       assert.ok(layout.welcomeRight <= width + 2, width + 'px header overflow ' + JSON.stringify(layout));
       assert.ok(layout.productDialogRight <= width + 2, width + 'px product dialog overflow: ' + JSON.stringify(layout));
