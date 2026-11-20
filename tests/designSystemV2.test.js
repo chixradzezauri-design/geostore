@@ -423,7 +423,7 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /const \[expensesReady, setExpensesReady\] = useState\(false\)/);
   assert.match(admin, /setExpenses\(allExpenses\);\s*setExpensesError\(''\);\s*setExpensesReady\(true\);/);
   assert.match(admin, /setExpensesReady\(false\);\s*setExpensesError\(error\?\.message/);
-  assert.match(admin, /if \(!hasExpensesPermission\) \{\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
+  assert.match(admin, /if \(!adminLoggedIn \|\| !hasExpensesPermission\) \{\s*expenseFetchRequestRef\.current \+= 1;\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
   assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\) \{/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{[\s\S]*?return;\s*\}\s*const periodLabel/);
@@ -441,4 +441,25 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(design, /Stage 15 — incomplete expense ledger reporting guard/);
   assert.match(layoutBrowser, /financeWarningButtonHeight/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
+
+
+test('stage 16 expense ledger fetches cannot overwrite newer snapshots', () => {
+  assert.match(admin, /const expenseFetchRequestRef = useRef\(0\)/);
+  assert.match(admin, /const fetchExpenses = async \(\) => \{[\s\S]*?const requestId = \+\+expenseFetchRequestRef\.current;/);
+  assert.match(admin, /const isLatestExpenseRequest = \(\) =>\s*isCurrentAdminSession\(requestSessionVersion\) && requestId === expenseFetchRequestRef\.current/);
+  const fetchCode = admin.split('const fetchExpenses = async () => {')[1]?.split('\n  useEffect(() => {')[0] || '';
+  assert.equal((fetchCode.match(/if \(!isLatestExpenseRequest\(\)\) return false;/g) || []).length, 5);
+  assert.match(fetchCode, /if \(!isLatestExpenseRequest\(\)\) return false;\s*setExpenses\(allExpenses\);/);
+  assert.match(fetchCode, /catch \(error\) \{\s*if \(!isLatestExpenseRequest\(\)\) return false;/);
+  assert.match(admin, /\}, \[adminLoggedIn, hasExpensesPermission\]\);/);
+  assert.match(admin, /clearInterval\(interval\);\s*expenseFetchRequestRef\.current \+= 1;/);
+  assert.match(admin, /expenseFetchRequestRef\.current \+= 1;\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
+  assert.match(admin, /if \(res\.ok\) \{[\s\S]*?expenseFetchRequestRef\.current \+= 1;\s*setExpensesReady\(false\);\s*setExpensesError\(''\);\s*setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
+  assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\);[\s\S]*?void fetchExpenses\(\);/);
+  assert.match(admin, /expenseFetchRequestRef\.current \+= 1;\s*setExpensesReady\(false\);\s*setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\)/);
+  assert.match(admin, /setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\);[\s\S]*?void fetchExpenses\(\);/);
+  assert.match(admin, /if \(!isCurrentAdminSession\(mutationSession\)\) return;/);
+  assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
+  assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\)/);
 });
