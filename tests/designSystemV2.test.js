@@ -417,3 +417,28 @@ test('stage 14 calculator exposes its four pre-existing hidden inputs without ch
   assert.match(layoutBrowser, /calculatorExtraCount/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
+  assert.match(admin, /const \[expensesReady, setExpensesReady\] = useState\(false\)/);
+  assert.match(admin, /setExpenses\(allExpenses\);\s*setExpensesError\(''\);\s*setExpensesReady\(true\);/);
+  assert.match(admin, /setExpensesReady\(false\);\s*setExpensesError\(error\?\.message/);
+  assert.match(admin, /if \(!hasExpensesPermission\) \{\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
+  assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
+  assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\) \{/);
+  assert.match(admin, /const handleExportAnalytics = \(\) => \{[\s\S]*?return;\s*\}\s*const periodLabel/);
+  assert.match(admin, /className="admin-finance-data-warning/);
+  assert.match(admin, /role="alert" className="admin-finance-data-warning/);
+  assert.match(admin, /!expensesVerifiedForReports \|\| financialOverview\.netProfit === null \? '—'/);
+  assert.match(admin, /expensesVerifiedForReports \? financialOverview\.totalExpenses\.toFixed\(2\)/);
+  assert.match(admin, /else if \(qLower\.includes\('ხარჯი'\)\) answer = expensesVerifiedForReports/);
+  assert.match(admin, /expensesError && <p className="mt-1">ჩატვირთვის შეცდომა:/);
+  assert.match(admin, /onClick=\{\(\) => void fetchExpenses\(\)\} className="admin-finance-retry/);
+  assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 \? totalProductRevenue - totalCogs : null/);
+  assert.match(admin, /const netProfit = grossProfit === null \? null : grossProfit \+ totalDeliveryRevenue - totalExpenses/);
+  assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
+  assert.match(admin, /setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\)/);
+  assert.match(design, /Stage 15 — incomplete expense ledger reporting guard/);
+  assert.match(layoutBrowser, /financeWarningButtonHeight/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
