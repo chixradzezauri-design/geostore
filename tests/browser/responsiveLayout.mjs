@@ -124,6 +124,33 @@ const adminFinancialDetailsFixture =
   '<div class="admin-profitability-results flex justify-between gap-2"><b>მოგება: 9876.54 ₾</b><span>მარჟა: 8.1%</span></div>' +
   '<p>მიმდინარე ფასით შეფასებულია 3 ერთეული; მოგება დადასტურებული არ არის.</p></article></div></div>';
 
+const adminFinanceFormsFixture =
+  '<section class="admin-profit-calculator">' +
+  '<div class="admin-calculator-layout grid grid-cols-1 lg:grid-cols-2 gap-6">' +
+  '<div class="admin-calculator-fields space-y-4">' +
+  Array.from({ length: 2 }, (_, k) =>
+    '<div class="admin-calculator-field-grid grid grid-cols-2 gap-3">' +
+    Array.from({ length: 2 }, (_, j) =>
+      '<div><label for="fixture-calc-' + (k * 2 + j) + '">ფინანსური კალკულატორის ველი ' + (k * 2 + j) + '</label>' +
+      '<input id="fixture-calc-' + (k * 2 + j) + '" type="number" value="100.50" /></div>'
+    ).join('') + '</div>'
+  ).join('') +
+  '</div><div class="admin-calculator-results"><h4>გამოთვლილი მონაცემები</h4>' +
+  '<div class="flex justify-between"><span>წმინდა მოგება:</span><b>987654321.00 ₾</b></div></div></div></section>' +
+  '<section class="admin-expenses"><div class="admin-staff-panel p-6">' +
+  '<form class="admin-expense-form space-y-4">' +
+  '<div class="admin-expense-fields grid grid-cols-1 sm:grid-cols-3 gap-3">' +
+  '<div class="admin-expense-field"><label for="fixture-expense-category">კატეგორია</label>' +
+  '<select id="fixture-expense-category"><option>რეკლამა &amp; მარკეტინგი</option></select></div>' +
+  '<div class="admin-expense-field"><label for="fixture-expense-amount">თანხა (₾)</label>' +
+  '<input id="fixture-expense-amount" type="number" min="0.01" max="1000000000" step="0.01" value="150.00"></div>' +
+  '<div class="admin-expense-field"><label for="fixture-expense-date">თარიღი</label>' +
+  '<input id="fixture-expense-date" type="date" value="2026-11-20"></div></div>' +
+  '<div class="admin-expense-field"><label for="fixture-expense-description">ხარჯის აღწერა</label>' +
+  '<input id="fixture-expense-description" type="text" value="სარეკლამო კამპანია"></div>' +
+  '<button class="admin-expense-submit" type="submit">+ ხარჯის დამატება ბაზაში</button>' +
+  '</form></div></section>';
+
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
   '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
@@ -182,7 +209,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -225,6 +252,14 @@ try {
         const financialRows = [...adminAnalytics.querySelectorAll('.admin-finance-breakdown-row, .admin-finance-recent-row, .admin-profitability-heading, .admin-profitability-metrics, .admin-profitability-results')];
         const financeBreakdown = adminAnalytics.querySelector('.admin-finance-breakdown-row');
         const financeProfitabilityHeading = adminAnalytics.querySelector('.admin-profitability-heading');
+        const expenseForm = document.querySelector('.admin-expense-form');
+        const expenseInputs = [...expenseForm.querySelectorAll('input, select')];
+        const expenseSubmit = expenseForm.querySelector('.admin-expense-submit');
+        const expenseGrid = expenseForm.querySelector('.admin-expense-fields');
+        const calcFields = document.querySelector('.admin-calculator-fields');
+        const calcInputs = [...calcFields.querySelectorAll('input')];
+        const calcGrid = calcFields.querySelector('.admin-calculator-field-grid');
+        const calcResults = document.querySelector('.admin-calculator-results');
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -284,7 +319,17 @@ try {
           financeRowMaxRight: Math.max(...financialRows.map(node => node.getBoundingClientRect().right)),
           financeBreakdownColumnCount: getComputedStyle(financeBreakdown).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
           financeProfitabilityColumnCount: getComputedStyle(financeProfitabilityHeading).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
-          financeBreakdownAmountWrap: getComputedStyle(financeBreakdown.lastElementChild).whiteSpace
+          financeBreakdownAmountWrap: getComputedStyle(financeBreakdown.lastElementChild).whiteSpace,
+          expenseFormRight: expenseForm.getBoundingClientRect().right,
+          expenseFormMinInputHeight: Math.min(...expenseInputs.map(node => node.getBoundingClientRect().height)),
+          expenseFormMinInputFontSize: Math.min(...expenseInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
+          expenseSubmitHeight: expenseSubmit.getBoundingClientRect().height,
+          expenseFormColumns: getComputedStyle(expenseGrid).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+          calculatorRight: calcFields.getBoundingClientRect().right,
+          calculatorMinInputHeight: Math.min(...calcInputs.map(node => node.getBoundingClientRect().height)),
+          calculatorMinInputFontSize: Math.min(...calcInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
+          calculatorColumns: getComputedStyle(calcGrid).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+          calculatorResultsRight: calcResults.getBoundingClientRect().right
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -313,6 +358,18 @@ try {
       assert.ok(layout.analyticsControlMinHeight >= 43, width + 'px analytics controls must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.analyticsChartRight <= width + 2, width + 'px chart scroll viewport overflow: ' + JSON.stringify(layout));
       assert.equal(layout.financePanelCount, 4, width + 'px all four finance detail panels must remain visible');
+      assert.ok(layout.expenseFormRight <= width + 2, width + 'px expense form overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.calculatorRight <= width + 2, width + 'px calculator input overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.calculatorResultsRight <= width + 2, width + 'px calculator results overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseFormMinInputHeight >= 43, width + 'px expense inputs must be touch sized: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseSubmitHeight >= 43, width + 'px expense submit must be touch sized: ' + JSON.stringify(layout));
+      assert.ok(layout.calculatorMinInputHeight >= 43, width + 'px calculator inputs must be touch sized: ' + JSON.stringify(layout));
+      if (width <= 640) {
+        assert.ok(layout.expenseFormMinInputFontSize >= 16, width + 'px expense fields must avoid iOS focus zoom: ' + JSON.stringify(layout));
+        assert.ok(layout.calculatorMinInputFontSize >= 16, width + 'px calculator fields must avoid iOS focus zoom: ' + JSON.stringify(layout));
+        assert.equal(layout.expenseFormColumns, 1, width + 'px expense fields should stack: ' + JSON.stringify(layout));
+      }
+      if (width <= 380) assert.equal(layout.calculatorColumns, 1, width + 'px calculator fields should stack: ' + JSON.stringify(layout));
       assert.ok(layout.financePanelMaxRight <= width + 2, width + 'px financial detail panel overflow: ' + JSON.stringify(layout));
       assert.ok(layout.financeRowMaxRight <= width + 2, width + 'px financial figure row overflow: ' + JSON.stringify(layout));
       assert.equal(layout.financeBreakdownAmountWrap, 'normal', width + 'px long currency amounts must wrap: ' + JSON.stringify(layout));
