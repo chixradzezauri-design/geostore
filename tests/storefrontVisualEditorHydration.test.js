@@ -57,3 +57,11 @@ test('failed publish request reports failure without claiming success', () => {
   assert.match(publish, /გამოქვეყნება ვერ მოხერხდა/);
   assert.ok(publish.indexOf('catch (error)') < publish.indexOf("published === true ? 'ცვლილებები გამოქვეყნებულია.'"));
 });
+
+test('published storefront stays confirmed when version history refresh fails', () => {
+  const publish = editor.split('const publish = async () =>')[1]?.split('const resetDesign = () =>')[0] || '';
+  assert.match(publish, /if \(published === true\)/);
+  assert.match(publish, /if \(error\) throw error/);
+  assert.match(publish, /ცვლილებები გამოქვეყნებულია, თუმცა ვერსიების ისტორიის განახლება ვერ მოხერხდა/);
+  assert.ok(publish.indexOf('if (published === true)') < publish.indexOf('if (error) throw error'));
+});
