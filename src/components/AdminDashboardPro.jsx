@@ -1330,7 +1330,13 @@ export default function AdminDashboardPro({
       }
       const result = await response.json();
       if (requestId !== replenishmentRequestRef.current) return;
-      if (!Array.isArray(result?.items) || result?.has_more === true) {
+      if (!Array.isArray(result?.items) || result?.has_more === true || result.items.some(item =>
+        !item || item.product_id == null || !item.updated_at ||
+        !Number.isSafeInteger(Number(item.low_stock_threshold)) ||
+        !Number.isSafeInteger(Number(item.target_stock)) ||
+        Number(item.low_stock_threshold) < 0 || Number(item.low_stock_threshold) > 100000 ||
+        Number(item.target_stock) <= Number(item.low_stock_threshold) || Number(item.target_stock) > 1000000
+      )) {
         throw new Error('მარაგის პარამეტრების სია არასრულია ან არასწორია. მონაცემები არ განახლებულა; დაუკავშირდით ადმინისტრატორს.');
       }
       setReplenishmentSettings(result.items);
