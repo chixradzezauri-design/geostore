@@ -418,9 +418,10 @@ export default function StorefrontVisualEditor({
     const target = event.target?.closest?.('[data-visual-editor-target]');
     const targetId = target?.getAttribute('data-visual-editor-target');
     const metadata = VISUAL_EDITOR_TARGETS[targetId];
-    if (!metadata) return;
+    // Suppress native Enter/Space activation even on controls without an editor target.
     event.preventDefault();
     event.stopPropagation();
+    if (!metadata) return;
     setSelectedElement({ id: targetId, ...metadata });
   };
 
