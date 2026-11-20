@@ -82,3 +82,20 @@ test('inventory history announces loading and provides a retry path for failed p
   assert.match(dashboard, /inventoryMovementRows\.length > 0 \? 'სცადეთ „მეტი ჩანაწერის ჩატვირთვა“ ხელახლა\.'/);
   assert.match(dashboard, /inventoryMovementLoading \? 'იტვირთება…' : 'განახლება'/);
 });
+
+test('replenishment settings enforce displayed limits before sending changes', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /threshold > 100000/);
+  assert.match(save, /target <= threshold \|\| target > 1000000/);
+  assert.match(save, /Number\.isSafeInteger\(threshold\)/);
+});
+
+test('replenishment mobile cards use two columns and accessible loading feedback', () => {
+  assert.match(dashboard, /admin-replenishment-row grid min-w-0 grid-cols-2/);
+  assert.match(dashboard, /admin-replenishment-product col-span-2 min-w-0 xl:col-span-1/);
+  assert.match(dashboard, /admin-replenishment-save col-span-2 flex items-center xl:col-span-1/);
+  assert.match(dashboard, /aria-labelledby="admin-replenishment-title" aria-busy=\{replenishmentLoading\}/);
+  assert.match(dashboard, /replenishmentLoading && <p role="status"/);
+});
