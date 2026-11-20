@@ -574,3 +574,17 @@
 .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-search input {
   font-size: 16px !important;
 }
+
+
+/* Stage 7 — visual-editor input precedence on phones.
+ * Owner's editable --admin-vd-inputFontSize-active controls all inputs with
+ * six :not selectors and !important. Match that specificity for operational
+ * search/number fields and preserve any owner-selected value ABOVE 16px.
+ * No saved presets, input colors, widths, or server-side logic are changed. */
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-visual-design="enabled"] .admin-orders-panel .admin-orders-search input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-visual-design="enabled"] .admin-products-panel .admin-product-controls input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-visual-design="enabled"] .admin-products-panel .admin-product-search input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+}
