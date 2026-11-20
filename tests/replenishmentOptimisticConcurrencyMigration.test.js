@@ -36,3 +36,8 @@ test('legacy four-argument API is not revoked before existing clients migrate', 
   assert.doesNotMatch(migration, /REVOKE ALL ON FUNCTION public\.admin_save_inventory_replenishment_setting\(text,text,integer,integer\)/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.admin_save_inventory_replenishment_setting\(text,text,integer,integer,timestamptz\)/);
 });
+
+test('migration requests PostgREST schema refresh before commit', () => {
+  assert.match(migration, /NOTIFY pgrst, 'reload schema';/);
+  assert.ok(migration.indexOf("NOTIFY pgrst, 'reload schema'") < migration.lastIndexOf('COMMIT;'));
+});
