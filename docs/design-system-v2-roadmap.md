@@ -54,3 +54,11 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Narrow screens get scannable ticket text, scrollable status choices and 44px action targets, without overriding the visual editor's colors.
 - Regression tests protect the new labels and existing reply/thread handlers.
 - Release gates: exact-HEAD full Node tests and build, responsive Chromium, CodeQL and dependency audit; authenticated support and server-side permissions still need review before merging.
+
+
+## Phase 9 — CRM customers, paginated mobile workspace
+- The CRM customer list now shows 10 matching records per page, with bounded pagination, previous/next actions, and an accessible current-page indicator. Search resets to page 1; the list count and original joined Supabase/local CRM source are unchanged.
+- Customer cards have responsive wrapping and 44px controls. VIP/CRM restriction/edit/local-only delete actions are now explicitly labelled (including icon-only actions), without altering existing handlers, server authorization, or CRM persistence.
+- Preserve the existing notice that the CRM restriction marker is not an Auth account block. Never imply otherwise.
+- A targeted Node regression and a Chromium fixture for 320–1440px phone/tablet/desktop widths validate the presentation. Live authenticated CRM actions and RLS must be reviewed separately before merge.
+- Keep all stages in Draft PR #146; do not publish to main/Production until an independently confirmed release decision.
