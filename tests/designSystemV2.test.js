@@ -173,3 +173,22 @@ test('stage 5 removes only adjacent identical CSS declarations from the legacy s
   assert.match(legacyIndex, /\.gs-category-card \.gs-category-photo/);
   assert.match(main, /import '\.\/designSystemV2\.css'/);
 });
+
+
+test('stage 6 admin product quick controls stay accessible and usable on narrow screens', () => {
+  assert.match(admin, /aria-label="პროდუქტის ძებნა"/);
+  assert.match(admin, /aria-label=\{`თვითღირებულება: \$\{p\.name\}`\}/);
+  assert.match(admin, /aria-label=\{`ფასი ლარში: \$\{p\.name\}`\}/);
+  assert.match(admin, /aria-label=\{`რედაქტირება: \$\{p\.name\}`\}/);
+  assert.match(admin, /aria-label=\{`წაშლა: \$\{p\.name\}`\}/);
+  assert.match(admin, /handleEditProduct\(p\)/);
+  assert.match(admin, /handleDeleteProduct\(p\.id\)/);
+  assert.match(admin, /handleQuickUpdateProduct\(p\.id, 'purchaseCost', draft\)/);
+  assert.match(admin, /handleQuickUpdateProduct\(p\.id, 'priceGEL', draft\)/);
+  assert.match(admin, /handleToggleProductPublished\(p\.id\)/);
+  assert.match(design, /Stage 6 — product-operations usability/);
+  assert.match(design, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(design, /\.admin-product-pagination button\s*\{\s*min-block-size: var\(--gs-v2-control-target\)/);
+  assert.match(design, /\.admin-product-search input\s*\{\s*font-size: 16px !important/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
