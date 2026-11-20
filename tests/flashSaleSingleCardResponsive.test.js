@@ -57,3 +57,16 @@ test('two Flash Sale products keep card text and prices shrink-safe and horizont
     /\.gs-flash-sale-card\s*>\s*button\s*\{[\s\S]*?writing-mode:\s*horizontal-tb\s*!important;/
   );
 });
+
+test('Visual Studio keeps a readable Flash Sale grid on narrow iPhones', () => {
+  const marker = 'GEOSTORE — Stage 43.3 compatibility for Visual Studio';
+  const start = css.lastIndexOf(marker);
+  assert.ok(start >= 0, 'mobile compatibility override is present');
+  const override = css.slice(start);
+  assert.match(override, /@media\s*\(max-width:\s*640px\)/);
+  assert.match(override, /\.gs-flash-sale-section\s*>\s*\.grid\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*220px\),\s*1fr\)\)\s*!important;/s);
+  assert.match(override, /\.gs-flash-sale-card\s*\{[^}]*width:\s*100%\s*!important;[^}]*min-width:\s*0\s*!important;[^}]*max-width:\s*100%\s*!important;/s);
+  const columns = (width, gap = 12) => Math.max(1, Math.floor((width + gap) / (220 + gap)));
+  for (const width of [272, 327, 382]) assert.equal(columns(width), 1);
+  assert.equal(columns(560), 2);
+});
