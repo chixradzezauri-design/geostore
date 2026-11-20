@@ -1381,7 +1381,13 @@ export default function AdminDashboardPro({
     if (!hasProductsPermission) return;
     const requestId = ++inventoryMovementRequestRef.current;
     setInventoryMovementLoading(true);
-    if (!append) setInventoryMovementError('');
+    if (!append) {
+      // Never show rows or pagination from a previous product after a filter change.
+      setInventoryMovementRows([]);
+      setInventoryMovementCursor(null);
+      setInventoryMovementHasMore(false);
+      setInventoryMovementError('');
+    }
     try {
       const headers = await getSupabaseHeaders();
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_inventory_movements`, {
