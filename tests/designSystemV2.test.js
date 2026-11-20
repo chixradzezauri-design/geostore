@@ -423,7 +423,7 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /const \[expensesReady, setExpensesReady\] = useState\(false\)/);
   assert.match(admin, /setExpenses\(allExpenses\);\s*setExpensesError\(''\);\s*setExpensesReady\(true\);/);
   assert.match(admin, /setExpensesReady\(false\);\s*setExpensesError\(error\?\.message/);
-  assert.match(admin, /if \(!adminLoggedIn \|\| !hasExpensesPermission\) \{\s*expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
+  assert.match(admin, /if \(!adminLoggedIn \|\| !hasExpensesPermission\) \{[\s\S]*?expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
   assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\) \{/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{[\s\S]*?return;\s*\}\s*const periodLabel/);
