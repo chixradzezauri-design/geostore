@@ -149,3 +149,12 @@ test('replenishment settings explain manual cross-device refresh and last-write-
   assert.match(dashboard, /სხვა მოწყობილობაზე შეცვლილი პარამეტრების სანახავად გამოიყენეთ „განახლება“/);
   assert.match(dashboard, /ერთდროული რედაქტირებისას სერვერზე ბოლოს შენახული მნიშვნელობა მოქმედებს/);
 });
+
+test('replenishment settings reject incomplete or malformed server responses', () => {
+  const start = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
+  const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
+  const fetcher = dashboard.slice(start, end);
+  assert.match(fetcher, /!Array\.isArray\(result\?\.items\) \|\| result\?\.has_more === true/);
+  assert.ok(fetcher.indexOf('throw new Error') < fetcher.indexOf('setReplenishmentSettings(result.items)'));
+  assert.match(fetcher, /setReplenishmentSettings\(result\.items\)/);
+});
