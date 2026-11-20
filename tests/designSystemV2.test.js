@@ -250,3 +250,24 @@ test('stage 8 support controls expose status, conversation and reply affordances
   assert.match(design, /min-block-size: 44px !important/);
   assert.match(design, /\.admin-support-panel \.admin-support-reply-form > input/);
 });
+
+
+test('stage 9 CRM customer list paginates without modifying customer authorization or data', () => {
+  assert.match(admin, /const \[crmPage, setCrmPage\] = useState\(1\)/);
+  assert.match(admin, /const CRM_PER_PAGE = 10/);
+  assert.match(admin, /const totalCrmPages = Math\.max\(1, Math\.ceil\(filteredUsers\.length \/ CRM_PER_PAGE\)\)/);
+  assert.match(admin, /const paginatedCrmUsers = filteredUsers\.slice\(/);
+  assert.match(admin, /const crmPaginationItems = getPaginationItems\(safeCrmPage, totalCrmPages\)/);
+  assert.match(admin, /paginatedCrmUsers\.map\(\(u, i\) =>/);
+  assert.match(admin, /setUserSearchQuery\(e\.target\.value\); setCrmPage\(1\)/);
+  assert.match(admin, /<nav aria-label="CRM მომხმარებლების გვერდები"/);
+  assert.match(admin, /aria-current=\{safeCrmPage === page \? 'page' : undefined\}/);
+  assert.match(admin, /onClick=\{\(\) => handleToggleVipUser\(u\.id \|\| u\.email\)\}/);
+  assert.match(admin, /onClick=\{\(\) => handleToggleBlockUser\(u\.id \|\| u\.email\)\}/);
+  assert.match(admin, /onClick=\{\(\) => handleSaveUserCrm\(u\.id \|\| u\.email\)\}/);
+  assert.match(admin, /onClick=\{\(\) => handleDeleteUser\(u\.id \|\| u\.email, u\.name\)\}/);
+  assert.match(design, /Stage 9 — CRM customer workspace/);
+  assert.match(design, /\.admin-crm-user-actions > button,/);
+  assert.match(design, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
