@@ -2808,13 +2808,14 @@ export default function AdminDashboardPro({
       }
       setExpenses(prev => [newExp, ...prev]);
       setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
-      setExpenseMutationNotice({ type: 'success', text: 'ხარჯის შენახვა დადასტურებულია სერვერის მიერ. სრული ისტორია ახლდება.' });
+      setExpenseMutationNotice({ type: 'success', action: 'create', text: 'ხარჯის შენახვა დადასტურებულია სერვერის მიერ. სრული ისტორია ახლდება.' });
       logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
     } catch (error) {
       if (!isCurrentMutation()) return;
       console.error('GEOSTORE expense insert failed or not confirmed:', error);
       setExpenseMutationNotice({
         type: 'error',
+        action: 'create',
         text: `შენახვა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. ჩანაწერი შესაძლოა მაინც შეიქმნა. ხელახლა დამატებამდე გადაამოწმეთ განახლებული ისტორია, რათა დუბლიკატი არ გაჩნდეს.`
       });
     } finally {
@@ -2857,13 +2858,14 @@ export default function AdminDashboardPro({
       }
       setExpenses(prev => prev.filter(expense => String(expense.id) !== normalizedId));
       setExpensesError('');
-      setExpenseMutationNotice({ type: 'success', text: 'ხარჯის წაშლა სერვერმა დაადასტურა. სრული ისტორია ახლდება.' });
+      setExpenseMutationNotice({ type: 'success', action: 'delete', text: 'ხარჯის წაშლა სერვერმა დაადასტურა. სრული ისტორია ახლდება.' });
       logActivity(`წაიშალა ხარჯი (ID: ${normalizedId})`);
     } catch (error) {
       if (!isCurrentMutation()) return;
       console.error('GEOSTORE expense delete failed:', error);
       setExpenseMutationNotice({
         type: 'error',
+        action: 'delete',
         text: `წაშლა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. წაშლის ხელახლა ცდამდე გადაამოწმეთ ხარჯების ისტორია.`
       });
     } finally {
@@ -5616,7 +5618,7 @@ export default function AdminDashboardPro({
               <h3 id="admin-expense-add-title" className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება (Supabase ბაზაში)
               </h3>
-              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs" aria-labelledby="admin-expense-add-title">
+              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs" aria-labelledby="admin-expense-add-title" aria-busy={expenseMutationBusy === 'create'}>
                 <div className="admin-expense-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="admin-expense-field">
                     <label htmlFor="admin-expense-category" className="block text-slate-300 font-bold mb-1.5">კატეგორია</label>
@@ -5644,10 +5646,19 @@ export default function AdminDashboardPro({
                   <p id="admin-expense-description-help" className="mt-1 text-[10px] text-slate-400">მაქსიმუმ 300 სიმბოლო.</p>
                 </div>
                 <p id="admin-expense-amount-help" className="text-[10px] leading-relaxed text-slate-400">თანხა უნდა იყოს 0-ზე მეტი, მაქსიმუმ 1,000,000,000 ₾ და შეიცავდეს არაუმეტეს 2 ათწილადს.</p>
-                <button type="submit" className="admin-expense-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება ბაზაში</button>
+                <button type="submit" disabled={Boolean(expenseMutationBusy)} className="admin-expense-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg disabled:cursor-not-allowed disabled:opacity-60">{expenseMutationBusy === 'create' ? 'ხარჯის შენახვა მოწმდება…' : '+ ხარჯის დამატება ბაზაში'}</button>
               </form>
+              {expenseMutationNotice?.action === 'create' && (
+                <p role={expenseMutationNotice.type === 'error' ? 'alert' : 'status'} aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs leading-relaxed text-slate-200">{expenseMutationNotice.text}</p>
+              )}
             </div>
             <div className="admin-expense-history-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
+              {expenseMutationBusy.startsWith('delete:') && (
+                <p role="status" aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs text-slate-300">მიმდინარეობს ხარჯის წაშლის დადასტურება სერვერზე…</p>
+              )}
+              {expenseMutationNotice?.action === 'delete' && (
+                <p role={expenseMutationNotice.type === 'error' ? 'alert' : 'status'} aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs leading-relaxed text-slate-200">{expenseMutationNotice.text}</p>
+              )}
               <div className="admin-expense-history-heading flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <h3 id="admin-expense-history-title" className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
@@ -5697,7 +5708,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div className="admin-expense-actions flex items-center gap-3">
                         <span className="admin-expense-amount font-black text-rose-300 whitespace-nowrap">-{(Number(exp.amount) || 0).toFixed(2)} ₾</span>
-                        <button type="button" onClick={() => handleDeleteExpense(exp.id)} className="admin-expense-delete" aria-label={`ხარჯის წაშლა: ${exp.description || exp.id}`} title="ხარჯის წაშლა">
+                        <button type="button" onClick={() => handleDeleteExpense(exp.id)} disabled={Boolean(expenseMutationBusy)} aria-busy={expenseMutationBusy === `delete:${String(exp.id)}`} className="admin-expense-delete disabled:cursor-not-allowed disabled:opacity-50" aria-label={`ხარჯის წაშლა: ${exp.description || exp.id}`} title="ხარჯის წაშლა">
                           <Trash2 className="w-4 h-4" />
                           <span>წაშლა</span>
                         </button>
