@@ -170,3 +170,11 @@ test('replenishment saves send the revision captured when editing began', () => 
   assert.match(dashboard, /expectedUpdatedAt: Object\.prototype\.hasOwnProperty\.call\(current\[position\.key\] \|\| \{\}, 'expectedUpdatedAt'\)/);
   assert.match(dashboard, /ცვლილების გაუქმება/);
 });
+
+test('replenishment list refresh shows parsed server error messages', () => {
+  const start = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
+  const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
+  const fetcher = dashboard.slice(start, end);
+  assert.match(fetcher, /JSON\.parse\(detail\)\?\.message \|\| detail/);
+  assert.match(fetcher, /throw new Error\(message \|\| `HTTP \$\{response\.status\}`\)/);
+});
