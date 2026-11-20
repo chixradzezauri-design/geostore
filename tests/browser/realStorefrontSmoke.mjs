@@ -48,6 +48,9 @@ try {
       assert.ok(before.documentWidth <= width + 2, 'Horizontal overflow at ' + width + 'px: ' + JSON.stringify(before));
       assert.ok(before.headerRight <= width + 2, 'Header overflow at ' + width + 'px: ' + JSON.stringify(before));
       assert.ok(before.hasStorefront && before.catalogStatePresent, 'Storefront catalog did not render at ' + width + 'px: ' + JSON.stringify(before));
+      const artwork = page.locator('.gs-category-card img.gs-category-photo').first();
+      assert.ok(await artwork.count() > 0, 'Category artwork is a real image at ' + width + 'px');
+      assert.equal(await artwork.getAttribute('loading'), 'lazy', 'Category artwork lazy loading at ' + width + 'px');
       const toggle = page.locator('.gs-menu-toggle');
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu opens at ' + width + 'px');

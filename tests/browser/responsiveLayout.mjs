@@ -77,13 +77,18 @@ const checkoutFixture =
   '<div class="gs-checkout-submit-area"><button type="submit">შეკვეთის დადასტურება</button></div>' +
   '</form></section></div>';
 
+const categoryArtworkFixture = '<div class="gs-category-grid"><div class="gs-category-card">' +
+  '<img class="gs-category-photo" loading="lazy" decoding="async" alt="" aria-hidden="true" ' +
+  'src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2230%22%20height=%2230%22/%3E" />' +
+  '<div><h4>ყველა კატეგორია</h4></div></div></div>';
+
 const browser = await chromium.launch({ headless: true });
 try {
   for (const width of [320, 359, 375, 430, 640, 768, 1024, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', productDialog + cartFixture + '</main>') + admin + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -96,6 +101,7 @@ try {
         const productBody = document.querySelector('.gs-product-modal-body');
         const purchase = document.querySelector('.gs-modal-add-to-cart');
         const productOptions = [...document.querySelectorAll('.gs-size-option, .gs-color-option')];
+        const categoryImg = document.querySelector('.gs-category-card > img.gs-category-photo');
         const cartQtyButtons = [...document.querySelectorAll('.gs-cart-quantity-controls button')];
         const cartCoupon = document.querySelector('.gs-cart-coupon-form');
         const checkoutDialog = document.querySelector('.gs-checkout-dialog');
@@ -121,6 +127,10 @@ try {
           minOptionHeight: Math.min(...productOptions.map(element => element.getBoundingClientRect().height)),
           optionMetrics: productOptions.map(element => ({ type: element.className, height: element.getBoundingClientRect().height, display: getComputedStyle(element).display, minHeight: getComputedStyle(element).minHeight, minBlockSize: getComputedStyle(element).minBlockSize })),
           purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0,
+          categoryImageFit: getComputedStyle(categoryImg).objectFit,
+          categoryImageLoading: categoryImg.loading,
+          categoryImageWidth: categoryImg.getBoundingClientRect().width,
+          categoryCardWidth: categoryImg.parentElement.getBoundingClientRect().width,
           cartQtyMinHeight: Math.min(...cartQtyButtons.map(node => node.getBoundingClientRect().height)),
           cartCouponRight: cartCoupon.getBoundingClientRect().right,
           checkoutDialogRight: checkoutDialog.getBoundingClientRect().right,
@@ -138,6 +148,9 @@ try {
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
       assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets: ' + JSON.stringify(layout.optionMetrics));
       assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');
+      assert.equal(layout.categoryImageFit, 'cover', width + 'px category crop must match the original background');
+      assert.equal(layout.categoryImageLoading, 'lazy', width + 'px category artwork should load natively on demand');
+      assert.ok(Math.abs(layout.categoryImageWidth - layout.categoryCardWidth) <= 2, width + 'px category image should fill its card');
       assert.ok(layout.cartQtyMinHeight >= 43, width + 'px cart quantity controls must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.cartCouponRight <= width + 2, width + 'px coupon form overflow: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutDialogRight <= width + 2, width + 'px checkout dialog overflow: ' + JSON.stringify(layout));

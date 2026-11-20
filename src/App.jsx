@@ -7,6 +7,7 @@ import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
+import ProductMediaImage from './components/ProductMediaImage';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
@@ -3635,10 +3636,13 @@ export default function App() {
                     className="gs-wishlist-card bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
                     <div className="flex items-center gap-3.5">
-                      <img
+                      <ProductMediaImage
                         src={prod.image}
-                        alt=""
+                        alt={prod.name || 'GEOSTORE product'}
+                        width={64}
+                        height={64}
                         className="gs-wishlist-image w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
+                        fallbackClassName="gs-wishlist-image flex w-16 h-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950/80 text-[9px] font-bold tracking-wide text-amber-300/70"
                       />
 
                       <div>
@@ -3694,18 +3698,14 @@ export default function App() {
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-start sm:items-center gap-3 text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="gs-cart-item-media relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950/70">
-                        {itemImage ? (
-                          <img
-                            src={itemImage}
-                            alt={item.name || 'GEOSTORE product'}
-                            loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-contain p-1"
-                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                          />
-                        ) : (
-                          <span className="text-[9px] font-black tracking-widest text-amber-400/60">GEOSTORE</span>
-                        )}
+                        <ProductMediaImage
+                          src={itemImage}
+                          alt={item.name || 'GEOSTORE product'}
+                          width={96}
+                          height={96}
+                          className="h-full w-full object-contain p-1"
+                          fallbackClassName="flex h-full w-full items-center justify-center text-center text-[9px] font-black tracking-widest text-amber-400/60"
+                        />
                       </div>
                       <div className="min-w-0 flex-1 space-y-1">
                         <h4 className="gs-cart-item-title break-words font-bold text-xs text-white">

@@ -402,3 +402,16 @@
     padding-inline: 12px !important;
   }
 }
+
+
+/* Stage 5 — category artwork is a native lazy image instead of a CSS
+ * background. Preserve the existing overlay, hover zoom, editor content and
+ * layout dimensions; keep decorative images out of the accessibility tree. */
+.geostore-fashion-store .geostore-storefront .gs-category-card > img.gs-category-photo {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  object-fit: cover;
+  object-position: center 42%;
+}

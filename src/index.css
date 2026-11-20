@@ -199,7 +199,7 @@ html{scroll-behavior:smooth}
 @media(max-width:1050px){}
 @media(max-width:700px){
  .geostore-fashion-store .gs-product-modal{align-items:flex-start!important;padding:0!important}
- .geostore-fashion-store .gs-product-dialog{width:100%!important;max-width:none!important;max-height:100dvh!important;height:100dvh!important;border:0!important;border-radius:0!important}
+ .geostore-fashion-store .gs-product-dialog{width:100%!important;max-width:none!important;max-height:100dvh!important;border:0!important;border-radius:0!important}
  .geostore-fashion-store .gs-product-modal-header{min-height:56px!important;padding:8px 14px!important}
  .geostore-fashion-store .gs-product-modal-body{padding:12px!important;padding-bottom:86px!important;gap:18px!important}
  .geostore-fashion-store .gs-product-modal-body>div:first-child{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}
@@ -1740,7 +1740,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
   background: rgba(27,23,19,.68);
   -webkit-backdrop-filter: blur(9px);
-  backdrop-filter: blur(9px);
   animation: gs-ai-fade-in .18s ease-out both;
 }
 .gs-ai-dialog {
@@ -2261,7 +2260,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .geostore-fashion-store .gs-filter-panel input,
 .geostore-fashion-store .gs-filter-panel select{
   min-height:40px!important;
-  height:40px!important;
 }
 .gs-ai-dialog{
   width:min(820px,100%)!important;
@@ -2455,7 +2453,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 }
 .geostore-fashion-store .gs-filter-panel input,
 .geostore-fashion-store .gs-filter-panel select{
-  min-width:0!important;min-height:38px!important;height:38px!important;padding:7px 10px!important;
+  min-width:0!important;min-height:38px!important;padding:7px 10px!important;
   border:1px solid #e3d9ce!important;border-radius:3px!important;
   background:#faf7f2!important;color:#302a24!important;box-shadow:none!important;
   font-size:11px!important;font-weight:500!important;
@@ -3148,7 +3146,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   border-bottom:1px solid #e8dfd5!important;
   box-shadow:0 5px 24px rgba(47,37,27,.055)!important;
   -webkit-backdrop-filter:blur(16px);
-  backdrop-filter:blur(16px);
 }
 .geostore-fashion-store .gs-site-announcement{
   min-height:25px!important;
@@ -3351,7 +3348,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .geostore-fashion-store .gs-filter-panel select{
   min-width:0!important;
   min-height:38px!important;
-  height:38px!important;
   padding:8px 10px!important;
   border:1px solid #ded3c6!important;
   border-radius:3px!important;
@@ -7997,7 +7993,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .gs-commerce-dialog--account form{min-width:0!important;gap:15px!important}
 .gs-commerce-dialog--account form>div{min-width:0!important;gap:6px!important}
 .gs-commerce-dialog--account form label{font-size:11px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
-.gs-commerce-dialog--account form input{box-sizing:border-box!important;min-width:0!important;max-width:100%!important;width:100%!important;min-height:46px!important;padding:12px 13px!important;border-radius:11px!important;font-size:13px!important;line-height:1.4!important}
+.gs-commerce-dialog--account form input{box-sizing:border-box!important;min-width:0!important;max-width:100%!important;min-height:46px!important;padding:12px 13px!important;border-radius:11px!important;font-size:13px!important;line-height:1.4!important}
 .gs-commerce-dialog--account form button{min-height:48px!important;padding:12px 14px!important;border-radius:12px!important;line-height:1.4!important;overflow-wrap:anywhere!important}
 .gs-commerce-dialog--account>div:last-child{min-width:0!important;padding-top:12px!important}
 .gs-commerce-dialog--account>div:last-child button{max-width:100%!important;line-height:1.5!important;overflow-wrap:anywhere!important}
@@ -9167,7 +9163,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     width: 100% !important;
     min-width: 0 !important;
     min-height: 36px !important;
-    height: 36px !important;
     padding: 7px 8px !important;
     border: 1px solid #ded3c6 !important;
     border-radius: 8px !important;
@@ -9199,7 +9194,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     min-width: 0 !important;
     max-width: none !important;
     min-height: 36px !important;
-    height: 36px !important;
     padding: 7px 30px 7px 9px !important;
     border: 1px solid #ded3c6 !important;
     border-radius: 8px !important;
@@ -9960,7 +9954,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     radial-gradient(ellipse at 50% 8%, rgba(199, 163, 116, .18), transparent 44%),
     rgba(13, 12, 11, .78) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
-  backdrop-filter: blur(18px) saturate(1.2) !important;
 }
 .geostore-fashion-store .gs-ai-dialog {
   position: relative;
@@ -10409,7 +10402,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     radial-gradient(ellipse at 50% 0%, rgba(190, 155, 111, .18), transparent 48%),
     rgba(18, 16, 14, .78) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.18) !important;
-  backdrop-filter: blur(18px) saturate(1.18) !important;
 }
 .geostore-fashion-store .gs-product-dialog {
   width: min(1120px, 100%) !important;
@@ -10483,7 +10475,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .geostore-fashion-store .gs-product-detail-image-stage {
   position: relative;
   min-height: clamp(280px, 39vw, 480px) !important;
-  height: clamp(280px, 39vw, 480px) !important;
   overflow: hidden;
   border: 1px solid rgba(178, 151, 118, .24) !important;
   border-radius: 22px !important;
@@ -10746,7 +10737,6 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   background: rgba(251, 249, 245, .96) !important;
   box-shadow: 0 -12px 32px rgba(49, 37, 24, .075) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.15) !important;
-  backdrop-filter: blur(16px) saturate(1.15) !important;
 }
 .geostore-fashion-store .gs-product-modal-cta .gs-modal-add-to-cart {
   min-height: 58px !important;
@@ -19270,7 +19260,6 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
   .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > button {
     min-width: 0 !important;
     max-width: 100% !important;
-    width: 100% !important;
     white-space: normal !important;
     overflow-wrap: anywhere !important;
     word-break: normal !important;

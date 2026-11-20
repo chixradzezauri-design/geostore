@@ -17,7 +17,7 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 2. Cart and checkout: **Stage 3 in progress** — enlarge quantity controls, compact cart summary/coupon layout, constrain checkout modal on phone, improve checkout error semantics and keep ≥16px mobile inputs. Order/price/payment RPC logic unchanged.
 3. Legacy CSS extraction: **Stage 4 first pass** — move the compact responsive compatibility tail from `index.css` into `responsiveCompatibility.css` at the exact original import order (no cascade reordering), with mobile/desktop browser QA. Continue isolated sections only after tests.
 4. Runtime performance: **Stage 4 first pass** — stop the storefront-wide Flash Sale 1-second rerender when no promotion is active, correctly wake future scheduled sales, pause hidden tabs and resume on visibility.
-5. Image decoding, Web Vitals and SEO based on measured baselines (Lighthouse/field data not yet verified).
+5. Image loading: **Stage 5 first pass** — convert category decoration from CSS backgrounds to native lazy/async images with unchanged hover crop/overlay; show accessible cart/wishlist placeholders on failed image URLs. Remove only byte-for-byte adjacent duplicate CSS declarations. Web Vitals and SEO still require measured field baselines.
 6. Admin operations enhancements, export/bulk actions and permissions only after server-side safety checks.
 
 ## Acceptance and release rules

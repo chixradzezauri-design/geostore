@@ -670,7 +670,7 @@ export default function StoreView({
                 : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
             }`}
           >
-            <div className="gs-category-photo gs-editorial-category-photo" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88")' }} />
+            <img className="gs-category-photo gs-editorial-category-photo" src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88" alt="" aria-hidden="true" loading="lazy" decoding="async" />
             <div className="flex justify-between items-start z-10">
               <div className="gs-category-icon gs-category-icon--all"><Sparkles className="w-5 h-5" /></div>
               <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
@@ -713,7 +713,7 @@ export default function StoreView({
                 }`}
               >
                 {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
-                <div className="gs-category-photo" style={{ backgroundImage: `url("${catImage}")` }} />
+                {catImage ? <img className="gs-category-photo" src={catImage} alt="" aria-hidden="true" loading="lazy" decoding="async" /> : null}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
                   <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>

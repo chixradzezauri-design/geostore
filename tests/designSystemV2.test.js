@@ -7,6 +7,7 @@ const compatibility = readFileSync(new URL('../src/responsiveCompatibility.css',
 const main = readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
 const design = readFileSync(new URL('../src/designSystemV2.css', import.meta.url), 'utf8');
 const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
+const productMedia = readFileSync(new URL('../src/components/ProductMediaImage.jsx', import.meta.url), 'utf8');
 const modal = readFileSync(new URL('../src/components/Modals.jsx', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.url), 'utf8');
@@ -140,4 +141,35 @@ test('stage 4 pauses idle flash-sale renders and resumes upon visibility or prod
   assert.match(store, /document\.removeEventListener\('visibilitychange', refreshWhenVisible\)/);
   assert.match(store, /\}, \[activeProducts\]\);/);
   assert.doesNotMatch(store, /setInterval\(\(\) => setFlashSaleClock/);
+});
+
+
+test('stage 5 category images are native lazy images with unchanged crop and overlays', () => {
+  assert.match(store, /<img className="gs-category-photo gs-editorial-category-photo"/);
+  assert.match(store, /\{catImage \? <img className="gs-category-photo" src=\{catImage\}/);
+  assert.doesNotMatch(store, /className="gs-category-photo" style=\{\{ backgroundImage:/);
+  const lazyImages = store.match(/className="gs-category-photo[^"]*"[^>]*loading="lazy" decoding="async"/g) || [];
+  assert.equal(lazyImages.length, 2);
+  assert.match(design, /\.gs-category-card > img\.gs-category-photo\s*\{\s*display: block;/);
+  assert.match(design, /object-fit: cover;/);
+  assert.match(layoutBrowser, /categoryImageFit/);
+  assert.match(browser, /img\.gs-category-photo/);
+});
+
+test('stage 5 broken cart/wishlist artwork is replaced with a labelled fallback without cart mutations', () => {
+  assert.match(app, /import ProductMediaImage from '\.\/components\/ProductMediaImage'/);
+  assert.equal((app.match(/<ProductMediaImage/g) || []).length, 2);
+  assert.match(productMedia, /onError=\{\(\) => setFailedUrl\(imageUrl\)\}/);
+  assert.match(productMedia, /imageUrl === failedUrl/);
+  assert.match(productMedia, /loading="lazy"/);
+  assert.match(productMedia, /decoding="async"/);
+  assert.match(productMedia, /role="img" aria-label=\{alt\}/);
+  assert.doesNotMatch(app, /event\.currentTarget\.style\.display = 'none'/);
+});
+
+test('stage 5 removes only adjacent identical CSS declarations from the legacy sheet', () => {
+  const re = /([-a-zA-Z][-\w]*):([^;{}]+);\s*\1:\2;/g;
+  assert.equal([...legacyIndex.matchAll(re)].length, 0);
+  assert.match(legacyIndex, /\.gs-category-card \.gs-category-photo/);
+  assert.match(main, /import '\.\/designSystemV2\.css'/);
 });
