@@ -144,3 +144,8 @@ test('replenishment saves cannot start during a server refresh', () => {
   assert.match(save, /p_low_stock_threshold: savedThreshold/);
   assert.match(save, /p_target_stock: savedTarget/);
 });
+
+test('replenishment settings explain manual cross-device refresh and last-write-wins behavior', () => {
+  assert.match(dashboard, /სხვა მოწყობილობაზე შეცვლილი პარამეტრების სანახავად გამოიყენეთ „განახლება“/);
+  assert.match(dashboard, /ერთდროული რედაქტირებისას სერვერზე ბოლოს შენახული მნიშვნელობა მოქმედებს/);
+});
