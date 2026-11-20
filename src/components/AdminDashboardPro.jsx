@@ -1354,6 +1354,9 @@ export default function AdminDashboardPro({
     }
     setReplenishmentSavingKey(position.key);
     setReplenishmentError('');
+    // Keep the saved values stable even if a new refresh starts while the request is in flight.
+    const savedThreshold = threshold;
+    const savedTarget = target;
     try {
       const headers = await getSupabaseHeaders();
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_inventory_replenishment_setting`, {
@@ -1361,8 +1364,8 @@ export default function AdminDashboardPro({
         body: JSON.stringify({
           p_product_id: position.productId,
           p_variant_id: position.variantId,
-          p_low_stock_threshold: threshold,
-          p_target_stock: target
+          p_low_stock_threshold: savedThreshold,
+          p_target_stock: savedTarget
         })
       });
       if (!response.ok) {
