@@ -650,6 +650,7 @@ export default function App() {
   const storefrontDraftUpdatedAtRef = useRef(null);
   const storefrontDraftBaselineRef = useRef(null);
   const storefrontDraftLocalDirtyRef = useRef(false);
+  const storefrontRemoteConflictRef = useRef('');
   // Read the latest rendered editor values after asynchronous network responses.
   const storefrontCurrentSnapshotRef = useRef(null);
   storefrontCurrentSnapshotRef.current = JSON.stringify({ categories, banners: bannersList, siteSettings });
@@ -952,6 +953,7 @@ export default function App() {
         };
         storefrontDraftBaselineRef.current = JSON.stringify(sharedSnapshot);
         storefrontDraftLocalDirtyRef.current = false;
+        storefrontRemoteConflictRef.current = '';
         setCategoriesList(sharedSnapshot.categories);
         setBannersList(sharedSnapshot.banners);
         setSiteSettings(sharedSnapshot.siteSettings);
@@ -976,7 +978,7 @@ export default function App() {
     const refreshSharedStorefrontDraft = async () => {
       if (!active || document.visibilityState !== 'visible' || inFlight ||
           storefrontSaveLock.current || storefrontPublishLock.current ||
-          storefrontDraftLocalDirtyRef.current || !storefrontDraftBaselineRef.current) return;
+          !storefrontDraftBaselineRef.current) return;
       inFlight = true;
       try {
         const response = await fetch(
@@ -989,8 +991,16 @@ export default function App() {
         const remoteUpdatedAt = typeof row?.draft_updated_at === 'string' ? row.draft_updated_at : null;
         if (!row?.draft_config || typeof row.draft_config !== 'object' || Array.isArray(row.draft_config) ||
             !remoteUpdatedAt || remoteUpdatedAt === storefrontDraftUpdatedAtRef.current) return;
-        // Recheck after the network request: never replace edits made while the request was in flight.
+        // Warn about a newer remote draft without overwriting unsaved local edits.
+        // De-duplicate warnings for the same remote revision.
         const latestSnapshot = storefrontCurrentSnapshotRef.current;
+        if (storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current) {
+          if (active && storefrontRemoteConflictRef.current !== remoteUpdatedAt) {
+            storefrontRemoteConflictRef.current = remoteUpdatedAt;
+            showToast('სხვა მოწყობილობაზე ახალი მონახაზია შენახული. თქვენი შეუნახავი ცვლილებები შენარჩუნებულია; შენახვამდე გადაამოწმეთ ვერსიები.');
+          }
+          return;
+        }
         if (!active || storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current ||
             storefrontSaveLock.current || storefrontPublishLock.current) return;
         const draft = row.draft_config;
@@ -1002,6 +1012,7 @@ export default function App() {
         storefrontDraftUpdatedAtRef.current = remoteUpdatedAt;
         storefrontDraftBaselineRef.current = JSON.stringify(nextSnapshot);
         storefrontDraftLocalDirtyRef.current = false;
+        storefrontRemoteConflictRef.current = '';
         setCategoriesList(nextSnapshot.categories);
         setBannersList(nextSnapshot.banners);
         setSiteSettings(nextSnapshot.siteSettings);
@@ -1450,6 +1461,7 @@ export default function App() {
         throw new Error('მონახაზი სერვერმა შეინახა, მაგრამ მისი ახალი ვერსიის დრო ვერ დადასტურდა. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
       }
       storefrontDraftUpdatedAtRef.current = savedDraftUpdatedAt;
+      storefrontRemoteConflictRef.current = '';
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: draftCategories, banners: draftBanners, siteSettings: draftSiteSettings });
       const editsArrivedDuringSave = storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart;
       storefrontDraftLocalDirtyRef.current = editsArrivedDuringSave;
@@ -1525,6 +1537,7 @@ export default function App() {
         throw new Error('აღდგენის პასუხი არასრულია. განაახლეთ გვერდი, რათა საერთო მონახაზის მიმდინარე ვერსია ჩაიტვირთოს.');
       }
       storefrontDraftUpdatedAtRef.current = result.draft_updated_at;
+      storefrontRemoteConflictRef.current = '';
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: restoredCategories, banners: restoredBanners, siteSettings: restoredSettings });
       storefrontDraftLocalDirtyRef.current = false;
       setCategoriesList(restoredCategories);
@@ -1626,6 +1639,7 @@ export default function App() {
         throw new Error('საიტი გამოქვეყნდა, თუმცა ახალი საერთო ვერსიის დრო ვერ დადასტურდა. ატვირთული ფაილები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი.');
       }
       storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at;
+      storefrontRemoteConflictRef.current = '';
       // Publishing also advances the shared draft version; keep the local baseline in sync.
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings });
       const editsArrivedDuringPublish = storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart;
