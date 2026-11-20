@@ -76,6 +76,31 @@ const adminCrmFixture =
   '<button type="button">წინა</button><button type="button">1</button><button type="button">შემდეგი</button>' +
   '</div></nav></section>';
 
+const adminAnalyticsFixture =
+  '<section class="admin-analytics space-y-6">' +
+  '<div class="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">' +
+  '<div class="admin-analytics-heading min-w-0"><h3>ფინანსური ანალიტიკა</h3><p>შერჩეული პერიოდის შედეგები</p></div>' +
+  '<div class="admin-analytics-actions flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">' +
+  '<label class="sr-only" for="fixture-analytics-period">პერიოდი</label>' +
+  '<select id="fixture-analytics-period"><option>ბოლო 30 დღე</option></select>' +
+  '<button type="button">ანგარიშების CSV ექსპორტი</button></div></div>' +
+  '<div class="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">' +
+  Array.from({ length: 8 }, (_, i) =>
+    '<article class="admin-analytics-card p-5"><p>ფინანსური მაჩვენებელი ' + (i + 1) + '</p>' +
+    '<p class="admin-analytics-value text-2xl sm:text-3xl">12345678.90 ₾</p>' +
+    '<span class="admin-analytics-note">გრძელი ფინანსური შენიშვნა შეკვეთებში დაფიქსირებული თვითღირებულების შესახებ</span></article>'
+  ).join('') + '</div>' +
+  '<div class="grid grid-cols-1 xl:grid-cols-2 gap-5"><div class="p-5">' +
+  '<h3>გაყიდვების დინამიკა</h3>' +
+  '<div class="admin-analytics-trend-scroll max-w-full overflow-x-auto" role="region" tabindex="0">' +
+  '<div class="admin-analytics-trend-bars flex items-end gap-1.5 h-44 pt-3" style="min-width:max(100%,1320px)" role="list">' +
+  Array.from({ length: 30 }, (_, i) =>
+    '<div role="listitem" aria-label="' + (i + 1) + ' ნოემბერი: 150.00 ₾" class="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1">' +
+    '<div aria-hidden="true" style="height:50%" class="w-full"></div>' +
+    '<span aria-hidden="true" class="text-[8px] whitespace-nowrap">დღე ' + (i + 1) + '</span></div>'
+  ).join('') +
+  '</div></div></div></div></section>';
+
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
   '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
@@ -134,7 +159,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -169,6 +194,10 @@ try {
         const adminCrmPagination = [...adminCrm.querySelectorAll('.admin-crm-pagination button')];
         const adminCrmSearch = adminCrm.querySelector('.admin-crm-search input');
         const adminCrmActionGrid = adminCrm.querySelector('.admin-crm-user-actions');
+        const adminAnalytics = document.querySelector('.admin-analytics');
+        const analyticsControls = [...adminAnalytics.querySelectorAll('.admin-analytics-actions > select, .admin-analytics-actions > button')];
+        const analyticsCards = [...adminAnalytics.querySelectorAll('.admin-analytics-card')];
+        const analyticsChartScroll = adminAnalytics.querySelector('.admin-analytics-trend-scroll');
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -215,7 +244,14 @@ try {
           crmActionMinHeight: Math.min(...adminCrmActions.map(node => node.getBoundingClientRect().height)),
           crmPaginationMinHeight: Math.min(...adminCrmPagination.map(node => node.getBoundingClientRect().height)),
           crmSearchFontSize: parseFloat(getComputedStyle(adminCrmSearch).fontSize),
-          crmActionGridColumns: getComputedStyle(adminCrmActionGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length
+          crmActionGridColumns: getComputedStyle(adminCrmActionGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          analyticsPanelRight: adminAnalytics.getBoundingClientRect().right,
+          analyticsControlMinHeight: Math.min(...analyticsControls.map(node => node.getBoundingClientRect().height)),
+          analyticsCardMaxRight: Math.max(...analyticsCards.map(node => node.getBoundingClientRect().right)),
+          analyticsCardCount: analyticsCards.length,
+          analyticsChartRight: analyticsChartScroll.getBoundingClientRect().right,
+          analyticsChartClientWidth: analyticsChartScroll.clientWidth,
+          analyticsChartScrollWidth: analyticsChartScroll.scrollWidth
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -238,6 +274,12 @@ try {
       assert.ok(layout.adminProductRowRight <= width + 2, width + 'px admin product row overflow: ' + JSON.stringify(layout));
       assert.ok(layout.adminOrdersRight <= width + 2, width + 'px admin orders overflow: ' + JSON.stringify(layout));
       assert.ok(layout.crmPanelRight <= width + 2, width + 'px CRM panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.analyticsPanelRight <= width + 2, width + 'px analytics panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.analyticsCardMaxRight <= width + 2, width + 'px analytics KPI overflow: ' + JSON.stringify(layout));
+      assert.equal(layout.analyticsCardCount, 8, width + 'px all financial KPIs must remain in the DOM');
+      assert.ok(layout.analyticsControlMinHeight >= 43, width + 'px analytics controls must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.analyticsChartRight <= width + 2, width + 'px chart scroll viewport overflow: ' + JSON.stringify(layout));
+      if (width <= 768) assert.ok(layout.analyticsChartScrollWidth > layout.analyticsChartClientWidth, width + 'px dense chart should scroll inside its own viewport: ' + JSON.stringify(layout));
       assert.ok(layout.crmActionMinHeight >= 43, width + 'px CRM customer actions must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.crmPaginationMinHeight >= 43, width + 'px CRM pagination must be touch-sized: ' + JSON.stringify(layout));
       if (width <= 640) assert.ok(layout.crmSearchFontSize >= 16, width + 'px CRM search must avoid iOS focus zoom: ' + JSON.stringify(layout));
