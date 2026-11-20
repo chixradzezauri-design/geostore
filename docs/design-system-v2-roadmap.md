@@ -42,3 +42,6 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 - Add Node regressions and a Chromium fixture exercising these controls at 320–1440px.
 - Out of scope: status transitions, reactivation rules, stock restoration, invoices, exports, Supabase data, customer data, RLS, payment handling or publication.
 - Require exact-HEAD build and Chromium success plus authenticated admin validation before release.
+
+### Phase 7 visual-editor precedence safety note
+On phones (≤640px), the existing owner visual editor can set an operational input font smaller than Safari's 16px focus threshold via a highly specific `!important` rule. A targeted, equally specific responsive rule for order search and product quick-edit/search fields uses `max(16px, var(--admin-vd-inputFontSize-active, 16px))`, retaining any owner-selected size larger than 16px. Saved preferences, desktop typography, all other editor targets and server behavior are unchanged. Browser regression requires the real editor-enabled admin fixture to compute at least 16px.
