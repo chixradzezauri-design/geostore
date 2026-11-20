@@ -71,3 +71,11 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Preserve every revenue trend data point while keeping densely labelled sales bars inside a keyboard-focusable, horizontally scrollable chart region, with accessible labels including period/revenue/order count. The graph never expands the page width.
 - Extend the Node regression and Chromium fixture (320–1440px). Unauthenticated fixture tests are not evidence of real owner-only financial-data access or correct production figures.
 - PR #146 stays Draft. Exact-HEAD CI and later authenticated owner review are required before any independently authorized production release.
+
+
+## Phase 11 — financial breakdown and profitability detail
+- The owner's income sources, categorized expense figures, five most recent expenses, product profitability and vendor profitability retain their existing datasets, labels, conditional unknown/estimated COGS warnings, currency computations and reporting-period behavior.
+- Read-only financial rows use compact, responsive, overflow-safe grid layouts. Long Georgian names, expense descriptions and large GEL values can wrap instead of pushing the admin page off-screen; at ultra-narrow ≤380px widths rows stack to preserve legibility.
+- Product and vendor profitability records now expose a distinct semantic article with its subject as an accessible label. Section regions have accessible names.
+- Scoped CSS does not change saved visual-editor tokens, chart calculations, CSV export, Supabase data, permissions, financial logic or production.
+- Node regression plus Chromium fixtures at 320–1440px check four panels, long labels, amount wrapping and narrow layout. Authentication and real financial source reconciliation remain a separate release gate. Keep PR #146 Draft.
