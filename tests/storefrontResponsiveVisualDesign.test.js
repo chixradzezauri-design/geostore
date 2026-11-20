@@ -422,3 +422,11 @@ test('one visual style property can be reset without clearing sibling overrides'
   assert.ok(reset.includes('commitDesign({ ...design, elementStyles })'));
   assert.ok(editor.includes('resetSelectedElementStyleProperty(event.target.value)'));
 });
+
+test('individual visual style reset options have understandable Georgian labels', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.ok(editor.includes("textColor: 'ტექსტის ფერი'"));
+  assert.ok(editor.includes("fontSize: 'ტექსტის ზომა'"));
+  assert.ok(editor.includes("marginTop: 'ზედა გარე დაშორება'"));
+  assert.ok(editor.includes('ELEMENT_STYLE_LABELS[key] || key'));
+});
