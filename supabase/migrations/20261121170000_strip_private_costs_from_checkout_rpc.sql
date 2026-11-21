@@ -11,6 +11,7 @@ BEGIN;
 CREATE OR REPLACE FUNCTION public.create_order_with_stock(p_order jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
+SECURITY INVOKER
 SET search_path TO ''
 AS $function$
 DECLARE
