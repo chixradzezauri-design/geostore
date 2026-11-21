@@ -43,6 +43,11 @@ VALUES (
   jsonb_build_array(jsonb_build_object('id','guest','price',50,'purchase_cost',15))
 );
 
+COMMIT;
+
+-- Test the EXACT Stage54 migration, not a test-only rewrite.
+\ir ../../supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql
+
 -- Preserve the exact existing public SECURITY INVOKER signature.
 CREATE FUNCTION public.get_my_orders()
 RETURNS TABLE (
@@ -53,10 +58,6 @@ LANGUAGE sql STABLE SECURITY INVOKER SET search_path TO ''
 AS $wrapper$ SELECT * FROM private.get_my_orders(); $wrapper$;
 REVOKE ALL ON FUNCTION public.get_my_orders() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_my_orders() TO authenticated;
-COMMIT;
-
--- Test the EXACT Stage54 migration, not a test-only rewrite.
-\ir ../../supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql
 
 \echo 'Stage54: signed-in identity A sees its own customer-friendly items only'
 SET request.jwt.claim.sub = '54000000-0000-4000-8000-00000000000a';
