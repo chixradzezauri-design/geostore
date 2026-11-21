@@ -2595,7 +2595,9 @@ export default function AdminDashboardPro({
     const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
-      const rawOrderTotal = order.totalGEL ?? order.total_gel;
+      const rawOrderTotal = Object.prototype.hasOwnProperty.call(order, 'rawTotalGEL')
+        ? order.rawTotalGEL
+        : (order.totalGEL ?? order.total_gel);
       const orderTotal = normalizeOrderTotal(rawOrderTotal);
       totalSalesRevenue += orderTotal;
       const rawItems = Array.isArray(order.items) ? order.items : [];

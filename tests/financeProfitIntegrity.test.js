@@ -9,7 +9,7 @@ test('historical delivered total is reconciled before normalization can mask mal
     admin.indexOf('    deliveredOrders.forEach(order => {'),
     admin.indexOf('    const trendBuckets = new Map();')
   );
-  assert.match(financialLoop, /const rawOrderTotal = order\.totalGEL \?\? order\.total_gel/);
+  assert.match(financialLoop, /const rawOrderTotal = Object\.prototype\.hasOwnProperty\.call\(order, 'rawTotalGEL'\)/);
   assert.match(financialLoop, /const orderTotal = normalizeOrderTotal\(rawOrderTotal\)/);
   assert.match(financialLoop, /if \(!isReconciledOrderRevenue\(rawOrderTotal, revenueSplit, order\.checkoutBreakdown\)\)/);
   assert.ok(financialLoop.indexOf('isReconciledOrderRevenue(rawOrderTotal') < financialLoop.indexOf('totalDeliveryRevenue += revenueSplit.deliveryRevenue'));

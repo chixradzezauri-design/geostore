@@ -1951,6 +1951,9 @@ export default function App() {
           phone: o.phone || '',
           address: o.address || '',
           totalGEL: normalizeOrderTotal(o.total_gel),
+          // Preserve the persisted amount for finance integrity checks; display
+          // normalization can otherwise hide malformed historical values as 0.
+          rawTotalGEL: o.total_gel,
           checkoutBreakdown,
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
