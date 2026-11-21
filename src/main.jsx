@@ -10,6 +10,8 @@ import './adminDashboardModals.css'
 import './adminDashboardPolish.css'
 // Incremental GEOSTORE Design System 2.0 refinements, ordered after legacy styles.
 import './designSystemV2.css'
+// Video-audited compact phone admin layout after all legacy visual layers.
+import './videoAuditMobileAdmin.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

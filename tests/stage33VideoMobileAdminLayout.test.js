@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const admin=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',import.meta.url),'utf8');
-const css=readFileSync(new URL('../src/adminDashboardPolish.css',import.meta.url),'utf8');
+const css=readFileSync(new URL('../src/videoAuditMobileAdmin.css',import.meta.url),'utf8');
 const browser=readFileSync(new URL('./browser/responsiveLayout.mjs',import.meta.url),'utf8');
 
 test('mobile selector and desktop sidebar share one permission-filtered admin module list',()=>{
@@ -18,8 +18,10 @@ test('mobile selector and desktop sidebar share one permission-filtered admin mo
   assert.match(admin,/onChange=\{\(event\) => setAdminTab\(event\.target\.value\)\}/);
   assert.match(admin,/htmlFor="geostore-admin-mobile-section"/);
 });
-test('video-derived mobile welcome and module picker override legacy tall greeting without altering save actions',()=>{
+test('mobile-only post-design-system stylesheet compacts the welcome without hiding actions',()=>{
   const rules=css.slice(css.indexOf('/* STAGE 33 — video-derived'));
+  const main=readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');
+  assert.ok(main.indexOf("import './videoAuditMobileAdmin.css'") > main.indexOf("import './designSystemV2.css'"));
   assert.match(rules,/@media \(max-width: 767px\)/);
   assert.match(rules,/grid-template-rows: auto auto/);
   assert.match(rules,/height: auto !important/);
