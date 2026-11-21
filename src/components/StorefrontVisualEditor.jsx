@@ -211,6 +211,17 @@ const formatSnapshotDiffValue = value => {
   const text = String(value);
   return text.length > 180 ? text.slice(0, 177) + '…' : text;
 };
+// Stage 34: compact, searchable native editor groups; stored design data is untouched.
+const STOREFRONT_EDITOR_GROUP_SEARCH = Object.freeze({
+  headings: 'ტექსტები სათაურები მაღაზიის სახელი მთავარი ზედა hero content text',
+  labels: 'სექციების წარწერები ღილაკები flash sale კატეგორიები labels buttons',
+  theme: 'ფერები თემები დიზაინი ფონი აქცენტი color palette theme',
+  layout: 'განლაგება ზომები დაშორება შრიფტი typography layout spacing',
+  image: 'მთავარი ფოტო სურათი ატვირთვა image hero upload',
+  sections: 'სექციების ჩართვა თანმიმდევრობა გადალაგება reorder sections',
+  custom: 'საკუთარი სექციების კონსტრუქტორი ელემენტები დამატება custom builder'
+});
+
 export default function StorefrontVisualEditor({
   siteSettings = {},
   setSiteSettings,
@@ -240,6 +251,10 @@ export default function StorefrontVisualEditor({
   const historyIndexRef = useRef(0);
   const customIdCounter = useRef(0);
   const [previewMode, setPreviewMode] = useState('desktop');
+  const [controlSearch, setControlSearch] = useState('');
+  const controlSearchQuery = controlSearch.trim().toLocaleLowerCase('ka-GE');
+  const isControlGroupVisible = key => !controlSearchQuery || STOREFRONT_EDITOR_GROUP_SEARCH[key].includes(controlSearchQuery);
+  const visibleControlGroupCount = Object.keys(STOREFRONT_EDITOR_GROUP_SEARCH).filter(isControlGroupVisible).length;
   const [previewCategory, setPreviewCategory] = useState('ყველა');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
@@ -895,14 +910,21 @@ export default function StorefrontVisualEditor({
         {saveMessage && <p role={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'alert' : 'status'} aria-live={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'assertive' : 'polite'} className={`mt-3 rounded-xl border px-3 py-2 text-xs ${/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'border-rose-400/40 bg-rose-950/40 text-rose-200' : 'border-emerald-400/20 bg-slate-950/70 text-emerald-200'}`}>{saveMessage}</p>}
       </header>
 
-      <section className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4 space-y-3" aria-label="გამოქვეყნებული ვერსიების ისტორია">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      {/* Keep save/publish reachable above the long phone preview. Real handlers and server guards are shared. */}
+      <div className="gs-visual-editor-mobile-actions sticky top-2 z-30 grid grid-cols-2 gap-2 rounded-xl border border-emerald-400/30 bg-slate-950/95 p-2 shadow-xl backdrop-blur md:hidden" role="group" aria-label="მობილური მონახაზის მოქმედებები">
+        <button type="button" onClick={saveDraft} disabled={storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-400 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" />{storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
+        <button type="button" onClick={publish} disabled={!isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
+      </div>
+
+      <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" aria-label="გამოქვეყნებული ვერსიების ისტორია">
+        <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-black text-white">გამოქვეყნებული ვერსიების ისტორია</h3>
             <p className="mt-1 text-[10px] leading-4 text-slate-400">შეამოწმეთ წინა გამოქვეყნებები და საჭიროებისას აღადგინეთ მონახაზში. აღდგენა საიტს არ აქვეყნებს.</p>
           </div>
           <span className="rounded-full border border-slate-700 px-2.5 py-1 text-[10px] font-bold text-slate-300">{versionHistory.length} / 20</span>
-        </div>
+        </summary>
+        <div className="mt-3 space-y-3">
         {versionHistoryLoading && <p role="status" className="text-xs text-slate-400">ისტორია იტვირთება…</p>}
         {versionHistoryError && <p role="alert" className="rounded-lg border border-rose-500/30 bg-rose-950/30 p-2 text-xs text-rose-200">{versionHistoryError}</p>}
         {!versionHistoryLoading && !versionHistory.length && !versionHistoryError && <p className="rounded-xl border border-dashed border-slate-700 p-3 text-xs text-slate-400">გამოქვეყნებული ვერსიები ჯერ არ არის.</p>}
@@ -948,10 +970,16 @@ export default function StorefrontVisualEditor({
             ))}
           </div>
         )}
-      </section>
+        </div>
+      </details>
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
         <aside className="gs-visual-editor-controls order-2 min-w-0 space-y-4 2xl:order-1">
+          <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
+            <label htmlFor="gs-visual-editor-control-search" className="block text-xs font-bold text-slate-200">პარამეტრების ჯგუფების ძებნა</label>
+            <input id="gs-visual-editor-control-search" type="search" value={controlSearch} onChange={event => setControlSearch(event.target.value)} placeholder="მაგალითად: ფერები, ტექსტი, ფოტო…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-base text-white placeholder:text-slate-500" />
+            <p role="status" aria-live="polite" className="mt-2 text-[11px] text-slate-400">{visibleControlGroupCount} / 7 ჯგუფი · გასაშლელად შეეხეთ სათაურს</p>
+          </div>
           <section className="rounded-2xl border border-emerald-400/25 bg-slate-900/90 p-4 space-y-3" aria-label="Preview ელემენტის არჩევა">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -1125,7 +1153,7 @@ export default function StorefrontVisualEditor({
               </div>
             )}
           </section>
-          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('headings')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Type className="h-4 w-4 text-emerald-300" /> ტექსტები და სათაურები</summary>
             <div className="mt-4 space-y-3">
               <label className="block space-y-1.5 text-xs font-semibold text-slate-300">მაღაზიის სახელი<input value={siteSettings?.storeName || 'GEOSTORE'} maxLength={60} onChange={event => updateSiteText('storeName', event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white" /></label>
@@ -1135,7 +1163,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('labels')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Type className="h-4 w-4 text-emerald-300" /> სექციების წარწერები და ღილაკები</summary>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
@@ -1154,7 +1182,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('theme')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Palette className="h-4 w-4 text-emerald-300" /> ფერები და თემები</summary>
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" onClick={() => applyPreset('luxury')} className="rounded-full border border-amber-300/40 px-3 py-2 text-[11px] font-bold text-amber-100">Luxury</button>
@@ -1177,7 +1205,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('layout')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Layout className="h-4 w-4 text-emerald-300" /> შრიფტი და ზომები</summary>
             <div className="mt-4 space-y-3">
               <label className="block space-y-1.5 text-xs font-semibold text-slate-300">შრიფტის სტილი
@@ -1208,7 +1236,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('image')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><ImageIcon className="h-4 w-4 text-emerald-300" /> მთავარი ფოტოს მართვა</summary>
             <div className="mt-4 space-y-3">
               <label className="block space-y-1.5 text-xs font-semibold text-slate-300">Hero ფოტოს HTTP/HTTPS ბმული
@@ -1223,7 +1251,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('sections')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Layout className="h-4 w-4 text-emerald-300" /> სექციების ჩართვა და თანმიმდევრობა</summary>
             <div className="mt-4 space-y-2">
               {design.sectionOrder.map((id, index) => (
@@ -1246,7 +1274,7 @@ export default function StorefrontVisualEditor({
           </details>
 
 
-          <details open className="rounded-2xl border border-emerald-400/30 bg-slate-900/90 p-4">
+          <details hidden={!isControlGroupVisible('custom')} className="rounded-2xl border border-emerald-400/30 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-white"><span className="flex items-center gap-2"><Layout className="h-4 w-4 text-emerald-300" /> საკუთარი სექციების კონსტრუქტორი</span><span className="text-[10px] font-semibold text-emerald-200">{(design.customSections || []).length}/12</span></summary>
             <p className="mt-2 text-[10px] leading-4 text-slate-400">შექმენით დამატებითი კონტენტბლოკები ისე, რომ არსებული მაღაზიის სექციები და ფუნქციები უცვლელი დარჩეს. ცვლილებები საერთო ვიზუალურ მონახაზში ინახება.</p>
             <button type="button" onClick={addCustomSection} disabled={(design.customSections || []).length >= 12} className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-3 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Plus className="h-4 w-4" /> ახალი სექციის დამატება</button>
@@ -1307,7 +1335,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <div className="sticky bottom-2 z-20 grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-2xl border border-emerald-400/30 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
+          <div className="hidden md:sticky md:bottom-2 md:z-20 md:grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-2xl border border-emerald-400/30 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
             <button type="button" onClick={saveDraft} disabled={storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" /> {storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
             <button type="button" onClick={publish} disabled={!isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-300/50 bg-amber-300 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" /> {storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
           </div>
