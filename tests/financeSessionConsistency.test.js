@@ -113,3 +113,19 @@ test('principal-keyed admin panel always invalidates old private work on compone
   assert.match(writes, /const isCurrentMutation = \(\) =>[\s\S]*?isCurrentAdminSession\(mutationSession\)/);
   assert.match(admin, /const isCurrentExport = \(\) =>[\s\S]*?isCurrentAdminSession\(exportSessionVersion\)/);
 });
+
+test('CSV export reauthorizes a refreshed token for the bound principal before download', () => {
+  const exportCode = admin.slice(
+    admin.indexOf('  const handleExportAnalytics = async () => {'),
+    admin.indexOf('  const handleAiAsk = async (e) => {')
+  );
+  const originalAuth = exportCode.indexOf('await requireExpensePermission(');
+  const newTokenCheck = exportCode.indexOf('await getRevalidatedExpenseAccessHeaders(');
+  const download = exportCode.indexOf('exportCsv(');
+  assert.ok(originalAuth >= 0 && originalAuth < newTokenCheck && newTokenCheck < download);
+  assert.match(exportCode, /expectedUserId: adminUserId,/);
+  assert.match(exportCode, /previousHeaders: headers,/);
+  assert.match(exportCode, /fetchImpl: fetch/);
+  assert.match(exportCode, /if \(!isCurrentExport\(\)\) return;/);
+  assert.match(exportCode, /if \(error\?\.expenseAccessDenied\) discardUnauthorizedExpenseData\(\)/);
+});

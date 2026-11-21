@@ -62,9 +62,9 @@ export async function requireExpensePermission({ supabaseUrl, headers, fetchImpl
 }
 
 // The initial permission RPC may finish while Supabase rotates the token or
-// signs in another staff account. Rebind immediately before a private write.
-// A rotated token must pass the *same* live permission RPC before use.
-export async function getRevalidatedExpenseWriteHeaders({
+// signs in another staff account. Before private writes or CSV downloads,
+// rebind to the mounted principal and recheck access on a rotated token.
+export async function getRevalidatedExpenseAccessHeaders({
   loadSession, apiKey, expectedUserId, previousHeaders, supabaseUrl, fetchImpl
 } = {}) {
   const principal = requireExpensePrincipal(expectedUserId);
@@ -79,3 +79,6 @@ export async function getRevalidatedExpenseWriteHeaders({
   }
   return headers;
 }
+
+// Preserve the existing mutation API; CSV and writes share identical preflight rules.
+export const getRevalidatedExpenseWriteHeaders = getRevalidatedExpenseAccessHeaders;

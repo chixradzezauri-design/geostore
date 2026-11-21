@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ExpenseAccessDeniedError, getAuthenticatedExpenseHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../src/utils/expenseRequestSecurity.js';
+import { ExpenseAccessDeniedError, getAuthenticatedExpenseHeaders, getRevalidatedExpenseAccessHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../src/utils/expenseRequestSecurity.js';
 
 const session = (id = 'staff-1', token = 'secure-session-token') => ({
   data: { session: { user: { id }, access_token: token } }, error: null
@@ -192,4 +192,75 @@ test('a failed refreshed-token permission RPC cannot certify a finance write', a
     fetchImpl: async () => ({ ok: false, status: 503 })
   };
   await assert.rejects(getRevalidatedExpenseWriteHeaders(input), (error) => !error.expenseAccessDenied);
+});
+
+test('financial CSV cannot use newly rotated token unless current expenses permission is granted', async () => {
+  const initial = { Authorization: 'Bearer owner-old-token' };
+  let checkCount = 0;
+  const input = {
+    loadSession: async () => session('owner-1', 'owner-new-token'),
+    apiKey: 'public-key',
+    expectedUserId: 'owner-1',
+    previousHeaders: initial,
+    supabaseUrl: 'https://test.supabase.co'
+  };
+  const fetchImpl = async (url, options) => {
+    checkCount += 1;
+    assert.match(url, /rpc\/has_staff_permission$/);
+    assert.equal(options.headers.Authorization, 'Bearer owner-new-token');
+    assert.equal(options.body, JSON.stringify({ p_permission: 'expenses' }));
+    return { ok: true, status: 200, json: async () => true };
+  };
+  const verified = await getRevalidatedExpenseAccessHeaders({ ...input, fetchImpl });
+  assert.equal(verified.Authorization, 'Bearer owner-new-token');
+  assert.equal(checkCount, 1);
+});
+
+test('financial CSV fails closed if token rotates to revoked staff or a different principal', async () => {
+  const base = {
+    apiKey: 'public-key',
+    expectedUserId: 'staff-A',
+    previousHeaders: { Authorization: 'Bearer old-token' },
+    supabaseUrl: 'https://test.supabase.co'
+  };
+  let lookups = 0;
+  const denied = async () => {
+    lookups += 1;
+    return { ok: true, status: 200, json: async () => false };
+  };
+  await assert.rejects(getRevalidatedExpenseAccessHeaders({
+    ...base,
+    loadSession: async () => session('staff-A', 'rotated-token'),
+    fetchImpl: denied
+  }), error => error instanceof ExpenseAccessDeniedError);
+  assert.equal(lookups, 1);
+  await assert.rejects(getRevalidatedExpenseAccessHeaders({
+    ...base,
+    loadSession: async () => session('staff-B', 'other-token'),
+    fetchImpl: denied
+  }), error => error instanceof ExpenseAccessDeniedError);
+  assert.equal(lookups, 1, 'different principal must fail without querying its authorization');
+});
+
+test('unchanged checked CSV token does not multiply authorization RPCs', async () => {
+  const headers = await getRevalidatedExpenseAccessHeaders({
+    loadSession: async () => session('staff-A', 'unchanged-token'),
+    apiKey: 'public-key',
+    expectedUserId: 'staff-A',
+    previousHeaders: { Authorization: 'Bearer unchanged-token' },
+    supabaseUrl: 'https://test.supabase.co',
+    fetchImpl: async () => { throw new Error('unexpected repeat permission RPC'); }
+  });
+  assert.equal(headers.Authorization, 'Bearer unchanged-token');
+});
+
+test('CSV export fails closed when refreshed permission check cannot contact server', async () => {
+  await assert.rejects(getRevalidatedExpenseAccessHeaders({
+    loadSession: async () => session('staff-A', 'rotated-token'),
+    apiKey: 'public-key',
+    expectedUserId: 'staff-A',
+    previousHeaders: { Authorization: 'Bearer old-token' },
+    supabaseUrl: 'https://test.supabase.co',
+    fetchImpl: async () => { throw new Error('temporary network failure'); }
+  }), /temporary network failure/);
 });

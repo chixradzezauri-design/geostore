@@ -17,7 +17,7 @@ import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../
 import { getFinancialOrderEventDate, getFinancialDeliveryCharge, isReconciledOrderRevenue } from '../utils/financeOrderReconciliation.js';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
-import { getAuthenticatedExpenseHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
+import { getAuthenticatedExpenseHeaders, getRevalidatedExpenseAccessHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
 import { invalidateAdminSessionOperations } from '../utils/adminSessionLifecycle.js';
 import { escapeSpreadsheetCsvCell, hasVerifiedExpenseLedgerRows } from '../utils/financeExportSafety.js';
 import { createSecureId } from '../utils/secureId.js';
@@ -2775,9 +2775,16 @@ export default function AdminDashboardPro({
       if (!isCurrentExport()) return;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers, fetchImpl: fetch });
       if (!isCurrentExport()) return;
-      // Re-read the current account after the permission RPC, so an account
-      // switch during the check cannot download the prior user's report.
-      await getExpenseSessionHeaders(adminUserId);
+      // Reject account switching and recheck server authorization if token
+      // rotation happened while the CSV preflight was in flight.
+      await getRevalidatedExpenseAccessHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: adminUserId,
+        previousHeaders: headers,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch
+      });
       if (!isCurrentExport()) return;
     } catch (error) {
       if (isCurrentExport()) {
