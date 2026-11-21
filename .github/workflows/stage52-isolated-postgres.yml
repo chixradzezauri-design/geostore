@@ -6,6 +6,8 @@ on:
     paths:
       - 'supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql'
       - 'tests/sql/stage52_checkout_contract.sql'
+      - 'supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql'
+      - 'tests/sql/stage54_order_history_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -46,3 +48,4 @@ jobs:
         run: |
           psql --version
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage52_checkout_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage54_order_history_contract.sql
