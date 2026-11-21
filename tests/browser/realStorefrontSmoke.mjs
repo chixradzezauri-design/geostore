@@ -90,9 +90,9 @@ try {
     }
   }
 
-  // Stage 32: exercise the actual lazily loaded admin route without a session.
-  // This catches the earlier staffList white-screen regression independently of
-  // mock CSS fixtures and verifies that an auth-bypass URL grants no privileges.
+  // Stage 32: a stale legacy ?admin=secret deep link must not grant an
+  // anonymous browser access. Supabase auth restore deliberately redirects the
+  // route back to the storefront; it does not render a private admin fallback.
   for (const width of [375, 768, 1440]) {
     const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const page = await context.newPage();
@@ -109,10 +109,12 @@ try {
       });
       const response = await page.goto(host + '?admin=secret', { waitUntil: 'domcontentloaded', timeout: 30000 });
       assert.equal(response?.status(), 200, 'Admin fallback route HTTP status at ' + width + 'px');
-      const authGate = page.getByRole('heading', { name: 'ადმინისტრატორის პანელი', exact: true });
-      await authGate.waitFor({ state: 'visible', timeout: 30000 });
-      await page.getByText('პანელზე წვდომისთვის შედით GEOSTORE-ში', { exact: false })
-        .waitFor({ state: 'visible', timeout: 10000 });
+      await page.locator('.geostore-storefront').waitFor({ state: 'visible', timeout: 30000 });
+      // The initial tab is 'store', a legacy query briefly switches to 'admin',
+      // and auth restoration switches an unauthenticated visitor back to 'store'.
+      await page.waitForTimeout(350);
+      assert.equal(await page.locator('.geostore-storefront').isVisible(), true,
+        'Unauthenticated deep link must return to the public storefront');
       assert.equal(await page.locator('.admin-dashboard-shell').count(), 0,
         'Unauthorized admin route must never mount private dashboard content');
       assert.equal(await page.locator('.geostore-admin-shortcut').count(), 0,
@@ -127,7 +129,7 @@ try {
       }));
       assert.ok(dimensions.document <= dimensions.viewport + 2,
         'Admin auth gate must not overflow at ' + width + 'px: ' + JSON.stringify(dimensions));
-      console.log('PASS unauthorized admin route at ' + width + 'px (no staffList crash, no private access)');
+      console.log('PASS anonymous admin deep link at ' + width + 'px (redirect to storefront, no private access)');
     } finally {
       await context.close();
     }

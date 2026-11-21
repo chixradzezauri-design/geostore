@@ -4,10 +4,10 @@ import { readFileSync } from 'node:fs';
 
 const browser = readFileSync(new URL('./browser/realStorefrontSmoke.mjs', import.meta.url), 'utf8');
 
-test('post-release browser suite opens the actual admin fallback route at mobile, tablet and desktop widths', () => {
+test('post-release browser suite redirects an anonymous admin deep link to storefront at every layout', () => {
   assert.match(browser, /for \(const width of \[375, 768, 1440\]\)/);
   assert.match(browser, /page\.goto\(host \+ '\?admin=secret'/);
-  assert.match(browser, /name: 'ადმინისტრატორის პანელი', exact: true/);
+  assert.match(browser, /page\.locator\('\.geostore-storefront'\)\.waitFor/);
   assert.match(browser, /page\.locator\('\.admin-dashboard-shell'\)\.count\(\)/);
   assert.match(browser, /assert\.deepEqual\(forbiddenRequests, \[\]/);
   assert.match(browser, /pageErrors\.length, 0/);

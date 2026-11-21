@@ -11,9 +11,14 @@
 ## Stage 32 — first independent enhancement after release
 
 - New branch `feature/post-release-admin-gate-stage32-2026-11-21` starts from the **released** Git commit, not the older PR #146 feature branch.
-- Extend the actual built-SPA Chromium smoke to navigate `?admin=secret` without an auth session at 375, 768 and 1440 px. This exercises the real lazy-loaded `AdminDashboardPro`, verifies the visible login-required fallback, rejects anonymous protected API requests and horizontal overflow, and catches uncaught runtime crashes such as the historic `staffList` error.
+- Extend the actual built-SPA Chromium smoke to navigate `?admin=secret` without an auth session at 375, 768 and 1440 px. Supabase's auth-state restoration **redirects an anonymous visitor back to the public storefront**. The test verifies this redirect, rejects private dashboard content/API requests and horizontal overflow, and catches uncaught browser errors. It does **not** mount the privileged dashboard or independently test the historic authenticated `staffList` failure.
 - This deliberately never signs in or sends writes and does not test owner/staff privileged workflows.
 
 ## Next accumulation (do not merge automatically)
 
 Continue extending coverage of authorized admin dashboard operations in a **separate, isolated test environment with explicit approval** before enabling user-creation or real transaction tests. Also inspect compact admin typography/spacing and multi-device visual-editor persistence. Accumulate future fixes in this new Draft PR; merge and deploy only after the user approves the next release.
+
+## Initial CI feedback and correction
+
+- The first Stage 32 Chromium run exposed an incorrect test assumption: the test waited for a visible admin login fallback, but `App.jsx` intentionally redirects an anonymous user from `?admin=secret` to the public storefront on `SIGNED_OUT`/session restoration. The timeout **was a test-design failure**, not evidence that the live Production UI is broken.
+- The test now verifies the actual fail-closed anonymous redirect and does not claim privileged admin route E2E. Re-run exact-HEAD CI after this correction.
