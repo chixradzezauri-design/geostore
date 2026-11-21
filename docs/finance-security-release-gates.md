@@ -25,3 +25,10 @@ This checklist describes **live steps not yet executed**. Node test fixtures, CI
 ## Release decision
 
 Require all four exact-HEAD GitHub workflows to pass, a completed authenticated owner/staff matrix above, confirmed Vercel target environment, and explicit separate approval to merge or deploy. Never log user passwords, bearer tokens, service-role keys or private expense descriptions in test output.
+
+## Phase 28 — orders are also a confirmed-finance prerequisite
+
+- Require one complete authenticated paginated order read for the same mounted user ID; verify `has_staff_permission('orders')` both before and after pagination and reject duplicate/missing IDs before publishing.
+- A previous successful snapshot must be marked **unverified** if a later order refresh fails; do not show it as confirmed turnover/profit or allow financial CSV until reconciliation succeeds again.
+- Confirm the persisted raw order total is preserved alongside the normalized UI value. Invalid raw currency must not pass reconciliation merely because display normalization converted it to zero.
+- Test multi-page token refresh, switching principal, revoked orders permission with RLS-filtered HTTP 200 [], timeouts, partial pages and restoration of a verified snapshot after retry.

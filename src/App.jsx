@@ -31,6 +31,7 @@ import { translations } from './utils/translations';
 import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { getAuthenticatedAdminOrderHeaders, requireAdminOrderPermission, hasVerifiedAdminOrderLedgerRows } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -666,6 +667,9 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
 
   const [orders, setOrders] = useState([]);
+  const [adminOrdersReady, setAdminOrdersReady] = useState(false);
+  const [adminOrdersError, setAdminOrdersError] = useState('');
+  const [adminOrdersVerifiedPrincipal, setAdminOrdersVerifiedPrincipal] = useState(null);
   const adminOrdersFetchLock = useRef(false);
   // Remember refreshes requested while a previous order snapshot is still loading.
   // Store the session version so a queued read cannot cross an admin logout/login boundary.
@@ -1882,8 +1886,19 @@ export default function App() {
       return;
     }
     const requestSessionVersion = adminOrdersSessionVersion.current;
+    const requestPrincipal = currentUser?.id || null;
     adminOrdersFetchLock.current = true;
     try {
+      // A 200 [] might be an RLS-denied view rather than no orders.
+      // Check the same server permission used by the orders policy.
+      const initialSession = await getAuthenticatedAdminOrderHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: requestPrincipal
+      });
+      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
+      await requireAdminOrderPermission({ supabaseUrl: SUPABASE_URL, headers: initialSession.headers, fetchImpl: fetch });
+      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
       // PostgREST commonly caps responses at 1,000 rows. Load the complete
       // admin order ledger in stable pages so older delivered/cancelled orders
       // remain available to finance, analytics and CSV exports.
@@ -1891,7 +1906,12 @@ export default function App() {
       const pageSize = 1000;
       let completed = false;
       for (let offset = 0; offset < 100000; offset += pageSize) {
-        const headers = await getSupabaseHeaders({ authenticated: true });
+        const { headers } = await getAuthenticatedAdminOrderHeaders({
+          loadSession: () => supabase.auth.getSession(),
+          apiKey: SUPABASE_ANON_KEY,
+          expectedUserId: initialSession.userId
+        });
+        if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
         headers.Range = `${offset}-${offset + pageSize - 1}`;
         headers['Range-Unit'] = 'items';
         const res = await fetch(
@@ -1914,6 +1934,16 @@ export default function App() {
         }
       }
       if (!completed) throw new Error('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      if (!hasVerifiedAdminOrderLedgerRows(allOrderRows)) {
+        throw new Error('შეკვეთების ისტორიაში არასწორი ან დუბლირებული ID აღმოჩნდა; ფინანსური ანგარიში არ დასტურდება.');
+      }
+      const finalSession = await getAuthenticatedAdminOrderHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: initialSession.userId
+      });
+      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
+      await requireAdminOrderPermission({ supabaseUrl: SUPABASE_URL, headers: finalSession.headers, fetchImpl: fetch });
       const data = allOrderRows;
       // Do not restore private admin data after logout while a request is pending.
       if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
@@ -1966,7 +1996,15 @@ export default function App() {
             : 'პროდუქტები'
         };
       }));
+      setAdminOrdersReady(true);
+      setAdminOrdersError('');
+      setAdminOrdersVerifiedPrincipal(initialSession.userId);
     } catch (error) {
+      if (adminOrdersSessionActive.current && requestSessionVersion === adminOrdersSessionVersion.current) {
+        setAdminOrdersReady(false);
+        setAdminOrdersError(error?.message || 'შეკვეთების სრული ისტორია ვერ დადასტურდა.');
+        setAdminOrdersVerifiedPrincipal(null);
+      }
       console.error('Orders fetch error:', error);
     } finally {
       adminOrdersFetchLock.current = false;
@@ -2227,6 +2265,10 @@ export default function App() {
     };
     document.addEventListener('visibilitychange', refreshProductsWhenVisible);
 
+    // An access/principal transition invalidates the previous finance ledger.
+    setAdminOrdersReady(false);
+    setAdminOrdersError('');
+    setAdminOrdersVerifiedPrincipal(null);
     if (!hasOrdersAccess) {
       adminOrdersSessionActive.current = false;
       adminOrdersSessionVersion.current += 1;
@@ -2237,6 +2279,7 @@ export default function App() {
 
     adminOrdersSessionActive.current = true;
     adminOrdersSessionVersion.current += 1;
+    setOrders([]);
     // Realtime delivers new/updated orders immediately. Keep the 15-second
     // refresh as a recovery path if the websocket disconnects or an event is missed.
     fetchOrders();
@@ -2265,7 +2308,7 @@ export default function App() {
       void supabase.removeChannel(orderChannel);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
-  }, [adminLoggedIn, adminAccess, hasOrdersAccess]);
+  }, [adminLoggedIn, adminAccess, hasOrdersAccess, currentUser?.id]);
 
   useEffect(() => {
     try {
@@ -3581,6 +3624,8 @@ export default function App() {
             handleLogout={handleLogout}
             adminError={adminError}
             orders={orders || []}
+            ordersReady={adminOrdersReady && adminOrdersVerifiedPrincipal === currentUser?.id}
+            ordersError={adminOrdersError}
             setOrders={setOrders}
             usersList={usersList || []}
             setUsersList={setUsersList}
