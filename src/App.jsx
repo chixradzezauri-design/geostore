@@ -35,7 +35,7 @@ import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { isAuthRestoreCurrent } from './utils/authSafety';
+import { isAuthRestoreCurrent, isCheckoutOwnerContextCurrent } from './utils/authSafety';
 import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAccess, hasAdminPermission as hasServerAdminPermission, hasAnyAdminAccess } from './utils/adminAccess';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getCartFeedbackMessage } from './utils/cartFeedback.js';
@@ -563,6 +563,7 @@ export default function App() {
 
   const cartRef = useRef(cart);
   const activeCartOwnerRef = useRef({ initialized: false, userId: null });
+  const checkoutOwnerEpochRef = useRef(0);
   useEffect(() => {
     cartRef.current = cart;
   }, [cart]);
@@ -1099,10 +1100,26 @@ export default function App() {
       // არაფერია გასაკეთებელი.
     }
 
+    // Customer contact data and order confirmations must never survive
+    // an account switch, including during initial session restoration.
+    const clearPrivateCheckout = () => {
+      checkoutOwnerEpochRef.current += 1;
+      setIsCheckoutOpen(false);
+      setCheckoutForm({ name: '', phone: '', email: '', address: '' });
+      setCheckoutError('');
+      setCheckoutErrorField(null);
+      setOrderConfirmation(null);
+      pendingCheckoutRef.current = null;
+      try { window.sessionStorage.removeItem('geostore.pendingCheckout'); } catch {}
+    };
+
     const activateCartOwner = (userId) => {
       const nextOwnerId = userId || null;
       const activeOwner = activeCartOwnerRef.current;
       if (activeOwner.initialized && String(activeOwner.userId ?? '') === String(nextOwnerId ?? '')) return;
+      if (String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
+        clearPrivateCheckout();
+      }
       try {
         const switched = switchCartStorageOwner({
           storage: window.localStorage,
@@ -1141,12 +1158,13 @@ export default function App() {
           setNotificationsError('');
           setNotificationsLoading(false);
           setIsNotificationsOpen(false);
-          setCheckoutForm({ name: '', phone: '', email: '', address: '' });
           setAppliedCoupon(null);
           setPromoInput('');
         }
         activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
       } catch (error) {
+        // Storage failures must not leave private checkout details visible.
+        clearPrivateCheckout();
         // Fail closed: never persist the outgoing owner's cart under a new account.
         console.error('Cart owner switch failed:', error);
         cartRef.current = [];
@@ -2993,6 +3011,23 @@ export default function App() {
     // Synchronous lock prevents rapid double taps before React rerenders.
     if (orderSubmitLock.current) return;
     orderSubmitLock.current = true;
+    const checkoutStartEpoch = checkoutOwnerEpochRef.current;
+    const checkoutStartOwnerId = activeCartOwnerRef.current.userId;
+    const abandonCheckoutIfOwnerChanged = () => {
+      if (isCheckoutOwnerContextCurrent({
+        startEpoch: checkoutStartEpoch,
+        currentEpoch: checkoutOwnerEpochRef.current,
+        startOwnerId: checkoutStartOwnerId,
+        currentOwnerId: activeCartOwnerRef.current.userId
+      })) return false;
+      // An in-flight request may already have reached the server. Never show
+      // its private receipt or change the newly active user's cart.
+      pendingCheckoutRef.current = null;
+      try { window.sessionStorage.removeItem('geostore.pendingCheckout'); } catch {}
+      orderSubmitLock.current = false;
+      setIsSubmittingOrder(false);
+      return true;
+    };
     setIsSubmittingOrder(true);
     setCheckoutError('');
     setCheckoutErrorField(null);
@@ -3124,6 +3159,7 @@ export default function App() {
         error: sessionError
       } = await supabase.auth.getSession();
 
+      if (abandonCheckoutIfOwnerChanged()) return;
       if (sessionError) throw sessionError;
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
@@ -3139,6 +3175,7 @@ export default function App() {
         throw new Error('პროდუქტების მიმდინარე ფასისა და მარაგის შემოწმება ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.');
       }
       const latestCatalogue = await catalogueResponse.json();
+      if (abandonCheckoutIfOwnerChanged()) return;
       if (!Array.isArray(latestCatalogue)) {
         throw new Error('პროდუქტების მიმდინარე მონაცემები არასწორია. გთხოვთ, სცადოთ თავიდან.');
       }
@@ -3216,6 +3253,7 @@ export default function App() {
         freshCouponResponse.json(),
         freshDeliveryResponse.json()
       ]);
+      if (abandonCheckoutIfOwnerChanged()) return;
       if (!Array.isArray(freshCouponRows) || !Array.isArray(freshDeliveryRows)) {
         throw new Error('Checkout pricing settings are invalid.');
       }
@@ -3340,6 +3378,8 @@ export default function App() {
         }
       }
 
+      // Never start a server-side order for an account that has switched.
+      if (abandonCheckoutIfOwnerChanged()) return;
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/create_order_with_stock`,
         {
@@ -3376,12 +3416,14 @@ export default function App() {
       }
 
       serverOrderResult = await response.json();
+      if (abandonCheckoutIfOwnerChanged()) return;
       const orderConfirmationCheck = validateOrderCreationResponse(serverOrderResult, orderId);
       if (!orderConfirmationCheck.valid) {
         throw new Error('სერვერისგან შეკვეთის დადასტურება ვერ მივიღეთ.');
       }
       orderId = orderConfirmationCheck.orderId;
     } catch (err) {
+      if (abandonCheckoutIfOwnerChanged()) return;
       console.error('Order submission failed:', err);
       const message = getCheckoutErrorMessage(err, currentLang);
       setCheckoutError(message);
@@ -3391,6 +3433,7 @@ export default function App() {
       return;
     }
 
+    if (abandonCheckoutIfOwnerChanged()) return;
     const confirmedItems = normalizeOrderItems(
       Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder
     );
