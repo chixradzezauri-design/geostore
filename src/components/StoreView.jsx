@@ -648,12 +648,12 @@ export default function StoreView({
               const availableStock = getProductAvailableStock(prod);
               return (
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
-                  <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
+                  <button type="button" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 w-full flex items-center justify-center cursor-pointer overflow-hidden">
                     {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
                     <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
-                  </div>
+                  </button>
                   <div className="py-3 space-y-1.5">
-                    <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
+                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300"><button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button></h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
                       {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
@@ -661,7 +661,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
-                  <button onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
@@ -1156,9 +1156,9 @@ export default function StoreView({
                           <button key={variant.id} type="button" disabled={variant.stock <= 0}
                             onClick={() => setSelectedCustomVariantId(variant.id)}
                             aria-pressed={selectedCustomVariantId === variant.id}
-                            className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-xs transition disabled:opacity-40 disabled:cursor-not-allowed ${selectedCustomVariantId === variant.id ? 'border-amber-400 bg-amber-500/10 text-amber-200' : 'border-amber-500/20 bg-[#08080a] text-slate-300'}`}>
-                            <span className="font-bold">{variant.name}</span>
-                            <span className="shrink-0 text-right"><b>{formatPrice(variant.priceGEL)}</b><small className="block text-slate-500">{variant.stock > 0 ? `${variant.stock} ც.` : storeText.outOfStock}</small></span>
+                            className={`gs-custom-variant-option flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-xs transition disabled:opacity-40 disabled:cursor-not-allowed ${selectedCustomVariantId === variant.id ? 'border-amber-400 bg-amber-500/10 text-amber-200' : 'border-amber-500/20 bg-[#08080a] text-slate-300'}`}>
+                            <span className="gs-custom-variant-name font-bold">{variant.name}</span>
+                            <span className="gs-custom-variant-meta shrink-0 text-right"><b>{formatPrice(variant.priceGEL)}</b><small className="block text-slate-500">{variant.stock > 0 ? `${variant.stock} ც.` : storeText.outOfStock}</small></span>
                           </button>
                         ))}
                       </div>

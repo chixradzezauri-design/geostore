@@ -1722,3 +1722,37 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Stage 45 — accessible Flash Sale quick-view and phone-safe variant labels.
+   Layout/accessibility only: keep the visual editor's color and type tokens. */
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-media {
+  min-width: 0; width: 100%; text-align: inherit; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-title-action {
+  width: 100%; min-width: 0; min-height: 44px; text-align: start;
+  overflow-wrap: anywhere; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-media:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-title-action:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-option:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 3px;
+}
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-option {
+  display: grid !important; grid-template-columns: minmax(0, 1fr) max-content;
+  width: 100%; min-width: 0; min-height: 44px !important;
+  align-items: center; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-name {
+  min-width: 0; overflow-wrap: anywhere;
+}
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-meta {
+  max-width: 100%; min-width: 0; white-space: normal;
+}
+@media (max-width: 380px) {
+  .geostore-fashion-store .geostore-storefront .gs-custom-variant-option {
+    grid-template-columns: minmax(0, 1fr); justify-items: start;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-custom-variant-meta {
+    text-align: start;
+  }
+}

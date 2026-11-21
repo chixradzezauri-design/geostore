@@ -38,6 +38,7 @@ import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
 import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAccess, hasAdminPermission as hasServerAdminPermission, hasAnyAdminAccess } from './utils/adminAccess';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
+import { getCartFeedbackMessage } from './utils/cartFeedback.js';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
@@ -1352,10 +1353,19 @@ export default function App() {
   };
 
   const [toastMessage, setToastMessage] = useState('');
-
-  const showToast = (msg) => {
+  const [toastTone, setToastTone] = useState('success');
+  const toastTimerRef = useRef(null);
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+  }, []);
+  const showToast = (msg, tone = 'success') => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+    setToastTone(tone);
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage('');
+      toastTimerRef.current = null;
+    }, 3000);
   };
 
   const markAllNotificationsAsRead = async () => {
@@ -2456,7 +2466,7 @@ export default function App() {
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Number(quantity);
     if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
-      showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidQuantity'), 'error');
       return false;
     }
 
@@ -2473,11 +2483,11 @@ export default function App() {
     const allowedColors = getAvailableProductColors(product);
 
     if (selectedSize && !allowedSizes.includes(selectedSize)) {
-      showToast('არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidSize'), 'error');
       return false;
     }
     if (selectedColor && !allowedColors.includes(selectedColor)) {
-      showToast('არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidColor'), 'error');
       return false;
     }
     if (sizeColorInventory && (
@@ -2485,15 +2495,15 @@ export default function App() {
       sizeColorVariant.stock <= 0 ||
       sizeColorVariant.id !== customVariantId
     )) {
-      showToast('არჩეული ზომისა და ფერის კომბინაცია მარაგში აღარ არის.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidCombination'), 'error');
       return false;
     }
     if (customVariantId && !selectedInventoryVariant) {
-      showToast('არჩეული ვარიანტი აღარ არის ხელმისაწვდომი.');
+      showToast(getCartFeedbackMessage(currentLang, 'unavailableVariant'), 'error');
       return false;
     }
     if (hasCustomProductVariants(product) && !customVariant) {
-      showToast('შეკვეთამდე აირჩიეთ პროდუქტის ინდივიდუალური ვარიანტი.');
+      showToast(getCartFeedbackMessage(currentLang, 'selectVariant'), 'error');
       return false;
     }
 
@@ -2510,18 +2520,18 @@ export default function App() {
 
     if (!result.valid) {
       if (result.reason === 'stock') {
-        showToast('პროდუქტი ამჟამად მარაგში არ არის.');
+        showToast(getCartFeedbackMessage(currentLang, 'outOfStock'), 'error');
       } else if (result.reason === 'limit') {
-        showToast(`მარაგში დარჩენილია მხოლოდ ${result.remaining} ცალი.`);
+        showToast(getCartFeedbackMessage(currentLang, 'stockLimit', { remaining: result.remaining }), 'error');
       } else {
-        showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
+        showToast(getCartFeedbackMessage(currentLang, 'invalidQuantity'), 'error');
       }
       return false;
     }
 
     cartRef.current = result.cart;
     setCart(result.cart);
-    showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
+    showToast(getCartFeedbackMessage(currentLang, 'added', { name: product.name }));
     return true;
   };
 
@@ -3477,7 +3487,11 @@ export default function App() {
         </div>
       )}
       {toastMessage && (
-        <div className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-6 right-6'} z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs`} >
+        <div
+          role={toastTone === 'error' ? 'alert' : 'status'}
+          aria-live={toastTone === 'error' ? 'assertive' : 'polite'}
+          className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-4 left-3 right-3 sm:left-auto sm:top-6 sm:right-6'} z-50 max-w-[min(480px,calc(100vw-24px))] break-words font-bold px-4 py-3 rounded-2xl shadow-2xl border motion-reduce:animate-none flex items-center gap-2.5 text-xs ${toastTone === 'error' ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-emerald-500 text-slate-950 border-emerald-300'}`}
+        >
           {toastMessage}
         </div>
       )}
