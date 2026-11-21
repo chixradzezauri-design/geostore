@@ -24,7 +24,8 @@ const setupFetch = ({ pages = [], permissions = [true, true], financePermissions
     if (url.endsWith('/rpc/has_staff_permission')) {
       const permission = JSON.parse(options.body)?.p_permission;
       if (permission === 'expenses') {
-        const allowed = financePermissions[financeIndex++] ?? false;
+        const allowed = financeIndex < financePermissions.length ? financePermissions[financeIndex] : false;
+      financeIndex += 1;
         return response(allowed);
       }
       assert.equal(permission, 'orders');
