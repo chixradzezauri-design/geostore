@@ -1646,3 +1646,47 @@
     min-height: 44px !important;
   }
 }
+
+/* Stage 43 — saved-list / comparison mobile sizing and accessibility.
+ * Preserve storefront's editable design settings. */
+.geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions {
+  grid-template-columns: minmax(0,1fr) auto !important;
+  min-width: 0;
+}
+.geostore-fashion-store .gs-wishlist-main,
+.geostore-fashion-store .gs-wishlist-meta,
+.geostore-fashion-store .gs-wishlist-actions { min-width: 0; max-width: 100%; }
+.geostore-fashion-store .gs-wishlist-main .gs-wishlist-image { flex-shrink: 0; }
+.geostore-fashion-store .gs-wishlist-actions { justify-content: flex-end; }
+.geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions .gs-wishlist-actions > button {
+  min-height: 44px !important;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .gs-wishlist-remove:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-close:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-clear:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-remove:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-scroll:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 2px;
+}
+.gs-product-compare-dialog .gs-product-compare-header { min-width: 0; gap: 10px; flex-wrap: wrap; }
+.gs-product-compare-dialog .gs-product-compare-header > div:first-child { min-width: 0; flex: 1 1 180px; }
+.gs-product-compare-dialog .gs-product-compare-close,
+.gs-product-compare-dialog .gs-product-compare-clear,
+.gs-product-compare-dialog .gs-product-compare-remove {
+  min-width: 44px !important; min-height: 44px !important; touch-action: manipulation;
+}
+.gs-product-compare-dialog .gs-product-compare-scroll {
+  max-width: 100%; min-width: 0; overscroll-behavior-x: contain; scroll-padding-inline: 12px;
+}
+.gs-product-compare-dialog .gs-product-compare-specs,
+.gs-product-compare-dialog .gs-product-compare-description,
+.geostore-fashion-store .gs-wishlist-product-title { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions {
+    grid-template-columns: minmax(0,1fr) !important; gap: 10px !important;
+  }
+  .geostore-fashion-store .gs-wishlist-actions { width: 100%; justify-content: stretch; }
+  .geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions .gs-wishlist-add { flex: 1 1 140px; }
+}

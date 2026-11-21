@@ -38,7 +38,7 @@ import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
 import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAccess, hasAdminPermission as hasServerAdminPermission, hasAnyAdminAccess } from './utils/adminAccess';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
-import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
@@ -2596,6 +2596,14 @@ export default function App() {
     });
   };
 
+  const handleFindSavedProduct = (product) => {
+    // Existing product detail view remains the only place to choose stock variants.
+    setSelectedCategory('ყველა');
+    setSearchQuery(String(product?.name || ''));
+    setActiveTab('store');
+    setIsComparisonOpen(false);
+  };
+
   const handleShareWishlist = () => {
     if (wishlist.length === 0) {
       alert('სურვილების სია ცარიელია!');
@@ -3641,9 +3649,9 @@ export default function App() {
                 {wishlist.map((prod) => (
                   <div
                     key={prod.id}
-                    className="gs-wishlist-card bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
+                    className="gs-wishlist-card gs-wishlist-card--actions bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="gs-wishlist-main flex items-center gap-3.5 min-w-0">
                       <ProductMediaImage
                         src={prod.image}
                         alt={prod.name || 'GEOSTORE product'}
@@ -3653,23 +3661,31 @@ export default function App() {
                         fallbackClassName="gs-wishlist-image flex w-16 h-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950/80 text-[9px] font-bold tracking-wide text-amber-300/70"
                       />
 
-                      <div>
+                      <div className="gs-wishlist-meta min-w-0">
                         <h4 className="gs-wishlist-product-title font-bold text-xs line-clamp-1">
                           {prod.name}
                         </h4>
 
                         <p className="gs-wishlist-product-price font-black text-xs mt-1">
-                          {formatPrice(prod.priceGEL)}
+                          {getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => addToCart(prod)}
-                      className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer"
-                    >
-                      {t.addToCart}
-                    </button>
+                    <div className="gs-wishlist-actions flex flex-wrap gap-2">
+                      <button type="button"
+                        onClick={() => hasProductVariantOptions(prod) ? handleFindSavedProduct(prod) : addToCart(prod)}
+                        disabled={getProductAvailableStock(prod) <= 0}
+                        aria-label={`${hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}: ${prod.name}`}
+                        className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        {getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
+                          : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}
+                      </button>
+                      <button type="button" className="gs-wishlist-remove inline-flex items-center justify-center rounded-xl border px-3 cursor-pointer"
+                        onClick={() => toggleWishlist(prod)} aria-label={`${currentLang === 'en' ? 'Remove from wishlist' : currentLang === 'ru' ? 'Удалить из избранного' : 'სურვილებიდან წაშლა'}: ${prod.name}`}>
+                        <X className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -4720,6 +4736,8 @@ export default function App() {
             setIsComparisonOpen={setIsComparisonOpen}
             comparisonList={comparisonList}
             setComparisonList={setComparisonList}
+            onFindProduct={handleFindSavedProduct}
+            currentLang={currentLang}
             addToCart={addToCart}
             formatPrice={formatPrice}
           />

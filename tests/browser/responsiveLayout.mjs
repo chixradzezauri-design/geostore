@@ -307,6 +307,23 @@ const categoryArtworkFixture = '<div class="gs-category-grid"><div class="gs-cat
   'src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2230%22%20height=%2230%22/%3E" />' +
   '<div><h4>ყველა კატეგორია</h4></div></div></div>';
 
+
+const stage43Fixture = '<section class="geostore-fashion-store"><div class="gs-wishlist-page"><div class="gs-wishlist-grid">' +
+  '<div class="gs-wishlist-card gs-wishlist-card--actions"><div class="gs-wishlist-main flex items-center gap-3.5 min-w-0">' +
+  '<div class="gs-wishlist-image">image</div><div class="gs-wishlist-meta min-w-0">' +
+  '<h3 class="gs-wishlist-product-title">გრძელისასურველინივთისდასახელება0000000</h3></div></div>' +
+  '<div class="gs-wishlist-actions flex flex-wrap gap-2"><button class="gs-wishlist-add">აირჩიეთ ვარიანტი</button>' +
+  '<button class="gs-wishlist-remove" aria-label="წაშლა">×</button></div></div></div></div></section>' +
+  '<div class="gs-product-compare-overlay fixed inset-0"><div class="gs-product-compare-dialog" role="dialog" aria-modal="true">' +
+  '<div class="gs-product-compare-header flex justify-between"><div><h2>შედარება</h2></div>' +
+  '<button class="gs-product-compare-clear">გასუფთავება</button><button class="gs-product-compare-close">×</button></div>' +
+  '<div class="gs-product-compare-scroll overflow-x-auto" tabindex="0" role="region">' +
+  '<div class="gs-product-compare-grid grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-6">' +
+  Array.from({length:4}, (_,i) => '<article class="gs-product-compare-card"><button class="gs-product-compare-remove" aria-label="წაშლა ' + i + '">×</button>' +
+    '<div class="gs-product-compare-specs">გრძელიმახასიათებელი012345678901234567890</div>' +
+    '<button class="gs-product-compare-action">კალათაში</button></article>').join('') +
+  '</div></div></div></div>';
+
 const browser = await chromium.launch({ headless: true });
 try {
   for (const width of [320, 359, 375, 430, 640, 768, 1024, 1440]) {
@@ -734,6 +751,32 @@ try {
         assert.equal(layout.sidebarOverflowY, 'auto', width + 'px nav overflow');
         assert.ok(layout.sidebarHeight <= 820, width + 'px sidebar max height');
       }
+      // Isolate comparison modal from the product/checkout overlay fixture.
+      await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>' + stage43Fixture + '</body></html>');
+      await page.addStyleTag({ content: css });
+      const saved = await page.evaluate(() => {
+        const card = document.querySelector('.gs-wishlist-card');
+        const actions = [...document.querySelectorAll('.gs-wishlist-actions > button')];
+        const dialog = document.querySelector('.gs-product-compare-dialog');
+        const closeActions = [...document.querySelectorAll('.gs-product-compare-clear, .gs-product-compare-close, .gs-product-compare-remove')];
+        const scroller = document.querySelector('.gs-product-compare-scroll');
+        return {
+          pageWidth: document.documentElement.scrollWidth,
+          cardRight: card.getBoundingClientRect().right,
+          controlsMinHeight: Math.min(...actions.map(b => b.getBoundingClientRect().height)),
+          dialogRight: dialog.getBoundingClientRect().right,
+          compareControlsMinHeight: Math.min(...closeActions.map(b => b.getBoundingClientRect().height)),
+          scrollWidth: scroller.scrollWidth,
+          clientWidth: scroller.clientWidth,
+          scrollFocusable: scroller.tabIndex === 0
+        };
+      });
+      assert.ok(saved.pageWidth <= width + 2 && saved.cardRight <= width + 2 && saved.dialogRight <= width + 2,
+        width + 'px wishlist/compare viewport overflow: ' + JSON.stringify(saved));
+      assert.ok(saved.controlsMinHeight >= 43 && saved.compareControlsMinHeight >= 43,
+        width + 'px wishlist/compare action touch size: ' + JSON.stringify(saved));
+      assert.ok(saved.scrollFocusable && saved.scrollWidth > saved.clientWidth,
+        width + 'px comparison content must scroll inside its container: ' + JSON.stringify(saved));
       process.stdout.write('PASS viewport ' + width + 'px\n');
     } finally {
       await page.close();
