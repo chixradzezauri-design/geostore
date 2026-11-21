@@ -44,3 +44,69 @@ export function hasVerifiedAdminOrderLedgerRows(rows) {
   }
   return true;
 }
+
+ 
+// Shared production order loader. The same async path is exercised by
+// deterministic integration tests without touching the live Supabase data.
+// null means that the mounting session changed; it does NOT certify an empty
+// ledger. Every other unverified read throws and App marks reports unverified.
+export async function fetchVerifiedAdminOrderLedger({
+  loadSession, apiKey, expectedUserId, supabaseUrl, fetchImpl, isCurrent,
+  pageSize = 1000, maxRows = 100000
+} = {}) {
+  if (typeof fetchImpl !== 'function' || !supabaseUrl || typeof isCurrent !== 'function' ||
+      !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 1000 ||
+      !Number.isSafeInteger(maxRows) || maxRows < pageSize || maxRows % pageSize !== 0) {
+    throw new Error('შეკვეთების სრული ისტორიის ჩატვირთვის კონფიგურაცია არასწორია.');
+  }
+  if (!isCurrent()) return null;
+
+  const initialSession = await getAuthenticatedAdminOrderHeaders({
+    loadSession, apiKey, expectedUserId
+  });
+  if (!isCurrent()) return null;
+  await requireAdminOrderPermission({ supabaseUrl, headers: initialSession.headers, fetchImpl });
+  if (!isCurrent()) return null;
+
+  const allOrderRows = [];
+  let completed = false;
+  for (let offset = 0; offset < maxRows; offset += pageSize) {
+    const { headers } = await getAuthenticatedAdminOrderHeaders({
+      loadSession, apiKey, expectedUserId: initialSession.userId
+    });
+    if (!isCurrent()) return null;
+    headers.Range = `${offset}-${offset + pageSize - 1}`;
+    headers['Range-Unit'] = 'items';
+    const response = await fetchImpl(
+      `${supabaseUrl}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
+      { headers }
+    );
+    if (!isCurrent()) return null;
+    if (!response?.ok) {
+      const detail = await response?.text?.().catch(() => '');
+      throw new Error(detail || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${response?.status ?? 'unknown'}).`);
+    }
+    const page = await response.json();
+    if (!isCurrent()) return null;
+    if (!Array.isArray(page)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
+    allOrderRows.push(...page);
+    if (page.length < pageSize) {
+      completed = true;
+      break;
+    }
+    if (offset + pageSize >= maxRows) {
+      throw new Error('შეკვეთების სრული ისტორიის შემოწმება ვერ დასრულდა; ბოლო წარმატებული სია შენარჩუნებულია.');
+    }
+  }
+  if (!completed) throw new Error('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+  if (!hasVerifiedAdminOrderLedgerRows(allOrderRows)) {
+    throw new Error('შეკვეთების ისტორიაში არასწორი ან დუბლირებული ID აღმოჩნდა; ფინანსური ანგარიში არ დასტურდება.');
+  }
+  const finalSession = await getAuthenticatedAdminOrderHeaders({
+    loadSession, apiKey, expectedUserId: initialSession.userId
+  });
+  if (!isCurrent()) return null;
+  await requireAdminOrderPermission({ supabaseUrl, headers: finalSession.headers, fetchImpl });
+  if (!isCurrent()) return null;
+  return allOrderRows;
+}

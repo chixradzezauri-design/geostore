@@ -32,3 +32,9 @@ Require all four exact-HEAD GitHub workflows to pass, a completed authenticated 
 - A previous successful snapshot must be marked **unverified** if a later order refresh fails; do not show it as confirmed turnover/profit or allow financial CSV until reconciliation succeeds again.
 - Confirm the persisted raw order total is preserved alongside the normalized UI value. Invalid raw currency must not pass reconciliation merely because display normalization converted it to zero.
 - Test multi-page token refresh, switching principal, revoked orders permission with RLS-filtered HTTP 200 [], timeouts, partial pages and restoration of a verified snapshot after retry.
+
+## Phase 29 — deterministic API-flow integration tests and deployment drift
+
+- The verified multi-page order loader has been extracted from the App and is executed verbatim in Node tests with a controlled, in-memory fake Supabase REST service. Cases cover multiple pages, a denied initial/final permission RPC, a false zero-row response, account switching after a page, same-account token rotation, duplicate order IDs, unclosed page cap, network/malformed JSON errors, and cancellation. **These are simulated API-flow integration tests, not real owner/staff browser E2E.**
+- Read-only Supabase catalog inspection confirmed live `public.expenses` and `public.orders` RLS enabled, live authenticated expense/order policies present, public `has_staff_permission` calls a private security-definer helper with fixed search path, and anonymous execution is revoked. This verifies stored definitions only, not token-bearing owner/staff request behavior.
+- Vercel preview for the prior Phase 28 HEAD `8d8c6ecd` is READY and has no production target. The most recent production deployment checked is `c6a9308f`, while `main` was `0ca3ff5c` (2 commits ahead of the deployed SHA); release must include that baseline drift in the eventual rollout review.

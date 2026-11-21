@@ -6,12 +6,15 @@ const admin=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',impor
 
 test('admin orders must be verified by live permission both before and after pagination',()=>{
   const part=app.slice(app.indexOf('  const fetchOrders = async () => {'),app.indexOf('  const fetchProductsFromDatabase = async () => {'));
-  assert.equal((part.match(/await requireAdminOrderPermission\(/g)||[]).length,2);
-  assert.match(part,/expectedUserId: initialSession\.userId/);
-  assert.match(part,/hasVerifiedAdminOrderLedgerRows\(allOrderRows\)/);
-  assert.ok(part.indexOf('await requireAdminOrderPermission(')<part.indexOf('for (let offset'));
-  assert.ok(part.lastIndexOf('await requireAdminOrderPermission(')>part.indexOf('if (!completed)'));
-  assert.ok(part.indexOf('setAdminOrdersReady(true)')>part.lastIndexOf('await requireAdminOrderPermission('));
+  const safety=readFileSync(new URL('../src/utils/adminOrderLedgerSafety.js',import.meta.url),'utf8');
+  const verifiedLoader=safety.slice(safety.indexOf('export async function fetchVerifiedAdminOrderLedger'));
+  assert.equal((verifiedLoader.match(/await requireAdminOrderPermission\(/g)||[]).length,2);
+  assert.match(verifiedLoader,/expectedUserId: initialSession\.userId/);
+  assert.match(verifiedLoader,/hasVerifiedAdminOrderLedgerRows\(allOrderRows\)/);
+  assert.ok(verifiedLoader.indexOf('await requireAdminOrderPermission(')<verifiedLoader.indexOf('for (let offset'));
+  assert.ok(verifiedLoader.lastIndexOf('await requireAdminOrderPermission(')>verifiedLoader.indexOf('if (!completed)'));
+  assert.match(part,/const data = await fetchVerifiedAdminOrderLedger\(\{/);
+  assert.match(part,/setAdminOrdersReady\(true\)/);
   assert.match(part,/setAdminOrdersReady\(false\);\s*setAdminOrdersError\(/);
   assert.match(app,/ordersReady=\{adminOrdersReady && adminOrdersVerifiedPrincipal === currentUser\?\.id\}/);
 });

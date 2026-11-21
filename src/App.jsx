@@ -31,7 +31,7 @@ import { translations } from './utils/translations';
 import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
-import { getAuthenticatedAdminOrderHeaders, requireAdminOrderPermission, hasVerifiedAdminOrderLedgerRows } from './utils/adminOrderLedgerSafety.js';
+import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -1889,62 +1889,19 @@ export default function App() {
     const requestPrincipal = currentUser?.id || null;
     adminOrdersFetchLock.current = true;
     try {
-      // A 200 [] might be an RLS-denied view rather than no orders.
-      // Check the same server permission used by the orders policy.
-      const initialSession = await getAuthenticatedAdminOrderHeaders({
+      // Exercise the same verified multi-page loader as the automated
+      // simulated E2E tests. A null result means the old principal/session
+      // was superseded before publication.
+      const data = await fetchVerifiedAdminOrderLedger({
         loadSession: () => supabase.auth.getSession(),
         apiKey: SUPABASE_ANON_KEY,
-        expectedUserId: requestPrincipal
+        expectedUserId: requestPrincipal,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch,
+        isCurrent: () => adminOrdersSessionActive.current &&
+          requestSessionVersion === adminOrdersSessionVersion.current
       });
-      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
-      await requireAdminOrderPermission({ supabaseUrl: SUPABASE_URL, headers: initialSession.headers, fetchImpl: fetch });
-      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
-      // PostgREST commonly caps responses at 1,000 rows. Load the complete
-      // admin order ledger in stable pages so older delivered/cancelled orders
-      // remain available to finance, analytics and CSV exports.
-      const allOrderRows = [];
-      const pageSize = 1000;
-      let completed = false;
-      for (let offset = 0; offset < 100000; offset += pageSize) {
-        const { headers } = await getAuthenticatedAdminOrderHeaders({
-          loadSession: () => supabase.auth.getSession(),
-          apiKey: SUPABASE_ANON_KEY,
-          expectedUserId: initialSession.userId
-        });
-        if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
-        headers.Range = `${offset}-${offset + pageSize - 1}`;
-        headers['Range-Unit'] = 'items';
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
-          { headers }
-        );
-        if (!res.ok) {
-          const errorBody = await res.text().catch(() => '');
-          throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
-        }
-        const page = await res.json();
-        if (!Array.isArray(page)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
-        allOrderRows.push(...page);
-        if (page.length < pageSize) {
-          completed = true;
-          break;
-        }
-        if (offset + pageSize >= 100000) {
-          throw new Error('შეკვეთების სრული ისტორიის შემოწმება ვერ დასრულდა; ბოლო წარმატებული სია შენარჩუნებულია.');
-        }
-      }
-      if (!completed) throw new Error('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
-      if (!hasVerifiedAdminOrderLedgerRows(allOrderRows)) {
-        throw new Error('შეკვეთების ისტორიაში არასწორი ან დუბლირებული ID აღმოჩნდა; ფინანსური ანგარიში არ დასტურდება.');
-      }
-      const finalSession = await getAuthenticatedAdminOrderHeaders({
-        loadSession: () => supabase.auth.getSession(),
-        apiKey: SUPABASE_ANON_KEY,
-        expectedUserId: initialSession.userId
-      });
-      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
-      await requireAdminOrderPermission({ supabaseUrl: SUPABASE_URL, headers: finalSession.headers, fetchImpl: fetch });
-      const data = allOrderRows;
+      if (data === null) return;
       // Do not restore private admin data after logout while a request is pending.
       if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
       setOrders(data.map((o) => {

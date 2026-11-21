@@ -3,21 +3,25 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const safety = await readFile(new URL('../src/utils/adminOrderLedgerSafety.js', import.meta.url), 'utf8');
 
-test('admin order refresh paginates the complete order ledger beyond the PostgREST row cap', () => {
-  assert.match(app, /const allOrderRows = \[\];[\s\S]*?const pageSize = 1000;/);
-  assert.match(app, /for \(let offset = 0; offset < 100000; offset \+= pageSize\)/);
-  assert.match(app, /headers\.Range = \x60\$\{offset\}-\$\{offset \+ pageSize - 1\}\x60/);
-  assert.match(app, /headers\['Range-Unit'\] = 'items'/);
-  assert.match(app, /orders\?select=\*&order=created_at\.desc,id\.asc/);
-  assert.match(app, /allOrderRows\.push\(\.\.\.page\)/);
-  assert.match(app, /const data = allOrderRows;[\s\S]*?setOrders\(data\.map/);
+test('admin order refresh uses the shared complete ledger loader rather than a partial PostgREST page', () => {
+  assert.match(app, /const data = await fetchVerifiedAdminOrderLedger\(\{/);
+  assert.match(app, /if \(data === null\) return;/);
+  assert.match(app, /setOrders\(data\.map/);
+  assert.match(safety, /pageSize = 1000, maxRows = 100000/);
+  assert.match(safety, /for \(let offset = 0; offset < maxRows; offset \+= pageSize\)/);
+  assert.match(safety, /headers\.Range = `\$\{offset\}-\$\{offset \+ pageSize - 1\}`/);
+  assert.match(safety, /headers\['Range-Unit'\] = 'items'/);
+  assert.match(safety, /orders\?select=\*&order=created_at\.desc,id\.asc/);
+  assert.match(safety, /allOrderRows\.push\(\.\.\.page\)/);
 });
 
-test('partial order pagination never replaces the last complete admin order snapshot', () => {
-  assert.match(app, /if \(page\.length < pageSize\) \{\s*completed = true;\s*break;\s*\}/);
-  assert.match(app, /შეკვეთების სრული ისტორიის შემოწმება ვერ დასრულდა/);
-  assert.match(app, /if \(!completed\) throw new Error\('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა\.'\)/);
+test('partial order pagination never certifies an incomplete admin order snapshot', () => {
+  assert.match(safety, /if \(page\.length < pageSize\) \{/);
+  assert.match(safety, /შეკვეთების სრული ისტორიის შემოწმება ვერ დასრულდა/);
+  assert.match(safety, /if \(!completed\) throw new Error\('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა\.'\)/);
+  assert.match(safety, /hasVerifiedAdminOrderLedgerRows\(allOrderRows\)/);
   assert.match(app, /if \(!adminOrdersSessionActive\.current \|\| requestSessionVersion !== adminOrdersSessionVersion\.current\) return;[\s\S]*?setOrders\(data\.map/);
   assert.match(app, /finally \{\s*adminOrdersFetchLock\.current = false;/);
 });
