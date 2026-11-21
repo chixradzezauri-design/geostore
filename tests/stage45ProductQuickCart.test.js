@@ -8,14 +8,14 @@ const store = readFileSync(new URL('../src/components/StoreView.jsx', import.met
 const css = readFileSync(new URL('../src/designSystemV2.css', import.meta.url), 'utf8');
 
 test('stage45 quick-view actions are keyboard reachable and preserve modal failure state', () => {
- assert.match(store, /<button type="button" onClick={event => handleOpenProduct\\(prod, event\\.currentTarget\\)} aria-label=/);
+ assert.match(store, /<button type="button" onClick={event => handleOpenProduct\(prod, event\.currentTarget\)} aria-label=/);
  assert.match(store, /className="gs-flash-sale-title-action"/);
- assert.match(store, /if \\(added !== false\\) setSelectedProduct\\(null\\)/);
- assert.match(store, /returnTarget\\?\\.isConnected/);
+ assert.match(store, /if \(added !== false\) setSelectedProduct\(null\)/);
+ assert.match(store, /returnTarget\?\.isConnected/);
  assert.match(store, /gs-custom-variant-name font-bold/);
  assert.match(css, /Stage 45 — accessible Flash Sale quick-view/);
- assert.match(css, /\\.gs-custom-variant-option[\\s\\S]*?min-height: 44px !important/);
- assert.match(css, /\\.gs-flash-sale-title-action[\\s\\S]*?min-height: 44px/);
+ assert.match(css, /\.gs-custom-variant-option[\s\S]*?min-height: 44px !important/);
+ assert.match(css, /\.gs-flash-sale-title-action[\s\S]*?min-height: 44px/);
 });
 test('stage45 stock-limit and option feedback is localized for all three languages', () => {
  for(const lang of ['ka','en','ru']) {
@@ -29,9 +29,9 @@ test('stage45 stock-limit and option feedback is localized for all three languag
  assert.match(getCartFeedbackMessage('ru','outOfStock'), /нет в наличии/);
  assert.equal(getCartFeedbackMessage('invalid','invalidSize'),getCartFeedbackMessage('ka','invalidSize'));
  assert.equal(getCartFeedbackMessage('en','stockLimit',{remaining:NaN}),getCartFeedbackMessage('en','outOfStock'));
- assert.match(app, /getCartFeedbackMessage\\(currentLang, 'invalidCombination'\\), 'error'/);
- assert.match(app, /role=\\{toastTone === 'error' \\? 'alert' : 'status'\\}/);
- assert.match(app, /toastTimerRef\\.current = setTimeout/);
+ assert.match(app, /getCartFeedbackMessage\(currentLang, 'invalidCombination'\), 'error'/);
+ assert.match(app, /role=\{toastTone === 'error' \? 'alert' : 'status'\}/);
+ assert.match(app, /toastTimerRef\.current = setTimeout/);
 });
 test('stage45 rapid repeated taps must not exceed stock or overwrite cart', () => {
  const product={id:'stage45',name:'Jacket',priceGEL:105,stock:1,selectedSize:'M'};
