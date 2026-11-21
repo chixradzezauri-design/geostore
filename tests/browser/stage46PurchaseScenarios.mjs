@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 // Every Supabase request is intercepted in the browser. No live account,
 // inventory, order, checkout, database or Storage mutation is possible.
 const supabaseOrigin = 'https://xmtnszxtnfxnrojionoa.supabase.co';
-export const stage49FixtureProductRows = [
+const productRows = [
   {
     id: 'stage46-simple', name: 'Stage46 Everyday Wallet', category: 'აქსესუარები',
     price_gel: 35, old_price_gel: 45, stock: 3,
@@ -41,6 +41,9 @@ export const stage49FixtureProductRows = [
   is_featured: false, description: 'Controlled browser test item, no live order.',
   ...row
 }));
+// Reuse exactly the same data in Stage49 authenticated browser journeys.
+export const stage49FixtureProductRows = productRows;
+
 const localCache = productRows.map(row => ({
   id: row.id, name: row.name, category: row.category,
   priceGEL: row.price_gel, oldPriceGEL: row.old_price_gel ?? null,
