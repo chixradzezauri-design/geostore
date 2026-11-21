@@ -3520,6 +3520,8 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             comparisonList={comparisonList}

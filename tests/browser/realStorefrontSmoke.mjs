@@ -65,6 +65,39 @@ try {
       const artwork = page.locator('.gs-category-card img.gs-category-photo').first();
       assert.ok(await artwork.count() > 0, 'Category artwork is a real image at ' + width + 'px');
       assert.equal(await artwork.getAttribute('loading'), 'lazy', 'Category artwork lazy loading at ' + width + 'px');
+      
+      // Stage 39 — integrated client-side search and filter recovery.
+      const search = page.locator('.gs-header-search input[type="search"]');
+      await search.fill('stage39-no-results');
+      const searchClear = page.locator('.gs-header-search-clear');
+      await searchClear.waitFor({ state: 'visible', timeout: 10000 });
+      assert.ok(await searchClear.evaluate(node => node.getBoundingClientRect().height >= 43),
+        'Search clear target at ' + width + 'px');
+      await searchClear.click();
+      assert.equal(await search.inputValue(), '', 'Search clear resets query at ' + width + 'px');
+      assert.ok(await search.evaluate(node => document.activeElement === node),
+        'Search clear restores focus at ' + width + 'px');
+      const priceMin = page.locator('.gs-price-input').first();
+      const priceMax = page.locator('.gs-price-input').last();
+      await priceMin.fill('120');
+      await priceMax.fill('20');
+      await page.locator('#gs-price-range-error').waitFor({ state: 'visible', timeout: 10000 });
+      assert.equal(await priceMin.getAttribute('aria-invalid'), 'true',
+        'Invalid price range is accessible at ' + width + 'px');
+      const reset = page.locator('.gs-filter-reset-all');
+      await reset.click();
+      await reset.waitFor({ state: 'detached' });
+      assert.equal(await priceMin.inputValue(), '', 'Reset clears minimum at ' + width + 'px');
+      assert.equal(await priceMax.inputValue(), '', 'Reset clears maximum at ' + width + 'px');
+      assert.equal(await page.locator('.gs-sort-select').inputValue(), 'default',
+        'Reset restores default sorting at ' + width + 'px');
+      if (width <= 640) {
+        const minFont = await priceMin.evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+        const sortFont = await page.locator('.gs-sort-select').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+        assert.ok(minFont >= 16 && sortFont >= 16, 'iOS focus-zoom-safe filters at ' + width + 'px');
+      }
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 2,
+        'No horizontal overflow after search/filter actions at ' + width + 'px');
       const toggle = page.locator('.gs-menu-toggle');
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu opens at ' + width + 'px');

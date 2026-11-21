@@ -46,6 +46,8 @@ export default function StoreView({
   selectedCategory,
   setSelectedCategory,
   filteredProducts: initialFilteredProducts,
+  searchQuery = '',
+  setSearchQuery,
   wishlist,
   toggleWishlist,
   comparisonList = [],
@@ -93,6 +95,20 @@ export default function StoreView({
 
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openParentCatId, setOpenParentCatId] = useState(null);
+
+  const hasActiveCatalogFilters = Boolean(String(searchQuery || '').trim()) ||
+    (Boolean(selectedCategory) && selectedCategory !== 'ყველა') ||
+    Boolean(selectedSubCategory) || minPrice !== '' || maxPrice !== '' || sortBy !== 'default';
+  const resetCatalogFilters = () => {
+    setSearchQuery?.('');
+    setSelectedCategory?.('ყველა');
+    setSelectedSubCategory(null);
+    setOpenParentCatId(null);
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('default');
+    setProductPage(1);
+  };
 
   useEffect(() => {
     setProductPage(1);
@@ -313,7 +329,11 @@ export default function StoreView({
   const processedProducts = useMemo(() => {
     let result = [...activeProducts];
 
-    if (selectedSubCategory) {
+    // External main-category navigation must not keep a stale child filter active.
+    const selectedParent = mainCategories.find(c => (typeof c === 'object' ? c.name : c) === selectedCategory);
+    const validSubcategory = selectedSubCategory && selectedParent &&
+      getSubCategories(selectedParent.id || selectedParent.name).some(sub => sub.name === selectedSubCategory);
+    if (validSubcategory) {
       result = result.filter(p => p.category === selectedSubCategory);
     } else if (selectedCategory && selectedCategory !== 'ყველა') {
       const matchedParent = mainCategories.find(c => (typeof c === 'object' ? c.name : c) === selectedCategory);
@@ -731,7 +751,7 @@ export default function StoreView({
           })}
         </div>
 
-        {openParentCatId && getSubCategories(openParentCatId).length > 0 && (
+        {openParentCatId && mainCategories.some(cat => String(cat.id || cat.name) === String(openParentCatId) && cat.name === selectedCategory) && getSubCategories(openParentCatId).length > 0 && (
           <div className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
@@ -781,6 +801,8 @@ export default function StoreView({
             inputMode="decimal"
             placeholder={storeText.minPrice}
             aria-label={storeText.minPrice}
+            aria-invalid={hasInvalidPriceRange}
+            aria-describedby={hasInvalidPriceRange ? 'gs-price-range-error' : undefined}
             value={minPrice}
             onChange={e => setMinPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
             data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
@@ -793,6 +815,8 @@ export default function StoreView({
             inputMode="decimal"
             placeholder={storeText.maxPrice}
             aria-label={storeText.maxPrice}
+            aria-invalid={hasInvalidPriceRange}
+            aria-describedby={hasInvalidPriceRange ? 'gs-price-range-error' : undefined}
             value={maxPrice}
             onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
             data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
@@ -817,13 +841,20 @@ export default function StoreView({
             <option value="price-desc">{storeText.priceHigh}</option>
             <option value="name-asc">{storeText.nameSort}</option>
           </select>
+          {hasActiveCatalogFilters && (
+            <button type="button" className="gs-filter-reset-all rounded-xl px-3 py-2 font-bold"
+              onClick={resetCatalogFilters}
+              aria-label={currentLang === 'en' ? 'Clear all product filters' : currentLang === 'ru' ? 'Сбросить все фильтры товаров' : 'პროდუქტის ყველა ფილტრის გასუფთავება'}>
+              {currentLang === 'en' ? 'Clear all filters' : currentLang === 'ru' ? 'Сбросить все фильтры' : 'ყველა ფილტრის გასუფთავება'}
+            </button>
+          )}
         </div>
       </div>
 
       {renderCustomSections('after-filters')}
 
       {hasInvalidPriceRange && (
-        <p className="gs-price-range-error" role="alert">
+        <p id="gs-price-range-error" className="gs-price-range-error" role="alert">
           {currentLang === 'en'
             ? 'Minimum price cannot be greater than maximum price.'
             : currentLang === 'ru'
@@ -836,6 +867,11 @@ export default function StoreView({
       {processedProducts.length === 0 ? (
         <div className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
+          {hasActiveCatalogFilters && (
+            <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
+              {currentLang === 'en' ? 'Show all products' : currentLang === 'ru' ? 'Показать все товары' : 'ყველა პროდუქტის ნახვა'}
+            </button>
+          )}
         </div>
       ) : (
         <div id="gs-catalog-products" className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>

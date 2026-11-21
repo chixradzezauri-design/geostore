@@ -1481,3 +1481,46 @@
     min-height: 44px;
   }
 }
+
+/* Stage 39 — search clear, filter reset and mobile catalogue controls.
+ * Visual-editor colors and stored product ordering remain authoritative. */
+.geostore-fashion-store .gs-header-search-row .gs-header-search-clear {
+  display: grid; place-items: center; flex: 0 0 44px;
+  width: 44px; min-width: 44px; min-height: 44px; touch-action: manipulation;
+}
+.geostore-fashion-store .gs-header-search-row .gs-header-search-clear svg { width: 17px; height: 17px; }
+.geostore-fashion-store .gs-filter-panel .gs-filter-reset-all,
+.geostore-fashion-store .gs-empty-products .gs-empty-products-reset {
+  min-height: 44px !important; min-width: 0; white-space: normal !important;
+  overflow-wrap: anywhere; touch-action: manipulation;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-header-search-row .gs-header-search { flex: 1 1 0; min-width: 0; }
+  .geostore-fashion-store .gs-header-search-row .gs-header-search input[type="search"] {
+    min-height: 44px !important; font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter {
+    display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important; width: 100%; position: relative;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > div:first-child,
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > button { grid-column: 1 / -1; }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > span {
+    position: absolute !important; width: 1px !important; height: 1px !important;
+    overflow: hidden !important; clip-path: inset(50%) !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > input[type="number"] {
+    width: 100% !important; max-width: none !important; min-width: 0 !important;
+    min-height: 44px !important; font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-sort-control {
+    width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-sort-control select {
+    width: 100% !important; min-width: 0 !important;
+    min-height: 44px !important; font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-sort-control .gs-filter-reset-all {
+    grid-column: 1 / -1; justify-self: stretch; width: 100%;
+  }
+}
