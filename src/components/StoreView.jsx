@@ -46,6 +46,8 @@ export default function StoreView({
   selectedCategory,
   setSelectedCategory,
   filteredProducts: initialFilteredProducts,
+  requestedSavedProductId = null,
+  onSavedProductRequestHandled,
   searchQuery = '',
   setSearchQuery,
   wishlist,
@@ -190,6 +192,13 @@ export default function StoreView({
     setNewReviewRating(5);
     setNewReviewImage('');
   };
+
+  useEffect(() => {
+    if (requestedSavedProductId === null || requestedSavedProductId === undefined) return;
+    const currentProduct = activeProducts.find(product => String(product?.id) === String(requestedSavedProductId));
+    if (currentProduct) handleOpenProduct(currentProduct);
+    onSavedProductRequestHandled?.(null);
+  }, [requestedSavedProductId, activeProducts, onSavedProductRequestHandled]);
 
   const closeProductDetails = () => {
     setSelectedProduct(null);

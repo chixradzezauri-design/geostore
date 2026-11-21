@@ -1690,3 +1690,35 @@
   .geostore-fashion-store .gs-wishlist-actions { width: 100%; justify-content: stretch; }
   .geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions .gs-wishlist-add { flex: 1 1 140px; }
 }
+
+/* Stage 44 — direct saved-product detail navigation, with accessible title actions.
+   The visual editor's storefront theme and per-product styles remain authoritative. */
+.geostore-fashion-store .gs-wishlist-detail-link,
+.gs-product-compare-dialog .gs-product-compare-detail-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  width: 100%;
+  max-width: 100%;
+  text-align: start;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .gs-wishlist-detail-link:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-detail-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.geostore-fashion-store .gs-wishlist-detail-link:disabled,
+.gs-product-compare-dialog .gs-product-compare-detail-link:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+.geostore-fashion-store .gs-wishlist-detail-link:not(:disabled),
+.gs-product-compare-dialog .gs-product-compare-detail-link:not(:disabled) {
+  cursor: pointer;
+}
+.gs-product-compare-dialog .gs-product-compare-heading {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

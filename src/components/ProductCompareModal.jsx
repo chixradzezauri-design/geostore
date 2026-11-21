@@ -1,6 +1,7 @@
 // src/components/ProductCompareModal.jsx - Side-by-Side Product Comparison
 import React, { useEffect, useRef } from 'react';
 import { getProductAvailableStock, getProductStartingPrice, hasProductVariantOptions } from '../utils/productVariants.js';
+import { findCurrentSavedProduct } from '../utils/savedProductNavigation.js';
 import { X, ShoppingBag, Trash2, Scale, Check, ShieldCheck } from 'lucide-react';
 
 export default function ProductCompareModal({
@@ -8,6 +9,7 @@ export default function ProductCompareModal({
   setIsComparisonOpen,
   comparisonList,
   setComparisonList,
+  catalogProducts = [],
   addToCart,
   formatPrice,
   onFindProduct,
@@ -81,12 +83,15 @@ export default function ProductCompareModal({
         ) : (
           <div className="gs-product-compare-scroll overflow-x-auto pb-4" role="region" tabIndex={0} aria-label={localized('პროდუქტების შედარების ცხრილი', 'Comparison of products', 'Сравнение товаров')}>
             <div className="gs-product-compare-grid grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-6">
-              {comparisonList.map(prod => (
-                <div key={prod.id} className="gs-product-compare-card bg-[#121216] border border-amber-500/20 rounded-[2rem] p-6 space-y-5 shadow-2xl relative flex flex-col justify-between">
+              {comparisonList.map(savedProd => {
+                const liveProduct = findCurrentSavedProduct(catalogProducts, savedProd);
+                const prod = liveProduct || savedProd;
+                return (
+                <div key={savedProd.id} className="gs-product-compare-card bg-[#121216] border border-amber-500/20 rounded-[2rem] p-6 space-y-5 shadow-2xl relative flex flex-col justify-between">
                   
                   <button 
                     type="button"
-                    onClick={() => handleRemoveFromCompare(prod.id)}
+                    onClick={() => handleRemoveFromCompare(savedProd.id)}
                     aria-label={`${localized('შედარებიდან წაშლა', 'Remove from comparison', 'Удалить из сравнения')}: ${prod.name}`}
                     className="gs-product-compare-remove absolute top-4 right-4 text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                     title="სიიდან ამოშლა"
@@ -101,7 +106,11 @@ export default function ProductCompareModal({
 
                     <div className="space-y-1">
                       <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg font-black uppercase">{prod.category}</span>
-                      <h3 className="font-black text-white text-sm line-clamp-2 pt-1">{prod.name}</h3>
+                      <h3 className="gs-product-compare-heading font-black text-white text-sm pt-1">
+                        <button type="button" className="gs-product-compare-detail-link text-left"
+                          aria-label={`${localized('დეტალურად ნახვა', 'View details', 'Подробнее')}: ${prod.name}`}
+                          onClick={() => onFindProduct?.(savedProd)} disabled={!liveProduct}>{prod.name}</button>
+                      </h3>
                     </div>
 
                     <div className="gs-product-compare-specs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 space-y-3 text-xs">
@@ -131,16 +140,17 @@ export default function ProductCompareModal({
 
                   <button
                     type="button"
-                    disabled={getProductAvailableStock(prod) <= 0}
+                    disabled={!liveProduct || getProductAvailableStock(prod) <= 0}
                     aria-label={`${hasProductVariantOptions(prod) ? localized('აირჩიეთ ვარიანტი', 'Choose options', 'Выбрать вариант') : localized('კალათაში დამატება', 'Add to cart', 'В корзину')}: ${prod.name}`}
-                    onClick={() => hasProductVariantOptions(prod) ? onFindProduct?.(prod) : addToCart(prod)}
+                    onClick={() => hasProductVariantOptions(prod) ? onFindProduct?.(savedProd) : addToCart(prod)}
                     className="gs-product-compare-action w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer mt-4"
                   >
-                    <ShoppingBag className="w-4 h-4" /> {getProductAvailableStock(prod) <= 0 ? localized('მარაგში არ არის', 'Out of stock', 'Нет в наличии') : hasProductVariantOptions(prod) ? localized('აირჩიეთ ვარიანტი', 'Choose options', 'Выбрать вариант') : localized('კალათაში დამატება', 'Add to cart', 'В корзину')}
+                    <ShoppingBag className="w-4 h-4" /> {!liveProduct ? localized('მიუწვდომელია', 'Unavailable', 'Недоступен') : getProductAvailableStock(prod) <= 0 ? localized('მარაგში არ არის', 'Out of stock', 'Нет в наличии') : hasProductVariantOptions(prod) ? localized('აირჩიეთ ვარიანტი', 'Choose options', 'Выбрать вариант') : localized('კალათაში დამატება', 'Add to cart', 'В корзину')}
                   </button>
 
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
         )}

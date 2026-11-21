@@ -40,6 +40,7 @@ import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAcc
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
+import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -553,6 +554,7 @@ export default function App() {
   const [selectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
+  const [requestedSavedProductId, setRequestedSavedProductId] = useState(null);
 
   const [cart, setCart] = useState(() =>
     sanitizeCartSnapshot(loadSafeStorage('geostore_cart:guest', loadSafeStorage('geostore_cart', [])))
@@ -2597,11 +2599,29 @@ export default function App() {
   };
 
   const handleFindSavedProduct = (product) => {
-    // Existing product detail view remains the only place to choose stock variants.
+    // Match by stable ID, not a non-unique name or persisted price/stock snapshot.
+    const currentProduct = findCurrentSavedProduct(products, product);
+    if (!currentProduct) {
+      showToast(currentLang === 'en' ? 'This product is no longer available in the catalog.' :
+        currentLang === 'ru' ? 'Товар больше не доступен в каталоге.' : 'ეს პროდუქტი კატალოგში აღარ არის.');
+      return false;
+    }
     setSelectedCategory('ყველა');
-    setSearchQuery(String(product?.name || ''));
+    setSearchQuery('');
+    setRequestedSavedProductId(String(currentProduct.id));
     setActiveTab('store');
     setIsComparisonOpen(false);
+    return true;
+  };
+
+  const handleAddSavedProduct = (savedProduct) => {
+    const currentProduct = findCurrentSavedProduct(products, savedProduct);
+    if (!currentProduct) {
+      showToast(currentLang === 'en' ? 'This product is no longer available in the catalog.' :
+        currentLang === 'ru' ? 'Товар больше не доступен в каталоге.' : 'ეს პროდუქტი კატალოგში აღარ არის.');
+      return false;
+    }
+    return hasProductVariantOptions(currentProduct) ? handleFindSavedProduct(currentProduct) : addToCart(currentProduct);
   };
 
   const handleShareWishlist = () => {
@@ -3528,6 +3548,8 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
+            requestedSavedProductId={requestedSavedProductId}
+            onSavedProductRequestHandled={setRequestedSavedProductId}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             wishlist={wishlist}
@@ -3646,9 +3668,12 @@ export default function App() {
               </p>
             ) : (
               <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {wishlist.map((prod) => (
+                {wishlist.map((savedProd) => {
+                  const liveProduct = findCurrentSavedProduct(products, savedProd);
+                  const prod = liveProduct || savedProd;
+                  return (
                   <div
-                    key={prod.id}
+                    key={savedProd.id}
                     className="gs-wishlist-card gs-wishlist-card--actions bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
                     <div className="gs-wishlist-main flex items-center gap-3.5 min-w-0">
@@ -3662,8 +3687,11 @@ export default function App() {
                       />
 
                       <div className="gs-wishlist-meta min-w-0">
-                        <h4 className="gs-wishlist-product-title font-bold text-xs line-clamp-1">
-                          {prod.name}
+                        <h4 className="gs-wishlist-product-title font-bold text-xs">
+                          <button type="button" className="gs-wishlist-detail-link text-left" onClick={() => handleFindSavedProduct(savedProd)}
+                            disabled={!liveProduct} aria-label={`${currentLang === 'en' ? 'View details' : currentLang === 'ru' ? 'Подробнее' : 'დეტალურად ნახვა'}: ${prod.name}`}>
+                            {prod.name}
+                          </button>
                         </h4>
 
                         <p className="gs-wishlist-product-price font-black text-xs mt-1">
@@ -3674,20 +3702,22 @@ export default function App() {
 
                     <div className="gs-wishlist-actions flex flex-wrap gap-2">
                       <button type="button"
-                        onClick={() => hasProductVariantOptions(prod) ? handleFindSavedProduct(prod) : addToCart(prod)}
-                        disabled={getProductAvailableStock(prod) <= 0}
+                        onClick={() => handleAddSavedProduct(savedProd)}
+                        disabled={!liveProduct || getProductAvailableStock(prod) <= 0}
                         aria-label={`${hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}: ${prod.name}`}
                         className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                        {getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
+                        {!liveProduct ? (currentLang === 'en' ? 'Unavailable' : currentLang === 'ru' ? 'Недоступен' : 'მიუწვდომელია')
+                          : getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
                           : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}
                       </button>
                       <button type="button" className="gs-wishlist-remove inline-flex items-center justify-center rounded-xl border px-3 cursor-pointer"
-                        onClick={() => toggleWishlist(prod)} aria-label={`${currentLang === 'en' ? 'Remove from wishlist' : currentLang === 'ru' ? 'Удалить из избранного' : 'სურვილებიდან წაშლა'}: ${prod.name}`}>
+                        onClick={() => toggleWishlist(savedProd)} aria-label={`${currentLang === 'en' ? 'Remove from wishlist' : currentLang === 'ru' ? 'Удалить из избранного' : 'სურვილებიდან წაშლა'}: ${prod.name}`}>
                         <X className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </div>
@@ -4736,6 +4766,7 @@ export default function App() {
             setIsComparisonOpen={setIsComparisonOpen}
             comparisonList={comparisonList}
             setComparisonList={setComparisonList}
+            catalogProducts={products}
             onFindProduct={handleFindSavedProduct}
             currentLang={currentLang}
             addToCart={addToCart}

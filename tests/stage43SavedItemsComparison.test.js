@@ -7,9 +7,9 @@ const css=readFileSync(new URL('../src/designSystemV2.css',import.meta.url),'utf
 const browser=readFileSync(new URL('./browser/responsiveLayout.mjs',import.meta.url),'utf8');
 test('Stage 43: wishlist removal, correct starting prices, and variant-safe storefront navigation',()=>{
   assert.match(app,/handleFindSavedProduct = \(product\) =>/);
-  assert.match(app,/setSearchQuery\(String\(product\?\.name \|\| ''\)\)/);
-  assert.match(app,/hasProductVariantOptions\(prod\) \? handleFindSavedProduct\(prod\) : addToCart\(prod\)/);
-  assert.match(app,/onClick=\{\(\) => toggleWishlist\(prod\)\}/);
+  assert.match(app,/setRequestedSavedProductId\(String\(currentProduct\.id\)\)/);
+  assert.match(app,/onClick=\{\(\) => handleAddSavedProduct\(savedProd\)\}/);
+  assert.match(app,/onClick=\{\(\) => toggleWishlist\(savedProd\)\}/);
   assert.match(app,/getProductAvailableStock\(prod\) <= 0/);
   assert.match(app,/getProductStartingPrice\(prod\) === null/);
 });
@@ -20,8 +20,8 @@ test('Stage 43: comparison modal focus, keyboard closure, clear and variant/stoc
   assert.match(compare,/event\.key === 'Tab'/);
   assert.match(compare,/returnFocus\.focus\(\)/);
   assert.match(compare,/setComparisonList\(\[\]\)/);
-  assert.match(compare,/onFindProduct\?\.\(prod\) : addToCart\(prod\)/);
-  assert.match(compare,/disabled=\{getProductAvailableStock\(prod\) <= 0\}/);
+  assert.match(compare,/onFindProduct\?\.\(savedProd\) : addToCart\(prod\)/);
+  assert.match(compare,/disabled=\{!liveProduct \|\| getProductAvailableStock\(prod\) <= 0\}/);
 });
 test('Stage 43: measured responsive wishlist and compare control sizes and horizontal comparison scroll',()=>{
   assert.match(css,/Stage 43 — saved-list \/ comparison/);
