@@ -1373,7 +1373,7 @@
   display: block;
   width: 100%;
   min-width: 0;
-  min-height: 84px;
+  min-height: 84px !important;
   max-width: 100%;
   overflow-wrap: anywhere;
   line-height: 1.5;
@@ -1400,15 +1400,15 @@
 }
 @media (max-width: 640px) {
   .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls {
-    display: grid;
-    grid-template-columns: minmax(0,1fr);
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) !important;
     width: 100%;
     min-width: 0;
     gap: 8px !important;
   }
   .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     width: 100%;
     min-width: 0;
     overflow: visible;
