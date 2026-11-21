@@ -262,7 +262,7 @@ const cartFixture =
   '<div class="gs-cart-quantity-controls flex items-center gap-2" role="group" aria-label="რაოდენობა: სატესტო პროდუქტი">' +
   '<button type="button" class="w-8 h-8" aria-label="რაოდენობის შემცირება: სატესტო პროდუქტი">−</button><span aria-live="polite">2</span><button type="button" class="w-8 h-8" aria-label="რაოდენობის გაზრდა: სატესტო პროდუქტი">+</button></div></div>' +
   '<button class="gs-cart-remove">წაშლა</button></div></div>' +
-  '<div class="gs-cart-summary"><form class="gs-cart-coupon-form flex gap-2">' +
+  '<div class="gs-cart-summary"><label>მიწოდების რეგიონი<select aria-label="მიწოდების რეგიონი"><option>თბილისი</option></select></label><form class="gs-cart-coupon-form flex gap-2">' +
   '<input placeholder="პრომოკოდი"><button type="submit">გამოყენება</button></form>' +
   '<div class="gs-cart-totals"><div class="flex justify-between"><span>სრული თანხა</span><span>199.00 ₾</span></div></div>' +
   '<button class="gs-cart-checkout">შეკვეთის გაფორმება</button></div></div></div>';
