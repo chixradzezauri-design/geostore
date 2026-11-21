@@ -1635,8 +1635,10 @@
   .geostore-fashion-store .geostore-storefront .gs-product-reviews {
     gap: 10px !important;
   }
-  .geostore-fashion-store .geostore-storefront .gs-product-review-rating-select,
-  .geostore-fashion-store .geostore-storefront .gs-product-review-field {
+  /* Legacy modal controls use important font sizes; scope to this exact
+     review form so the 16px iOS floor takes priority over their selectors. */
+  .geostore-fashion-store .geostore-storefront .gs-product-modal-body .gs-product-review-entry .gs-product-review-rating-select,
+  .geostore-fashion-store .geostore-storefront .gs-product-modal-body .gs-product-review-entry .gs-product-review-field {
     font-size: 16px !important;
     min-height: 44px !important;
   }
