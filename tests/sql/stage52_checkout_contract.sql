@@ -41,12 +41,15 @@ BEGIN
       jsonb_build_object(
         'id', 'stage52-item-one', 'name', 'Fixture A', 'price', 100,
         'quantity', 1, 'purchase_cost', 45, 'purchaseCost', 46,
+        'vendor', 'internal-maker', 'unit_cost', 43, 'unitCost', 44,
+        'cost', 48, 'margin', 52, 'profit', 53,
         'selectedSize', 'M'
       ),
       jsonb_build_object(
         'id', 'stage52-item-two', 'name', 'Fixture B',
         'price', 44, 'quantity', 1, 'cost_price', 15, 'costPrice', 16,
-        'gift_wrap', true
+        'supplier', 'internal-supplier', 'supplier_name', 'internal-warehouse',
+        'supplierName', 'internal-warehouse-name', 'gift_wrap', true
       )
     )
   );
@@ -88,7 +91,8 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM jsonb_array_elements(result->'items') AS line(item)
-    WHERE line.item ?| ARRAY['purchase_cost','purchaseCost','cost_price','costPrice']
+    WHERE line.item ?| ARRAY['purchase_cost','purchaseCost','cost_price','costPrice','vendor',
+      'unit_cost','unitCost','cost','margin','profit','supplier','supplier_name','supplierName']
   ) THEN
     RAISE EXCEPTION 'Stage52: a new checkout exposed private financial data';
   END IF;
@@ -100,7 +104,8 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM jsonb_array_elements(replay->'items') AS line(item)
-    WHERE line.item ?| ARRAY['purchase_cost','purchaseCost','cost_price','costPrice']
+    WHERE line.item ?| ARRAY['purchase_cost','purchaseCost','cost_price','costPrice','vendor',
+      'unit_cost','unitCost','cost','margin','profit','supplier','supplier_name','supplierName']
   ) THEN
     RAISE EXCEPTION 'Stage52: an old snapshot replay exposed finance-only data';
   END IF;
@@ -122,7 +127,9 @@ BEGIN
   ));
   IF result->>'order_id' IS DISTINCT FROM 'STG52-AUTH-001'
      OR result->'items'->0 ? 'purchase_cost'
-     OR result->'items'->1 ? 'cost_price' THEN
+     OR result->'items'->1 ? 'cost_price'
+     OR result->'items'->0 ? 'vendor'
+     OR result->'items'->1 ? 'supplier' THEN
     RAISE EXCEPTION 'Stage52: authenticated checkout leaked private fields';
   END IF;
   BEGIN
@@ -154,7 +161,9 @@ BEGIN
   SELECT checkout_result INTO finance
   FROM private.stage52_snapshots WHERE order_id = 'STG52-GUEST-001';
   IF finance->'items'->0->>'purchase_cost' IS DISTINCT FROM '45'
-     OR finance->'items'->1->>'cost_price' IS DISTINCT FROM '15' THEN
+     OR finance->'items'->1->>'cost_price' IS DISTINCT FROM '15'
+     OR finance->'items'->0->>'vendor' IS DISTINCT FROM 'internal-maker'
+     OR finance->'items'->1->>'supplier' IS DISTINCT FROM 'internal-supplier' THEN
     RAISE EXCEPTION 'Stage52: finance-only snapshot was altered';
   END IF;
   IF has_table_privilege('anon','private.stage52_snapshots','SELECT')
@@ -173,4 +182,4 @@ BEGIN
   END IF;
 END
 $test$;
-\echo 'PASS Stage52 isolated PostgreSQL 17: new/replayed checkout redacted, prices preserved, private finance retained, roles checked, no real orders'
+\echo 'PASS Stage52+55 isolated PostgreSQL 17: all finance/vendor aliases redacted for new/replayed checkout, prices preserved, private finance retained, roles checked, no real orders'

@@ -1,4 +1,4 @@
--- Stage 51: prevent checkout RPC responses from exposing private product cost data.
+-- Stage 51 + 55: keep all internal purchasing, supplier, cost and margin data out of the public checkout response.
 -- The existing server transaction stores purchase_cost for authorized finance
 -- reports and continues to enforce stock, coupon, idempotency and auth rules.
 -- This only replaces the public, SECURITY INVOKER response boundary.
@@ -85,7 +85,21 @@ BEGIN
 
   SELECT coalesce(
     jsonb_agg(
-      entry.item - ARRAY['purchase_cost', 'purchaseCost', 'cost_price', 'costPrice']::text[]
+      entry.item - ARRAY[
+        'purchase_cost',
+        'purchaseCost',
+        'cost_price',
+        'costPrice',
+        'vendor',
+        'unit_cost',
+        'unitCost',
+        'cost',
+        'margin',
+        'profit',
+        'supplier',
+        'supplier_name',
+        'supplierName'
+      ]::text[]
       ORDER BY entry.line_no
     ),
     '[]'::jsonb

@@ -11,7 +11,7 @@ test('Stage51 public checkout wrapper excludes financial purchase cost from new 
   assert.match(privateCheckout, /'purchase_cost', v_product\.purchase_cost/);
   assert.match(privateCheckout, /v_existing\.checkout_result \|\| jsonb_build_object\('idempotent_replay', true\)/);
   assert.match(migration, /v_internal_result := private\.create_order_with_stock\(p_order\)/);
-  assert.match(migration, /entry\.item - ARRAY\['purchase_cost', 'purchaseCost', 'cost_price', 'costPrice'\]::text\[\]/);
+  assert.match(migration, /entry\.item - ARRAY\[[\s\S]*?'purchase_cost'[\s\S]*?'supplierName'[\s\S]*?\]::text\[\]/);
   assert.match(migration, /jsonb_agg\([\s\S]*ORDER BY entry\.line_no/);
   assert.match(migration, /RETURN jsonb_set\(v_internal_result, '\{items\}', v_public_items, false\)/);
   assert.doesNotMatch(migration, /UPDATE public\.orders|UPDATE public\.products|DELETE FROM public\.orders|INSERT INTO public\.orders/i);
@@ -56,6 +56,8 @@ test('Stage51 customer receipt strips private cost fields without altering autho
   const original = [{
     id: 'p1', price: 150, base_price: 130, addon_total: 20, quantity: 2,
     purchase_cost: 51, purchaseCost: 52, cost_price: 53, costPrice: 54,
+    vendor: 'internal', unit_cost: 55, unitCost: 56, cost: 57, margin: 58,
+    profit: 59, supplier: 'supplier', supplier_name: 'internal', supplierName: 'internal',
     selectedSize: 'M', gift_wrap: true
   }];
   const result = redactCustomerCheckoutItems(original);

@@ -80,7 +80,8 @@ export const normalizeOrderItems = (items) => (
 export const redactCustomerCheckoutItems = (items) => (
   Array.isArray(items) ? items.map((item) => {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
-    const { purchase_cost, purchaseCost, cost_price, costPrice, ...publicItem } = item;
+    const { purchase_cost, purchaseCost, cost_price, costPrice, vendor, unit_cost, unitCost,
+      cost, margin, profit, supplier, supplier_name, supplierName, ...publicItem } = item;
     return publicItem;
   }) : []
 );
