@@ -3548,10 +3548,10 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
-            requestedSavedProductId={requestedSavedProductId}
-            onSavedProductRequestHandled={setRequestedSavedProductId}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            requestedSavedProductId={requestedSavedProductId}
+            onSavedProductRequestHandled={setRequestedSavedProductId}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             comparisonList={comparisonList}
