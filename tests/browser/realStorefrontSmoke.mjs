@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { runStage46ProductPurchaseScenarios } from './stage46PurchaseScenarios.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -187,6 +188,8 @@ try {
       await context.close();
     }
   }
+  // Stage 46: actual built SPA with a fully intercepted, deterministic catalogue.
+  await runStage46ProductPurchaseScenarios(browser, host);
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
