@@ -72,6 +72,19 @@ export const normalizeOrderItems = (items) => (
     : []
 );
 
+/**
+ * Defense in depth: never retain internal finance-only fields in a customer
+ * checkout receipt or in the client order state. Database analytics keep the
+ * original cost snapshots and the public RPC has its own response redaction.
+ */
+export const redactCustomerCheckoutItems = (items) => (
+  Array.isArray(items) ? items.map((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+    const { purchase_cost, purchaseCost, cost_price, costPrice, ...publicItem } = item;
+    return publicItem;
+  }) : []
+);
+
 // Pure checkout safety helpers. Kept separate so Node's built-in test runner
 // can verify retry and item-grouping rules without browser or Supabase access.
 

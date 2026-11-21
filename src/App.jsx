@@ -30,7 +30,7 @@ import {
 import { translations } from './utils/translations';
 import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, redactCustomerCheckoutItems, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
@@ -3443,7 +3443,7 @@ export default function App() {
 
     if (abandonCheckoutIfOwnerChanged()) return;
     const confirmedItems = normalizeOrderItems(
-      Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder
+      redactCustomerCheckoutItems(Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder)
     );
     const confirmedTotal = Number(serverOrderResult.total_gel);
     const confirmedDelivery = Number(serverOrderResult.delivery_gel);

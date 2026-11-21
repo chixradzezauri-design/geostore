@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { redactCustomerCheckoutItems } from '../src/utils/orderSafety.js';
 
 const migration = readFileSync(new URL('../supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql', import.meta.url), 'utf8');
 const privateCheckout = readFileSync(new URL('../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql', import.meta.url), 'utf8');
@@ -48,4 +49,26 @@ test('Stage51 deliberately preserves the internal financial snapshot used by adm
   assert.match(privateCheckout, /insert into public\.orders\(id, customer_name, phone, address/);
   assert.match(migration, /The existing server transaction stores purchase_cost for authorized finance/);
   assert.match(migration, /Data API response is filtered/);
+});
+
+
+test('Stage51 customer receipt strips private cost fields without altering authoritative prices', () => {
+  const original = [{
+    id: 'p1', price: 150, base_price: 130, addon_total: 20, quantity: 2,
+    purchase_cost: 51, purchaseCost: 52, cost_price: 53, costPrice: 54,
+    selectedSize: 'M', gift_wrap: true
+  }];
+  const result = redactCustomerCheckoutItems(original);
+  assert.deepEqual(result, [{
+    id: 'p1', price: 150, base_price: 130, addon_total: 20,
+    quantity: 2, selectedSize: 'M', gift_wrap: true
+  }]);
+  assert.equal(original[0].purchase_cost, 51, 'No mutation to original authoritative snapshot');
+  assert.deepEqual(redactCustomerCheckoutItems(null), []);
+});
+
+test('Stage51 applies receipt redaction before customer normalization / local state', () => {
+  const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  assert.match(app, /const confirmedItems = normalizeOrderItems\(\s*redactCustomerCheckoutItems\(/);
+  assert.match(app, /serverOrderResult\.items\) \? serverOrderResult\.items : itemsToOrder/);
 });
