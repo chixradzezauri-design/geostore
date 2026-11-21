@@ -1531,3 +1531,32 @@
     min-height: 44px !important;
   }
 }
+
+/* Stage 40 — touch-sized catalog actions and keyboard category controls.
+ * Do not override merchant-selected product media ratio, font family or palette. */
+.geostore-fashion-store .geostore-storefront .gs-category-card[role="button"]:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-subcategory-chip:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-title-action:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 2px;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-title-action {
+  display: block; width: 100%; min-width: 0; font: inherit;
+  line-height: inherit; text-align: inherit; overflow-wrap: anywhere; cursor: pointer;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-media > button.gs-catalog-media-toggle {
+  width: 44px !important; height: 44px !important;
+  min-width: 44px !important; min-height: 44px !important;
+  padding: 10px !important; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-media > button.gs-catalog-media-toggle svg {
+  width: 18px !important; height: 18px !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-badges {
+  max-width: calc(100% - 64px); min-width: 0;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-badges > span {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.geostore-fashion-store .geostore-storefront .gs-subcategory-chip {
+  min-height: 44px !important; max-width: 100%; overflow-wrap: anywhere; touch-action: manipulation;
+}

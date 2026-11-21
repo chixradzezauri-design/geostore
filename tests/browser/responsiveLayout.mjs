@@ -10,8 +10,10 @@ const css = stylesheets.map(file => readFileSync(resolve(assets, file), 'utf8'))
 const stage6CssPresent = css.includes('.admin-products-panel .admin-product-controls');
 assert.ok(stage6CssPresent, 'Stage 6 admin product rules must be included in the built stylesheet');
 const cards = Array.from({ length: 2 }, (_, i) =>
-  '<article class="gs-catalog-product-card"><div class="gs-catalog-product-media">Image</div>' +
-  '<div class="gs-catalog-product-info"><h3>Product ' + i + '</h3><button>დამატება</button></div></article>'
+  '<article class="gs-catalog-product-card"><div class="gs-catalog-product-media">Image' +
+  '<button type="button" class="gs-catalog-media-toggle gs-catalog-wishlist-toggle" aria-label="სურვილები: Product ' + i + '" aria-pressed="false">♡</button>' +
+  '<button type="button" class="gs-catalog-media-toggle gs-catalog-comparison-toggle" aria-label="შედარება: Product ' + i + '" aria-pressed="false">⇄</button>' +
+  '</div><div class="gs-catalog-product-info"><h3 class="gs-catalog-product-title"><button type="button" class="gs-catalog-product-title-action">Product ' + i + '</button></h3><button>დამატება</button></div></article>'
 ).join('');
 const nav = Array.from({ length: 23 }, (_, i) =>
   '<button type="button" data-admin-visual-nav-item="true" class="w-full min-w-0 px-3.5 py-3 rounded-2xl flex items-center justify-between">' +
@@ -299,6 +301,8 @@ try {
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
+        const catalogActions = [...document.querySelectorAll('.gs-catalog-product-media > button.gs-catalog-media-toggle')];
+        const catalogTitleActions = [...document.querySelectorAll('.gs-catalog-product-title-action')];
         const links = document.querySelector('.geostore-footer-links');
         const dots = [...links.querySelectorAll('span[aria-hidden="true"]')];
         const buttons = [...links.querySelectorAll('button')];
@@ -387,6 +391,11 @@ try {
           scrollWidth: document.documentElement.scrollWidth,
           width: window.innerWidth,
           gridTracks: getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          catalogActionsCount: catalogActions.length,
+          catalogActionMinSize: Math.min(...catalogActions.map(el => Math.min(el.getBoundingClientRect().height, el.getBoundingClientRect().width))),
+          catalogActionMaxRight: Math.max(...catalogActions.map(el => el.getBoundingClientRect().right)),
+          catalogActionsNamed: catalogActions.every(el => Boolean(el.getAttribute('aria-label')) && el.hasAttribute('aria-pressed')),
+          catalogTitleActionCount: catalogTitleActions.length,
           footerDisplay: getComputedStyle(links).display,
           hiddenDots: dots.every(dot => getComputedStyle(dot).display === 'none'),
           footerMinButtonHeight: Math.min(...buttons.map(button => button.getBoundingClientRect().height)),
@@ -530,6 +539,10 @@ try {
       assert.ok(layout.productDialogRight <= width + 2, width + 'px product dialog overflow: ' + JSON.stringify(layout));
       assert.ok(layout.purchaseRight <= width + 2, width + 'px purchase CTA overflow: ' + JSON.stringify(layout));
       assert.ok(layout.productDialogMaxHeight <= 820 + 2, width + 'px product dialog height: ' + JSON.stringify(layout));
+      assert.equal(layout.catalogActionsCount, 4, width + 'px catalog wish/compare shortcuts exist');
+      assert.ok(layout.catalogActionMinSize >= 43, width + 'px catalog shortcuts must be touch sized: ' + JSON.stringify(layout));
+      assert.ok(layout.catalogActionMaxRight <= width + 2, width + 'px catalog shortcuts must not overflow');
+      assert.ok(layout.catalogActionsNamed && layout.catalogTitleActionCount === 2, width + 'px named and keyboard product actions');
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
       assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets: ' + JSON.stringify(layout.optionMetrics));
       assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');

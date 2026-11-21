@@ -300,7 +300,7 @@ export default function StoreView({
   };
 
   const mainCategories = useMemo(() => {
-    return (categories || []).filter(c => !c.parentId);
+    return (categories || []).filter(c => !c?.parentId).map(c => typeof c === 'string' ? { id: c, name: c } : c);
   }, [categories]);
 
   const getSubCategories = (parentId) => {
@@ -681,6 +681,7 @@ export default function StoreView({
             style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
             role="button"
             tabIndex={0}
+            aria-label={storeText.allCategories}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
@@ -719,7 +720,10 @@ export default function StoreView({
                 style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
                 role="button"
                 tabIndex={0}
+                aria-label={`${catName} — ${pCount} ${storeText.productsOnDisplay}`}
                 aria-pressed={isSelected}
+                aria-expanded={subCats.length > 0 ? isOpen : undefined}
+                aria-controls={subCats.length > 0 && isOpen ? 'gs-subcategory-panel' : undefined}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory(catName); setSelectedSubCategory(null); setOpenParentCatId(isOpen ? null : catId); } }}
                 onClick={() => { 
                   setSelectedCategory(catName); 
@@ -752,16 +756,18 @@ export default function StoreView({
         </div>
 
         {openParentCatId && mainCategories.some(cat => String(cat.id || cat.name) === String(openParentCatId) && cat.name === selectedCategory) && getSubCategories(openParentCatId).length > 0 && (
-          <div className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
+          <div id="gs-subcategory-panel" className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
                 <CornerDownRight className="w-4 h-4" /> {storeText.subcategories} <b className="text-white underline">{selectedCategory}</b>
               </span>
-              <button onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
+              <button type="button" onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
             </div>
             
             <div className="flex flex-wrap gap-2.5 pt-1">
               <button
+                type="button"
+                aria-pressed={!selectedSubCategory}
                 onClick={() => setSelectedSubCategory(null)}
                 className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
               >
@@ -773,6 +779,8 @@ export default function StoreView({
                 return (
                   <button
                     key={sub.id || sub.name}
+                    type="button"
+                    aria-pressed={isSubSel}
                     onClick={() => setSelectedSubCategory(sub.name)}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
@@ -902,21 +910,23 @@ export default function StoreView({
                 >
                   {prod.image ? <img data-visual-editor-target="product.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.image')} src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
-                    className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2.5 sm:p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }}
+                    className="gs-catalog-media-toggle gs-catalog-wishlist-toggle absolute top-3 right-3 sm:top-4 sm:right-4 p-2.5 sm:p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
                     title={storeText.wishlistTitle}
-                    aria-label={storeText.wishlistTitle}
+                    aria-label={`${storeText.wishlistTitle}: ${prod.name}`}
                     aria-pressed={isWish}
                   >
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
 
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
-                    className={`absolute top-14 right-3 sm:top-16 sm:right-4 p-2.5 sm:p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }}
+                    className={`gs-catalog-media-toggle gs-catalog-comparison-toggle absolute top-14 right-3 sm:top-16 sm:right-4 p-2.5 sm:p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
                     title={storeText.compareTitle}
-                    aria-label={storeText.compareTitle}
+                    aria-label={`${storeText.compareTitle}: ${prod.name}`}
                     aria-pressed={isCompared}
                   >
                     <Scale className="w-4 h-4" />
@@ -943,7 +953,9 @@ export default function StoreView({
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 data-visual-editor-target="product.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.title')} onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <h3 data-visual-editor-target="product.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                    <button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>
+                  </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
@@ -951,9 +963,11 @@ export default function StoreView({
                 </div>
 
                 <button
+                  type="button"
                   data-visual-editor-target="product.button"
                   style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.button')}
                   onClick={(event) => handleOpenProduct(prod, event.currentTarget)}
+                  aria-label={`${visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}: ${prod.name}`}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}

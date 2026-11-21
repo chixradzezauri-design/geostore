@@ -62,7 +62,27 @@ try {
         'Anonymous visitor must not see the administrator shortcut at ' + width + 'px');
       assert.equal(await page.locator('.admin-dashboard-pro').count(), 0,
         'Anonymous visitor must not mount private administrator content at ' + width + 'px');
-      const artwork = page.locator('.gs-category-card img.gs-category-photo').first();
+      const allCategoryCard = page.locator('.gs-category-card--all');
+       assert.equal(await allCategoryCard.getAttribute('role'), 'button', 'All-category is keyboard operable');
+       await allCategoryCard.focus();
+       await page.keyboard.press('Space');
+       assert.equal(await allCategoryCard.getAttribute('aria-pressed'), 'true', 'Space selects all categories at ' + width + 'px');
+       const firstCategoryCard = page.locator('.gs-category-card:not(.gs-category-card--all)').first();
+       if (await firstCategoryCard.count()) {
+         assert.ok(await firstCategoryCard.getAttribute('aria-label'), 'A main category has an accessible label');
+         await firstCategoryCard.focus();
+         await page.keyboard.press('Enter');
+         assert.equal(await firstCategoryCard.getAttribute('aria-pressed'), 'true', 'Enter selects category at ' + width + 'px');
+         await allCategoryCard.focus();
+         await page.keyboard.press('Space');
+         assert.equal(await allCategoryCard.getAttribute('aria-pressed'), 'true', 'All-category restored at ' + width + 'px');
+       }
+       const firstProduct = page.locator('.gs-catalog-product-card').first();
+       if (await firstProduct.count()) {
+         assert.equal(await firstProduct.locator('.gs-catalog-media-toggle').count(), 2, 'Product shortcuts exist');
+         assert.equal(await firstProduct.locator('.gs-catalog-product-title-action').count(), 1, 'Product title is keyboard operable');
+       }
+       const artwork = page.locator('.gs-category-card img.gs-category-photo').first();
       assert.ok(await artwork.count() > 0, 'Category artwork is a real image at ' + width + 'px');
       assert.equal(await artwork.getAttribute('loading'), 'lazy', 'Category artwork lazy loading at ' + width + 'px');
       
