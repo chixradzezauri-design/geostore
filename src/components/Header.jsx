@@ -41,6 +41,7 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef(null);
   const menuToggleRef = useRef(null);
+  const searchInputRef = useRef(null);
   const t = translations[currentLang] || translations.ka;
 
   const closeMenu = () => setMenuOpen(false);
@@ -149,6 +150,7 @@ export default function Header({
             <Search aria-hidden="true" />
             <input
               type="search"
+              ref={searchInputRef}
               data-visual-editor-target="header.search.input"
               style={visualStyle('header.search.input')}
               value={searchQuery || ''}
@@ -157,6 +159,15 @@ export default function Header({
               aria-label={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
             />
           </label>
+          {String(searchQuery || '').length > 0 && (
+            <button
+              type="button"
+              className="gs-header-search-clear"
+              onClick={() => { setSearchQuery?.(''); searchInputRef.current?.focus(); }}
+              aria-label={currentLang === 'en' ? 'Clear product search' : currentLang === 'ru' ? 'Очистить поиск товаров' : 'პროდუქტის ძებნის გასუფთავება'}
+              title={currentLang === 'en' ? 'Clear search' : currentLang === 'ru' ? 'Очистить поиск' : 'ძებნის გასუფთავება'}
+            ><X aria-hidden="true" /></button>
+          )}
           <button
             type="button"
             data-visual-editor-target="header.search.button" style={visualStyle('header.search.button')} className="gs-header-image-search"

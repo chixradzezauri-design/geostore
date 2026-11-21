@@ -22,7 +22,7 @@ test('Flash Sale CSS selectors match the actual StoreView card DOM', () => {
   assert.match(flashSaleMarkup, /className="flex items-baseline gap-2"/);
   assert.match(flashSaleMarkup, /<button[\s\S]*?className="w-full/);
   assert.match(flashSaleMarkup, /flashSaleProducts\.map\(prod =>/);
-  assert.match(flashSaleMarkup, /handleOpenProduct\(prod\)/);
+  assert.match(flashSaleMarkup, /handleOpenProduct\(prod, event\.currentTarget\)/);
   assert.match(flashSaleMarkup, /addToCart\(prod\)/);
 });
 

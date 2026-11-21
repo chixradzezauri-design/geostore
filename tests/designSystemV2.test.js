@@ -97,7 +97,7 @@ test('stage 3 retains existing order and coupon business logic while adding acce
   assert.match(app, /onSubmit=\{handleApplyCoupon\}/);
   assert.match(app, /setAppliedCoupon\(null\)/);
   assert.match(app, /aria-label=\{t\.promoCode\}/);
-  assert.match(app, /onClick=\{\(\) => \{\s*setCheckoutError\(''\);\s*setIsCheckoutOpen\(true\)/);
+  assert.match(app, /onClick=\{\(\) => \{\s*setCheckoutError\(''\);\s*setCheckoutErrorField\(null\);\s*setIsCheckoutOpen\(true\)/);
   assert.match(design, /Stage 3 — cart and checkout density/);
 });
 

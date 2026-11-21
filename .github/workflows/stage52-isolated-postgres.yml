@@ -1,0 +1,54 @@
+name: Stage52 isolated PostgreSQL checkout contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql'
+      - 'tests/sql/stage52_checkout_contract.sql'
+      - 'supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql'
+      - 'tests/sql/stage54_order_history_contract.sql'
+      - 'supabase/migrations/20261117100000_admin_staff_auth_foundation.sql'
+      - 'tests/sql/stage56_staff_auth_contract.sql'
+      - '.github/workflows/stage52-isolated-postgres.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checkout-rpc-isolation:
+    name: Run checkout public/private RPC contract against disposable PostgreSQL 17
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: stage52-fixture-only
+          POSTGRES_DB: stage52_checkout
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d stage52_checkout"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    steps:
+      - name: Check out Draft PR only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run real Stage51 SQL in isolated PostgreSQL 17
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: stage52_checkout
+          PGUSER: postgres
+          PGPASSWORD: stage52-fixture-only
+        run: |
+          psql --version
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage52_checkout_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage54_order_history_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage56_staff_auth_contract.sql

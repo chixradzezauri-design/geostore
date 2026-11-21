@@ -485,10 +485,30 @@ const PRESETS = {
 
 export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, onReloadRemote, previewTab = 'orders', onPreviewTabChange, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
+  // Stage 35: discoverability is local UI state, never part of the stored design.
+  const [panelGroupSearch, setPanelGroupSearch] = useState('');
+  const elementEditorDetailsRef = useRef(null);
+  const panelGroupQuery = panelGroupSearch.trim().toLocaleLowerCase('ka-GE');
+  const panelGroupKeywords = {
+    palette: 'ფერები პალიტრა თემები აქცენტი ფონები color theme palette',
+    typography: 'ტიპოგრაფია შრიფტი font typography',
+    layout: 'განლაგება ზომები დაშორება სიგანე სიმაღლე layout spacing size',
+    content: 'ტექსტები რედაქტირება სათაურები აღწერა ღილაკები content labels',
+    modules: 'მოდულები კომპონენტები ბლოკები panels components',
+    elements: 'ელემენტები შიდა რედაქტირება შეკვეთები ფილტრები სტატუსი ბარათები presets styles'
+  };
+  const isPanelGroupVisible = key => !panelGroupQuery || panelGroupKeywords[key].includes(panelGroupQuery);
+  const visiblePanelGroupCount = Object.keys(panelGroupKeywords).filter(isPanelGroupVisible).length;
   const [elementSearch, setElementSearch] = useState('');
   const [elementCategory, setElementCategory] = useState('all');
   const [showCustomizedOnly, setShowCustomizedOnly] = useState(false);
   const [selectedElementKey, setSelectedElementKey] = useState('');
+  useEffect(() => {
+    if (!selectedElementKey) return;
+    // Direct selection should reveal its controls even if another group was filtered.
+    setPanelGroupSearch('');
+    if (elementEditorDetailsRef.current) elementEditorDetailsRef.current.open = true;
+  }, [selectedElementKey]);
   const [directSelectionMode, setDirectSelectionMode] = useState(false);
   const [selectedElementKeys, setSelectedElementKeys] = useState([]);
   const [expandedElementDiffKeys, setExpandedElementDiffKeys] = useState([]);
@@ -1560,6 +1580,19 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </p>
       )}
 
+      <div className="min-w-0 rounded-2xl border border-slate-700 bg-slate-950/65 p-3" role="search" aria-label="ადმინპანელის დიზაინის პარამეტრების ძებნა">
+        <label htmlFor="admin-studio-group-search" className="block text-xs font-bold text-slate-200">პარამეტრების ძებნა</label>
+        <input id="admin-studio-group-search" type="search" autoComplete="off" value={panelGroupSearch} onChange={event => setPanelGroupSearch(event.target.value)} placeholder="ფერები, შრიფტი, ზომები, ტექსტები…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-base text-white placeholder:text-slate-500 sm:text-sm" />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <p role="status" aria-live="polite" className="text-[11px] text-slate-400">{visiblePanelGroupCount} / 6 ჯგუფი · გასაშლელად შეეხეთ სათაურს</p>
+          {panelGroupSearch && <button type="button" onClick={() => setPanelGroupSearch('')} className="min-h-10 rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold text-emerald-200">ძებნის გასუფთავება</button>}
+        </div>
+        {visiblePanelGroupCount === 0 && <p className="mt-2 text-xs text-amber-200" role="status">ჯგუფი ვერ მოიძებნა. შეცვალეთ საძიებო სიტყვა.</p>}
+      </div>
+
+      <details hidden={!isPanelGroupVisible('palette')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ფერების პალიტრა <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
+        <div className="mt-3">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-black text-white">ფერების პალიტრა</h3>
@@ -1585,7 +1618,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           ))}
         </div>
       </div>
+        </div>
+      </details>
 
+      <details hidden={!isPanelGroupVisible('typography')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ტიპოგრაფია და შრიფტები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
+        <div className="mt-3">
       <div className="space-y-3">
         <h3 className="text-sm font-black text-white">ტიპოგრაფია</h3>
         <label className="block max-w-xl space-y-2 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3 text-xs text-slate-200">
@@ -1605,7 +1643,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <span className="block text-[11px] leading-5 text-slate-400">შრიფტი იცვლება მხოლოდ ადმინ პანელის ამ ხედში; Tablet და Mobile პარამეტრები დამოუკიდებლად შეგიძლიათ დააყენოთ.</span>
         </label>
       </div>
+        </div>
+      </details>
 
+      <details hidden={!isPanelGroupVisible('layout')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">განლაგება და ზომები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
+        <div className="mt-3">
       <div className="space-y-4">
         <h3 className="text-sm font-black text-white">განლაგება და ზომები</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1629,7 +1672,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           ))}
         </div>
       </div>
+        </div>
+      </details>
 
+      <details hidden={!isPanelGroupVisible('content')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ტექსტები და წარწერები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
+        <div className="mt-3">
       <div className="space-y-3">
         <div>
           <h3 className="text-sm font-black text-white">ტექსტების რედაქტირება</h3>
@@ -1649,7 +1697,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           ))}
         </div>
       </div>
+        </div>
+      </details>
 
+      <details hidden={!isPanelGroupVisible('modules')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">მოდულების ინდივიდუალური დიზაინი <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
+        <div className="mt-3">
       <div className="space-y-4">
         <div>
           <h3 className="text-sm font-black text-white">მოდულების ინდივიდუალური დიზაინი</h3>
@@ -1657,8 +1710,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {COMPONENT_FIELDS.map(component => (
-            <section key={component.key} className="rounded-2xl border border-slate-700/80 bg-slate-950/60 p-3 sm:p-4" aria-label={component.label}>
-              <h4 className="mb-3 text-xs font-black text-emerald-200">{component.label}</h4>
+            <details key={component.key} className="min-w-0 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3 sm:p-4" aria-label={component.label}>
+              <summary className="flex min-h-11 cursor-pointer list-none items-center text-xs font-black text-emerald-200">{component.label}</summary>
+              <div className="mt-3 space-y-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {component.properties.map(property => (
                   <label key={property.key} className="block min-w-0 space-y-1.5 text-[11px] text-slate-300">
@@ -1708,12 +1762,17 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                   </label>
                 ))}
               </div>
-            </section>
+              </div>
+            </details>
           ))}
         </div>
       </div>
+        </div>
+      </details>
 
-
+      <details ref={elementEditorDetailsRef} hidden={!isPanelGroupVisible('elements')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">შიდა ელემენტების რედაქტირება <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
+        <div className="mt-3">
       <div className="space-y-4 rounded-2xl border border-emerald-400/20 bg-slate-950/50 p-3 sm:p-4">
         <div>
           <h3 className="text-sm font-black text-white">შიდა ელემენტების ინდივიდუალური რედაქტირება</h3>
@@ -2002,6 +2061,8 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           )}
         </div>
       </div>
+        </div>
+      </details>
 
       <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-3 text-[11px] leading-5 text-slate-300">
         პარამეტრები მოქმედებს მხოლოდ მთავარ ადმინისტრატორზე და იტვირთება მისი ანგარიშით ნებისმიერ მოწყობილობაზე. სხვა თანამშრომლების ხედს და მაღაზიის საჯარო დიზაინს არ ცვლის.
