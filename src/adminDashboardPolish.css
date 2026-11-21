@@ -1428,3 +1428,93 @@
     padding: 7px 9px !important;
   }
 }
+
+/* STAGE 33 — video-derived iPhone admin fixes: preserve desktop and stored colors. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-mobile-section-picker { display: none; }
+
+@media (max-width: 767px) {
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    > [data-admin-sidebar="true"] > div:nth-child(2) {
+    display: none !important; /* The 23 clipped horizontal chips are replaced below. */
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    > [data-admin-sidebar="true"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    .admin-mobile-section-picker {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+    width: 100%;
+    min-width: 0;
+    gap: 5px;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    .admin-mobile-section-picker label {
+    color: var(--admin-vd-muted-active, #cbd5e1) !important;
+    font-size: 11px !important;
+    font-weight: 700;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    .admin-mobile-section-picker select {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--admin-vd-border-active, #52738c) !important;
+    border-radius: 12px !important;
+    background: var(--admin-vd-surface-active, #0d1b2d) !important;
+    color: var(--admin-vd-text-active, #f8fafc) !important;
+    -webkit-text-fill-color: var(--admin-vd-text-active, #f8fafc) !important;
+    font-size: 16px !important; /* Avoid iOS zoom on focus. */
+    box-sizing: border-box;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    > div:nth-child(2) > [data-admin-visual-header="true"] {
+    /* Prevent saved desktop/legacy 480px greeting block from pushing action
+       buttons below the phone viewport. No design values are erased. */
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+    grid-template-rows: auto auto;
+    align-content: start !important;
+    justify-content: start !important;
+    justify-items: stretch !important;
+    align-items: start !important;
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    gap: 9px !important;
+    width: 100% !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    > div:nth-child(2) > [data-admin-visual-header="true"] > div {
+    width: 100% !important;
+    min-width: 0;
+    margin: 0 !important;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    > div:nth-child(2) > [data-admin-visual-header="true"] > div:last-child {
+    align-self: start;
+    align-content: start;
+    grid-auto-rows: auto;
+    gap: 7px !important;
+  }
+  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+    > div:nth-child(2) > [data-admin-visual-header="true"] > div:last-child > button {
+    min-height: 44px !important;
+    padding: 9px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+}

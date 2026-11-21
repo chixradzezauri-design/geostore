@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const admin=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',import.meta.url),'utf8');
-const css=readFileSync(new URL('../src/designSystemV2.css',import.meta.url),'utf8');
+const css=readFileSync(new URL('../src/adminDashboardPolish.css',import.meta.url),'utf8');
 const browser=readFileSync(new URL('./browser/responsiveLayout.mjs',import.meta.url),'utf8');
 
 test('mobile selector and desktop sidebar share one permission-filtered admin module list',()=>{
