@@ -18,6 +18,7 @@ import { getFinancialOrderEventDate, getFinancialDeliveryCharge, isReconciledOrd
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
 import { getAuthenticatedExpenseHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
+import { invalidateAdminSessionOperations } from '../utils/adminSessionLifecycle.js';
 import { escapeSpreadsheetCsvCell, hasVerifiedExpenseLedgerRows } from '../utils/financeExportSafety.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
@@ -2343,7 +2344,21 @@ export default function AdminDashboardPro({
   useLayoutEffect(() => {
     adminSessionActiveRef.current = Boolean(adminLoggedIn);
     adminSessionVersion.current += 1;
-    if (adminLoggedIn) return;
+    // The parent uses a principal-keyed AdminDashboardPro. A new account
+    // unmounts this instance without a logged-out render. Invalidate *all*
+    // pending async guards on effect cleanup, including owner/staff switches.
+    const invalidatePendingAdminWork = () => invalidateAdminSessionOperations({
+      adminSessionActiveRef,
+      adminSessionVersion,
+      expenseMutationVersionRef,
+      expenseMutationInFlightRef,
+      expenseFetchRequestRef,
+      expenseFetchInFlightRef,
+      expenseExportInFlightRef,
+      aiResponseVersionRef,
+      aiResponseInFlightRef
+    });
+    if (adminLoggedIn) return invalidatePendingAdminWork;
 
     // Clear private admin snapshots before the logged-out UI is painted.
     expenseMutationVersionRef.current += 1;
@@ -2421,6 +2436,7 @@ export default function AdminDashboardPro({
     supportThreadFetchInFlight.current.clear();
     supportThreadRefreshPending.current.clear();
     supportReplyInFlight.current.clear();
+    return invalidatePendingAdminWork;
   }, [adminLoggedIn]);
 
   const fetchActivityLogs = async () => {

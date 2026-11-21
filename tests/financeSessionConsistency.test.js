@@ -93,3 +93,23 @@ test('both expense mutations re-read user identity and re-authorize rotated toke
     assert.match(operation, /if \(!isCurrentMutation\(\)\) return;\s*const headers = new Headers\(currentHeaders\)/);
   }
 });
+
+test('principal-keyed admin panel always invalidates old private work on component unmount', () => {
+  const mountStart = app.indexOf('<AdminDashboardPro');
+  const dashboardMount = app.slice(mountStart, mountStart + 650);
+  assert.match(dashboardMount, /key=\{\x60\$\{currentUser\?\.id \|\| 'anonymous'\}/);
+
+  const lifecycle = admin.slice(
+    admin.indexOf('  useLayoutEffect(() => {\n    adminSessionActiveRef.current'),
+    admin.indexOf('  const fetchActivityLogs = async () => {')
+  );
+  assert.match(lifecycle, /const invalidatePendingAdminWork = \(\) => invalidateAdminSessionOperations\(/);
+  assert.match(lifecycle, /if \(adminLoggedIn\) return invalidatePendingAdminWork/);
+  assert.match(lifecycle, /return invalidatePendingAdminWork;\s*\}, \[adminLoggedIn\]\);/);
+
+  const read = admin.slice(admin.indexOf("  const fetchExpenses = async (requestMode = 'manual') => {"), admin.indexOf('  useEffect(() => {\n    // Do not poll private finance data'));
+  assert.match(read, /isCurrentAdminSession\(requestSessionVersion\)/);
+  const writes = admin.slice(admin.indexOf('  const handleAddExpense = async (e) => {'), admin.indexOf('  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess))'));
+  assert.match(writes, /const isCurrentMutation = \(\) =>[\s\S]*?isCurrentAdminSession\(mutationSession\)/);
+  assert.match(admin, /const isCurrentExport = \(\) =>[\s\S]*?isCurrentAdminSession\(exportSessionVersion\)/);
+});
