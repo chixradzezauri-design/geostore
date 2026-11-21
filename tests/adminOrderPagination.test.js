@@ -13,7 +13,8 @@ test('admin order refresh uses the shared complete ledger loader rather than a p
   assert.match(safety, /for \(let offset = 0; offset < maxRows; offset \+= pageSize\)/);
   assert.match(safety, /rest\/v1\/rpc\/admin_order_ledger_page/);
   assert.match(safety, /body: JSON\.stringify\(\{ p_offset: offset, p_limit: pageSize \}\)/);
-  assert.match(safety, /allOrderRows\.push\(\.\.\.page\)/);
+  assert.match(safety, /allOrderRows\.push\(\.\.\.page\.map/);
+  assert.match(safety, /redactCustomerCheckoutItems\(order\.items\)/);
 });
 
 test('partial order pagination never certifies an incomplete admin order snapshot', () => {
