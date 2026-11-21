@@ -15,7 +15,11 @@ test('Stage 46: browser harness intercepts all Supabase calls and does not submi
   assert.match(cases, /request\.method\(\) !== 'GET'/);
   assert.match(cases, /Blocked isolated browser test write/);
   assert.match(cases, /gs-cart-checkout/);
-  assert.doesNotMatch(cases, /\.gs-checkout-submit-area.*click\(/);
+  // Stage 47 submits only malformed contact data to exercise local validation;
+  // the intercepted test never performs a live order creation request.
+  assert.match(cases, /checkout\.locator\('\.gs-checkout-submit-area button'\)\.click\(\)/);
+  assert.match(cases, /Invalid contact data passes native length checks/);
+  assert.doesNotMatch(cases, /create_order_with_stock/);
   assert.match(cases, /assert\.deepEqual\(blockedWrites, \[\]/);
 });
 test('Stage 46: production cart quantity/variant guards remain in place', () => {
