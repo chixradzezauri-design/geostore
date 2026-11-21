@@ -24,7 +24,9 @@ const setupFetch = ({ pages = [], permissions = [true, true], onPage } = {}) => 
       const allowed = permissions[permissionIndex++] ?? false;
       return response(allowed);
     }
-    assert.ok(url.endsWith('/orders?select=*&order=created_at.desc,id.asc'));
+    assert.ok(url.endsWith('/rpc/admin_order_ledger_page'));
+    assert.equal(options.method, 'POST');
+    assert.deepEqual(JSON.parse(options.body), { p_offset: pageIndex * 2, p_limit: 2 });
     const index = pageIndex++;
     if (onPage) onPage(index);
     return typeof pages[index] === 'function' ? pages[index]() : response(pages[index] ?? []);
@@ -38,8 +40,8 @@ test('shared production order loader verifies multiple pages and both permission
   assert.deepEqual(rows.map(r=>r.id),['o-4','o-3','o-2']);
   assert.equal(mock.pageCount,2);
   assert.equal(mock.permissionCount,2);
-  const requests=mock.calls.filter(c=>c.url.includes('/orders?'));
-  assert.deepEqual(requests.map(c=>c.options.headers.Range),['0-1','2-3']);
+  const requests=mock.calls.filter(c=>c.url.includes('/rpc/admin_order_ledger_page'));
+  assert.deepEqual(requests.map(c=>JSON.parse(c.options.body).p_offset),[0,2]);
   assert.ok(requests.every(c=>c.options.headers.Authorization==='Bearer token-A'));
 });
 
@@ -72,7 +74,7 @@ test('same-account rotated token is supported with live final permission check',
   });
   assert.equal(rows.length,3);
   assert.equal(mock.permissionCount,2);
-  assert.equal(mock.calls.filter(c=>c.url.includes('/orders?'))[1].options.headers.Authorization,'Bearer rotated-token');
+  assert.equal(mock.calls.filter(c=>c.url.includes('/rpc/admin_order_ledger_page'))[1].options.headers.Authorization,'Bearer rotated-token');
   assert.equal(mock.calls.at(-1).options.headers.Authorization,'Bearer rotated-token');
 });
 

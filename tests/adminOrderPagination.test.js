@@ -11,9 +11,8 @@ test('admin order refresh uses the shared complete ledger loader rather than a p
   assert.match(app, /setOrders\(data\.map/);
   assert.match(safety, /pageSize = 1000, maxRows = 100000/);
   assert.match(safety, /for \(let offset = 0; offset < maxRows; offset \+= pageSize\)/);
-  assert.match(safety, /headers\.Range = `\$\{offset\}-\$\{offset \+ pageSize - 1\}`/);
-  assert.match(safety, /headers\['Range-Unit'\] = 'items'/);
-  assert.match(safety, /orders\?select=\*&order=created_at\.desc,id\.asc/);
+  assert.match(safety, /rest\/v1\/rpc\/admin_order_ledger_page/);
+  assert.match(safety, /body: JSON\.stringify\(\{ p_offset: offset, p_limit: pageSize \}\)/);
   assert.match(safety, /allOrderRows\.push\(\.\.\.page\)/);
 });
 

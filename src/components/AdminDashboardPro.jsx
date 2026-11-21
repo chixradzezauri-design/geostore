@@ -230,11 +230,13 @@ const deleteProductImages = async (imageUrls, productId) => {
     const orderRows = [];
     for (let offset = 0; offset < 100000; offset += pageSize) {
       const orderHeaders = await getSupabaseHeaders();
-      orderHeaders.Range = `${offset}-${offset + pageSize - 1}`;
-      orderHeaders['Range-Unit'] = 'items';
+      orderHeaders['Content-Type'] = 'application/json';
       const orderResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders?select=items&order=created_at.asc,id.asc`,
-        { headers: orderHeaders }
+        `${SUPABASE_URL}/rest/v1/rpc/admin_order_image_refs_page`,
+        {
+          method: 'POST', headers: orderHeaders,
+          body: JSON.stringify({ p_offset: offset, p_limit: pageSize })
+        }
       );
       if (!orderResponse.ok) throw new Error('შეკვეთებში ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
       const page = await orderResponse.json();

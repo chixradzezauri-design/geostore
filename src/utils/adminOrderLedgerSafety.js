@@ -75,11 +75,9 @@ export async function fetchVerifiedAdminOrderLedger({
       loadSession, apiKey, expectedUserId: initialSession.userId
     });
     if (!isCurrent()) return null;
-    headers.Range = `${offset}-${offset + pageSize - 1}`;
-    headers['Range-Unit'] = 'items';
     const response = await fetchImpl(
-      `${supabaseUrl}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
-      { headers }
+      `${supabaseUrl}/rest/v1/rpc/admin_order_ledger_page`,
+      { method: 'POST', headers, body: JSON.stringify({ p_offset: offset, p_limit: pageSize }) }
     );
     if (!isCurrent()) return null;
     if (!response?.ok) {
