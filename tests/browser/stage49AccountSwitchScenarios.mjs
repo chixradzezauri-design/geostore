@@ -55,10 +55,15 @@ const login = async (page, key) => {
   await auth.locator('#geostore-auth-password').fill('stage49-safe-password');
   await auth.locator('form button[type="submit"]').click();
   await auth.waitFor({ state: 'detached', timeout: 15000 });
-  await page.waitForFunction(email => {
-    const brand = document.querySelector('.gs-menu-heading');
-    return Boolean(brand && brand.textContent?.includes(email));
-  }, mockUsers[key].email, { timeout: 15000 });
+  // The header menu is closed by login; wait for the authenticated owner's
+  // storage slot, then verify the account control inside the reopened menu.
+  await page.waitForFunction(id => Boolean(
+    localStorage.getItem('geostore_cart:user:' + encodeURIComponent(id))
+  ), mockUsers[key].id, { timeout: 15000 });
+  await openMenu(page);
+  await page.locator('.gs-menu-account').waitFor({ state: 'visible' });
+  assert.ok((await page.locator('.gs-menu-heading').innerText()).includes(mockUsers[key].user_metadata.name));
+  await page.locator('.gs-menu-toggle').click();
 };
 const logout = async page => {
   await openMenu(page);
