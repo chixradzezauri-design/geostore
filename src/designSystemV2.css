@@ -1455,3 +1455,29 @@
     gap: 8px !important;
   }
 }
+
+/* Stage 38 — checkout/cart visibility and accessible mobile controls.
+ * Coupon validation, cart math, order RPC and owner-controlled theme data are unchanged. */
+.gs-commerce-overlay--checkout .gs-checkout-error:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .gs-commerce-overlay--checkout .gs-checkout-form {
+    scroll-padding-bottom: 116px;
+  }
+  .gs-commerce-overlay--checkout .gs-checkout-submit-area {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #fff;
+    padding-top: 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 18px rgba(255, 255, 255, 0.94);
+  }
+  .geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form input,
+  .geostore-fashion-store .gs-cart-layout .gs-cart-summary select {
+    font-size: max(16px, var(--gs-v2-inputFontSize, 16px)) !important;
+    min-height: 44px;
+  }
+}

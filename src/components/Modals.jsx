@@ -291,6 +291,28 @@ export default function Modals({
   const [trackerError, setTrackerError] = useState('');
   const trackerFeedbackRef = useRef(null);
   const trackerDialogRef = useRef(null);
+  // Checkout errors are below long phone forms; keep feedback keyboard-readable.
+  const checkoutErrorRef = useRef(null);
+  const checkoutFormRef = useRef(null);
+
+  useEffect(() => {
+    if (!isCheckoutOpen || !checkoutError) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const target = checkoutErrorRef.current;
+      const form = checkoutFormRef.current;
+      if (!target || !form) return;
+      target.focus({ preventScroll: true });
+      const formRect = form.getBoundingClientRect();
+      const errorRect = target.getBoundingClientRect();
+      if (errorRect.bottom > formRect.bottom || errorRect.top < formRect.top) {
+        form.scrollTo({
+          top: Math.max(0, form.scrollTop + errorRect.top - formRect.top - 14),
+          behavior: 'smooth'
+        });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isCheckoutOpen, checkoutError]);
 
   useEffect(() => {
     if (!isTrackerOpen || (!trackerError && !trackedOrder)) return undefined;
@@ -407,7 +429,7 @@ export default function Modals({
               </button>
             </header>
 
-            <form onSubmit={handlePlaceOrder} aria-busy={isSubmittingOrder} aria-describedby={checkoutError ? 'geostore-checkout-error' : undefined} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+            <form ref={checkoutFormRef} onSubmit={handlePlaceOrder} aria-busy={isSubmittingOrder} aria-describedby={checkoutError ? 'geostore-checkout-error' : undefined} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
               <div className="gs-checkout-contact-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
@@ -463,7 +485,7 @@ export default function Modals({
               </label>
 
               {checkoutError && (
-                <p id="geostore-checkout-error" role="alert" aria-atomic="true" className="gs-checkout-error rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
+                <p ref={checkoutErrorRef} tabIndex={-1} id="geostore-checkout-error" role="alert" aria-atomic="true" className="gs-checkout-error rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
                   {localizeMessage(checkoutError)}
                 </p>
               )}

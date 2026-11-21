@@ -3744,14 +3744,15 @@ export default function App() {
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} × {item.quantity}
                         </p>
-                        <div className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
-                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? 'Decrease quantity' : currentLang === 'ru' ? 'Уменьшить количество' : 'რაოდენობის შემცირება'} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
-                          <span className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
-                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? 'Increase quantity' : currentLang === 'ru' ? 'Увеличить количество' : 'რაოდენობის გაზრდა'} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
+                        <div role="group" className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? `Quantity for ${item.name}` : currentLang === 'ru' ? `Количество: ${item.name}` : `რაოდენობა: ${item.name}`}>
+                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? `Decrease quantity: ${item.name}` : currentLang === 'ru' ? `Уменьшить количество: ${item.name}` : `რაოდენობის შემცირება: ${item.name}`} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
+                          <span aria-live="polite" aria-atomic="true" className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
+                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? `Increase quantity: ${item.name}` : currentLang === 'ru' ? `Увеличить количество: ${item.name}` : `რაოდენობის გაზრდა: ${item.name}`} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
                         </div>
                       </div>
 
                       <button
+                        type="button"
                         onClick={() => removeFromCart(item)}
                         aria-label={currentLang === 'en' ? `Remove ${item.name} from cart` : currentLang === 'ru' ? `Удалить ${item.name} из корзины` : `წაშალე ${item.name} კალათიდან`}
                         className="gs-cart-remove shrink-0 self-start text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
@@ -3828,7 +3829,7 @@ export default function App() {
                           type="text"
                           aria-label={t.promoCode}
                           autoComplete="off"
-                          placeholder="GEOSTORE2026"
+                          placeholder={currentLang === 'en' ? 'Promo code' : currentLang === 'ru' ? 'Промокод' : 'პრომოკოდი'}
                           value={promoInput}
                           onChange={(e) =>
                             setPromoInput(e.target.value)
@@ -3885,6 +3886,7 @@ export default function App() {
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => {
                       setCheckoutError('');
                       setIsCheckoutOpen(true);

@@ -259,11 +259,11 @@ const cartFixture =
   '<div class="gs-cart-items-list lg:col-span-2"><div class="gs-cart-item flex items-start gap-3">' +
   '<div class="gs-cart-item-media relative flex w-20 h-20 shrink-0">სურათი</div>' +
   '<div class="min-w-0 flex-1"><h4 class="gs-cart-item-title">ქართული პროდუქტის დასახელება</h4>' +
-  '<div class="gs-cart-quantity-controls flex items-center gap-2">' +
-  '<button type="button" class="w-8 h-8">−</button><span>2</span><button type="button" class="w-8 h-8">+</button></div></div>' +
+  '<div class="gs-cart-quantity-controls flex items-center gap-2" role="group" aria-label="რაოდენობა: სატესტო პროდუქტი">' +
+  '<button type="button" class="w-8 h-8" aria-label="რაოდენობის შემცირება: სატესტო პროდუქტი">−</button><span aria-live="polite">2</span><button type="button" class="w-8 h-8" aria-label="რაოდენობის გაზრდა: სატესტო პროდუქტი">+</button></div></div>' +
   '<button class="gs-cart-remove">წაშლა</button></div></div>' +
   '<div class="gs-cart-summary"><form class="gs-cart-coupon-form flex gap-2">' +
-  '<input placeholder="GEOSTORE2026"><button type="submit">გამოყენება</button></form>' +
+  '<input placeholder="პრომოკოდი"><button type="submit">გამოყენება</button></form>' +
   '<div class="gs-cart-totals"><div class="flex justify-between"><span>სრული თანხა</span><span>199.00 ₾</span></div></div>' +
   '<button class="gs-cart-checkout">შეკვეთის გაფორმება</button></div></div></div>';
 
@@ -280,7 +280,7 @@ const checkoutFixture =
   '<label><span>ელ-ფოსტა</span><input type="email" /></label>' +
   '<label><span>მიწოდების რეგიონი</span><select><option>თბილისი</option></select></label>' +
   '<label><span>მისამართი</span><input type="text" /></label>' +
-  '<p class="gs-checkout-error" role="alert">გთხოვთ გადაამოწმოთ მონაცემები.</p>' +
+  '<p class="gs-checkout-error" role="alert" tabindex="-1">გთხოვთ გადაამოწმოთ მონაცემები.</p>' +
   '<div class="gs-checkout-submit-area"><button type="submit">შეკვეთის დადასტურება</button></div>' +
   '</form></section></div>';
 
@@ -315,6 +315,10 @@ try {
         const checkoutInput = document.querySelector('.gs-checkout-form input');
         const checkoutError = document.querySelector('.gs-checkout-error');
         const checkoutSubmit = document.querySelector('.gs-checkout-submit-area button');
+        const checkoutSubmitArea = document.querySelector('.gs-checkout-submit-area');
+        const cartCouponInput = document.querySelector('.gs-cart-coupon-form input');
+        const cartRegionSelect = document.querySelector('.gs-cart-summary select');
+        const cartQtyGroup = document.querySelector('.gs-cart-quantity-controls');
         const adminProductRow = document.querySelector('.admin-product-row');
         const adminProductControls = document.querySelector('.admin-product-controls');
         const adminProductButtons = [...adminProductControls.querySelectorAll('button')];
@@ -414,6 +418,13 @@ try {
           checkoutInputFontSize: parseFloat(getComputedStyle(checkoutInput).fontSize),
           checkoutErrorRight: checkoutError.getBoundingClientRect().right,
           checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height,
+          checkoutSubmitPosition: getComputedStyle(checkoutSubmitArea).position,
+          checkoutErrorFocusable: checkoutError.tabIndex === -1,
+          cartCouponPlaceholder: cartCouponInput.placeholder,
+          cartQuantityGroupNamed: cartQtyGroup.getAttribute('role') === 'group' && Boolean(cartQtyGroup.getAttribute('aria-label')),
+          cartQuantityButtonsNamed: cartQtyButtons.every(button => button.getAttribute('aria-label')?.includes('სატესტო პროდუქტი')),
+          cartCouponFont: parseFloat(getComputedStyle(cartCouponInput).fontSize),
+          cartRegionFont: parseFloat(getComputedStyle(cartRegionSelect).fontSize),
           adminProductRowRight: adminProductRow.getBoundingClientRect().right,
           adminProductControlsRight: adminProductControls.getBoundingClientRect().right,
           adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
@@ -531,6 +542,14 @@ try {
       assert.ok(layout.checkoutErrorRight <= width + 2, width + 'px checkout error overflow: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutDialogHeight <= 822, width + 'px checkout dialog height: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutSubmitHeight >= 43, width + 'px checkout action must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.checkoutErrorFocusable, 'checkout error must accept programmatic focus');
+      assert.ok(layout.cartQuantityGroupNamed && layout.cartQuantityButtonsNamed, 'cart quantity controls must identify the product');
+      assert.equal(layout.cartCouponPlaceholder, 'პრომოკოდი', 'cart must not advertise an expired demo promo');
+      if (width <= 640) {
+        assert.equal(layout.checkoutSubmitPosition, 'sticky', width + 'px checkout submit remains visible in scrolling form');
+        assert.ok(layout.cartCouponFont >= 16, width + 'px promo field avoids iOS focus zoom');
+        assert.ok(layout.cartRegionFont >= 16, width + 'px delivery selector avoids iOS focus zoom');
+      }
       assert.ok(layout.adminProductRowRight <= width + 2, width + 'px admin product row overflow: ' + JSON.stringify(layout));
       assert.ok(layout.adminOrdersRight <= width + 2, width + 'px admin orders overflow: ' + JSON.stringify(layout));
       assert.ok(layout.crmPanelRight <= width + 2, width + 'px CRM panel overflow: ' + JSON.stringify(layout));
