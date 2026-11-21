@@ -34,6 +34,10 @@ const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex fl
   '<div class="admin-command-kpis"><button class="admin-command-kpi"><span>ახალი შეკვეთები</span><strong>120</strong></button></div>' +
   '</div></section>';
 
+const stage37ProductFiltersFixture = '<div class="admin-product-list-filters flex flex-col sm:flex-row gap-2">' +
+  '<select aria-label="კატეგორია"><option>ყველა კატეგორია</option></select>' +
+  '<div class="admin-product-search"><input type="search" aria-label="პროდუქტის ძებნა"></div></div>';
+
 const adminProductFixture =
   '<section class="admin-products-panel">' + stage37ProductFiltersFixture + '<div class="admin-product-row flex flex-col sm:flex-row justify-between gap-4">' +
   '<div class="admin-product-identity flex min-w-0 items-center gap-3.5">' +
@@ -93,10 +97,6 @@ const stage37CrmEditorFixture = '<div class="admin-crm-edit-panel">' +
   '<div><label for="test-crm-note">შენიშვნა</label>' +
   '<input id="test-crm-note" type="text" value="სატესტო"></div>' +
   '<div><button type="button">გაუქმება</button><button type="button">შენახვა</button></div></div>';
-const stage37ProductFiltersFixture = '<div class="admin-product-list-filters flex flex-col sm:flex-row gap-2">' +
-  '<select aria-label="კატეგორია"><option>ყველა კატეგორია</option></select>' +
-  '<div class="admin-product-search"><input type="search" aria-label="პროდუქტის ძებნა"></div></div>';
-
 const adminCrmFixture =
   '<section class="admin-crm-panel"><div class="admin-crm-search">' +
   '<input type="text" aria-label="CRM მომხმარებლების ძებნა"></div>' +
