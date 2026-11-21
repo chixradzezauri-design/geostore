@@ -31,7 +31,7 @@ import { translations } from './utils/translations';
 import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, redactCustomerCheckoutItems, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
-import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
+import { AdminOrderLedgerAccessError, fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage, CHECKOUT_SESSION_UNAVAILABLE } from './utils/checkoutMessages';
@@ -1986,12 +1986,17 @@ export default function App() {
       }));
       setAdminOrdersReady(true);
       setAdminOrdersError('');
-      setAdminOrdersVerifiedPrincipal(initialSession.userId);
+      setAdminOrdersVerifiedPrincipal(requestPrincipal);
     } catch (error) {
       if (adminOrdersSessionActive.current && requestSessionVersion === adminOrdersSessionVersion.current) {
         setAdminOrdersReady(false);
         setAdminOrdersError(error?.message || 'შეკვეთების სრული ისტორია ვერ დადასტურდა.');
         setAdminOrdersVerifiedPrincipal(null);
+        if (error instanceof AdminOrderLedgerAccessError) {
+          // Revoked or changed permissions must not leave a stale, privileged
+          // finance-bearing order list visible in the admin UI.
+          setOrders([]);
+        }
       }
       console.error('Orders fetch error:', error);
     } finally {
