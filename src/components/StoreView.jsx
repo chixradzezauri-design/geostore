@@ -661,7 +661,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
-                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
