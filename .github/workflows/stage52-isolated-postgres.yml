@@ -10,6 +10,8 @@ on:
       - 'tests/sql/stage54_order_history_contract.sql'
       - 'supabase/migrations/20261117100000_admin_staff_auth_foundation.sql'
       - 'tests/sql/stage56_staff_auth_contract.sql'
+      - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
+      - 'tests/sql/stage57_order_ledger_scope_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -52,3 +54,4 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage52_checkout_contract.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage54_order_history_contract.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage56_staff_auth_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage57_order_ledger_scope_contract.sql
