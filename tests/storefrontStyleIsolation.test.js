@@ -328,3 +328,31 @@ test('storefront visual editor navigator lists only selectable real DOM targets'
   const actual = [...new Set([...([header, store, footer].join('\n')).matchAll(/data-visual-editor-target=[\"']([^\"']+)[\"']/g)].map(match => match[1]))];
   assert.deepEqual(registered.sort(), actual.sort());
 });
+
+
+test('iPhone Flash Sale grid keeps one or two cards readable after visual-editor CSS', () => {
+  // Match the actual StoreView DOM: section > grid > card > media/info/button.
+  const flash = storeView.slice(storeView.indexOf('className="gs-flash-sale-section'));
+  assert.match(flash, /<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">/);
+  assert.match(flash, /className="gs-flash-sale-card group/);
+  assert.match(flash, /className="gs-flash-sale-media relative/);
+  assert.match(flash, /<div className="py-3 space-y-1\.5">/);
+  assert.match(flash, /className="w-full bg-\[#16161a\]/);
+
+  // This compatibility rule is deliberately placed after the editor's mobile
+  // two-column rule: both a single product and two products get a >=220px track
+  // (or 100% when the available width is narrower).
+  const marker = 'GEOSTORE — Stage 43.3 compatibility for Visual Studio';
+  const start = css.lastIndexOf(marker);
+  assert.ok(start > 0, 'mobile compatibility override must exist');
+  const override = css.slice(start, css.indexOf('}', css.indexOf('.gs-flash-sale-card {', start)) + 1);
+  assert.match(override, /@media\s*\(max-width:\s*640px\)/);
+  assert.match(override, /\.gs-flash-sale-section > \.grid\s*\{/);
+  assert.match(override, /grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*220px\),\s*1fr\)\)\s*!important/);
+  assert.match(override, /\.gs-flash-sale-section > \.grid > \.gs-flash-sale-card\s*\{/);
+  assert.match(override, /width:\s*100%\s*!important/);
+  assert.match(override, /min-width:\s*0\s*!important/);
+  assert.match(override, /max-width:\s*100%\s*!important/);
+  const editorRule = css.lastIndexOf('grid-template-columns:repeat(2,minmax(0,1fr))!important', start);
+  assert.ok(editorRule >= 0 && editorRule < start, 'safe phone override must follow forced two-column editor rule');
+});
