@@ -8,7 +8,8 @@ const runbook = readFileSync(new URL('../docs/production-release-gate-phase30.md
 test('real Chromium storefront smoke rejects anonymous admin panels and private ledger network calls', () => {
   assert.match(browser, /const privateRequests = \[\]/);
   assert.match(browser, /page\.on\('request', request =>/);
-  assert.match(browser, /rest\\\/v1\\\/(?:orders\|expenses)/);
+  assert.match(browser, /orders\|expenses/);
+  assert.match(browser, /privateRequests\.push\(path\)/);
   assert.match(browser, /\/rest\/v1\/rpc\/has_staff_permission/);
   assert.match(browser, /page\.locator\('\.geostore-admin-shortcut'\)\.count\(\)/);
   assert.match(browser, /page\.locator\('\.admin-dashboard-pro'\)\.count\(\)/);
