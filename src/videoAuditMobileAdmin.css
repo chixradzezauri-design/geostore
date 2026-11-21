@@ -7,11 +7,11 @@
 .admin-dashboard-pro.admin-dashboard-shell .admin-mobile-section-picker { display: none; }
 
 @media (max-width: 767px) {
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     > [data-admin-sidebar="true"] > div:nth-child(2) {
     display: none !important; /* The 23 clipped horizontal chips are replaced below. */
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     > [data-admin-sidebar="true"] {
     display: flex !important;
     flex-direction: column !important;
@@ -22,7 +22,7 @@
     padding: 12px !important;
     border-radius: 16px !important;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     .admin-mobile-section-picker {
     display: grid !important;
     grid-template-columns: minmax(0,1fr);
@@ -30,13 +30,13 @@
     min-width: 0;
     gap: 5px;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     .admin-mobile-section-picker label {
     color: var(--admin-vd-muted-active, #cbd5e1) !important;
     font-size: 11px !important;
     font-weight: 700;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     .admin-mobile-section-picker select {
     display: block !important;
     width: 100% !important;
@@ -51,7 +51,7 @@
     font-size: 16px !important; /* Avoid iOS zoom on focus. */
     box-sizing: border-box;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     > div:nth-child(2) > [data-admin-visual-header="true"] {
     /* Prevent saved desktop/legacy 480px greeting block from pushing action
        buttons below the phone viewport. No design values are erased. */
@@ -71,20 +71,20 @@
     padding: 12px !important;
     border-radius: 16px !important;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     > div:nth-child(2) > [data-admin-visual-header="true"] > div {
     width: 100% !important;
     min-width: 0;
     margin: 0 !important;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     > div:nth-child(2) > [data-admin-visual-header="true"] > div:last-child {
     align-self: start;
     align-content: start;
     grid-auto-rows: auto;
     gap: 7px !important;
   }
-  .geostore-shell .admin-dashboard-pro.admin-dashboard-shell
+  .admin-dashboard-pro.admin-dashboard-shell
     > div:nth-child(2) > [data-admin-visual-header="true"] > div:last-child > button {
     min-height: 44px !important;
     padding: 9px 8px !important;
