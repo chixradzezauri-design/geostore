@@ -32,7 +32,17 @@ try {
     const page = await context.newPage();
     try {
       const pageErrors = [];
+      const privateRequests = [];
       page.on('pageerror', error => pageErrors.push(String(error.message || error)));
+      // A new anonymous browser context must never load private finance/order
+      // ledgers or ask the authenticated-only staff-permission RPC.
+      page.on('request', request => {
+        const path = new URL(request.url()).pathname;
+        if (/\/rest\/v1\/(?:orders|expenses)(?:\/|$)/.test(path) ||
+            path === '/rest/v1/rpc/has_staff_permission') {
+          privateRequests.push(path);
+        }
+      });
       const response = await page.goto(host, { waitUntil: 'domcontentloaded', timeout: 30000 });
       assert.equal(response?.status(), 200, 'Homepage HTTP response');
       await page.locator('.gs-site-header').waitFor({ state: 'visible', timeout: 30000 });
@@ -48,6 +58,10 @@ try {
       assert.ok(before.documentWidth <= width + 2, 'Horizontal overflow at ' + width + 'px: ' + JSON.stringify(before));
       assert.ok(before.headerRight <= width + 2, 'Header overflow at ' + width + 'px: ' + JSON.stringify(before));
       assert.ok(before.hasStorefront && before.catalogStatePresent, 'Storefront catalog did not render at ' + width + 'px: ' + JSON.stringify(before));
+      assert.equal(await page.locator('.geostore-admin-shortcut').count(), 0,
+        'Anonymous visitor must not see the administrator shortcut at ' + width + 'px');
+      assert.equal(await page.locator('.admin-dashboard-pro').count(), 0,
+        'Anonymous visitor must not mount private administrator content at ' + width + 'px');
       const artwork = page.locator('.gs-category-card img.gs-category-photo').first();
       assert.ok(await artwork.count() > 0, 'Category artwork is a real image at ' + width + 'px');
       assert.equal(await artwork.getAttribute('loading'), 'lazy', 'Category artwork lazy loading at ' + width + 'px');
@@ -66,9 +80,11 @@ try {
       assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu reopens at ' + width + 'px');
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'Menu closes by clicking at ' + width + 'px');
+      assert.deepEqual(privateRequests, [],
+        'Anonymous storefront must not request private orders/expenses or staff permission at ' + width + 'px');
       assert.equal(pageErrors.length, 0, 'Uncaught browser errors at ' + width + 'px: ' + pageErrors.join('; '));
       console.log('PASS real SPA at ' + width + 'px' +
-        ' (catalog state present, no overflow, menu toggle works)');
+        ' (catalog state present, no overflow, menu toggle works, anonymous admin guard enforced)');
     } finally {
       await context.close();
     }

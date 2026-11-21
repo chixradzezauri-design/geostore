@@ -39,3 +39,15 @@ The **live** PostgreSQL catalog confirms:
 ## Limits of this checkpoint
 
 Phase 29's 822/822 automated tests and Preview prove code/build smoke only. Real Supabase signed-in owner/staff E2E, concurrent two-device workflow, and the final Production target remain **not verified**. Read-only database queries were used in Phase 30; no production data, schema, credentials, membership or deployed alias was changed.
+
+## Phase 31 — read-only RLS execution and anonymous browser E2E
+
+**Live database verification (2026-11-21, connected project).** Executed SELECT-only assertions in `BEGIN READ ONLY ... ROLLBACK` SQL transactions with `SET LOCAL ROLE authenticated` and locally simulated JWT claim context, **not with an actual signed access token**:
+- Simulated mounted owner claim with `app_metadata.role=admin`: `public.has_staff_permission('orders')` and `('expenses')` both returned `true`; row-visibility probes on both tables confirmed permitted reads.
+- Simulated authenticated nonstaff subject with no staff membership: both permission RPCs returned `false`; SELECT visibility probes for `orders` and `expenses` returned no visible rows.
+- Catalog privileges: `anon` lacks SELECT on both private financial/order tables and lacks EXECUTE on `public.has_staff_permission(text)`; `authenticated` has the requisite grants but RLS filters identities. RLS is enabled for both tables. `admin_staff_members` has zero rows at audit time.
+- The Supabase project had **no available database branches** (`list_branches` returned none). Vercel Preview is **not an assumed isolated database**; do not create an invited staff account or post test orders/expenses against this connected project without separate approval and an environment check.
+
+**New genuine browser coverage (anonymous only):** The existing Playwright Chromium production-build SPA test now checks at each viewport width (320, 375, 430, 768, 1024 and 1440px) that a fresh logged-out browser has no administrator shortcut/panel and **never initiates** private orders/expenses REST calls or staff permission RPCs. This test uses the real built React app, not a mock DOM fixture. It does **not** test logged-in owner/staff E2E.
+
+**Still blocked:** signed-in owner/staff finance and order operations, live permission revocation/token change, and two-device editor/replenishment conflicts require an authorized isolated environment with real accounts and explicitly approved test data. No such real-account tests are claimed by the RLS claim-simulation or anonymous browser smoke. Keep Draft PR unmerged, leave Production untouched, and do not revoke legacy RPC overloads.
