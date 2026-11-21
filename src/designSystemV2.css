@@ -1589,3 +1589,59 @@
     padding-bottom: 164px !important;
   }
 }
+
+/* Stage 42 — compact, keyboard-accessible details and review submission.
+ * Keep visual-editor typography, color palette and persistent product data unchanged. */
+.geostore-fashion-store .geostore-storefront .gs-product-description-panel,
+.geostore-fashion-store .geostore-storefront .gs-product-detail-specs,
+.geostore-fashion-store .geostore-storefront .gs-product-reviews,
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry,
+.geostore-fashion-store .geostore-storefront .gs-product-review-card {
+  min-width: 0;
+  max-width: 100%;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-description-copy,
+.geostore-fashion-store .geostore-storefront .gs-product-detail-specs b,
+.geostore-fashion-store .geostore-storefront .gs-product-review-comment-text,
+.geostore-fashion-store .geostore-storefront .gs-product-review-author {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: pre-wrap;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle {
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  list-style: none;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle::-webkit-details-marker { display: none; }
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry[open] .gs-product-review-entry-chevron {
+  transform: rotate(180deg);
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry .gs-product-review-form {
+  margin-top: 8px;
+  min-width: 0;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-upload label:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .geostore-storefront .gs-product-reviews {
+    gap: 10px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-product-review-rating-select,
+  .geostore-fashion-store .geostore-storefront .gs-product-review-field {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-product-review-upload label {
+    min-height: 44px !important;
+  }
+}

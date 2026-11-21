@@ -216,7 +216,7 @@ export default function StoreView({
       if (event.key === 'Tab' && !isSmartSizeModalOpen && !isSizeGuideOpen) {
         const dialog = productDialogRef.current;
         if (!dialog) return;
-        const focusables = [...dialog.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        const focusables = [...dialog.querySelectorAll('button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
           .filter(node => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden');
         if (focusables.length === 0) {
           event.preventDefault();
@@ -1120,7 +1120,7 @@ export default function StoreView({
                   </div>
 
                   {(selectedProduct.material || selectedProduct.durability) && (
-                    <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" aria-label={currentLang === 'en' ? 'Product specifications' : currentLang === 'ru' ? 'Характеристики товара' : 'პროდუქტის მახასიათებლები'}>
                       {selectedProduct.material && (
                         <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                           <span className="text-slate-400 block text-[10px]">{storeText.material}</span>
@@ -1294,26 +1294,32 @@ export default function StoreView({
                     <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
                   </label>
 
-                  <div className="gs-product-description-panel space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
+                  <section aria-label={storeText.description} className="gs-product-description-panel space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="gs-product-description-label text-amber-300 font-bold block text-sm">{storeText.description}</span>
                     <p data-visual-editor-target="product.detail.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.description')} className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
-                  </div>
+                  </section>
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                     <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
                     <span>{storeText.inStock} <b className="text-amber-400 font-black">{currentAvailableStock > 0 ? currentAvailableStock : storeText.outOfStock}</b> {currentAvailableStock > 0 ? storeText.deliveryFit : ''}</span>
                   </div>
 
-                  <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
-                    <h3 className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
+                  <section className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20" aria-labelledby="gs-product-reviews-title">
+                    <h3 id="gs-product-reviews-title" className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-amber-400" /> {storeText.reviews} ({(allReviews[selectedProduct.id] || []).length})
                     </h3>
 
-                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
-                      <span className="text-amber-300 font-bold block text-xs">{storeText.leaveReview}</span>
+                    <details className="gs-product-review-entry">
+                      <summary className="gs-product-review-entry-toggle cursor-pointer font-bold flex items-center justify-between gap-2 px-3 py-2">
+                        <span>{storeText.leaveReview}</span>
+                        <ChevronDown className="gs-product-review-entry-chevron w-4 h-4 shrink-0" aria-hidden="true" />
+                      </summary>
+                      <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3"
+                        aria-label={storeText.leaveReview}>
                       <div className="gs-product-review-rating flex gap-2 items-center">
-                        <span className="text-slate-400">{storeText.rating}</span>
-                        <select 
+                        <label className="text-slate-400" htmlFor="gs-product-review-rating">{storeText.rating}</label>
+                        <select
+                          id="gs-product-review-rating"
                           value={newReviewRating} 
                           onChange={e => setNewReviewRating(Number(e.target.value))}
                           className="gs-product-review-rating-select bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
@@ -1327,14 +1333,18 @@ export default function StoreView({
                       </div>
                       <input 
                         type="text" 
-                        placeholder={storeText.yourName} 
+                        placeholder={storeText.yourName}
+                        aria-label={storeText.yourName}
+                        maxLength={100}
                         value={newReviewAuthor} 
                         onChange={e => setNewReviewAuthor(e.target.value)}
                         required
                         className="gs-product-review-field w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
                       />
                       <textarea 
-                        placeholder={storeText.reviewPlaceholder} 
+                        placeholder={storeText.reviewPlaceholder}
+                        aria-label={storeText.reviewPlaceholder}
+                        maxLength={1500}
                         value={newReviewComment} 
                         onChange={e => setNewReviewComment(e.target.value)}
                         required
@@ -1345,7 +1355,7 @@ export default function StoreView({
                       <div className="gs-product-review-upload flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                         <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
-                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} aria-label={storeText.uploadPhoto} className="gs-product-review-file-input sr-only" />
                         </label>
                         {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
@@ -1353,7 +1363,8 @@ export default function StoreView({
                       <button type="submit" className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
                         {storeText.publishReview}
                       </button>
-                    </form>
+                      </form>
+                    </details>
 
                     <div className="gs-product-review-list space-y-3 pt-2">
                       {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
@@ -1373,14 +1384,14 @@ export default function StoreView({
                             <p className="gs-product-review-comment-text text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
                             {rev.image && (
                               <div className="mt-2">
-                                <img src={rev.image} alt="UGC" loading="lazy" decoding="async" className="gs-product-review-image w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
+                                <img src={rev.image} alt={`${rev.author} — ${storeText.reviews}`} loading="lazy" decoding="async" className="gs-product-review-image w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
                               </div>
                             )}
                           </div>
                         ))
                       )}
                     </div>
-                  </div>
+                  </section>
 
                 </div>
               </div>

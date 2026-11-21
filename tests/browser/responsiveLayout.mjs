@@ -255,6 +255,17 @@ const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-size-options-grid">' +
   '<button class="gs-size-option">M</button><button class="gs-size-option">L</button></div></div>' +
   '<div class="gs-color-selector"><div class="flex"><button class="gs-color-option">ბეჟი</button></div></div>' +
+  '</div><section class="gs-product-description-panel" aria-label="პროდუქტის აღწერა"><p class="gs-product-description-copy">გრძელიდასახელებისსაკომპოზიციომასალა012345678901234567890 გრძელი აღწერა</p></section>' +
+  '<div class="gs-product-detail-specs"><div><b>გრძელიმასალისსახელიABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</b></div></div>' +
+  '<section class="gs-product-reviews" aria-labelledby="fixture-review-title"><h3 id="fixture-review-title">შეფასებები</h3>' +
+  '<details class="gs-product-review-entry"><summary class="gs-product-review-entry-toggle"><span>დატოვეთ შეფასება და ატვირთეთ ფოტო</span></summary>' +
+  '<form class="gs-product-review-form"><div class="gs-product-review-rating"><label for="fixture-rating">შეფასება</label>' +
+  '<select id="fixture-rating" class="gs-product-review-rating-select"><option>5</option></select></div>' +
+  '<input class="gs-product-review-field" aria-label="თქვენი სახელი" type="text" placeholder="სახელი">' +
+  '<textarea class="gs-product-review-field gs-product-review-comment" aria-label="კომენტარი"></textarea>' +
+  '<div class="gs-product-review-upload"><label>ფოტოს ატვირთვა<input type="file" class="gs-product-review-file-input sr-only"></label></div>' +
+  '<button class="gs-product-review-submit" type="submit">გამოქვეყნება</button></form></details>' +
+  '<div class="gs-product-review-list"><article class="gs-product-review-card"><b class="gs-product-review-author">გრძელისახელითტექსტი0123456789</b><p class="gs-product-review-comment-text">ძალიანგრძელიშეფასებისტექსტი12345678901234567890123456789</p></article></div></section>' +
   '</div></div></div><div class="gs-product-modal-purchase-bar">' +
   '<p class="gs-product-purchase-hint" id="gs-product-purchase-hint" role="status">მარაგში არ არის</p>' +
   '<button class="gs-modal-add-to-cart" aria-describedby="gs-product-purchase-hint" disabled><span>🛍</span>' +
@@ -319,6 +330,13 @@ try {
         const productOptions = [...document.querySelectorAll('.gs-size-option, .gs-color-option')];
         const gallerySteps = [...document.querySelectorAll('.gs-product-gallery-step')];
         const purchaseHint = document.querySelector('.gs-product-purchase-hint');
+        const reviewDetails = document.querySelector('.gs-product-review-entry');
+        const reviewSummary = document.querySelector('.gs-product-review-entry-toggle');
+        const reviewForm = document.querySelector('.gs-product-review-form');
+        const reviewRating = document.querySelector('.gs-product-review-rating-select');
+        const reviewField = document.querySelector('.gs-product-review-field');
+        const description = document.querySelector('.gs-product-description-panel');
+        const specification = document.querySelector('.gs-product-detail-specs');
         const categoryImg = document.querySelector('.gs-category-card > img.gs-category-photo');
         const cartQtyButtons = [...document.querySelectorAll('.gs-cart-quantity-controls button')];
         const cartCoupon = document.querySelector('.gs-cart-coupon-form');
@@ -426,6 +444,13 @@ try {
           galleryStepsNamed: gallerySteps.length === 2 && gallerySteps.every(element => Boolean(element.getAttribute('aria-label'))),
           purchaseHintVisible: purchaseHint.getBoundingClientRect().height > 0,
           purchaseGuardDescribed: purchase.getAttribute('aria-describedby') === purchaseHint.id && purchase.disabled,
+          reviewCollapsedInitially: !reviewDetails.open && reviewForm.getClientRects().length === 0,
+          reviewSummaryHeight: reviewSummary.getBoundingClientRect().height,
+          reviewSummaryRight: reviewSummary.getBoundingClientRect().right,
+          descriptionRight: description.getBoundingClientRect().right,
+          specificationRight: specification.getBoundingClientRect().right,
+          reviewFieldNamed: Boolean(reviewField.getAttribute('aria-label')),
+          reviewRatingNamed: Boolean(document.querySelector('label[for="fixture-rating"]')),
           optionMetrics: productOptions.map(element => ({ type: element.className, height: element.getBoundingClientRect().height, display: getComputedStyle(element).display, minHeight: getComputedStyle(element).minHeight, minBlockSize: getComputedStyle(element).minBlockSize })),
           purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0,
           categoryImageFit: getComputedStyle(categoryImg).objectFit,
@@ -557,6 +582,23 @@ try {
       assert.ok(layout.catalogActionsNamed && layout.catalogTitleActionCount === 2, width + 'px named and keyboard product actions');
       assert.ok(layout.galleryStepMinHeight >= 43 && layout.galleryStepRight <= width + 2 && layout.galleryStepsNamed,
         width + 'px gallery navigation touch/label safety: ' + JSON.stringify(layout));
+      assert.ok(layout.reviewCollapsedInitially && layout.reviewSummaryHeight >= 43,
+        width + 'px review form should be collapsible with a 44px keyboard target: ' + JSON.stringify(layout));
+      assert.ok(layout.reviewSummaryRight <= width + 2 && layout.descriptionRight <= width + 2 && layout.specificationRight <= width + 2,
+        width + 'px descriptions and review disclosure must fit the screen');
+      assert.ok(layout.reviewFieldNamed && layout.reviewRatingNamed, width + 'px review fields have readable labels');
+      const reviewEntry = page.locator('.gs-product-review-entry');
+      await reviewEntry.locator('summary').click();
+      assert.ok(await reviewEntry.evaluate(node => node.open), width + 'px review form opens');
+      if (width <= 640) {
+        const ratingFont = await page.locator('.gs-product-review-rating-select').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+        const fieldFont = await page.locator('.gs-product-review-field').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+        assert.ok(ratingFont >= 16 && fieldFont >= 16, width + 'px review inputs must avoid iOS zoom');
+      }
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 2,
+        width + 'px expanded review form must not overflow');
+      await reviewEntry.locator('summary').click();
+      assert.equal(await reviewEntry.evaluate(node => node.open), false, width + 'px review form closes');
       assert.ok(layout.purchaseHintVisible && layout.purchaseGuardDescribed,
         width + 'px disabled purchase action announces its reason: ' + JSON.stringify(layout));
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
