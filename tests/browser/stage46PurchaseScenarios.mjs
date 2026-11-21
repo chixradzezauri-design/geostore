@@ -199,8 +199,44 @@ export async function runStage46ProductPurchaseScenarios(browser, host) {
       await page.locator('.gs-checkout-dialog').waitFor({ state: 'visible', timeout: 15000 });
       assert.equal(await page.locator('.gs-checkout-form').count(), 1,
         'Checkout form opens without creating an order');
-      await page.locator('.gs-checkout-close').click();
-      await page.locator('.gs-checkout-dialog').waitFor({ state: 'detached' });
+      const checkout = page.locator('.gs-checkout-dialog');
+      const nameInput = checkout.locator('input[name="name"]');
+      await page.waitForFunction(() => document.activeElement?.getAttribute('name') === 'name');
+      // Invalid contact data passes native length checks but is rejected by
+      // the shared validator before any live checkout request.
+      await nameInput.fill('Stage47 Test Customer');
+      await checkout.locator('input[name="phone"]').fill('++995555123456');
+      await checkout.locator('input[name="email"]').fill('buyer@example.com');
+      await checkout.locator('input[name="address"]').fill('Test address 123');
+      await checkout.locator('.gs-checkout-submit-area button').click();
+      await checkout.locator('#geostore-checkout-error').waitFor({ state: 'visible', timeout: 8000 });
+      await page.waitForFunction(() => document.activeElement?.getAttribute('name') === 'phone');
+      assert.equal(await checkout.locator('input[name="phone"]').getAttribute('aria-invalid'), 'true');
+      assert.equal(await checkout.locator('input[name="phone"]').getAttribute('aria-describedby'), 'geostore-checkout-error');
+      assert.equal(await page.locator('.gs-cart-item').count(), 3,
+        'Invalid contact keeps cart contents unchanged');
+      await checkout.locator('input[name="phone"]').fill('+995 555 123 456');
+      await checkout.locator('#geostore-checkout-error').waitFor({ state: 'detached' });
+      assert.notEqual(await checkout.locator('input[name="phone"]').getAttribute('aria-invalid'), 'true');
+      assert.equal(await nameInput.inputValue(), 'Stage47 Test Customer',
+        'Editing one field keeps other checkout inputs');
+
+      // Tab and Escape remain within the modal lifecycle.
+      const closeButton = checkout.locator('.gs-checkout-close');
+      await closeButton.focus();
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await page.evaluate(() => document.activeElement?.closest('.gs-checkout-dialog') !== null), true);
+      await page.keyboard.press('Escape');
+      await checkout.waitFor({ state: 'detached' });
+      await page.waitForFunction(() => document.activeElement?.classList?.contains('gs-cart-checkout'));
+      await page.locator('.gs-cart-checkout').click();
+      await checkout.waitFor({ state: 'visible' });
+      assert.equal(await checkout.locator('input[name="phone"]').inputValue(), '+995 555 123 456',
+        'Checkout retry preserves corrected contact values');
+      assert.equal(await checkout.locator('#geostore-checkout-error').count(), 0,
+        'Reopened checkout has no stale validation error');
+      await checkout.locator('.gs-checkout-close').click();
+      await checkout.waitFor({ state: 'detached' });
 
       assert.deepEqual(blockedWrites, [], 'No live Supabase mutations at width ' + width);
       assert.deepEqual(browserErrors, [], 'No uncaught JavaScript errors at width ' + width);

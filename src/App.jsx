@@ -688,6 +688,7 @@ export default function App() {
   const authSubmitLock = useRef(false);
   const pendingCheckoutRef = useRef(null);
   const [checkoutError, setCheckoutError] = useState('');
+  const [checkoutErrorField, setCheckoutErrorField] = useState(null);
   const [orderConfirmation, setOrderConfirmation] = useState(null);
 
   const [checkoutForm, setCheckoutForm] = useState({
@@ -2994,6 +2995,7 @@ export default function App() {
     orderSubmitLock.current = true;
     setIsSubmittingOrder(true);
     setCheckoutError('');
+    setCheckoutErrorField(null);
     // The submit button already shows the loading state; avoid a stale toast
     // covering the order confirmation dialog after the server commits.
 
@@ -3033,7 +3035,8 @@ export default function App() {
       };
       const message = (messages[currentLang] || messages.ka)[contactValidation.field];
       setCheckoutError(message);
-      showToast(message);
+      setCheckoutErrorField(contactValidation.field);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3080,7 +3083,7 @@ export default function App() {
           ? 'Корзина пуста. Добавьте товар перед оформлением заказа.'
           : 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
       setCheckoutError(message);
-      showToast(message);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3095,7 +3098,7 @@ export default function App() {
       };
       const message = messages[currentLang] || messages.ka;
       setCheckoutError(message);
-      showToast(message);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3188,7 +3191,7 @@ export default function App() {
               ? `არჩეული ზომა ან ფერი აღარ არის ხელმისაწვდომი: ${changedNames}. წაშალეთ ეს ნივთი კალათიდან ან აირჩიეთ ხელმისაწვდომი ვარიანტი და სცადეთ თავიდან.`
               : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
         setCheckoutError(message);
-        showToast(message);
+        showToast(message, 'error');
         setIsSubmittingOrder(false);
         orderSubmitLock.current = false;
         return;
@@ -3271,7 +3274,7 @@ export default function App() {
             ? 'Условия доставки или купона изменились. Показаны актуальные цены. Проверьте заказ и отправьте его повторно.'
             : 'მიწოდების ან კუპონის პირობები შეიცვალა. ნაჩვენებია განახლებული ფასები. გადაამოწმეთ შეკვეთა და ხელახლა დაადასტურეთ.';
         setCheckoutError(message);
-        showToast(message);
+        showToast(message, 'error');
         setIsSubmittingOrder(false);
         orderSubmitLock.current = false;
         return;
@@ -3382,7 +3385,7 @@ export default function App() {
       console.error('Order submission failed:', err);
       const message = getCheckoutErrorMessage(err, currentLang);
       setCheckoutError(message);
-      showToast(message);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3951,6 +3954,7 @@ export default function App() {
                     type="button"
                     onClick={() => {
                       setCheckoutError('');
+                      setCheckoutErrorField(null);
                       setIsCheckoutOpen(true);
                     }}
                     className="gs-cart-checkout w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
@@ -4713,6 +4717,11 @@ export default function App() {
         orderConfirmation={orderConfirmation}
         setOrderConfirmation={setOrderConfirmation}
         checkoutError={checkoutError}
+        checkoutErrorField={checkoutErrorField}
+        onCheckoutValidationEdit={() => {
+          setCheckoutError('');
+          setCheckoutErrorField(null);
+        }}
         isAuthOpen={isAuthOpen}
         setIsAuthOpen={setIsAuthOpen}
         authMode={authMode}

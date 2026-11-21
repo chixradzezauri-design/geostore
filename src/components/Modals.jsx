@@ -15,6 +15,8 @@ export default function Modals({
   handlePlaceOrder,
   isSubmittingOrder = false,
   checkoutError = '',
+  checkoutErrorField = null,
+  onCheckoutValidationEdit,
   orderConfirmation = null,
   setOrderConfirmation,
   isAuthOpen,
@@ -294,6 +296,59 @@ export default function Modals({
   // Checkout errors are below long phone forms; keep feedback keyboard-readable.
   const checkoutErrorRef = useRef(null);
   const checkoutFormRef = useRef(null);
+  const checkoutDialogRef = useRef(null);
+
+  // Stage 47 — keyboard-contained checkout. The opening cart button is the
+  // return target, unless it is removed after a successful order.
+  useEffect(() => {
+    if (!isCheckoutOpen) return undefined;
+    const previousFocus = document.activeElement;
+    const frame = window.requestAnimationFrame(() => {
+      checkoutFormRef.current?.querySelector('input[name="name"]')?.focus({ preventScroll: true });
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (previousFocus?.isConnected && typeof previousFocus.focus === 'function') {
+        previousFocus.focus({ preventScroll: true });
+      }
+    };
+  }, [isCheckoutOpen]);
+
+  useEffect(() => {
+    if (!isCheckoutOpen) return undefined;
+    const handleCheckoutKeys = (event) => {
+      if (event.key === 'Escape') {
+        if (isSubmittingOrder) return;
+        event.preventDefault();
+        setIsCheckoutOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const dialog = checkoutDialogRef.current;
+      if (!dialog) return;
+      const focusable = [...dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')]
+        .filter(node => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden');
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (!dialog.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleCheckoutKeys);
+    return () => document.removeEventListener('keydown', handleCheckoutKeys);
+  }, [isCheckoutOpen, isSubmittingOrder, setIsCheckoutOpen]);
+
+  const updateCheckoutField = (field, value) => {
+    setCheckoutForm(current => ({ ...current, [field]: value }));
+    if (checkoutErrorField === field) onCheckoutValidationEdit?.();
+  };
 
   useEffect(() => {
     if (!isCheckoutOpen || !checkoutError) return undefined;
@@ -301,18 +356,23 @@ export default function Modals({
       const target = checkoutErrorRef.current;
       const form = checkoutFormRef.current;
       if (!target || !form) return;
-      target.focus({ preventScroll: true });
+      const field = checkoutErrorField ? form.querySelector(`[name="${checkoutErrorField}"]`) : null;
+      // Field validation errors return to the editable control; service/stock
+      // errors retain the existing accessible alert below the form.
+      const focusTarget = field && !field.readOnly ? field : target;
+      if (focusTarget === target) target.focus({ preventScroll: true });
+      else focusTarget.focus({ preventScroll: true });
       const formRect = form.getBoundingClientRect();
-      const errorRect = target.getBoundingClientRect();
-      if (errorRect.bottom > formRect.bottom || errorRect.top < formRect.top) {
+      const feedbackRect = focusTarget.getBoundingClientRect();
+      if (feedbackRect.bottom > formRect.bottom || feedbackRect.top < formRect.top) {
         form.scrollTo({
-          top: Math.max(0, form.scrollTop + errorRect.top - formRect.top - 14),
+          top: Math.max(0, form.scrollTop + feedbackRect.top - formRect.top - 14),
           behavior: 'smooth'
         });
       }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [isCheckoutOpen, checkoutError]);
+  }, [isCheckoutOpen, checkoutError, checkoutErrorField]);
 
   useEffect(() => {
     if (!isTrackerOpen || (!trackerError && !trackedOrder)) return undefined;
@@ -407,6 +467,7 @@ export default function Modals({
       {isCheckoutOpen && createPortal(
         <div className="gs-commerce-overlay gs-commerce-overlay--checkout fixed inset-0 z-[10000] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm sm:p-6">
           <section
+            ref={checkoutDialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="geostore-checkout-title"
@@ -423,6 +484,7 @@ export default function Modals({
                 type="button"
                 aria-label={copy.close}
                 onClick={() => setIsCheckoutOpen(false)}
+                disabled={isSubmittingOrder}
                 className="gs-checkout-close grid h-11 w-11 shrink-0 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:bg-neutral-100 hover:text-black"
               >
                 <X className="h-4 w-4" />
@@ -435,8 +497,8 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="text" required minLength={2} maxLength={100} autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
-                      onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
+                    <input type="text" name="name" aria-invalid={checkoutErrorField === 'name' && Boolean(checkoutError)} aria-describedby={checkoutErrorField === 'name' && checkoutError ? 'geostore-checkout-error' : undefined} required minLength={2} maxLength={100} autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
+                      onChange={e => updateCheckoutField('name', e.target.value)}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
                 </label>
@@ -445,8 +507,8 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.phone} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="tel" required minLength={9} maxLength={24} autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
-                      onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
+                    <input type="tel" name="phone" aria-invalid={checkoutErrorField === 'phone' && Boolean(checkoutError)} aria-describedby={checkoutErrorField === 'phone' && checkoutError ? 'geostore-checkout-error' : undefined} required minLength={9} maxLength={24} autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
+                      onChange={e => updateCheckoutField('phone', e.target.value)}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
                 </label>
@@ -454,9 +516,9 @@ export default function Modals({
 
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.email} {!currentUser?.email && <span className="text-neutral-400">*</span>}</span>
-                <input type="email" maxLength={254} required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
+                <input type="email" name="email" aria-invalid={checkoutErrorField === 'email' && Boolean(checkoutError)} aria-describedby={checkoutErrorField === 'email' && checkoutError ? 'geostore-checkout-error' : undefined} maxLength={254} required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
                   placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''}
-                  onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                  onChange={e => updateCheckoutField('email', e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white read-only:cursor-not-allowed read-only:opacity-65" />
                 <span className="block text-[10px] text-neutral-500">{copy.emailInfo}</span>
               </label>
@@ -478,8 +540,8 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.address} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <input type="text" required minLength={3} maxLength={300} autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
-                    onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
+                  <input type="text" name="address" aria-invalid={checkoutErrorField === 'address' && Boolean(checkoutError)} aria-describedby={checkoutErrorField === 'address' && checkoutError ? 'geostore-checkout-error' : undefined} required minLength={3} maxLength={300} autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
+                    onChange={e => updateCheckoutField('address', e.target.value)}
                     className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                 </span>
               </label>
