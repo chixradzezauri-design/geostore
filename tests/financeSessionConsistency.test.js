@@ -63,7 +63,7 @@ test('expense reads and writes pin Supabase session to current App admin user', 
 
 test('financial CSV export checks live server permission and rejects stale requests', () => {
   const exportCode = admin.slice(admin.indexOf('  const handleExportAnalytics = async () => {'), admin.indexOf('  const handleAiAsk = async (e) => {'));
-  assert.match(exportCode, /if \(!expensesVerifiedForReports \|\| expenseMutationInFlightRef\.current \|\| expenseFetchInFlightRef\.current\)/);
+  assert.match(exportCode, /if \(!expensesVerifiedForReports \|\| expenseMutationInFlightRef\.current \|\| expenseFetchInFlightRef\.current \|\| !ordersVerifiedForReports\)/);
   assert.match(exportCode, /expenseExportInFlightRef\.current = true/);
   assert.match(exportCode, /await getExpenseSessionHeaders\(adminUserId\)/);
   assert.match(exportCode, /await requireExpensePermission\(/);

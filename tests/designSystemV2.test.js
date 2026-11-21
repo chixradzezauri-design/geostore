@@ -429,7 +429,7 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /const handleExportAnalytics = async \(\) => \{[\s\S]*?await requireExpensePermission\([\s\S]*?const periodLabel/);
   assert.match(admin, /className="admin-finance-data-warning/);
   assert.match(admin, /role=\{expensesError \|\| !hasExpensesPermission \? 'alert' : 'status'\} aria-live="polite" className="admin-finance-data-warning/);
-  assert.match(admin, /!expensesVerifiedForReports \|\| financialOverview\.netProfit === null \? '—'/);
+  assert.match(admin, /!verifiedFinanceSnapshot \|\| financialOverview\.netProfit === null \? '—'/);
   assert.match(admin, /expensesVerifiedForReports \? financialOverview\.totalExpenses\.toFixed\(2\)/);
   assert.match(admin, /else if \(qLower\.includes\('ხარჯი'\)\) answer = expensesVerifiedForReports/);
   assert.match(admin, /expensesError && <p className="mt-1">ჩატვირთვის შეცდომა:/);
