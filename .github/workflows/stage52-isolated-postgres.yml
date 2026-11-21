@@ -8,6 +8,8 @@ on:
       - 'tests/sql/stage52_checkout_contract.sql'
       - 'supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql'
       - 'tests/sql/stage54_order_history_contract.sql'
+      - 'supabase/migrations/20261117100000_admin_staff_auth_foundation.sql'
+      - 'tests/sql/stage56_staff_auth_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -49,3 +51,4 @@ jobs:
           psql --version
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage52_checkout_contract.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage54_order_history_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage56_staff_auth_contract.sql

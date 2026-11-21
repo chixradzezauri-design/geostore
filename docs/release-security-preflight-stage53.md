@@ -30,3 +30,14 @@ The [PostgREST schema documentation](https://docs.postgrest.org/en/stable/refere
 - [ ] Review and explicitly approve merge/Production deployment. Keep PR #149 Draft until then.
 
 Do not grant public or authenticated users SELECT on internal finance tables or expose private through PostgREST to work around access problems.
+
+
+## Stage56 — staff roles tested, raw order finance-field leak remains a release blocker
+
+Read-only live metadata confirmed the current public administrative RPC EXECUTE grants deny anonymous users; membership/invite tables have FORCE RLS and no direct customer grants; expenses has a server-side staff-permission RLS policy.
+
+**Newly found release blocker:** The orders-only staff role can read full raw order items including internal purchase_cost. The current orders SELECT RLS policy checks has_staff_permission('orders'), authenticated has SELECT on the orders.items column, and the admin order ledger requests orders?select=*. This does not check the distinct expenses permission. This is grounded in live database ACL/policy metadata and version-controlled loader SQL, not a test with real customer records.
+
+Do not casually revoke orders.items SELECT: the order ledger and image-reference checker require item content. The coordinated fix must implement a permission-filtered server projection (operational items for order staff, finance data only for expenses staff), migrate every order-reading client, lock down raw columns, and verify roles, orders, invoices, totals and UI in full-schema staging.
+
+The new Stage56 disposable PG17 scenario executes the real staff foundation migration with synthetic JWT and user rows to check inactive/unconfirmed accounts, arbitrary forged admin role, owner identity+metadata, product vs finance permissions, and direct staff membership table grants. It does **not** replace full Supabase Auth integration or close the live orders.items exposure. Keep PR #149 Draft until that exposure and the previously recorded release gates are addressed.
