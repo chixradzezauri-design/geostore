@@ -185,7 +185,10 @@ export async function runStage49AccountSwitchScenario(browser, host) {
     const checkout = await openCheckout(page);
     await checkout.locator('input[name="name"]').fill('Private Customer A');
     await checkout.locator('input[name="phone"]').fill('599123456');
-    await checkout.locator('input[name="email"]').fill(mockUsers.a.email);
+    assert.equal(await checkout.locator('input[name="email"]').inputValue(), mockUsers.a.email,
+      'Authenticated email is prefilled from the verified session');
+    assert.equal(await checkout.locator('input[name="email"]').getAttribute('readonly'), '',
+      'Authenticated email is not manually editable');
     await checkout.locator('input[name="address"]').fill('Private address A');
     const otherTab = await context.newPage();
     otherTab.on('pageerror', err => pageErrors.push(String(err.message || err)));
