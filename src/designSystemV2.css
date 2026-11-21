@@ -1366,3 +1366,92 @@
     padding: 12px !important;
   }
 }
+
+/* Stage 37 — support, CRM and product forms: phone ergonomics / accessible fields.
+ * No reply transport, status changes, product mutations or account permissions altered. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 84px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-input:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel :is(input, button):focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters :is(input, select):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-contact-line {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel :is(input, button) {
+  min-width: 0;
+  min-height: 44px !important;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters :is(input, select) {
+  min-width: 0;
+  min-height: 44px !important;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    width: 100%;
+    min-width: 0;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+    gap: 5px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button {
+    min-width: 0;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button:last-child {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls > button {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > textarea {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > button {
+    white-space: normal;
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-search input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters :is(input, select) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+    min-height: 44px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel > div:last-child {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel > div:last-child > button {
+    flex: 1 1 120px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters {
+    width: 100%;
+    min-width: 0;
+    gap: 8px !important;
+  }
+}

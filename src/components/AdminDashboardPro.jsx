@@ -6381,14 +6381,14 @@ export default function AdminDashboardPro({
                     )}
 
                     <div className="admin-support-reply-form flex flex-col sm:flex-row gap-3 pt-2">
-                      <input 
-                        type="text" 
+                      <textarea
+                        rows={3} 
                         placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
                         aria-label={`ტიკეტი #${t.id} — პასუხის ტექსტი`}
                         maxLength={4000}
                         value={replyInputs[t.id] !== undefined ? replyInputs[t.id] : ''}
                         onChange={e => setReplyInputs({...replyInputs, [t.id]: e.target.value})}
-                        className="flex-1 bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
+                        className="admin-support-reply-input min-w-0 flex-1 resize-y bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
                       />
                       <button 
                         type="button"
@@ -6650,7 +6650,7 @@ export default function AdminDashboardPro({
                   </select>
                   <div className="admin-product-search relative w-full sm:w-72">
                     <input
-                      type="text"
+                      type="search"
                       placeholder="ძებნა პროდუქტებში..."
                       aria-label="პროდუქტის ძებნა"
                       value={productSearchQuery}
@@ -7347,15 +7347,15 @@ export default function AdminDashboardPro({
                 <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
-                <input type="text" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="search" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
             <p className="text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
               რეგისტრირებული მომხმარებლები და CRM პროფილები იტვირთება Supabase-იდან. ძველი ლოკალური ჩანაწერები შენარჩუნებულია და გაერთიანებულია სიაში; CRM შეზღუდვის ნიშანი არ ცვლის Auth ანგარიშის უფლებებს.
             </p>
-            {crmLoading && <p className="text-emerald-300 text-xs">CRM მონაცემები იტვირთება...</p>}
-            {crmError && <p className="text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">Supabase CRM: {crmError} ძველი ლოკალური ჩანაწერები არ შეცვლილა.</p>}
+            {crmLoading && <p role="status" aria-live="polite" className="text-emerald-300 text-xs">CRM მონაცემები იტვირთება...</p>}
+            {crmError && <p role="alert" className="text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">Supabase CRM: {crmError} ძველი ლოკალური ჩანაწერები არ შეცვლილა.</p>}
 
             <div className="admin-crm-list space-y-4">
               {(!filteredUsers || filteredUsers.length === 0) ? (
@@ -7375,7 +7375,7 @@ export default function AdminDashboardPro({
                             {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
                             {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
-                          <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
+                          <p className="admin-crm-contact-line text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
                           {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
                         </div>
 
@@ -7430,12 +7430,13 @@ export default function AdminDashboardPro({
                       </div>
 
                       {isEditing && (
-                        <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
+                        <div className="admin-crm-edit-panel bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
                           <h5 className="font-black text-amber-400 text-xs">პერსონალური CRM პარამეტრები კლიენტისთვის: {u.name}</h5>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="text-slate-400 text-[10px] block mb-1">პერსონალური ფასდაკლება (%)</label>
+                              <label htmlFor={`crm-discount-${uId}`} className="text-slate-400 text-[10px] block mb-1">პერსონალური ფასდაკლება (%)</label>
                               <input 
+                                id={`crm-discount-${uId}`}
                                 type="number" 
                                 placeholder="მაგ: 10" 
                                 value={editUserDiscount} 
@@ -7444,8 +7445,9 @@ export default function AdminDashboardPro({
                               />
                             </div>
                             <div>
-                              <label className="text-slate-400 text-[10px] block mb-1">ადმინისტრატორის შენიშვნა</label>
+                              <label htmlFor={`crm-note-${uId}`} className="text-slate-400 text-[10px] block mb-1">ადმინისტრატორის შენიშვნა</label>
                               <input 
+                                id={`crm-note-${uId}`}
                                 type="text" 
                                 placeholder="მაგ: VIP კლიენტი, ჰყავს ფასდაკლება" 
                                 value={editUserNotes} 

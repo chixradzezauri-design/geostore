@@ -35,7 +35,7 @@ const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex fl
   '</div></section>';
 
 const adminProductFixture =
-  '<section class="admin-products-panel"><div class="admin-product-row flex flex-col sm:flex-row justify-between gap-4">' +
+  '<section class="admin-products-panel">' + stage37ProductFiltersFixture + '<div class="admin-product-row flex flex-col sm:flex-row justify-between gap-4">' +
   '<div class="admin-product-identity flex min-w-0 items-center gap-3.5">' +
   '<div style="width:56px;height:56px;flex-shrink:0"></div><div>' +
   '<h4>გრძელი დასახელების ქართული პროდუქტი სხვადასხვა ზომით და ფერით</h4>' +
@@ -77,10 +77,30 @@ const stage36OperationsFixture = '<section class="admin-inventory-panel">' +
   '<input id="fixture-target" type="number" disabled value="20"></div>' +
   '<div class="admin-replenishment-save"><button disabled>შენახვა</button></div></div></section>';
 
+
+const stage37SupportFixture = '<section class="admin-support-panel">' +
+  '<article class="admin-support-ticket"><div class="admin-support-ticket-header">' +
+  '<div class="admin-support-ticket-controls flex flex-wrap gap-2">' +
+  '<div class="admin-support-status-actions flex gap-1">' +
+  '<button type="button">ღია</button><button type="button">მუშავდება</button><button type="button">მოგვარებული</button></div>' +
+  '<button type="button">მიმოწერის ნახვა</button></div></div>' +
+  '<div class="admin-support-reply-form flex flex-col sm:flex-row gap-3 pt-2">' +
+  '<textarea class="admin-support-reply-input" rows="3" aria-label="პასუხის ტექსტი"></textarea>' +
+  '<button type="button">გაგზავნა</button></div></article></section>';
+const stage37CrmEditorFixture = '<div class="admin-crm-edit-panel">' +
+  '<div><label for="test-crm-discount">ფასდაკლება</label>' +
+  '<input id="test-crm-discount" type="number" value="10"></div>' +
+  '<div><label for="test-crm-note">შენიშვნა</label>' +
+  '<input id="test-crm-note" type="text" value="სატესტო"></div>' +
+  '<div><button type="button">გაუქმება</button><button type="button">შენახვა</button></div></div>';
+const stage37ProductFiltersFixture = '<div class="admin-product-list-filters flex flex-col sm:flex-row gap-2">' +
+  '<select aria-label="კატეგორია"><option>ყველა კატეგორია</option></select>' +
+  '<div class="admin-product-search"><input type="search" aria-label="პროდუქტის ძებნა"></div></div>';
+
 const adminCrmFixture =
   '<section class="admin-crm-panel"><div class="admin-crm-search">' +
   '<input type="text" aria-label="CRM მომხმარებლების ძებნა"></div>' +
-  '<div class="admin-crm-list"><article class="admin-crm-user-card">' +
+  stage37CrmEditorFixture + '<div class="admin-crm-list"><article class="admin-crm-user-card">' +
   '<div><h4>ძალიან გრძელი ქართული მომხმარებლის სახელი სატესტო მონაცემებით</h4>' +
   '<p>user.with.long.email.address@example.test | +995555555555</p></div>' +
   '<div class="admin-crm-user-actions flex flex-wrap gap-2 w-full sm:w-auto justify-end">' +
@@ -275,7 +295,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + stage36OperationsFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + stage36OperationsFixture + stage37SupportFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -313,6 +333,16 @@ try {
         const inventoryScroll = document.querySelector('.admin-inventory-table-scroll');
         const replenishmentRow = document.querySelector('.admin-replenishment-row');
         const replenishmentInputs = [...replenishmentRow.querySelectorAll('input[type="number"]')];
+        const support = document.querySelector('.admin-support-panel');
+        const supportControls = support.querySelector('.admin-support-ticket-controls');
+        const supportStatusButtons = [...support.querySelectorAll('.admin-support-status-actions button')];
+        const supportStatusGroup = support.querySelector('.admin-support-status-actions');
+        const supportTextarea = support.querySelector('.admin-support-reply-input');
+        const supportSend = support.querySelector('.admin-support-reply-form button');
+        const crmEditor = document.querySelector('.admin-crm-edit-panel');
+        const crmEditorInputs = [...crmEditor.querySelectorAll('input')];
+        const productFilters = document.querySelector('.admin-product-list-filters');
+        const productFilterInputs = [...productFilters.querySelectorAll('input, select')];
         const adminCrm = document.querySelector('.admin-crm-panel');
         const adminCrmActions = [...adminCrm.querySelectorAll('.admin-crm-user-actions button')];
         const adminCrmPagination = [...adminCrm.querySelectorAll('.admin-crm-pagination button')];
@@ -408,6 +438,20 @@ try {
           replenishmentRight: replenishmentRow.getBoundingClientRect().right,
           replenishmentDisabledPreserved: replenishmentInputs[1].disabled,
           financePeriodFont: parseFloat(getComputedStyle(adminAnalytics.querySelector('.admin-analytics-actions select')).fontSize),
+          supportRight: support.getBoundingClientRect().right,
+          supportStatusColumns: getComputedStyle(supportStatusGroup).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          supportControlsColumns: getComputedStyle(supportControls).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          supportStatusButtonMinHeight: Math.min(...supportStatusButtons.map(el => el.getBoundingClientRect().height)),
+          supportReplyFont: parseFloat(getComputedStyle(supportTextarea).fontSize),
+          supportReplyHeight: supportTextarea.getBoundingClientRect().height,
+          supportReplyRight: supportTextarea.getBoundingClientRect().right,
+          supportSendHeight: supportSend.getBoundingClientRect().height,
+          crmEditInputFont: Math.min(...crmEditorInputs.map(el => parseFloat(getComputedStyle(el).fontSize))),
+          crmEditInputMinHeight: Math.min(...crmEditorInputs.map(el => el.getBoundingClientRect().height)),
+          crmEditLabelsLinked: crmEditorInputs.every(input => crmEditor.querySelector('label[for="' + input.id + '"]')),
+          productFilterMinFont: Math.min(...productFilterInputs.map(el => parseFloat(getComputedStyle(el).fontSize))),
+          productFilterMinHeight: Math.min(...productFilterInputs.map(el => el.getBoundingClientRect().height)),
+          productFilterRight: productFilters.getBoundingClientRect().right,
           crmPanelRight: adminCrm.getBoundingClientRect().right,
           crmActionMinHeight: Math.min(...adminCrmActions.map(node => node.getBoundingClientRect().height)),
           crmPaginationMinHeight: Math.min(...adminCrmPagination.map(node => node.getBoundingClientRect().height)),
@@ -541,6 +585,20 @@ try {
         assert.equal(layout.financeProfitabilityColumnCount, 1, width + 'px profit labels should stack: ' + JSON.stringify(layout));
       }
       if (width <= 768) assert.ok(layout.analyticsChartScrollWidth > layout.analyticsChartClientWidth, width + 'px dense chart should scroll inside its own viewport: ' + JSON.stringify(layout));
+      assert.ok(layout.crmEditLabelsLinked, 'CRM edit form must associate both labels with controls');
+      assert.ok(layout.supportRight <= width + 2, width + 'px support panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.supportReplyRight <= width + 2, width + 'px support reply overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.productFilterRight <= width + 2, width + 'px product filter overflow: ' + JSON.stringify(layout));
+      if (width <= 640) {
+        assert.equal(layout.supportControlsColumns, 1, width + 'px support controls stack: ' + JSON.stringify(layout));
+        assert.equal(layout.supportStatusColumns, 2, width + 'px support status layout: ' + JSON.stringify(layout));
+        assert.ok(layout.supportReplyFont >= 16, width + 'px reply iOS focus safety: ' + JSON.stringify(layout));
+        assert.ok(layout.supportReplyHeight >= 80, width + 'px multiline reply should be readable: ' + JSON.stringify(layout));
+        assert.ok(layout.supportSendHeight >= 43, width + 'px send reply touch target: ' + JSON.stringify(layout));
+        assert.ok(layout.crmEditInputFont >= 16 && layout.crmEditInputMinHeight >= 43, width + 'px CRM editor touch/zoom safety: ' + JSON.stringify(layout));
+        assert.ok(layout.productFilterMinFont >= 16 && layout.productFilterMinHeight >= 43, width + 'px product filter touch/zoom safety: ' + JSON.stringify(layout));
+      }
+      assert.ok(layout.supportStatusButtonMinHeight >= 43, width + 'px support statuses touch targets: ' + JSON.stringify(layout));
       assert.ok(layout.crmActionMinHeight >= 43, width + 'px CRM customer actions must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.crmPaginationMinHeight >= 43, width + 'px CRM pagination must be touch-sized: ' + JSON.stringify(layout));
       if (width <= 640) assert.ok(layout.crmSearchFontSize >= 16, width + 'px CRM search must avoid iOS focus zoom: ' + JSON.stringify(layout));
