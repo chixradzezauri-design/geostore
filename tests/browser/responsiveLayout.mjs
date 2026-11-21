@@ -24,7 +24,7 @@ const storefront = '<section class="geostore-fashion-store" style="width:100%;ma
   '<button>კონფიდენციალურობა</button><span aria-hidden="true">•</span>' +
   '<button>საგარანტიო წესები</button></div></footer></section>';
 const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 w-full" data-admin-visual-design="enabled">' +
-  '<div class="w-full lg:w-72 shrink-0" data-admin-sidebar="true"><div>GEOSTORE Admin</div><div class="space-y-1.5">' + nav + '</div>' +
+  '<div class="w-full lg:w-72 shrink-0" data-admin-sidebar="true"><div>GEOSTORE Admin</div><div id="geostore-admin-desktop-modules" class="space-y-1.5">' + nav + '</div>' +
   '<div class="admin-mobile-section-picker"><label for="fixture-mobile-admin-section">სექციაზე გადასვლა</label>' +
   '<select id="fixture-mobile-admin-section"><option>მთავარი</option><option>შეკვეთები</option></select></div></div>' +
   '<div class="flex-1 w-full"><div data-admin-visual-header="true" class="flex flex-col lg:flex-row p-5 gap-3" style="height:480px;justify-content:space-between">' +

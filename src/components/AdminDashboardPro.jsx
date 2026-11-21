@@ -5026,7 +5026,7 @@ export default function AdminDashboardPro({
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        <div id="geostore-admin-desktop-modules" className="space-y-1.5">
           {visibleAdminNavigationItems.map(tab => {
             const IconComp = tab.icon;
             const isActive = visibleAdminTab === tab.id;

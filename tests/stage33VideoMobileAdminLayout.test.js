@@ -17,6 +17,8 @@ test('mobile selector and desktop sidebar share one permission-filtered admin mo
   assert.match(admin,/value=\{visibleAdminTab\}/);
   assert.match(admin,/onChange=\{\(event\) => setAdminTab\(event\.target\.value\)\}/);
   assert.match(admin,/htmlFor="geostore-admin-mobile-section"/);
+  assert.match(admin,/id="geostore-admin-desktop-modules"/);
+  assert.match(css,/#geostore-admin-desktop-modules/);
 });
 test('mobile-only post-design-system stylesheet compacts the welcome without hiding actions',()=>{
   const rules=css.slice(css.indexOf('/* STAGE 33 — video-derived'));

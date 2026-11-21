@@ -7,6 +7,13 @@
 .admin-dashboard-pro.admin-dashboard-shell .admin-mobile-section-picker { display: none; }
 
 @media (max-width: 767px) {
+  /* Legacy class-based display:flex!important can resurrect the hidden rail.
+     A unique ID has higher specificity, while all 23 module buttons remain
+     mounted for tablet/desktop and retain their original click handlers. */
+  .admin-dashboard-pro.admin-dashboard-shell
+    #geostore-admin-desktop-modules {
+    display: none !important;
+  }
   .admin-dashboard-pro.admin-dashboard-shell
     > [data-admin-sidebar="true"] > div:nth-child(2) {
     display: none !important; /* The 23 clipped horizontal chips are replaced below. */
