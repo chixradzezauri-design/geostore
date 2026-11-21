@@ -58,10 +58,24 @@ const adminOrdersFixture =
   '<div class="admin-order-card-heading"><strong>შეკვეთა #1001</strong><span>120.00 ₾</span></div>' +
   '<div class="admin-order-card-customer"><p>მყიდველი: გრძელისახელისგრძელიმომხმარებელი</p></div>' +
   '<div class="admin-order-actions flex gap-2"><button>სრული დეტალები</button><button>ინვოისი</button>' +
-  '<div class="admin-order-status-actions flex gap-1"><button>ახალი</button><button>მუშავდება</button></div></div>' +
+  '<div class="admin-order-status-actions flex gap-1"><button>ახალი</button><button>მუშავდება</button>' +
+   '<button>გაგზავნილი</button><button>ჩაბარებული</button><button>გაუქმება</button></div></div>' +
   '</article></div>' +
   '<nav class="admin-orders-pagination" aria-label="შეკვეთების გვერდები"><div class="flex gap-2">' +
   '<button>წინა</button><button>1</button><button>შემდეგი</button></div></nav></section>';
+
+
+const stage36OperationsFixture = '<section class="admin-inventory-panel">' +
+  '<div class="admin-inventory-history-toolbar flex w-full flex-col sm:flex-row gap-2">' +
+  '<input aria-label="მარაგის ძებნა" type="search" /><button>ფილტრი</button><button>განახლება</button></div>' +
+  '<div class="admin-inventory-table-scroll overflow-x-auto" role="region" tabindex="0">' +
+  '<table style="min-width:900px"><tbody><tr><td>მარაგის ცვლილება</td></tr></tbody></table></div></section>' +
+  '<section class="admin-inventory-panel"><div class="admin-replenishment-row grid grid-cols-2 gap-3">' +
+  '<div class="admin-replenishment-metric"><label for="fixture-threshold">დაბალი მარაგის ზღვარი</label>' +
+  '<input id="fixture-threshold" type="number" value="5"></div>' +
+  '<div class="admin-replenishment-metric"><label for="fixture-target">სამიზნე მარაგი</label>' +
+  '<input id="fixture-target" type="number" disabled value="20"></div>' +
+  '<div class="admin-replenishment-save"><button disabled>შენახვა</button></div></div></section>';
 
 const adminCrmFixture =
   '<section class="admin-crm-panel"><div class="admin-crm-search">' +
@@ -261,7 +275,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + stage36OperationsFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -291,6 +305,14 @@ try {
         const orderActionButtons = [...adminOrders.querySelectorAll('.admin-order-actions button')];
         const orderPaginationButtons = [...adminOrders.querySelectorAll('.admin-orders-pagination button')];
         const orderSearch = adminOrders.querySelector('.admin-orders-search input');
+        const orderActionsGroup = adminOrders.querySelector('.admin-order-actions');
+        const orderStatusActions = adminOrders.querySelector('.admin-order-status-actions');
+        const inventoryBar = document.querySelector('.admin-inventory-history-toolbar');
+        const inventorySearch = inventoryBar.querySelector('input');
+        const inventoryButtons = [...inventoryBar.querySelectorAll('button')];
+        const inventoryScroll = document.querySelector('.admin-inventory-table-scroll');
+        const replenishmentRow = document.querySelector('.admin-replenishment-row');
+        const replenishmentInputs = [...replenishmentRow.querySelectorAll('input[type="number"]')];
         const adminCrm = document.querySelector('.admin-crm-panel');
         const adminCrmActions = [...adminCrm.querySelectorAll('.admin-crm-user-actions button')];
         const adminCrmPagination = [...adminCrm.querySelectorAll('.admin-crm-pagination button')];
@@ -373,6 +395,19 @@ try {
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
           orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
+          orderActionsColumns: getComputedStyle(orderActionsGroup).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          orderStatusesColumns: getComputedStyle(orderStatusActions).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          inventoryToolbarColumns: getComputedStyle(inventoryBar).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          inventorySearchFont: parseFloat(getComputedStyle(inventorySearch).fontSize),
+          inventorySearchRight: inventorySearch.getBoundingClientRect().right,
+          inventoryButtonMinHeight: Math.min(...inventoryButtons.map(button => button.getBoundingClientRect().height)),
+          inventoryScrollFocusable: inventoryScroll.tabIndex === 0,
+          inventoryScrollInner: inventoryScroll.scrollWidth > inventoryScroll.clientWidth,
+          replenishmentInputMinFont: Math.min(...replenishmentInputs.map(input => parseFloat(getComputedStyle(input).fontSize))),
+          replenishmentInputMinHeight: Math.min(...replenishmentInputs.map(input => input.getBoundingClientRect().height)),
+          replenishmentRight: replenishmentRow.getBoundingClientRect().right,
+          replenishmentDisabledPreserved: replenishmentInputs[1].disabled,
+          financePeriodFont: parseFloat(getComputedStyle(adminAnalytics.querySelector('.admin-analytics-actions select')).fontSize),
           crmPanelRight: adminCrm.getBoundingClientRect().right,
           crmActionMinHeight: Math.min(...adminCrmActions.map(node => node.getBoundingClientRect().height)),
           crmPaginationMinHeight: Math.min(...adminCrmPagination.map(node => node.getBoundingClientRect().height)),
@@ -510,6 +545,20 @@ try {
       assert.ok(layout.crmPaginationMinHeight >= 43, width + 'px CRM pagination must be touch-sized: ' + JSON.stringify(layout));
       if (width <= 640) assert.ok(layout.crmSearchFontSize >= 16, width + 'px CRM search must avoid iOS focus zoom: ' + JSON.stringify(layout));
       if (width <= 639) assert.equal(layout.crmActionGridColumns, width <= 380 ? 1 : 2, width + 'px CRM actions should use narrow safe grid: ' + JSON.stringify(layout));
+      if (width <= 767) {
+        assert.equal(layout.orderActionsColumns, width <= 359 ? 1 : 2, width + 'px order action columns: ' + JSON.stringify(layout));
+        assert.equal(layout.orderStatusesColumns, 2, width + 'px status button columns: ' + JSON.stringify(layout));
+        assert.equal(layout.inventoryToolbarColumns, 2, width + 'px inventory toolbar columns: ' + JSON.stringify(layout));
+        assert.ok(layout.inventorySearchFont >= 16, width + 'px inventory search iOS focus zoom: ' + JSON.stringify(layout));
+        assert.ok(layout.inventorySearchRight <= width + 2, width + 'px inventory filter overflow: ' + JSON.stringify(layout));
+        assert.ok(layout.inventoryButtonMinHeight >= 43, width + 'px inventory touch targets: ' + JSON.stringify(layout));
+        assert.ok(layout.replenishmentInputMinFont >= 16, width + 'px replenishment iOS focus zoom: ' + JSON.stringify(layout));
+        assert.ok(layout.replenishmentInputMinHeight >= 43, width + 'px replenishment touch targets: ' + JSON.stringify(layout));
+        assert.ok(layout.replenishmentRight <= width + 2, width + 'px replenishment overflow: ' + JSON.stringify(layout));
+        assert.ok(layout.financePeriodFont >= 16, width + 'px finance period iOS focus zoom: ' + JSON.stringify(layout));
+      }
+      assert.ok(layout.inventoryScrollFocusable && layout.inventoryScrollInner, 'inventory table remains scrollable and focusable');
+      assert.ok(layout.replenishmentDisabledPreserved, 'disabled replenishment input guard must stay intact');
       assert.ok(layout.minOrderFilterHeight >= 43, width + 'px order filters should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderActionHeight >= 43, width + 'px order actions should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderPaginationHeight >= 43, width + 'px order pagination should be touch-sized: ' + JSON.stringify(layout));

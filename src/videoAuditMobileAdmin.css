@@ -99,3 +99,99 @@
     line-height: 1.3 !important;
   }
 }
+
+/* Stage 36: video-audited order, inventory and finance controls on phones.
+ * Scope to operational controls, preserving owner theme tokens and all business logic. */
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-header {
+    gap: 10px !important;
+    padding-bottom: 12px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-list,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card {
+    gap: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 8px !important;
+    align-items: stretch;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions > button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions > .admin-order-reactivate-button,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions > .admin-order-status-actions,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions > :not(button):not(.admin-order-status-actions) {
+    grid-column: 1 / -1;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 6px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-actions > button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-actions > button:last-child {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-inventory-panel .admin-inventory-history-toolbar {
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-inventory-panel .admin-inventory-history-toolbar > input {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-inventory-panel .admin-inventory-history-toolbar > button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px !important;
+    white-space: normal;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row {
+    gap: 8px !important;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row :is(.admin-replenishment-metric, .admin-replenishment-save) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-inventory-panel input[type="search"]:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row input[type="number"]:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions > select {
+    min-height: 44px !important;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row input[type="number"] {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-inventory-table-scroll:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
