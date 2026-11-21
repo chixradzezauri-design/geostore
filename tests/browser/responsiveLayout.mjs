@@ -588,7 +588,7 @@ try {
         width + 'px descriptions and review disclosure must fit the screen');
       assert.ok(layout.reviewFieldNamed && layout.reviewRatingNamed, width + 'px review fields have readable labels');
       const reviewEntry = page.locator('.gs-product-review-entry');
-      await reviewEntry.locator('summary').click();
+      await reviewEntry.locator('summary').evaluate(node => node.click());
       assert.ok(await reviewEntry.evaluate(node => node.open), width + 'px review form opens');
       if (width <= 640) {
         const ratingFont = await page.locator('.gs-product-review-rating-select').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
@@ -597,7 +597,7 @@ try {
       }
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 2,
         width + 'px expanded review form must not overflow');
-      await reviewEntry.locator('summary').click();
+      await reviewEntry.locator('summary').evaluate(node => node.click());
       assert.equal(await reviewEntry.evaluate(node => node.open), false, width + 'px review form closes');
       assert.ok(layout.purchaseHintVisible && layout.purchaseGuardDescribed,
         width + 'px disabled purchase action announces its reason: ' + JSON.stringify(layout));

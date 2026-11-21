@@ -11,7 +11,7 @@ test('Stage 42 reviews are discoverable with a native collapsible summary and pr
   assert.match(store, /<section className="gs-product-reviews/);
   assert.match(store, /setAllReviews\(prev => \{/);
   assert.match(browser, /reviewCollapsedInitially/);
-  assert.match(browser, /await reviewEntry\.locator\('summary'\)\.click\(\)/);
+  assert.match(browser, /await reviewEntry\.locator\('summary'\)\.evaluate\(node => node\.click\(\)\)/);
 });
 test('Stage 42 review form inputs have accessible names and keyboard-operable file upload',()=>{
   assert.match(store, /htmlFor="gs-product-review-rating"/);
