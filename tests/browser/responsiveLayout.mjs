@@ -473,8 +473,12 @@ try {
           purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0,
           categoryImageFit: getComputedStyle(categoryImg).objectFit,
           categoryImageLoading: categoryImg.loading,
-          categoryImageWidth: categoryImg.getBoundingClientRect().width,
-          categoryCardWidth: categoryImg.parentElement.getBoundingClientRect().width,
+          // Stage53: compare layout widths, not transformed visual bounds.
+          // Category images intentionally zoom on :hover (up to 1.035x);
+          // getBoundingClientRect() includes that transient transform and
+          // caused a false failure at the 1440px viewport.
+          categoryImageWidth: categoryImg.offsetWidth,
+          categoryCardWidth: categoryImg.parentElement.offsetWidth,
           cartQtyMinHeight: Math.min(...cartQtyButtons.map(node => node.getBoundingClientRect().height)),
           cartCouponRight: cartCoupon.getBoundingClientRect().right,
           checkoutDialogRight: checkoutDialog.getBoundingClientRect().right,
