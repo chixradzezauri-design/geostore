@@ -24,8 +24,10 @@ const storefront = '<section class="geostore-fashion-store" style="width:100%;ma
   '<button>კონფიდენციალურობა</button><span aria-hidden="true">•</span>' +
   '<button>საგარანტიო წესები</button></div></footer></section>';
 const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 w-full" data-admin-visual-design="enabled">' +
-  '<div class="w-full lg:w-72 shrink-0"><div>GEOSTORE Admin</div><div class="space-y-1.5">' + nav + '</div></div>' +
-  '<div class="flex-1 w-full"><div data-admin-visual-header="true" class="flex flex-col lg:flex-row p-5 gap-3">' +
+  '<div class="w-full lg:w-72 shrink-0" data-admin-sidebar="true"><div>GEOSTORE Admin</div><div class="space-y-1.5">' + nav + '</div>' +
+  '<div class="admin-mobile-section-picker"><label for="fixture-mobile-admin-section">სექციაზე გადასვლა</label>' +
+  '<select id="fixture-mobile-admin-section"><option>მთავარი</option><option>შეკვეთები</option></select></div></div>' +
+  '<div class="flex-1 w-full"><div data-admin-visual-header="true" class="flex flex-col lg:flex-row p-5 gap-3" style="height:480px;justify-content:space-between">' +
   '<div><h2>მოგესალმებით, მთავარო ადმინისტრატორო</h2></div>' +
   '<div class="grid grid-cols-2 gap-2"><button>მონახაზის შენახვა</button><button>ცვლილებების გამოქვეყნება</button></div>' +
   '</div><div class="admin-command-hero"><h3>მთავარი მართვის ცენტრი</h3></div>' +
@@ -336,6 +338,11 @@ try {
           sidebarOverflowY: getComputedStyle(sidebar).overflowY,
           sidebarHeight: sidebar.getBoundingClientRect().height,
           welcomeRight: welcome.getBoundingClientRect().right,
+          welcomeHeight: welcome.getBoundingClientRect().height,
+          mobilePickerDisplay: getComputedStyle(document.querySelector('.admin-mobile-section-picker')).display,
+          mobilePickerHeight: document.querySelector('.admin-mobile-section-picker select').getBoundingClientRect().height,
+          mobilePickerFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-mobile-section-picker select')).fontSize),
+          navRailDisplay: getComputedStyle(document.querySelector('[data-admin-sidebar="true"] > div:nth-child(2)')).display,
           kpiFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-command-kpi > strong')).fontSize),
           productDialogRight: productDialog.getBoundingClientRect().right,
           productBodyScrollable: ['auto', 'scroll'].includes(getComputedStyle(productBody).overflowY),
@@ -421,6 +428,15 @@ try {
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
       assert.ok(layout.welcomeRight <= width + 2, width + 'px header overflow ' + JSON.stringify(layout));
+      if (width <= 640) {
+        assert.ok(layout.welcomeHeight < 230, width + 'px greeting must not be 480px on phones: ' + JSON.stringify(layout));
+        assert.equal(layout.mobilePickerDisplay, 'grid', width + 'px native section picker must be visible');
+        assert.equal(layout.navRailDisplay, 'none', width + 'px 23-module scroll rail must be replaced');
+        assert.ok(layout.mobilePickerHeight >= 44, width + 'px native picker touch target');
+        assert.ok(layout.mobilePickerFontSize >= 16, width + 'px iOS select text prevents focus zoom');
+      } else if (width >= 768) {
+        assert.equal(layout.mobilePickerDisplay, 'none', width + 'px desktop/tablet nav is unchanged');
+      }
       assert.ok(layout.productDialogRight <= width + 2, width + 'px product dialog overflow: ' + JSON.stringify(layout));
       assert.ok(layout.purchaseRight <= width + 2, width + 'px purchase CTA overflow: ' + JSON.stringify(layout));
       assert.ok(layout.productDialogMaxHeight <= 820 + 2, width + 'px product dialog height: ' + JSON.stringify(layout));
