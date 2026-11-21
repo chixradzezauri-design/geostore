@@ -71,8 +71,8 @@ async function addSelectedProduct(page) {
   await page.locator('.gs-product-dialog').waitFor({ state: 'detached', timeout: 10000 });
 }
 
-export async function runStage46ProductPurchaseScenarios(browser, host) {
-  for (const width of [320, 390, 768, 1440]) {
+export async function runStage46ProductPurchaseScenarios(browser, host, widths = [320, 390, 768, 1440]) {
+  for (const width of widths) {
     const context = await browser.newContext({
       viewport: { width, height: 850 }, reducedMotion: 'reduce'
     });

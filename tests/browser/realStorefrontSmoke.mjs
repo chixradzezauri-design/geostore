@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { runStage46ProductPurchaseScenarios } from './stage46PurchaseScenarios.mjs';
 
 const server = spawn(process.execPath,
@@ -190,6 +190,13 @@ try {
   }
   // Stage 46: actual built SPA with a fully intercepted, deterministic catalogue.
   await runStage46ProductPurchaseScenarios(browser, host);
+
+  // Stage 48: exercise Safari's WebKit engine with the exact same fully
+  // intercepted catalogue. This is not a native iPhone Safari test.
+  await browser.close();
+  browser = await webkit.launch({ headless: true });
+  await runStage46ProductPurchaseScenarios(browser, host, [390]);
+  console.log('PASS Stage48 WebKit phone-sized checkout flow at 390px (mock data, no live orders)');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

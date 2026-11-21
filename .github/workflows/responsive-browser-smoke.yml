@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   browser-layout:
-    name: Chromium responsive CSS layouts
+    name: Chromium and WebKit mobile checkout smoke
     runs-on: ubuntu-24.04 # Playwright 1.56.1 supports Ubuntu 24.04, not latest 26.04
     timeout-minutes: 15
     steps:
@@ -35,10 +35,10 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Build actual production CSS
         run: npm run build
-      - name: Install pinned Chromium test runner
+      - name: Install pinned Chromium and WebKit test browsers
         run: |
           npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Verify phone, tablet, desktop widths
         run: node tests/browser/responsiveLayout.mjs
       - name: Open the built GEOSTORE SPA and verify navigation across devices
