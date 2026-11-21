@@ -2187,3 +2187,15 @@
   padding: var(--admin-vd-element-mobile-inventoryHistoryMetric-padding, var(--admin-vd-element-tablet-inventoryHistoryMetric-padding, var(--admin-vd-element-inventoryHistoryMetric-padding))) !important;
 }
 }
+
+
+/* Design System 2.0 — prevent iOS focus zoom under editor-selected mobile input typography.
+ * Preserve per-device editor sizes above 16px; only enforce the mobile
+ * accessibility floor for text-entry controls (not radio/checkbox/range/file). */
+@media (max-width: 640px) {
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] select,
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] textarea {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+}

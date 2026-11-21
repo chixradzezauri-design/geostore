@@ -54,3 +54,41 @@ export const getFlashSaleCountdown = (endsAtMs, nowMs = Date.now()) => {
     seconds: remainingSeconds % 60
   };
 };
+
+
+/**
+ * Choose the next storefront countdown wake-up without polling inactive stores.
+ *
+ * Active discounted promotions refresh on the next second boundary.
+ * Future sales still wake at their start timestamp, with a bounded timeout to
+ * tolerate browser clock changes and keep browser timers within safe limits.
+ * Pages hidden in the background are paused by StoreView and sync on visibility.
+ */
+export const getFlashSaleNextTickDelay = (products, nowMs = Date.now()) => {
+  if (getActiveFlashSaleProducts(products, nowMs).length > 0) {
+    return Math.max(1, 1000 - (nowMs % 1000));
+  }
+
+  if (!Array.isArray(products)) return null;
+  let earliestStart = null;
+
+  for (const product of products) {
+    if (!product || hasCustomProductVariants(product)) continue;
+    const endsAt = getProductSaleEnd(product);
+    if (endsAt === null || endsAt <= nowMs) continue;
+
+    const startedAtValue = product.flashSaleStartedAt ?? product.flash_sale_started_at;
+    const startedAt = readTimestamp(startedAtValue);
+    if (startedAt === null || startedAt <= nowMs || startedAt >= endsAt) continue;
+
+    const originalPrice = Number(product.oldPriceGEL ?? product.old_price_gel);
+    const price = Number(product.priceGEL ?? product.price_gel);
+    if (!Number.isFinite(originalPrice) || !Number.isFinite(price) ||
+        originalPrice <= price || price < 0) continue;
+
+    earliestStart = earliestStart === null ? startedAt : Math.min(earliestStart, startedAt);
+  }
+
+  if (earliestStart === null) return null;
+  return Math.max(1, Math.min(60000, Math.ceil(earliestStart - nowMs)));
+};

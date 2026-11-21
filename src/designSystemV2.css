@@ -1,0 +1,1368 @@
+/*
+ * GEOSTORE Design System 2.0 — Stage 1: density, text wrapping and focus.
+ *
+ * Applied after legacy style imports. Keep storefront visual-editor inline styles
+ * and administrator-selected color/type/size variables authoritative.
+ * Future phases will migrate legacy rules into components, not duplicate them.
+ */
+
+.geostore-fashion-store,
+.admin-dashboard-pro.admin-dashboard-shell {
+  --gs-v2-space-1: 4px;
+  --gs-v2-space-2: 8px;
+  --gs-v2-space-3: 12px;
+  --gs-v2-space-4: 16px;
+  --gs-v2-space-5: 24px;
+  --gs-v2-control-target: 44px;
+  --gs-v2-focus-offset: 3px;
+}
+
+/* Long translated labels must wrap instead of widening the page or clipping.
+ * Leave color, font, size and position controls to the existing visual editor. */
+.geostore-fashion-store .gs-site-announcement > span,
+.geostore-fashion-store .gs-menu-brand,
+.geostore-fashion-store .gs-menu-section,
+.geostore-fashion-store .gs-menu-footer,
+.geostore-fashion-store .gs-brand-wordmark {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .gs-main-menu .gs-menu-link > span:not(.gs-menu-count):not(.gs-menu-category-dot),
+.geostore-fashion-store .gs-main-menu .gs-menu-account > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .gs-site-header-inner,
+.geostore-fashion-store .gs-header-search-row,
+.geostore-fashion-store .gs-header-search,
+.geostore-fashion-store .gs-header-search input {
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .gs-main-menu {
+  overscroll-behavior-y: contain;
+  max-inline-size: calc(100vw - 16px);
+}
+
+/* A consistent visible focus ring is useful with tab, switch and keyboard input.
+ * Existing palette variables and inline brand customizations remain untouched. */
+.geostore-fashion-store :where(.gs-site-header, .geostore-storefront, .geostore-site-footer)
+  :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--gs-accent, #92785f);
+  outline-offset: var(--gs-v2-focus-offset);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell
+  :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--admin-accent, #6ee7b7);
+  outline-offset: var(--gs-v2-focus-offset);
+}
+
+/* Command-center controls are not part of the owner's editable hero/logo
+ * targets, so compact them without overriding any visual-editor settings. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-center {
+  min-inline-size: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi {
+  min-inline-size: 0;
+  padding: clamp(10px, 1.15vw, 14px) !important;
+  text-wrap: pretty;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+  font-size: clamp(18px, 1.9vw, 25px) !important;
+  line-height: 1.18 !important;
+  margin-top: var(--gs-v2-space-2) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > span:first-child,
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-panel :where(h4, p, button) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-panels > .admin-command-panel {
+  min-inline-size: 0;
+  padding: clamp(11px, 1.2vw, 16px) !important;
+}
+
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-main-menu {
+    max-inline-size: calc(100vw - 16px);
+    padding-bottom: max(var(--gs-v2-space-3), env(safe-area-inset-bottom));
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpis {
+    gap: var(--gs-v2-space-2) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+    font-size: clamp(17px, 5.5vw, 23px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi {
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* Stage 2 — product dialog usability: sized surfaces, variants, and CTA.
+ * Preserve the Visual Editor's inline colors, imagery and typography.
+ * Variant state, stock validation and addToCart are unchanged. */
+.geostore-fashion-store .geostore-storefront .gs-product-dialog {
+  min-inline-size: 0;
+  max-inline-size: min(100%, 1080px);
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-modal-header {
+  flex: 0 0 auto;
+  min-inline-size: 0;
+  gap: var(--gs-v2-space-2);
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-modal-header > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-modal-close {
+  flex: 0 0 auto;
+  min-inline-size: var(--gs-v2-control-target);
+  min-block-size: var(--gs-v2-control-target);
+  display: inline-grid;
+  place-items: center;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-modal-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-gallery,
+.geostore-fashion-store .geostore-storefront .gs-product-detail-info,
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-thumbnails,
+.geostore-fashion-store .geostore-storefront .gs-size-options-grid {
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-thumbnails {
+  scroll-padding-inline: var(--gs-v2-space-2);
+  overscroll-behavior-x: contain;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-modal-body
+  button:is(.gs-size-option, .gs-color-option, .gs-product-gallery-thumb) {
+  /* Override legacy modal-specific 34/40px important button rules. */
+  min-height: var(--gs-v2-control-target) !important;
+  min-block-size: var(--gs-v2-control-target) !important;
+  touch-action: manipulation;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-size-options-grid,
+.geostore-fashion-store .geostore-storefront .gs-color-selector > .flex {
+  gap: var(--gs-v2-space-2) !important;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-product-modal-purchase-bar {
+  min-inline-size: 0;
+  inset-inline: 0;
+}
+
+.geostore-fashion-store .geostore-storefront .gs-modal-add-to-cart {
+  display: flex;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+  min-block-size: 48px;
+  gap: var(--gs-v2-space-2);
+}
+
+.geostore-fashion-store .geostore-storefront .gs-modal-add-label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .geostore-fashion-store .geostore-storefront .gs-product-modal {
+    padding-inline: max(6px, env(safe-area-inset-left)) max(6px, env(safe-area-inset-right)) !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-product-dialog {
+    max-block-size: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px) !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-product-modal-body {
+    padding-bottom: 118px !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-product-modal-purchase-bar {
+    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-modal-add-to-cart {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    min-block-size: 52px;
+    gap: 7px !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-modal-add-price {
+    max-inline-size: 100%;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+
+/* Stage 3 — cart and checkout density, narrow screens and readable error states.
+ * This is presentation-only: no modifications to cart pricing, checkout totals,
+ * delivery/discount calculations, order RPCs or editor-managed storefront tokens. */
+.geostore-fashion-store .gs-cart-layout,
+.geostore-fashion-store .gs-cart-content-grid,
+.geostore-fashion-store .gs-cart-items-list,
+.geostore-fashion-store .gs-cart-summary,
+.geostore-fashion-store .gs-cart-item {
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-item {
+  gap: var(--gs-v2-space-3);
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-item-media {
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-item-title,
+.geostore-fashion-store .gs-cart-layout .gs-cart-item-variant,
+.geostore-fashion-store .gs-cart-layout .gs-cart-gift-message,
+.geostore-fashion-store .gs-cart-layout .gs-cart-item-options {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-cart-quantity-controls button {
+  min-width: var(--gs-v2-control-target) !important;
+  min-height: var(--gs-v2-control-target) !important;
+  min-inline-size: var(--gs-v2-control-target);
+  min-block-size: var(--gs-v2-control-target);
+  touch-action: manipulation;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-cart-remove {
+  flex: 0 0 auto;
+  min-height: var(--gs-v2-control-target) !important;
+  max-inline-size: min(36%, 130px);
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-summary {
+  padding: clamp(13px, 2vw, 23px) !important;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-totals > div {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  gap: var(--gs-v2-space-2);
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-totals > div > :first-child {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-totals > div > :last-child {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form {
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form input {
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form button,
+.geostore-fashion-store .gs-cart-layout .gs-cart-checkout {
+  min-height: var(--gs-v2-control-target) !important;
+  touch-action: manipulation;
+}
+
+.gs-commerce-overlay--checkout,
+.gs-commerce-overlay--checkout .gs-checkout-dialog,
+.gs-commerce-overlay--checkout .gs-checkout-header,
+.gs-commerce-overlay--checkout .gs-checkout-form {
+  min-inline-size: 0;
+  box-sizing: border-box;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-header {
+  gap: 12px;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-heading {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-close {
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-form {
+  min-block-size: 0;
+  overscroll-behavior-y: contain;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-contact-grid,
+.gs-commerce-overlay--checkout .gs-checkout-form label,
+.gs-commerce-overlay--checkout .gs-checkout-form input,
+.gs-commerce-overlay--checkout .gs-checkout-form select {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-error {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.gs-commerce-overlay--checkout .gs-checkout-submit-area button {
+  min-height: 48px !important;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-cart-layout .gs-cart-content-grid {
+    gap: var(--gs-v2-space-3) !important;
+  }
+
+  .geostore-fashion-store .gs-cart-layout .gs-cart-item {
+    gap: var(--gs-v2-space-2) !important;
+  }
+
+  .gs-commerce-overlay--checkout .gs-checkout-dialog {
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px) !important;
+  }
+
+  .gs-commerce-overlay--checkout .gs-checkout-header {
+    padding: 13px 15px !important;
+  }
+
+  .gs-commerce-overlay--checkout .gs-checkout-form {
+    padding: 14px 15px max(18px, env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Prevent focus zoom in iOS Safari on text-input and select controls. */
+  .gs-commerce-overlay--checkout .gs-checkout-form :is(input, select) {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .geostore-fashion-store .gs-cart-layout .gs-cart-item-media {
+    width: 64px !important;
+    height: 70px !important;
+  }
+
+  .geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form {
+    flex-wrap: wrap;
+  }
+
+  .geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form input {
+    flex: 1 1 100%;
+  }
+
+  .geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form button {
+    flex: 1 1 100%;
+  }
+
+  .gs-commerce-overlay--checkout .gs-checkout-header {
+    padding-inline: 12px !important;
+  }
+
+  .gs-commerce-overlay--checkout .gs-checkout-form {
+    padding-inline: 12px !important;
+  }
+}
+
+
+/* Stage 5 — category artwork is a native lazy image instead of a CSS
+ * background. Preserve the existing overlay, hover zoom, editor content and
+ * layout dimensions; keep decorative images out of the accessibility tree. */
+.geostore-fashion-store .geostore-storefront .gs-category-card > img.gs-category-photo {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+
+/* Stage 6 — product-operations usability. Existing quick-save handlers,
+ * publish permissions and owner-controlled visual styles remain untouched. */
+.admin-products-panel .admin-product-row,
+.admin-products-panel .admin-product-identity,
+.admin-products-panel .admin-product-identity > div,
+.admin-products-panel .admin-product-controls,
+.admin-products-panel .admin-product-list-filters {
+  min-inline-size: 0;
+}
+
+.admin-products-panel .admin-product-row {
+  padding: clamp(12px, 1.5vw, 17px) !important;
+  gap: var(--gs-v2-space-3, 12px);
+}
+
+.admin-products-panel .admin-product-identity {
+  flex: 1 1 220px;
+}
+
+.admin-products-panel .admin-product-identity :is(h4, p) {
+  overflow-wrap: anywhere;
+}
+
+.admin-products-panel .admin-product-controls {
+  gap: var(--gs-v2-space-2, 8px) !important;
+}
+
+.admin-products-panel .admin-product-controls > button,
+.admin-products-panel .admin-product-pagination button {
+  min-block-size: var(--gs-v2-control-target, 44px);
+  touch-action: manipulation;
+}
+
+@media (max-width: 639px) {
+  .admin-products-panel .admin-product-row {
+    align-items: stretch;
+  }
+
+  .admin-products-panel .admin-product-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    inline-size: 100%;
+    align-items: stretch;
+  }
+
+  .admin-products-panel .admin-product-controls > div {
+    min-inline-size: 0;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .admin-products-panel .admin-product-controls > div:nth-child(3),
+  .admin-products-panel .admin-product-controls > button:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .admin-products-panel .admin-product-controls input,
+  .admin-products-panel .admin-product-search input {
+    font-size: 16px !important;
+    min-block-size: 44px;
+  }
+}
+
+
+/* Stage 6 — ultra-narrow compatibility with previously shipped admin rules.
+ * Match the older high-specificity important controls without replacing the
+ * intentionally single-column 320–380px product editor. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-pagination button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-search input {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+
+/* Stage 7 — admin orders readability and efficient pagination.
+ * Presentation only: order statuses, stock rules, permissions, exports,
+ * and saved admin visual-editor colors remain under their original owners. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel :is(
+  .admin-orders-toolbar, .admin-orders-search, .admin-order-status-filters,
+  .admin-orders-list, .admin-order-card, .admin-order-card-heading,
+  .admin-order-card-customer, .admin-order-card-footer, .admin-order-actions,
+  .admin-order-status-actions, .admin-orders-pagination
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-pagination button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-filters button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-actions > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions > button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-pagination > div {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card-heading,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card-customer {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-search input {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-filters {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card-footer {
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-pagination {
+    gap: 10px !important;
+  }
+}
+
+
+/* Stage 7 — input font legibility across all viewports.
+ * Some legacy mobile text-sizing selectors and media-merged declarations
+ * resolve to 11px in the compiled browser cascade. These three operational
+ * fields have a stable 16px minimum regardless of breakpoint, preventing
+ * Safari's focus zoom without touching owner-adjustable typography. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls input,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-search input,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-search input {
+  font-size: 16px !important;
+}
+
+
+/* Stage 7 — visual-editor input precedence on phones.
+ * Owner's editable --admin-vd-inputFontSize-active controls all inputs with
+ * six :not selectors and !important. Match that specificity for operational
+ * search/number fields and preserve any owner-selected value ABOVE 16px.
+ * No saved presets, input colors, widths, or server-side logic are changed. */
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-visual-design="enabled"] .admin-orders-panel .admin-orders-search input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-visual-design="enabled"] .admin-products-panel .admin-product-controls input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-visual-design="enabled"] .admin-products-panel .admin-product-search input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+}
+
+
+/* Stage 8 — accessible support tickets.
+ * Scoped presentation: no ticket mutation, reply transport or permissions change. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel :is(
+  .admin-support-ticket,
+  .admin-support-ticket-header,
+  .admin-support-ticket-meta,
+  .admin-support-ticket-controls,
+  .admin-support-status-actions,
+  .admin-support-reply-form
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel :is(
+  .admin-support-ticket-message,
+  .admin-support-ticket-reply,
+  .admin-support-ticket-meta
+) {
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > input {
+    min-width: 0;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > button {
+    white-space: nowrap;
+  }
+}
+
+
+/* Stage 9 — CRM customer workspace.
+ * Layout and accessible hit targets only. CRM profile/server authority, data
+ * reconciliation, VIP markers and deletion permission behavior stay intact. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel :is(
+  .admin-crm-search, .admin-crm-list, .admin-crm-user-card,
+  .admin-crm-user-actions, .admin-crm-pagination
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-card {
+  padding: clamp(12px, 1.4vw, 18px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-actions {
+  gap: 8px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-actions > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-pagination button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-card button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-pagination > div {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-actions > button {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-search input {
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 9px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-pagination > div {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-user-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+/* Stage 10 — analytics and finance dashboard.
+ * Presentation only: currency values, financial calculations, reporting period,
+ * export handlers and owner editor preferences are not modified. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-heading,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis > *,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-scroll {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-toolbar {
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions {
+  flex-wrap: wrap;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions > :is(select, button) {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  min-inline-size: 0;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-card {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(13px, 1.4vw, 18px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-card > .admin-analytics-value {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-card > .admin-analytics-note {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-scroll {
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-scroll:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-bars > [role="listitem"] {
+  min-inline-size: 0;
+  max-inline-size: none;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-bars > [role="listitem"] > span {
+  display: block;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-toolbar .admin-analytics-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-toolbar .admin-analytics-actions > :is(select, button) {
+    width: 100%;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+
+/* Stage 11 — finance breakdown detail readability.
+ * Only owner analytics sections and their existing read-only figures are styled.
+ * Preserve currency amounts, COGS unknown/estimated warnings, editor tokens and calculations. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel,
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row,
+  .admin-profitability-row,
+  .admin-profitability-heading,
+  .admin-profitability-metrics,
+  .admin-profitability-results
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel
+) {
+  padding: clamp(14px, 1.65vw, 20px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel
+) > div:first-child {
+  min-inline-size: 0;
+  gap: 10px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel
+) > div:first-child > * {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row
+) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row
+) > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row
+) > :last-child {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-row {
+  padding-block: 11px;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-heading,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-results,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 6px 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-profitability-heading,
+  .admin-profitability-results,
+  .admin-profitability-metrics
+) > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-profitability-heading,
+  .admin-profitability-results
+) > :last-child {
+  text-align: end;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-row > p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+    .admin-finance-sources-panel,
+    .admin-finance-expenses-panel,
+    .admin-finance-products-panel,
+    .admin-finance-vendors-panel
+  ) > div:first-child {
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+    .admin-finance-breakdown-row,
+    .admin-finance-recent-row,
+    .admin-profitability-heading,
+    .admin-profitability-results
+  ) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+    .admin-finance-breakdown-row,
+    .admin-finance-recent-row,
+    .admin-profitability-heading,
+    .admin-profitability-results
+  ) > :last-child {
+    text-align: start;
+  }
+}
+
+
+/* Stage 12 — expense entry and calculator forms.
+ * Readable field labels and responsive input/result layout; posting, deletion,
+ * financial math and saved owner-editor colors/values remain untouched. */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-expenses,
+  .admin-expense-form,
+  .admin-expense-fields,
+  .admin-expense-field,
+  .admin-profit-calculator,
+  .admin-calculator-layout,
+  .admin-calculator-fields,
+  .admin-calculator-field-grid,
+  .admin-calculator-results
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-staff-panel,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator {
+  padding: clamp(13px, 1.65vw, 22px) !important;
+  border-radius: 20px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-form {
+  gap: 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-fields {
+  align-items: end;
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field > :is(input, select),
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields input {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  width: 100%;
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  box-sizing: border-box;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field > label,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields label {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-form :is(input, select, button):focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-field-grid {
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-field-grid > * {
+  min-inline-size: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results {
+  padding: clamp(13px, 1.4vw, 20px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 5px 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div > :last-child {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field > :is(input, select),
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields input {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-field-grid,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div > :last-child {
+    text-align: start;
+  }
+}
+
+
+/* Stage 13 — expense ledger search and pagination.
+ * History controls are read-only presentation; full expense ledger, save/delete,
+ * report math and staff permissions remain unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses :is(
+  .admin-expense-history-panel,
+  .admin-expense-history-heading,
+  .admin-expense-history-filters,
+  .admin-expense-history-list,
+  .admin-expense-pagination,
+  .admin-expense-pagination-controls
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-panel {
+  padding: clamp(13px, 1.7vw, 22px) !important;
+  border-radius: 20px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-heading > div,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-filters > div {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-filters {
+  gap: 10px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-filters :is(input, select) {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-pagination button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-list .admin-expense-row {
+  min-width: 0;
+  padding: clamp(11px, 1.25vw, 15px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-list .admin-expense-amount {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-pagination {
+  gap: 10px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-pagination-controls {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-pagination button:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-filters :is(input, select):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-heading,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-history-filters :is(input, select) {
+    font-size: 16px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh {
+    width: 100%;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-pagination-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+
+/* Stage 14 — fully editable profit calculator inputs.
+ * The existing four previously hidden cost/quantity variables are now
+ * visible; no calculation or default parameter is modified. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields > div:first-child,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields > .admin-calculator-field-grid {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields > div:first-child :is(h4, p),
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields > p,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > p {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields .admin-calculator-field-grid > div {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields input {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-extra-fields input {
+    font-size: 16px !important;
+  }
+}
+
+
+/* Stage 15 — incomplete expense ledger reporting guard.
+ * This only sizes the financial-integrity alert; expense permissions,
+ * financial formulas, reports and visual editor styles stay server-owned. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-retry {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-retry:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning {
+    padding: 13px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-retry {
+    width: 100%;
+  }
+}
+
+
+/* Stage 17 — expense verification status and retry accessibility.
+ * Only visible refresh / stale-data notices are styled. Finance amounts,
+ * editor-controlled colors and saved settings remain unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses :is(
+  .admin-expense-sync-state,
+  .admin-expense-load-error,
+  .admin-expense-error-retry
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-sync-state {
+  line-height: 1.5;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-sync-state time,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning time {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-error-retry,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-error-retry:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-refresh:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-error-retry {
+    display: block;
+    width: 100%;
+    margin-inline-start: 0 !important;
+    margin-block-start: 8px;
+  }
+}
+
+
+/* Stage 18 — expense mutation confirmations and feedback.
+ * Inline operation messages must remain readable even with long server errors.
+ * Existing editor-owned visual tokens and finance formulas are not changed. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-mutation-notice {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit:disabled,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-delete:disabled {
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-delete {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-mutation-notice {
+    padding: 12px !important;
+  }
+}

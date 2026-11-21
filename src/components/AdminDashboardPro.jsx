@@ -14,7 +14,12 @@ import { validateProductVariants, validateSizeColorInventoryVariants } from '../
 import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
+import { getFinancialOrderEventDate, getFinancialDeliveryCharge, isReconciledOrderRevenue } from '../utils/financeOrderReconciliation.js';
 import { getPaginationItems } from '../utils/pagination.js';
+import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
+import { getAuthenticatedExpenseHeaders, getRevalidatedExpenseAccessHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
+import { invalidateAdminSessionOperations } from '../utils/adminSessionLifecycle.js';
+import { escapeSpreadsheetCsvCell, hasVerifiedExpenseLedgerRows } from '../utils/financeExportSafety.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
@@ -83,6 +88,14 @@ const getSupabaseHeaders = async () => {
     Prefer: 'return=representation'
   };
 };
+
+// Expenses never fall back to an anonymous token, unlike public storefront reads.
+const getExpenseSessionHeaders = (expectedUserId) =>
+  getAuthenticatedExpenseHeaders({
+    loadSession: () => supabase.auth.getSession(),
+    apiKey: SUPABASE_ANON_KEY,
+    expectedUserId: requireExpensePrincipal(expectedUserId)
+  });
 
 const PRODUCT_IMAGE_BUCKET = 'storefront-media';
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -895,6 +908,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
 export default function AdminDashboardPro({
   adminLoggedIn,
+  adminUserId = null,
   adminAccess = EMPTY_ADMIN_ACCESS,
   setAdminLoggedIn,
   adminLoginForm,
@@ -903,6 +917,8 @@ export default function AdminDashboardPro({
   handleLogout,
   adminError,
   orders = [],
+  ordersReady = false,
+  ordersError = '',
   setOrders,
   usersList = [],
   setUsersList,
@@ -1140,6 +1156,7 @@ export default function AdminDashboardPro({
     if (!canAccessAdminTab(adminTab)) setAdminTab(getDefaultAdminTab());
   }, [adminLoggedIn, adminAccess, adminTab]); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [crmPage, setCrmPage] = useState(1);
   const [serverCustomers, setServerCustomers] = useState([]);
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmError, setCrmError] = useState('');
@@ -1179,6 +1196,8 @@ export default function AdminDashboardPro({
   const ORDERS_PER_PAGE = 5;
   const PRODUCTS_PER_PAGE = 10;
   const REPLENISHMENT_PER_PAGE = 10;
+  const CRM_PER_PAGE = 10;
+  const EXPENSES_PER_PAGE = 10;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
@@ -1309,6 +1328,26 @@ export default function AdminDashboardPro({
 
   const [expenses, setExpenses] = useState([]);
   const [expensesError, setExpensesError] = useState('');
+  const [expensesReady, setExpensesReady] = useState(false);
+  const [expensesLoading, setExpensesLoading] = useState(false);
+  const [expensesLastVerifiedAt, setExpensesLastVerifiedAt] = useState(null);
+  const [expenseMutationBusy, setExpenseMutationBusy] = useState('');
+  const [expenseMutationNotice, setExpenseMutationNotice] = useState(null);
+  const expenseMutationInFlightRef = useRef(false);
+  const expenseMutationVersionRef = useRef(0);
+  // A slow 15-second poll must never replace a newer refresh or post-mutation ledger.
+  const expenseFetchRequestRef = useRef(0);
+  const expenseFetchInFlightRef = useRef(false);
+  const expenseExportInFlightRef = useRef(false);
+  const [expenseExportBusy, setExpenseExportBusy] = useState(false);
+  const expenseExportMountedRef = useRef(false);
+  useEffect(() => {
+    expenseExportMountedRef.current = true;
+    return () => { expenseExportMountedRef.current = false; };
+  }, []);
+  const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
+  const [expensePage, setExpensePage] = useState(1);
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
 
   const [aiQuery, setAiQuery] = useState('');
@@ -1316,6 +1355,13 @@ export default function AdminDashboardPro({
     { role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  // Discard scheduled financial replies when the admin session ends or this view unmounts.
+  const aiResponseVersionRef = useRef(0);
+  const aiResponseInFlightRef = useRef(false);
+  useEffect(() => () => {
+    aiResponseVersionRef.current += 1;
+    aiResponseInFlightRef.current = false;
+  }, []);
 
   const fetchInventoryReplenishmentSettings = async () => {
     const requestSessionVersion = adminSessionVersion.current;
@@ -1585,10 +1631,36 @@ export default function AdminDashboardPro({
     };
   }, [adminLoggedIn, hasCrmPermission]);
 
-  const fetchExpenses = async () => {
+  // A denied server request overrides any earlier successful ledger snapshot.
+  // Cached finance data must not stay on screen after a 401/403 response.
+  const discardUnauthorizedExpenseData = () => {
+    setExpenses([]);
+    setExpensesReady(false);
+    setExpensesLastVerifiedAt(null);
+    setExpenseMutationNotice(null);
+  };
+
+  const fetchExpenses = async (requestMode = 'manual') => {
     const requestSessionVersion = adminSessionVersion.current;
     if (!isCurrentAdminSession(requestSessionVersion) || !hasExpensesPermission) return false;
+    // A mutation may have committed but not yet reconciled. Never publish a
+    // previous ledger as complete until that write's outcome is checked.
+    if (expenseMutationInFlightRef.current) return false;
+    // A slow full-ledger fetch may exceed the polling period. Skip overlapping
+    // timer ticks; explicit refresh and post-mutation refresh can supersede it.
+    if (requestMode === 'poll' && expenseFetchInFlightRef.current) return false;
+    const requestId = ++expenseFetchRequestRef.current;
+    expenseFetchInFlightRef.current = true;
+    setExpensesLoading(true);
+    const isLatestExpenseRequest = () =>
+      isCurrentAdminSession(requestSessionVersion) && requestId === expenseFetchRequestRef.current;
     try {
+      // RLS may return HTTP 200 with [] when a staff permission is revoked.
+      // Verify authorization on the server before trusting any zero-row ledger.
+      const initialExpenseSession = await getExpenseSessionHeaders(adminUserId);
+      if (!isLatestExpenseRequest()) return false;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: initialExpenseSession.headers, fetchImpl: fetch });
+      if (!isLatestExpenseRequest()) return false;
       // PostgREST commonly caps one response at 1,000 rows. Fetch the complete
       // expense ledger in stable pages so older expenses are not silently
       // omitted from financial-period totals or CSV exports.
@@ -1596,18 +1668,21 @@ export default function AdminDashboardPro({
       const pageSize = 1000;
       let completed = false;
       for (let offset = 0; offset < 100000; offset += pageSize) {
-        const headers = await getSupabaseHeaders();
-        if (!isCurrentAdminSession(requestSessionVersion)) return false;
+        const { headers } = await getExpenseSessionHeaders(initialExpenseSession.userId);
+        if (!isLatestExpenseRequest()) return false;
         headers.Range = `${offset}-${offset + pageSize - 1}`;
         headers['Range-Unit'] = 'items';
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc,id.desc`,
           { headers }
         );
-        if (!isCurrentAdminSession(requestSessionVersion)) return false;
-        if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+        if (!isLatestExpenseRequest()) return false;
+        if (!res.ok) {
+          if (isExpenseAccessDeniedStatus(res.status)) discardUnauthorizedExpenseData();
+          throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+        }
         const page = await res.json();
-        if (!isCurrentAdminSession(requestSessionVersion)) return false;
+        if (!isLatestExpenseRequest()) return false;
         if (!Array.isArray(page)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
         allExpenses.push(...page);
         if (page.length < pageSize) {
@@ -1619,30 +1694,65 @@ export default function AdminDashboardPro({
         }
       }
       if (!completed) throw new Error('ხარჯების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
-      if (!isCurrentAdminSession(requestSessionVersion)) return false;
+      if (!isLatestExpenseRequest()) return false;
+      // Detect permission revocation or account switching during pagination.
+      const finalExpenseSession = await getExpenseSessionHeaders(initialExpenseSession.userId);
+      if (!isLatestExpenseRequest()) return false;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: finalExpenseSession.headers, fetchImpl: fetch });
+      if (!isLatestExpenseRequest()) return false;
+      if (!hasVerifiedExpenseLedgerRows(allExpenses)) {
+        throw new Error('ხარჯების ისტორიაში თანხის არასწორი მნიშვნელობა ან განმეორებული ID აღმოჩნდა; ფინანსური ანგარიშები არ დასტურდება.');
+      }
       setExpenses(allExpenses);
       setExpensesError('');
+      setExpensesReady(true);
+      setExpensesLastVerifiedAt(new Date().toISOString());
       return true;
     } catch (error) {
-      if (!isCurrentAdminSession(requestSessionVersion)) return false;
+      if (!isLatestExpenseRequest()) return false;
+      if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
       console.error('GEOSTORE expense history fetch failed:', error);
+      setExpensesReady(false);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
+    } finally {
+      if (requestId === expenseFetchRequestRef.current) {
+        expenseFetchInFlightRef.current = false;
+        if (isCurrentAdminSession(requestSessionVersion)) setExpensesLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    // Do not poll private finance data unless the server grants the expenses module.
-    if (!hasExpensesPermission) {
+    // Do not poll private finance data without a live session and expenses permission.
+    if (!adminLoggedIn || !hasExpensesPermission) {
+      expenseMutationVersionRef.current += 1;
+      expenseMutationInFlightRef.current = false;
+      setExpenseMutationBusy('');
+      setExpenseMutationNotice(null);
+      expenseFetchRequestRef.current += 1;
+      expenseFetchInFlightRef.current = false;
       setExpenses([]);
       setExpensesError('');
+      setExpensesReady(false);
+      setExpensesLoading(false);
+      setExpensesLastVerifiedAt(null);
+      setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+      setExpenseSearchQuery('');
+      setExpenseCategoryFilter('all');
+      setExpensePage(1);
       return undefined;
     }
 
-    fetchExpenses();
-    const interval = setInterval(fetchExpenses, 15000);
-    return () => clearInterval(interval);
-  }, [hasExpensesPermission]);
+    void fetchExpenses();
+    const interval = setInterval(() => { void fetchExpenses('poll'); }, 15000);
+    return () => {
+      clearInterval(interval);
+      expenseFetchRequestRef.current += 1;
+      expenseFetchInFlightRef.current = false;
+      // Invalidate a pending request; a future effect owns its loading state.
+    };
+  }, [adminLoggedIn, hasExpensesPermission]);
 
 
 
@@ -2236,11 +2346,43 @@ export default function AdminDashboardPro({
   useLayoutEffect(() => {
     adminSessionActiveRef.current = Boolean(adminLoggedIn);
     adminSessionVersion.current += 1;
-    if (adminLoggedIn) return;
+    // The parent uses a principal-keyed AdminDashboardPro. A new account
+    // unmounts this instance without a logged-out render. Invalidate *all*
+    // pending async guards on effect cleanup, including owner/staff switches.
+    const invalidatePendingAdminWork = () => invalidateAdminSessionOperations({
+      adminSessionActiveRef,
+      adminSessionVersion,
+      expenseMutationVersionRef,
+      expenseMutationInFlightRef,
+      expenseFetchRequestRef,
+      expenseFetchInFlightRef,
+      expenseExportInFlightRef,
+      aiResponseVersionRef,
+      aiResponseInFlightRef
+    });
+    if (adminLoggedIn) return invalidatePendingAdminWork;
 
     // Clear private admin snapshots before the logged-out UI is painted.
+    expenseMutationVersionRef.current += 1;
+    expenseMutationInFlightRef.current = false;
+    setExpenseMutationBusy('');
+    setExpenseMutationNotice(null);
+    expenseFetchRequestRef.current += 1;
+    expenseFetchInFlightRef.current = false;
     setExpenses([]);
     setExpensesError('');
+    setExpensesReady(false);
+    setExpensesLoading(false);
+    setExpensesLastVerifiedAt(null);
+    setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+    setExpenseSearchQuery('');
+    setExpenseCategoryFilter('all');
+    setExpensePage(1);
+    aiResponseVersionRef.current += 1;
+    aiResponseInFlightRef.current = false;
+    setAiQuery('');
+    setAiChatLogs([{ role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }]);
+    setIsAiThinking(false);
     setServerCustomers([]);
     setCrmLoading(false);
     setCrmError('');
@@ -2296,6 +2438,7 @@ export default function AdminDashboardPro({
     supportThreadFetchInFlight.current.clear();
     supportThreadRefreshPending.current.clear();
     supportReplyInFlight.current.clear();
+    return invalidatePendingAdminWork;
   }, [adminLoggedIn]);
 
   const fetchActivityLogs = async () => {
@@ -2420,11 +2563,8 @@ export default function AdminDashboardPro({
     };
 
     const periodOrders = (orders || []).filter(order => {
-      const delivered = !isCancelled(order) && isDelivered(order);
-      const reportingDate = delivered
-        ? (order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date)
-        : (order.created_at || order.createdAt || order.date);
-      return inPeriod(reportingDate);
+      const closed = isCancelled(order) || isDelivered(order);
+      return inPeriod(getFinancialOrderEventDate(order, closed));
     });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
     const cancelledOrders = periodOrders.filter(isCancelled);
@@ -2451,20 +2591,26 @@ export default function AdminDashboardPro({
     let totalCogs = 0;
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
+    let unreconciledDeliveredOrders = 0;
     const incomeTotals = new Map();
     const productProfitTotals = new Map();
     const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
-      const orderTotal = normalizeOrderTotal(order.totalGEL ?? order.total_gel);
+      const rawOrderTotal = Object.prototype.hasOwnProperty.call(order, 'rawTotalGEL')
+        ? order.rawTotalGEL
+        : (order.totalGEL ?? order.total_gel);
+      const orderTotal = normalizeOrderTotal(rawOrderTotal);
       totalSalesRevenue += orderTotal;
       const rawItems = Array.isArray(order.items) ? order.items : [];
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
-      const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
+      const deliveryCharge = getFinancialDeliveryCharge(order);
       const revenueSplit = splitOrderRevenue(items, orderTotal, deliveryCharge);
+      if (!isReconciledOrderRevenue(rawOrderTotal, revenueSplit, order.checkoutBreakdown)) {
+        unreconciledDeliveredOrders += 1;
+      }
       totalDeliveryRevenue += revenueSplit.deliveryRevenue;
       totalProductRevenue += revenueSplit.productRevenue;
       totalAddonRevenue += revenueSplit.addonRevenue;
@@ -2534,7 +2680,7 @@ export default function AdminDashboardPro({
     const trendBuckets = new Map();
     const useDailyTrend = analyticsPeriod === '30' || analyticsPeriod === '90';
     deliveredOrders.forEach(order => {
-      const date = parseDate(order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date);
+      const date = parseDate(getFinancialOrderEventDate(order, true));
       if (!date) return;
       const key = useDailyTrend
         ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
@@ -2554,7 +2700,7 @@ export default function AdminDashboardPro({
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     // Add-on revenue is disclosed separately but excluded from profit until
     // its fulfilment costs can be recorded. Delivery is tracked separately.
-    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
+    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 && unreconciledDeliveredOrders === 0 ? totalProductRevenue - totalCogs : null;
     const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
     periodExpenses.forEach(expense => {
@@ -2567,7 +2713,7 @@ export default function AdminDashboardPro({
 
     return {
       periodOrders, deliveredOrders, cancelledOrders, cancelledOrderValue, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
-      deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
+      deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking, unreconciledDeliveredOrders,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue, totalAddonRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
@@ -2575,20 +2721,27 @@ export default function AdminDashboardPro({
       incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
       productProfitability: Array.from(productProfitTotals.values()).map(item => ({
         ...item,
-        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       vendorProfitability: Array.from(vendorProfitTotals.values()).map(item => ({
         ...item,
         productCount: item.productCount.size,
-        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       expenseBreakdown: Array.from(expenseTotals.values()).sort((x, y) => y.amount - x.amount)
     };
   }, [orders, expenses, products, analyticsPeriod]);
 
   const financialOverview = analyticsData;
+  // Never describe missing, inaccessible or stale expense data as verified profit.
+  // Computed finance datasets remain unchanged; this gates report presentation/export.
+  const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError;
+  const ordersVerifiedForReports = hasOrdersPermission && ordersReady && !ordersError;
+  const verifiedFinanceSnapshot = ordersVerifiedForReports && expensesVerifiedForReports;
+  const ordersVerifiedForReportsRef = useRef(ordersVerifiedForReports);
+  ordersVerifiedForReportsRef.current = ordersVerifiedForReports;
   const lowStockGroups = useMemo(
     () => groupLowStockInventory(financialOverview.lowStockProducts),
     [financialOverview.lowStockProducts]
@@ -2597,12 +2750,7 @@ export default function AdminDashboardPro({
   const expenseBreakdown = analyticsData.expenseBreakdown;
 
   const exportCsv = (filename, headers, rows) => {
-    const escapeCell = value => {
-      const raw = value === null || value === undefined ? '' : String(value);
-      const safe = /^[=+@\\-]/.test(raw) ? "'" + raw : raw;
-      return '"' + safe.replace(/"/g, '""') + '"';
-    };
-    const csv = [headers, ...rows].map(row => row.map(escapeCell).join(';')).join('\r\n');
+    const csv = [headers, ...rows].map(row => row.map(escapeSpreadsheetCsvCell).join(';')).join('\r\n');
     const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -2614,7 +2762,53 @@ export default function AdminDashboardPro({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  const handleExportAnalytics = () => {
+  const handleExportAnalytics = async () => {
+    if (!expensesVerifiedForReports || expenseMutationInFlightRef.current || expenseFetchInFlightRef.current || !ordersVerifiedForReports) {
+      alert('ფინანსური CSV ვერ მომზადდება: შეკვეთების ან ხარჯების სრული ისტორია არ არის დადასტურებული. გადაამოწმეთ მონაცემები, წვდომა და განაახლეთ ორივე ისტორია.');
+      return;
+    }
+    if (expenseExportInFlightRef.current) return;
+    const exportSessionVersion = adminSessionVersion.current;
+    const exportRequestId = expenseFetchRequestRef.current;
+    const isCurrentExport = () =>
+      expenseExportMountedRef.current &&
+      isCurrentAdminSession(exportSessionVersion) &&
+      exportRequestId === expenseFetchRequestRef.current &&
+      !expenseMutationInFlightRef.current &&
+      !expenseFetchInFlightRef.current &&
+      ordersVerifiedForReportsRef.current;
+    expenseExportInFlightRef.current = true;
+    setExpenseExportBusy(true);
+    try {
+      const { headers } = await getExpenseSessionHeaders(adminUserId);
+      if (!isCurrentExport()) return;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers, fetchImpl: fetch });
+      if (!isCurrentExport()) return;
+      // Reject account switching and recheck server authorization if token
+      // rotation happened while the CSV preflight was in flight.
+      await getRevalidatedExpenseAccessHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: adminUserId,
+        previousHeaders: headers,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch
+      });
+      if (!isCurrentExport()) return;
+    } catch (error) {
+      if (isCurrentExport()) {
+        if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
+        setExpensesReady(false);
+        setExpensesLastVerifiedAt(null);
+        setExpensesError(error?.message || 'CSV ექსპორტის ნებართვა ვერ გადამოწმდა.');
+        alert('ფინანსური CSV ვერ მომზადდა: ანგარიშის სესია ან ხარჯების ნებართვა ვერ დადასტურდა. გადაამოწმეთ ფინანსური ისტორია.');
+      }
+      return;
+    } finally {
+      expenseExportInFlightRef.current = false;
+      if (expenseExportMountedRef.current && isCurrentAdminSession(exportSessionVersion)) setExpenseExportBusy(false);
+    }
+    if (!isCurrentExport()) return;
     const periodLabel = analyticsPeriod === 'all' ? 'all-period' : 'last-' + analyticsPeriod + '-days';
     exportCsv(`geostore-financial-summary-${periodLabel}.csv`,
       ['მაჩვენებელი', 'თანხა (GEL)'],
@@ -2629,9 +2823,10 @@ export default function AdminDashboardPro({
         ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.estimatedCogsItems ? 'შეფასებულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
         ['უცნობი თვითღირებულების ერთეულები', financialOverview.unknownCogsItems],
-        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.grossProfit.toFixed(2)],
+        ['შემოსავლების გაყოფით შეუსაბამო ჩაბარებული შეკვეთები', financialOverview.unreconciledDeliveredOrders],
+        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება არასრულია ან შეკვეთების თანხები არ ემთხვევა' : financialOverview.grossProfit.toFixed(2)],
         ['ოპერაციული ხარჯები', financialOverview.totalExpenses.toFixed(2)],
-        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.netProfit.toFixed(2)]
+        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება არასრულია ან შეკვეთების თანხები არ ემთხვევა' : financialOverview.netProfit.toFixed(2)]
       ]);
     exportCsv(`geostore-product-profitability-${periodLabel}.csv`,
       ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
@@ -2646,28 +2841,37 @@ export default function AdminDashboardPro({
 
   const handleAiAsk = async (e) => {
     e.preventDefault();
-    if (!aiQuery.trim() || isAiThinking) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isOwner || !isCurrentAdminSession(requestSessionVersion) || !aiQuery.trim() || aiResponseInFlightRef.current) return;
+    const responseVersion = ++aiResponseVersionRef.current;
+    aiResponseInFlightRef.current = true;
     const userQuestion = aiQuery.trim();
     setAiQuery('');
     setAiChatLogs(prev => [...prev, { role: 'user', text: userQuestion }]);
     setIsAiThinking(true);
 
     setTimeout(() => {
-      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
+      if (!isCurrentAdminSession(requestSessionVersion) || responseVersion !== aiResponseVersionRef.current) return;
+      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${!expensesVerifiedForReports ? 'ვერ განისაზღვრება — ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
-      if (qLower.includes('მომსახურ') || qLower.includes('შეფუთვა') || qLower.includes('დაზღვევა')) answer = `✨ დამატებითი მომსახურებების შემოსავალია ${financialOverview.totalAddonRevenue.toFixed(2)} ₾. ეს თანხა ცალკეა ნაჩვენები და მოგებაში არ შედის, რადგან მომსახურების თვითღირებულება ჯერ არ აღირიცხება.`;
+      if (!ordersVerifiedForReports && !qLower.includes('ხარჯი')) answer = 'შეკვეთების სრული ისტორია ჯერ არ არის დადასტურებული. გადაამოწმეთ შეკვეთების მონაცემები და შემდეგ გაიმეორეთ ფინანსური კითხვა.';
+      else if (qLower.includes('მომსახურ') || qLower.includes('შეფუთვა') || qLower.includes('დაზღვევა')) answer = `✨ დამატებითი მომსახურებების შემოსავალია ${financialOverview.totalAddonRevenue.toFixed(2)} ₾. ეს თანხა ცალკეა ნაჩვენები და მოგებაში არ შედის, რადგან მომსახურების თვითღირებულება ჯერ არ აღირიცხება.`;
       else if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
-      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
+      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${!expensesVerifiedForReports ? 'ვერ განისაზღვრება — ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
       else if (qLower.includes('გაუქმ')) answer = `🛑 გაუქმებულია ${financialOverview.cancelledOrders.length} შეკვეთა, ნომინალური ღირებულებით ${financialOverview.cancelledOrderValue.toFixed(2)} ₾. ეს თანხა არ ითვლება გაყიდვად ან დადასტურებულ დაბრუნებად.`;
-      else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
+      else if (qLower.includes('ხარჯი')) answer = expensesVerifiedForReports
+        ? `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`
+        : '📉 ხარჯების სრული ისტორია არ არის დადასტურებული. გადაამოწმეთ ფინანსების წვდომა ან სცადეთ ისტორიის განახლება.';
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
       setIsAiThinking(false);
+      aiResponseInFlightRef.current = false;
     }, 800);
   };
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
+    if (expenseMutationInFlightRef.current) return;
     const amountText = String(expenseForm.amount ?? '').trim();
     const description = String(expenseForm.description ?? '').trim();
     const category = String(expenseForm.category ?? '').trim();
@@ -2700,6 +2904,8 @@ export default function AdminDashboardPro({
 
     const expenseId = createAdminId('exp');
     if (!expenseId) return alert(secureIdError);
+    const mutationSession = adminSessionVersion.current;
+    if (!hasExpensesPermission || !isCurrentAdminSession(mutationSession)) return;
     const newExp = {
       id: expenseId,
       category,
@@ -2708,48 +2914,147 @@ export default function AdminDashboardPro({
       description
     };
 
+    // Prevent duplicate POSTs and invalidate any read that started before
+    // this write. The report stays unverified until full reconciliation.
+    const mutationVersion = ++expenseMutationVersionRef.current;
+    expenseMutationInFlightRef.current = true;
+    setExpenseMutationBusy('create');
+    setExpenseMutationNotice(null);
+    expenseFetchRequestRef.current += 1;
+    expenseFetchInFlightRef.current = false;
+    setExpensesReady(false);
+    const isCurrentMutation = () =>
+      mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
+      const { headers: verifiedHeaders } = await getExpenseSessionHeaders(adminUserId);
+      if (!isCurrentMutation()) return;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
+      if (!isCurrentMutation()) return;
+      const currentHeaders = await getRevalidatedExpenseWriteHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: adminUserId,
+        previousHeaders: verifiedHeaders,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch
+      });
+      if (!isCurrentMutation()) return;
+      const headers = new Headers(currentHeaders);
+      headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
-        headers: await getSupabaseHeaders(),
+        headers,
         body: JSON.stringify(newExp)
       });
-
-      if (res.ok) {
-        setExpenses(prev => [newExp, ...prev]);
-        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
-        logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
-        alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
-      } else {
-        alert('შეცდომა ბაზაში შენახვისას');
+      if (!isCurrentMutation()) return;
+      if (!res.ok) {
+        if (isExpenseAccessDeniedStatus(res.status)) {
+          discardUnauthorizedExpenseData();
+          const error = new Error('ხარჯის შენახვის უფლება არ დადასტურდა.');
+          error.expenseAccessDenied = true;
+          throw error;
+        }
+        throw new Error(`შენახვა ვერ დადასტურდა (HTTP ${res.status}).`);
       }
-    } catch {
-      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+      const rows = await res.json().catch(() => null);
+      if (!isCurrentMutation()) return;
+      if (!isConfirmedExpenseInsert(rows, newExp)) {
+        throw new Error('სერვერმა შექმნილი ხარჯის ზუსტი ჩანაწერი არ დააბრუნა.');
+      }
+      setExpenses(prev => [newExp, ...prev]);
+      setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+      setExpenseMutationNotice({ type: 'success', action: 'create', text: 'ხარჯის შენახვა დადასტურებულია სერვერის მიერ. სრული ისტორია ახლდება.' });
+      logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
+    } catch (error) {
+      if (!isCurrentMutation()) return;
+      if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
+      console.error('GEOSTORE expense insert failed or not confirmed:', error);
+      setExpenseMutationNotice({
+        type: 'error',
+        action: 'create',
+        text: error?.expenseAccessDenied
+          ? 'ხარჯის შენახვა სერვერმა უარყო. გადაამოწმეთ ანგარიშის სესია და ხარჯების ნებართვა.'
+          : `შენახვა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. ჩანაწერი შესაძლოა მაინც შეიქმნა. ხელახლა დამატებამდე გადაამოწმეთ განახლებული ისტორია, რათა დუბლიკატი არ გაჩნდეს.`
+      });
+    } finally {
+      if (isCurrentMutation()) {
+        expenseMutationInFlightRef.current = false;
+        setExpenseMutationBusy('');
+        void fetchExpenses();
+      }
     }
   };
 
   const handleDeleteExpense = async (id) => {
     const normalizedId = String(id ?? '').trim();
-    if (!normalizedId || !window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
+    if (!normalizedId || expenseMutationInFlightRef.current || !window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
+    const mutationSession = adminSessionVersion.current;
+    if (!hasExpensesPermission || !isCurrentAdminSession(mutationSession)) return;
+    const mutationVersion = ++expenseMutationVersionRef.current;
+    expenseMutationInFlightRef.current = true;
+    setExpenseMutationBusy(`delete:${normalizedId}`);
+    setExpenseMutationNotice(null);
+    expenseFetchRequestRef.current += 1;
+    expenseFetchInFlightRef.current = false;
+    setExpensesReady(false);
+    const isCurrentMutation = () =>
+      mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
-      const headers = new Headers(await getSupabaseHeaders());
+      const { headers: verifiedHeaders } = await getExpenseSessionHeaders(adminUserId);
+      if (!isCurrentMutation()) return;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
+      if (!isCurrentMutation()) return;
+      const currentHeaders = await getRevalidatedExpenseWriteHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: adminUserId,
+        previousHeaders: verifiedHeaders,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch
+      });
+      if (!isCurrentMutation()) return;
+      const headers = new Headers(currentHeaders);
       headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(normalizedId)}&select=id`, {
         method: 'DELETE',
         headers
       });
-      if (!res.ok) throw new Error(`ხარჯის წაშლა ვერ მოხერხდა (HTTP ${res.status}).`);
-      const deletedRows = await res.json();
-      if (!Array.isArray(deletedRows) || deletedRows.length !== 1 || String(deletedRows[0]?.id) !== normalizedId) {
-        throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა. სია უცვლელი დარჩა; განაახლეთ ისტორია.');
+      if (!isCurrentMutation()) return;
+      if (!res.ok) {
+        if (isExpenseAccessDeniedStatus(res.status)) {
+          discardUnauthorizedExpenseData();
+          const error = new Error('ხარჯის წაშლის უფლება არ დადასტურდა.');
+          error.expenseAccessDenied = true;
+          throw error;
+        }
+        throw new Error(`ხარჯის წაშლა ვერ დადასტურდა (HTTP ${res.status}).`);
+      }
+      const deletedRows = await res.json().catch(() => null);
+      if (!isCurrentMutation()) return;
+      if (!isConfirmedExpenseDelete(deletedRows, normalizedId)) {
+        throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა.');
       }
       setExpenses(prev => prev.filter(expense => String(expense.id) !== normalizedId));
       setExpensesError('');
+      setExpenseMutationNotice({ type: 'success', action: 'delete', text: 'ხარჯის წაშლა სერვერმა დაადასტურა. სრული ისტორია ახლდება.' });
       logActivity(`წაიშალა ხარჯი (ID: ${normalizedId})`);
-      alert('✅ ხარჯი წარმატებით წაიშალა!');
     } catch (error) {
+      if (!isCurrentMutation()) return;
+      if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
       console.error('GEOSTORE expense delete failed:', error);
-      alert(error?.message || 'ხარჯის წაშლისას ქსელის შეცდომა მოხდა.');
+      setExpenseMutationNotice({
+        type: 'error',
+        action: 'delete',
+        text: error?.expenseAccessDenied
+          ? 'ხარჯის წაშლა სერვერმა უარყო. გადაამოწმეთ ანგარიშის სესია და ხარჯების ნებართვა.'
+          : `წაშლა ვერ დადასტურდა: ${error?.message || 'ქსელის შეცდომა'}. წაშლის ხელახლა ცდამდე გადაამოწმეთ ხარჯების ისტორია.`
+      });
+    } finally {
+      if (isCurrentMutation()) {
+        expenseMutationInFlightRef.current = false;
+        setExpenseMutationBusy('');
+        void fetchExpenses();
+      }
     }
   };
 
@@ -4523,6 +4828,35 @@ export default function AdminDashboardPro({
     String(u.phone || '').toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
+  // Derived after the early login view, so no conditional React hook is introduced.
+  // Pagination affects only the rendered CRM rows, never server/customer permissions.
+  const totalCrmPages = Math.max(1, Math.ceil(filteredUsers.length / CRM_PER_PAGE));
+  const safeCrmPage = Math.min(Math.max(1, crmPage), totalCrmPages);
+  const paginatedCrmUsers = filteredUsers.slice((safeCrmPage - 1) * CRM_PER_PAGE, safeCrmPage * CRM_PER_PAGE);
+  const crmPaginationItems = getPaginationItems(safeCrmPage, totalCrmPages);
+
+  // Expense filters affect presentation only: the complete server ledger remains
+  // in expenses for revenue/profit reports, exports and financial reconciliation.
+  const expenseCategoryOptions = Array.from(new Set(expenses.map(exp =>
+    String(exp.category || '').trim()).filter(Boolean)
+  )).sort((a, b) => a.localeCompare(b, 'ka'));
+  const normalizedExpenseSearch = String(expenseSearchQuery || '').trim().toLocaleLowerCase();
+  const filteredExpenses = expenses.filter(exp => {
+    const category = String(exp.category || '').trim();
+    const categoryMatch = expenseCategoryFilter === 'all' || category === expenseCategoryFilter;
+    const searchMatch = !normalizedExpenseSearch || [
+      exp.description, exp.category, exp.date, exp.amount
+    ].some(value => String(value ?? '').toLocaleLowerCase().includes(normalizedExpenseSearch));
+    return categoryMatch && searchMatch;
+  });
+  const totalExpensePages = Math.max(1, Math.ceil(filteredExpenses.length / EXPENSES_PER_PAGE));
+  const safeExpensePage = Math.min(Math.max(1, expensePage), totalExpensePages);
+  const paginatedExpenses = filteredExpenses.slice(
+    (safeExpensePage - 1) * EXPENSES_PER_PAGE,
+    safeExpensePage * EXPENSES_PER_PAGE
+  );
+  const expensePaginationItems = getPaginationItems(safeExpensePage, totalExpensePages);
+
   const normalizedProductSearch = String(productSearchQuery || '').trim().toLocaleLowerCase();
   const selectedProductCategory = safeCategories.find(category => category.name === productCategoryFilter);
   const productCategoryNames = productCategoryFilter === 'ყველა'
@@ -4590,6 +4924,7 @@ export default function AdminDashboardPro({
   const currentOrderPage = Math.max(1, orderPageByStatus[orderStatusFilter] || 1);
   const totalOrderPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE));
   const safeOrderPage = Math.min(currentOrderPage, totalOrderPages);
+  const orderPaginationItems = getPaginationItems(safeOrderPage, totalOrderPages);
   const paginatedOrders = filteredOrders.slice((safeOrderPage - 1) * ORDERS_PER_PAGE, safeOrderPage * ORDERS_PER_PAGE);
   const setCurrentOrderPage = (page) => setOrderPageByStatus(prev => ({ ...prev, [orderStatusFilter]: page }));
 
@@ -5106,23 +5441,46 @@ export default function AdminDashboardPro({
         {(visibleAdminTab === 'analytics' && isOwner && (adminContentTab === 'analytics' || visibleAdminTab === 'analytics') || visibleAdminTab === 'admin_visual_editor' && isOwner && adminContentTab === 'analytics') && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
-              <div>
+              <div className="admin-analytics-heading min-w-0">
                 <h3 className="text-white font-black text-sm">{adminVisualDesign.content.analyticsPeriodTitle}</h3>
                 <p className="text-slate-400 text-[10px] mt-1">{adminVisualDesign.content.analyticsPeriodDescription}</p>
               </div>
-              <select value={analyticsPeriod} onChange={e => setAnalyticsPeriod(e.target.value)} className="bg-slate-950 border border-emerald-500/30 text-white rounded-xl px-4 py-3 text-xs font-bold">
-                <option value="all">მთელი პერიოდი</option>
-                <option value="30">ბოლო 30 დღე</option>
-                <option value="90">ბოლო 90 დღე</option>
-                <option value="365">ბოლო 12 თვე</option>
-              </select>
-              <button type="button" onClick={handleExportAnalytics} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
-                <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
-              </button>
+              <div className="admin-analytics-actions flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                <label className="sr-only" htmlFor="admin-analytics-period">ანალიტიკის პერიოდი</label>
+                <select id="admin-analytics-period" aria-label="ანალიტიკის პერიოდი" value={analyticsPeriod} onChange={e => setAnalyticsPeriod(e.target.value)} className="bg-slate-950 border border-emerald-500/30 text-white rounded-xl px-4 py-3 text-xs font-bold">
+                  <option value="all">მთელი პერიოდი</option>
+                  <option value="30">ბოლო 30 დღე</option>
+                  <option value="90">ბოლო 90 დღე</option>
+                  <option value="365">ბოლო 12 თვე</option>
+                </select>
+                <button type="button" onClick={handleExportAnalytics} disabled={expenseExportBusy || !ordersVerifiedForReports} aria-busy={expenseExportBusy} className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
+                  <Download className="w-4 h-4" /> {expenseExportBusy ? 'CSV ნებართვა მოწმდება…' : 'ანგარიშების CSV ექსპორტი'}
+                </button>
+              </div>
             </div>
-            {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
+            {!ordersVerifiedForReports && (
+              <div role="alert" aria-live="polite" className="admin-finance-orders-warning rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block mb-1">შეკვეთების სრული ისტორია არ არის დადასტურებული</strong>
+                <p>ბრუნვა და მოგება დროებით არ ჩანს, ფინანსური CSV კი დაბლოკილია, სანამ შეკვეთების ყველა გვერდი და წვდომა სერვერზე არ გადამოწმდება.</p>
+                {ordersError && <p className="mt-1">შეკვეთების ჩატვირთვის შეცდომა: {ordersError}</p>}
+              </div>
+            )}
+            {!expensesVerifiedForReports && (
+              <div role={expensesError || !hasExpensesPermission ? 'alert' : 'status'} aria-live="polite" className="admin-finance-data-warning rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block mb-1">{expensesLoading ? 'ხარჯების სრული ისტორია მოწმდება' : 'ხარჯების სრული ისტორია არ არის დადასტურებული'}</strong>
+                <p>ხარჯები და წმინდა მოგება დროებით არ ჩანს, ხოლო ფინანსური CSV ექსპორტი დაცულია, სანამ Supabase-დან სრული ხარჯების ისტორია წარმატებით არ ჩაიტვირთება.</p>
+                {expensesError && <p className="mt-1">ჩატვირთვის შეცდომა: {expensesError}</p>}
+                {!hasExpensesPermission && <p className="mt-1">ფინანსური მონაცემების წაკითხვის უფლება საჭიროა.</p>}
+                {expensesLastVerifiedAt && <p className="mt-1">ბოლო წარმატებული შემოწმება: <time dateTime={expensesLastVerifiedAt}>{new Date(expensesLastVerifiedAt).toLocaleString('ka-GE')}</time></p>}
+                {hasExpensesPermission && <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-finance-retry mt-2 min-h-11 rounded-xl border border-amber-500/30 px-4 py-2 text-xs font-bold">ხელახლა გადამოწმება</button>}
+              </div>
+            )}
+            {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0 || financialOverview.unreconciledDeliveredOrders > 0) && (
               <div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
-                <strong className="block mb-1">ისტორიული შეკვეთების მონაცემების შენიშვნა</strong>
+                <strong className="block mb-1">შეკვეთების ფინანსური მონაცემების შემოწმება</strong>
+                {financialOverview.unreconciledDeliveredOrders > 0 && (
+                  <span className="block">{financialOverview.unreconciledDeliveredOrders} ჩაბარებულ შეკვეთაზე დადასტურებული ჯამი არ ემთხვევა პროდუქტის, მომსახურებისა და მიწოდების შემოსავლების გაყოფას. მოგება დროებით არ ითვლება; შეამოწმეთ შეკვეთების დეტალები.</span>
+                )}
                 {financialOverview.deliveredOrdersMissingStatusDate > 0 && (
                   <span className="block">{financialOverview.deliveredOrdersMissingStatusDate} ჩაბარებულ შეკვეთას სტატუსის ცვლილების თარიღი არ აქვს; პერიოდისთვის გამოყენებულია შეკვეთის შექმნის თარიღი.</span>
                 )}
@@ -5134,43 +5492,43 @@ export default function AdminDashboardPro({
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-5">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">მხოლოდ ჩაბარებული შეკვეთები</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-emerald-400">{ordersVerifiedForReports ? financialOverview.totalSalesRevenue.toFixed(2) + ' ₾' : '—'}</p>
+                <span className="admin-analytics-note text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">მხოლოდ ჩაბარებული შეკვეთები</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> მთლიანი მოგება</p>
-                <p className="text-2xl sm:text-3xl font-black text-cyan-400">{financialOverview.grossProfit === null ? '—' : financialOverview.grossProfit.toFixed(2) + ' ₾'}</p>
-                <span className="text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-cyan-400">{!ordersVerifiedForReports || financialOverview.grossProfit === null ? '—' : financialOverview.grossProfit.toFixed(2) + ' ₾'}</p>
+                <span className="admin-analytics-note text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unreconciledDeliveredOrders > 0 ? 'შეკვეთების თანხების შეუსაბამობა' : financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-400" /> სულ ხარჯები</p>
-                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.totalExpenses.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-rose-400">{expensesVerifiedForReports ? financialOverview.totalExpenses.toFixed(2) + ' ₾' : '—'}</p>
+                <span className="admin-analytics-note text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-blue-400" /> ჩაბარებული შეკვეთები</p>
-                <p className="text-2xl sm:text-3xl font-black text-blue-400">{financialOverview.deliveredOrders.length}</p>
-                <span className="text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-blue-400">{ordersVerifiedForReports ? financialOverview.deliveredOrders.length : '—'}</p>
+                <span className="admin-analytics-note text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-rose-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><X className="w-4 h-4 text-rose-400" /> გაუქმებული შეკვეთები</p>
-                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.cancelledOrders.length}</p>
-                <span className="text-[10px] text-rose-300">ნომინალური ღირებულება: {financialOverview.cancelledOrderValue.toFixed(2)} ₾ · არ არის დადასტურებული დაბრუნება</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-rose-400">{ordersVerifiedForReports ? financialOverview.cancelledOrders.length : '—'}</p>
+                <span className="admin-analytics-note text-[10px] text-rose-300">ნომინალური ღირებულება: {financialOverview.cancelledOrderValue.toFixed(2)} ₾ · არ არის დადასტურებული დაბრუნება</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> საშუალო შეკვეთა</p>
-                <p className="text-2xl sm:text-3xl font-black text-indigo-400">{financialOverview.averageOrderValue.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-indigo-400">{ordersVerifiedForReports ? financialOverview.averageOrderValue.toFixed(2) + ' ₾' : '—'}</p>
+                <span className="admin-analytics-note text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-violet-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /> დამატებითი მომსახურებები</p>
-                <p className="text-2xl sm:text-3xl font-black text-violet-300">{financialOverview.totalAddonRevenue.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-violet-300">შეფუთვა და VIP დაზღვევა · მოგებაში არ არის ჩათვლილი</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-violet-300">{ordersVerifiedForReports ? financialOverview.totalAddonRevenue.toFixed(2) + ' ₾' : '—'}</p>
+                <span className="admin-analytics-note text-[10px] text-violet-300">შეფუთვა და VIP დაზღვევა · მოგებაში არ არის ჩათვლილი</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
-                <p className="text-2xl sm:text-3xl font-black text-amber-400">{financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
-                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-amber-400">{!verifiedFinanceSnapshot || financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
+                <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{!expensesVerifiedForReports ? 'ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — თვითღირებულება ან შეკვეთების გაყოფა არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
               </div>
             </div>
 
@@ -5181,17 +5539,19 @@ export default function AdminDashboardPro({
                   <span className="text-[10px] text-slate-400">{analyticsPeriod === '30' || analyticsPeriod === '90' ? 'დღეების მიხედვით' : 'თვეების მიხედვით'}</span>
                 </div>
                 {financialOverview.salesTrend.length === 0 ? <p className="text-slate-500 text-xs py-6">არჩეულ პერიოდში ჩაბარებული გაყიდვები არ არის.</p> : (
-                  <div className="flex items-end gap-1.5 h-44 pt-3">
-                    {financialOverview.salesTrend.map(point => {
-                      const maxRevenue = Math.max(1, ...financialOverview.salesTrend.map(item => item.revenue));
-                      const height = Math.max(4, (point.revenue / maxRevenue) * 100);
-                      return (
-                        <div key={point.key} className="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1" title={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`}>
-                          <div className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
-                          <span className="text-[8px] text-slate-500 whitespace-nowrap">{point.label}</span>
-                        </div>
-                      );
-                    })}
+                  <div className="admin-analytics-trend-scroll max-w-full overflow-x-auto" role="region" aria-label="გაყიდვების დინამიკის გადახვევადი გრაფიკი" tabIndex={0}>
+                    <div className="admin-analytics-trend-bars flex items-end gap-1.5 h-44 pt-3" style={{ minWidth: `max(100%, ${financialOverview.salesTrend.length * 44}px)` }} role="list">
+                      {financialOverview.salesTrend.map(point => {
+                        const maxRevenue = Math.max(1, ...financialOverview.salesTrend.map(item => item.revenue));
+                        const height = Math.max(4, (point.revenue / maxRevenue) * 100);
+                        return (
+                          <div key={point.key} role="listitem" aria-label={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`} className="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1" title={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`}>
+                            <div aria-hidden="true" className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
+                            <span aria-hidden="true" className="text-[8px] text-slate-500 whitespace-nowrap">{point.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 <p className="text-[10px] text-slate-400">ჯამური ბრუნვა: <b className="text-cyan-300">{financialOverview.salesTrend.reduce((sum, point) => sum + point.revenue, 0).toFixed(2)} ₾</b> · ჩაბარებული შეკვეთები: {financialOverview.salesTrend.reduce((sum, point) => sum + point.orders, 0)}</p>
@@ -5272,13 +5632,13 @@ export default function AdminDashboardPro({
               </div>
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-              <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="შემოსავლის წყაროები" className="admin-finance-sources-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">შემოსავლის წყაროები</h3>
                   <span className="text-[10px] text-slate-400">პროდუქტი, დამატებითი მომსახურება და მიწოდება</span>
                 </div>
                 {incomeSources.length === 0 ? <p className="text-slate-500 text-xs py-4">შემოსავლის წყარო ჯერ არ არის.</p> : incomeSources.map(source => (
-                  <div key={source.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
+                  <div key={source.label} className="admin-finance-breakdown-row flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
                     <span className="text-slate-300">{source.label}</span>
                     <b className="text-emerald-400 whitespace-nowrap">{source.amount.toFixed(2)} ₾</b>
                   </div>
@@ -5286,21 +5646,21 @@ export default function AdminDashboardPro({
                 {financialOverview.unknownCogsItems > 0 && <p className="text-amber-300 text-[10px]">თვითღირებულება უცნობია {financialOverview.unknownCogsItems} შეკვეთის/პროდუქტის ჩანაწერზე.</p>}
                 {financialOverview.estimatedCogsItems > 0 && <p className="text-amber-300 text-[10px]">ძველი შეკვეთების {financialOverview.estimatedCogsItems} ერთეულზე გამოყენებულია პროდუქტის მიმდინარე თვითღირებულება და არა გაყიდვის დღის ისტორიული ფასი.</p>}
               </div>
-              <div className="bg-slate-900/80 border border-rose-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="გასავლები — კატეგორიების მიხედვით" className="admin-finance-expenses-panel bg-slate-900/80 border border-rose-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-rose-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">გასავლები — კატეგორიების მიხედვით</h3>
                   <span className="text-[10px] text-slate-400">ჩანაწერები: {expenses.length}</span>
                 </div>
                 {expenseBreakdown.length === 0 ? <p className="text-slate-500 text-xs py-4">არჩეულ პერიოდში ხარჯები არ არის.</p> : expenseBreakdown.map(expense => (
-                  <div key={expense.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
+                  <div key={expense.label} className="admin-finance-breakdown-row flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
                     <span className="text-slate-300">{expense.label} <span className="text-slate-500">({expense.count} ჩანაწერი)</span></span>
                     <b className="text-rose-400 whitespace-nowrap">{expense.amount.toFixed(2)} ₾</b>
                   </div>
                 ))}
-                <div className="border-t border-rose-500/20 pt-3 space-y-2">
+                <div className="admin-finance-recent-list border-t border-rose-500/20 pt-3 space-y-2">
                   <p className="text-[10px] font-black text-slate-300">ბოლო ხარჯების ჩანაწერები</p>
                   {financialOverview.periodExpenses.slice(0,5).map(expense => (
-                    <div key={expense.id} className="flex justify-between gap-3 text-[10px]">
+                    <div key={expense.id} className="admin-finance-recent-row flex justify-between gap-3 text-[10px]">
                       <span className="text-slate-400">{expense.date || 'თარიღი უცნობია'} · {expense.description || expense.category}</span>
                       <b className="text-rose-300 whitespace-nowrap">-{(Number(expense.amount)||0).toFixed(2)} ₾</b>
                     </div>
@@ -5310,35 +5670,35 @@ export default function AdminDashboardPro({
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-              <div className="bg-slate-900/80 border border-cyan-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="პროდუქტების მომგებიანობა" className="admin-finance-products-panel bg-slate-900/80 border border-cyan-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-cyan-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">პროდუქტების მომგებიანობა</h3>
                   <span className="text-[10px] text-slate-400">არჩეული პერიოდი</span>
                 </div>
                 {financialOverview.productProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">პროდუქტის გაყიდვები არ არის.</p> : financialOverview.productProfitability.map(item => (
-                  <div key={item.key} className="border-b border-slate-800 pb-3 space-y-1.5">
-                    <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
+                  <article key={item.key} aria-label={`პროდუქტი: ${item.name}`} className="admin-profitability-row border-b border-slate-800 pb-3 space-y-1.5">
+                    <div className="admin-profitability-heading flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
                     <p className="text-[10px] text-slate-400">{item.vendor} · {item.category}</p>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
-                    <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
+                    <div className="admin-profitability-metrics flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="admin-profitability-results flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
                     {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
-                  </div>
+                  </article>
                 ))}
               </div>
-              <div className="bg-slate-900/80 border border-indigo-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="მომწოდებლების მომგებიანობა" className="admin-finance-vendors-panel bg-slate-900/80 border border-indigo-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-indigo-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">მომწოდებლების მომგებიანობა</h3>
                   <span className="text-[10px] text-slate-400">პროდუქტები და გაყიდვები</span>
                 </div>
                 {financialOverview.vendorProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">მომწოდებლის გაყიდვები არ არის.</p> : financialOverview.vendorProfitability.map(item => (
-                  <div key={item.name} className="border-b border-slate-800 pb-3 space-y-1.5">
-                    <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
-                    <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
+                  <article key={item.name} aria-label={`მომწოდებელი: ${item.name}`} className="admin-profitability-row border-b border-slate-800 pb-3 space-y-1.5">
+                    <div className="admin-profitability-heading flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
+                    <div className="admin-profitability-metrics flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="admin-profitability-results flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
                     {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
-                  </div>
+                  </article>
                 ))}
               </div>
             </div>
@@ -5380,35 +5740,64 @@ export default function AdminDashboardPro({
               <Calculator className="w-5 h-5 text-emerald-400" /> გაყიდვებისა და მოგების კალკულატორი
             </h3>
             <div className="admin-calculator-layout grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="admin-calculator-fields space-y-4">
+                <p id="admin-calculator-units-help" className="text-[11px] leading-relaxed text-slate-400">ყველა ფასი და ხარჯი მითითებულია ერთეულზე. ჯამური შემოსავალი და მოგება ითვალისწინებს რაოდენობას.</p>
+                <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">თვითღირებულება (₾)</label>
-                    <input type="number" value={calcForm.purchaseCost} onChange={e => setCalcForm({...calcForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-purchase-cost" className="text-slate-400 font-bold block mb-1">თვითღირებულება ერთეულზე (₾)</label>
+                    <input id="admin-calc-purchase-cost" type="number" min="0" step="0.01" inputMode="decimal" aria-describedby="admin-calculator-units-help" value={calcForm.purchaseCost} onChange={e => setCalcForm({...calcForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (₾)</label>
-                    <input type="number" value={calcForm.sellingPrice} onChange={e => setCalcForm({...calcForm, sellingPrice: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-black outline-none" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-slate-400 font-bold block mb-1">ფასდაკლება (%)</label>
-                    <input type="number" value={calcForm.discountPercent} onChange={e => setCalcForm({...calcForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-slate-400 font-bold block mb-1">მიწოდება / ხარჯი (₾)</label>
-                    <input type="number" value={calcForm.shippingCost} onChange={e => setCalcForm({...calcForm, shippingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-selling-price" className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი ერთეულზე (₾)</label>
+                    <input id="admin-calc-selling-price" type="number" min="0" step="0.01" inputMode="decimal" aria-describedby="admin-calculator-units-help" value={calcForm.sellingPrice} onChange={e => setCalcForm({...calcForm, sellingPrice: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                   </div>
                 </div>
+                <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="admin-calc-discount-percent" className="text-slate-400 font-bold block mb-1">ფასდაკლება (%)</label>
+                    <input id="admin-calc-discount-percent" type="number" min="0" max="100" step="0.01" inputMode="decimal" value={calcForm.discountPercent} onChange={e => setCalcForm({...calcForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                  </div>
+                  <div>
+                    <label htmlFor="admin-calc-shipping-cost" className="text-slate-400 font-bold block mb-1">მიწოდების ხარჯი ერთეულზე (₾)</label>
+                    <input id="admin-calc-shipping-cost" type="number" min="0" step="0.01" inputMode="decimal" aria-describedby="admin-calculator-units-help" value={calcForm.shippingCost} onChange={e => setCalcForm({...calcForm, shippingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                  </div>
+                </div>
+                <section className="admin-calculator-extra-fields space-y-3" aria-labelledby="admin-calc-extra-title">
+                  <div className="min-w-0 border-t border-emerald-500/15 pt-3">
+                    <h4 id="admin-calc-extra-title" className="font-black text-slate-200 text-xs">დამატებითი ხარჯები და რაოდენობა</h4>
+                    <p className="mt-1 text-[10px] leading-relaxed text-slate-400">ეს ოთხი პარამეტრი უკვე მონაწილეობს მოგების გამოთვლაში. შეცვალეთ რეალური მონაცემების მიხედვით.</p>
+                  </div>
+                  <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="admin-calc-packaging-cost" className="text-slate-400 font-bold block mb-1">შეფუთვის ხარჯი (₾/ერთ.)</label>
+                      <input id="admin-calc-packaging-cost" type="number" min="0" step="0.01" inputMode="decimal" value={calcForm.packagingCost} onChange={e => setCalcForm({...calcForm, packagingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                    <div>
+                      <label htmlFor="admin-calc-processing-fee" className="text-slate-400 font-bold block mb-1">დამუშავების საკომისიო (₾/ერთ.)</label>
+                      <input id="admin-calc-processing-fee" type="number" min="0" step="0.01" inputMode="decimal" value={calcForm.processingFee} onChange={e => setCalcForm({...calcForm, processingFee: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                  </div>
+                  <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="admin-calc-other-expenses" className="text-slate-400 font-bold block mb-1">სხვა ხარჯი (₾/ერთ.)</label>
+                      <input id="admin-calc-other-expenses" type="number" min="0" step="0.01" inputMode="decimal" value={calcForm.otherExpenses} onChange={e => setCalcForm({...calcForm, otherExpenses: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                    <div>
+                      <label htmlFor="admin-calc-quantity" className="text-slate-400 font-bold block mb-1">რაოდენობა (ცალი)</label>
+                      <input id="admin-calc-quantity" type="number" min="1" step="1" inputMode="numeric" value={calcForm.quantity} onChange={e => setCalcForm({...calcForm, quantity: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                  </div>
+                </section>
               </div>
               <div className="admin-calculator-results bg-slate-950/80 border border-emerald-500/30 p-6 rounded-3xl space-y-3 shadow-inner flex flex-col justify-center">
                 <h4 className="font-black text-emerald-400 text-sm mb-1">გამოთვლილი მონაცემები</h4>
-                <div className="flex justify-between"><span>ფასდაკლებული ფასი:</span><b className="text-white">{calculatedSalesMetrics.discountedPrice.toFixed(2)} ₾</b></div>
+                <div className="flex justify-between"><span>ფასდაკლებული ფასი ერთეულზე:</span><b className="text-white">{calculatedSalesMetrics.discountedPrice.toFixed(2)} ₾</b></div>
+                <div className="flex justify-between"><span>ჯამური შემოსავალი:</span><b className="text-white">{calculatedSalesMetrics.revenue.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>მთლიანი მოგება:</span><b className="text-emerald-400">{calculatedSalesMetrics.grossProfit.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>წმინდა მოგება:</span><b className="text-cyan-400 text-base">{calculatedSalesMetrics.netProfit.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>მარჟა (Margin):</span><b className="text-amber-400">{calculatedSalesMetrics.profitMargin.toFixed(1)}%</b></div>
                 <div className="flex justify-between"><span>მარკაპი (Markup):</span><b className="text-indigo-400">{calculatedSalesMetrics.markup.toFixed(1)}%</b></div>
+                <p className="text-[10px] leading-relaxed text-slate-400">მთლიანი მოგება = (ფასდაკლებული ფასი − თვითღირებულება) × რაოდენობა. წმინდა მოგებას დამატებით აკლდება მიწოდება, შეფუთვა, დამუშავება და სხვა ხარჯები თითოეულ ერთეულზე.</p>
               </div>
             </div>
           </div>
@@ -5417,39 +5806,89 @@ export default function AdminDashboardPro({
         {(visibleAdminTab === 'expenses' || adminContentTab === 'expenses') && (
           <div className="admin-expenses space-y-6">
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
+              <h3 id="admin-expense-add-title" className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება (Supabase ბაზაში)
               </h3>
-              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <select value={expenseForm.category} onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none">
-                    <option value="რეკლამა & მარკეტინგი">რეკლამა & მარკეტინგი</option>
-                    <option value="საიტი & ჰოსტინგი">საიტი & ჰოსტინგი</option>
-                    <option value="მიწოდება">მიწოდება</option>
-                    <option value="ხელფასები">ხელფასები</option>
-                    <option value="შეფუთვა">შეფუთვა</option>
-                    <option value="სხვა ოპერაციული">სხვა ოპერაციული</option>
-                  </select>
-                  <input type="number" required placeholder="თანხა (₾)" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
-                  <input type="date" value={expenseForm.date} onChange={e => setExpenseForm({...expenseForm, date: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs" aria-labelledby="admin-expense-add-title" aria-busy={expenseMutationBusy === 'create'}>
+                <div className="admin-expense-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="admin-expense-field">
+                    <label htmlFor="admin-expense-category" className="block text-slate-300 font-bold mb-1.5">კატეგორია</label>
+                    <select id="admin-expense-category" required value={expenseForm.category} onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none">
+                      <option value="რეკლამა & მარკეტინგი">რეკლამა & მარკეტინგი</option>
+                      <option value="საიტი & ჰოსტინგი">საიტი & ჰოსტინგი</option>
+                      <option value="მიწოდება">მიწოდება</option>
+                      <option value="ხელფასები">ხელფასები</option>
+                      <option value="შეფუთვა">შეფუთვა</option>
+                      <option value="სხვა ოპერაციული">სხვა ოპერაციული</option>
+                    </select>
+                  </div>
+                  <div className="admin-expense-field">
+                    <label htmlFor="admin-expense-amount" className="block text-slate-300 font-bold mb-1.5">თანხა (₾)</label>
+                    <input id="admin-expense-amount" type="number" inputMode="decimal" min="0.01" max="1000000000" step="0.01" required aria-describedby="admin-expense-amount-help" placeholder="მაგ: 150.00" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+                  </div>
+                  <div className="admin-expense-field">
+                    <label htmlFor="admin-expense-date" className="block text-slate-300 font-bold mb-1.5">თარიღი</label>
+                    <input id="admin-expense-date" type="date" required value={expenseForm.date} onChange={e => setExpenseForm({...expenseForm, date: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+                  </div>
                 </div>
-                <input type="text" required placeholder="აღწერა (მაგ: Facebook Ads)" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება ბაზაში</button>
+                <div className="admin-expense-field">
+                  <label htmlFor="admin-expense-description" className="block text-slate-300 font-bold mb-1.5">ხარჯის აღწერა</label>
+                  <input id="admin-expense-description" type="text" maxLength={300} required aria-describedby="admin-expense-description-help" placeholder="მაგ: Facebook Ads" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+                  <p id="admin-expense-description-help" className="mt-1 text-[10px] text-slate-400">მაქსიმუმ 300 სიმბოლო.</p>
+                </div>
+                <p id="admin-expense-amount-help" className="text-[10px] leading-relaxed text-slate-400">თანხა უნდა იყოს 0-ზე მეტი, მაქსიმუმ 1,000,000,000 ₾ და შეიცავდეს არაუმეტეს 2 ათწილადს.</p>
+                <button type="submit" disabled={Boolean(expenseMutationBusy)} className="admin-expense-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg disabled:cursor-not-allowed disabled:opacity-60">{expenseMutationBusy === 'create' ? 'ხარჯის შენახვა მოწმდება…' : '+ ხარჯის დამატება ბაზაში'}</button>
               </form>
+              {expenseMutationNotice?.action === 'create' && (
+                <p role={expenseMutationNotice.type === 'error' ? 'alert' : 'status'} aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs leading-relaxed text-slate-200">{expenseMutationNotice.text}</p>
+              )}
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
+            <div className="admin-expense-history-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
+              {expenseMutationBusy.startsWith('delete:') && (
+                <p role="status" aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs text-slate-300">მიმდინარეობს ხარჯის წაშლის დადასტურება სერვერზე…</p>
+              )}
+              {expenseMutationNotice?.action === 'delete' && (
+                <p role={expenseMutationNotice.type === 'error' ? 'alert' : 'status'} aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs leading-relaxed text-slate-200">{expenseMutationNotice.text}</p>
+              )}
+              <div className="admin-expense-history-heading flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 id="admin-expense-history-title" className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
+                  <p className="mt-1 text-[10px] text-slate-400">ძებნა და გვერდები მხოლოდ ამ სიას ცვლის — ფინანსური ჯამები და CSV იყენებს სრულ ისტორიას.</p>
+                </div>
+                <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-expense-refresh min-h-11 rounded-xl border border-emerald-500/25 px-4 py-2 text-xs font-bold text-emerald-300">{expensesLoading ? 'ახლდება… ხელახლა შემოწმება' : 'ისტორიის განახლება'}</button>
+              </div>
+              <p className="admin-expense-sync-state text-[11px] leading-relaxed text-slate-400" role="status" aria-live="polite">
+                {expensesLoading ? 'მიმდინარეობს სრული ისტორიის შემოწმება… ' : expensesError ? 'ისტორია ვერ განახლდა. ' : expensesReady ? 'ისტორია სრულად დადასტურებულია. ' : 'ისტორია ჯერ არ არის დადასტურებული. '}
+                {expensesLastVerifiedAt && <>ბოლო წარმატებული შემოწმება: <time dateTime={expensesLastVerifiedAt}>{new Date(expensesLastVerifiedAt).toLocaleString('ka-GE')}</time>.</>}
+                {!expensesReady && expenses.length > 0 && <span className="block text-amber-300">ნაჩვენები ძველი ჩანაწერები დროებით დაუდასტურებელია.</span>}
+              </p>
+              <div className="admin-expense-history-filters grid grid-cols-1 sm:grid-cols-2 gap-2" role="search" aria-label="ხარჯების ისტორიის ფილტრები">
+                <div className="min-w-0">
+                  <label htmlFor="admin-expense-history-search" className="mb-1 block text-[10px] font-bold text-slate-300">მოძებნე ხარჯი</label>
+                  <input id="admin-expense-history-search" type="search" placeholder="აღწერა, კატეგორია, თარიღი ან თანხა" value={expenseSearchQuery} onChange={e => { setExpenseSearchQuery(e.target.value); setExpensePage(1); }} className="w-full min-w-0 min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-2 text-sm text-white outline-none" />
+                </div>
+                <div className="min-w-0">
+                  <label htmlFor="admin-expense-history-category" className="mb-1 block text-[10px] font-bold text-slate-300">კატეგორიის ფილტრი</label>
+                  <select id="admin-expense-history-category" value={expenseCategoryFilter} onChange={e => { setExpenseCategoryFilter(e.target.value); setExpensePage(1); }} className="w-full min-w-0 min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="all">ყველა კატეგორია</option>
+                    {expenseCategoryOptions.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400" role="status" aria-live="polite">ნაპოვნია {filteredExpenses.length} / {expenses.length} ჩანაწერი</p>
               {expensesError && (
-                <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-3 text-xs leading-relaxed text-rose-200">
+                <div role="alert" className="admin-expense-load-error rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-3 text-xs leading-relaxed text-rose-200">
                   ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული ჩანაწერები შენარჩუნებულია. დეტალი: {expensesError}
-                  <button type="button" onClick={fetchExpenses} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
+                  <button type="button" onClick={() => void fetchExpenses()} aria-busy={expensesLoading} className="admin-expense-error-retry ml-2 underline underline-offset-2">ხელახლა ცდა</button>
                 </div>
               )}
-              <div className="space-y-3">
-                {expenses.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-4">ხარჯები ჯერ არ არის დამატებული.</p>
+              <div className="admin-expense-history-list space-y-3" aria-labelledby="admin-expense-history-title">
+                {filteredExpenses.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-4">{!expensesReady && expenses.length === 0 ? (expensesLoading ? 'ხარჯების ისტორია იტვირთება…' : 'ხარჯების ისტორია ჯერ არ არის დადასტურებული.') : expenses.length === 0 ? 'ხარჯები ჯერ არ არის დამატებული.' : 'მითითებული ფილტრებით ხარჯი ვერ მოიძებნა.'}</p>
                 ) : (
-                  expenses.map(exp => (
+                  paginatedExpenses.map(exp => (
                     <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 text-xs shadow-inner">
                       <div className="admin-expense-details min-w-0">
                         <div className="admin-expense-heading flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
@@ -5460,7 +5899,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div className="admin-expense-actions flex items-center gap-3">
                         <span className="admin-expense-amount font-black text-rose-300 whitespace-nowrap">-{(Number(exp.amount) || 0).toFixed(2)} ₾</span>
-                        <button type="button" onClick={() => handleDeleteExpense(exp.id)} className="admin-expense-delete" aria-label={`ხარჯის წაშლა: ${exp.description || exp.id}`} title="ხარჯის წაშლა">
+                        <button type="button" onClick={() => handleDeleteExpense(exp.id)} disabled={Boolean(expenseMutationBusy)} aria-busy={expenseMutationBusy === `delete:${String(exp.id)}`} className="admin-expense-delete disabled:cursor-not-allowed disabled:opacity-50" aria-label={`ხარჯის წაშლა: ${exp.description || exp.id}`} title="ხარჯის წაშლა">
                           <Trash2 className="w-4 h-4" />
                           <span>წაშლა</span>
                         </button>
@@ -5469,6 +5908,22 @@ export default function AdminDashboardPro({
                   ))
                 )}
               </div>
+              {filteredExpenses.length > EXPENSES_PER_PAGE && (
+                <nav aria-label="ხარჯების ისტორიის გვერდები" className="admin-expense-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                  <p className="text-[11px] text-slate-400" aria-live="polite">
+                    ნაჩვენებია {(safeExpensePage - 1) * EXPENSES_PER_PAGE + 1}–{Math.min(safeExpensePage * EXPENSES_PER_PAGE, filteredExpenses.length)} / {filteredExpenses.length}
+                  </p>
+                  <div className="admin-expense-pagination-controls flex flex-wrap items-center gap-1.5">
+                    <button type="button" onClick={() => setExpensePage(Math.max(1, safeExpensePage - 1))} disabled={safeExpensePage === 1} className="min-h-11 rounded-xl border border-emerald-500/20 px-3 py-2 text-xs font-bold text-slate-300 disabled:opacity-35">წინა</button>
+                    {expensePaginationItems.map((page, index) => page === '…' ? (
+                      <span key={`expense-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                    ) : (
+                      <button key={page} type="button" onClick={() => setExpensePage(page)} aria-current={safeExpensePage === page ? 'page' : undefined} aria-label={`ხარჯების გვერდი ${page}`} className={`min-h-11 min-w-11 rounded-xl border px-3 py-2 text-xs font-bold ${safeExpensePage === page ? 'border-emerald-400 bg-emerald-500 text-slate-950' : 'border-emerald-500/20 text-slate-300'}`}>{page}</button>
+                    ))}
+                    <button type="button" onClick={() => setExpensePage(Math.min(totalExpensePages, safeExpensePage + 1))} disabled={safeExpensePage === totalExpensePages} className="min-h-11 rounded-xl border border-emerald-500/20 px-3 py-2 text-xs font-bold text-slate-300 disabled:opacity-35">შემდეგი</button>
+                  </div>
+                </nav>
+              )}
             </div>
           </div>
         )}
@@ -5528,6 +5983,7 @@ export default function AdminDashboardPro({
                 <input 
                   type="text" 
                   placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
+                  aria-label="შეკვეთების ძებნა"
                   value={orderSearchQuery} 
                   onChange={e => { setOrderSearchQuery(e.target.value); setCurrentOrderPage(1); }} 
                   className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -5535,10 +5991,12 @@ export default function AdminDashboardPro({
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
               </div>
 
-              <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto">
+              <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto" role="group" aria-label="შეკვეთების სტატუსის ფილტრები">
                 {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
                   <button 
                     key={st}
+                    type="button"
+                    aria-pressed={orderStatusFilter === st}
                     onClick={() => setOrderStatusFilter(st)}
                     className={`px-3 py-2 rounded-xl font-bold text-[11px] cursor-pointer transition whitespace-nowrap ${orderStatusFilter === st ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
                   >
@@ -5555,7 +6013,7 @@ export default function AdminDashboardPro({
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
-                    <div className="admin-order-card-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                    <div className="admin-order-card-heading flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
                         <span className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
@@ -5588,6 +6046,8 @@ export default function AdminDashboardPro({
 
                       <div className="admin-order-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                         <button 
+                          type="button"
+                          aria-label={`შეკვეთა #${o.id} — სრული დეტალები`}
                           onClick={(event) => {
                             orderDetailTriggerRef.current = event.currentTarget;
                             setSelectedOrderForModal(o);
@@ -5599,7 +6059,9 @@ export default function AdminDashboardPro({
                         </button>
 
                         <button 
+                          type="button"
                           onClick={() => handlePrintInvoice(o)} 
+                          aria-label={`შეკვეთა #${o.id} — ინვოისის ბეჭდვა`}
                           title="ინვოისის ბეჭდვა"
                           className="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/20 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
                         >
@@ -5651,16 +6113,18 @@ export default function AdminDashboardPro({
                 ))
               )}
               {filteredOrders.length > ORDERS_PER_PAGE && (
-                <div className="admin-orders-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                <nav aria-label="შეკვეთების გვერდები" className="admin-orders-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
                   <p className="text-[11px] text-slate-400">ნაჩვენებია {(safeOrderPage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(safeOrderPage * ORDERS_PER_PAGE, filteredOrders.length)} / {filteredOrders.length}</p>
                   <div className="flex flex-wrap items-center justify-center gap-1.5">
                     <button type="button" onClick={() => setCurrentOrderPage(Math.max(1, safeOrderPage - 1))} disabled={safeOrderPage === 1} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">წინა</button>
-                    {Array.from({ length: totalOrderPages }, (_, index) => index + 1).map(page => (
-                      <button key={page} type="button" onClick={() => setCurrentOrderPage(page)} aria-current={safeOrderPage === page ? 'page' : undefined} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-black transition ${safeOrderPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
+                    {orderPaginationItems.map((page, index) => page === '…' ? (
+                      <span key={`orders-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                    ) : (
+                      <button key={page} type="button" onClick={() => setCurrentOrderPage(page)} aria-label={`შეკვეთების გვერდი ${page}`} aria-current={safeOrderPage === page ? 'page' : undefined} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-black transition ${safeOrderPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
                     ))}
                     <button type="button" onClick={() => setCurrentOrderPage(Math.min(totalOrderPages, safeOrderPage + 1))} disabled={safeOrderPage === totalOrderPages} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">შემდეგი</button>
                   </div>
-                </div>
+                </nav>
               )}
             </div>
           </div>
@@ -5841,16 +6305,16 @@ export default function AdminDashboardPro({
                       </div>
                       
                       <div className="admin-support-ticket-controls flex items-center gap-2.5 flex-wrap">
-                        <div className="admin-support-status-actions flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20">
-                          <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
-                          <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
+                        <div className="admin-support-status-actions flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20" role="group" aria-label={`ტიკეტი #${t.id} — სტატუსი`}>
+                          <button type="button" aria-pressed={t.status === 'ღია'} onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
+                          <button type="button" aria-pressed={t.status === 'მუშავდება'} onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                          <button type="button" aria-pressed={t.status === 'მოგვარებული'} onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
                         </div>
                         <button type="button" onClick={() => {
                           const ticketId = String(t.id);
                           if (String(selectedSupportTicketId) === ticketId) setSelectedSupportTicketId(null);
                           else { setSelectedSupportTicketId(ticketId); fetchSupportTicketThread(ticketId); }
-                        }} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
+                        }} aria-expanded={String(selectedSupportTicketId) === String(t.id)} aria-controls={`admin-support-thread-${t.id}`} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
                           {String(selectedSupportTicketId) === String(t.id) ? 'მიმოწერის დამალვა' : 'მიმოწერის ნახვა'}
                         </button>
                       </div>
@@ -5871,7 +6335,7 @@ export default function AdminDashboardPro({
                     )}
 
                     {String(selectedSupportTicketId) === String(t.id) && (
-                      <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
+                      <div id={`admin-support-thread-${t.id}`} role="region" aria-label={`ტიკეტი #${t.id} — მიმოწერის ისტორია`} className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <b className="text-cyan-200 text-xs">მიმოწერის სრული ისტორია</b>
                           <button type="button" onClick={() => fetchSupportTicketThread(t.id)} className="text-cyan-300 underline underline-offset-2">განახლება</button>
@@ -5903,6 +6367,7 @@ export default function AdminDashboardPro({
                       <input 
                         type="text" 
                         placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
+                        aria-label={`ტიკეტი #${t.id} — პასუხის ტექსტი`}
                         maxLength={4000}
                         value={replyInputs[t.id] !== undefined ? replyInputs[t.id] : ''}
                         onChange={e => setReplyInputs({...replyInputs, [t.id]: e.target.value})}
@@ -5911,6 +6376,7 @@ export default function AdminDashboardPro({
                       <button 
                         type="button"
                         onClick={() => handleSendTicketReply(t.id)}
+                        aria-label={`ტიკეტი #${t.id} — პასუხის გაგზავნა`}
                         disabled={!!replySending[String(t.id)] || !String(replyInputs[t.id] || '').trim()}
                         aria-busy={!!replySending[String(t.id)]}
                         className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -6169,6 +6635,7 @@ export default function AdminDashboardPro({
                     <input
                       type="text"
                       placeholder="ძებნა პროდუქტებში..."
+                      aria-label="პროდუქტის ძებნა"
                       value={productSearchQuery}
                       onChange={e => { setProductSearchQuery(e.target.value); setProductPage(1); }}
                       className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner"
@@ -6185,7 +6652,7 @@ export default function AdminDashboardPro({
                   </div>
                 ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
-                    <div className="admin-product-identity flex items-center gap-3.5">
+                    <div className="admin-product-identity flex min-w-0 items-center gap-3.5">
                       {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
@@ -6204,6 +6671,7 @@ export default function AdminDashboardPro({
                           min="0"
                           step="0.01"
                           inputMode="decimal"
+                          aria-label={`თვითღირებულება: ${p.name}`}
                           value={quickProductDrafts['purchaseCost:' + String(p.id)] ?? String(p.purchaseCost !== undefined ? p.purchaseCost : (p.purchase_cost ?? 0))}
                           onChange={e => setQuickProductDrafts(prev => ({ ...prev, ['purchaseCost:' + String(p.id)]: e.target.value }))}
                           onBlur={e => {
@@ -6232,6 +6700,7 @@ export default function AdminDashboardPro({
                           min="0"
                           step="0.01"
                           inputMode="decimal"
+                          aria-label={`ფასი ლარში: ${p.name}`}
                           value={quickProductDrafts['priceGEL:' + String(p.id)] ?? String(p.priceGEL ?? p.price_gel ?? '')}
                           onChange={e => setQuickProductDrafts(prev => ({ ...prev, ['priceGEL:' + String(p.id)]: e.target.value }))}
                           onBlur={e => {
@@ -6288,6 +6757,7 @@ export default function AdminDashboardPro({
                       <button
                         type="button"
                         onClick={() => handleToggleProductPublished(p.id)}
+                        aria-label={`${(p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}: ${p.name}`}
                         disabled={Boolean(productPublishBusyIds[String(p.id)])}
                         className={`inline-flex items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-[10px] font-bold transition disabled:opacity-50 disabled:cursor-wait ${(p.isPublished ?? p.is_published) === false ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}
                         title={(p.isPublished ?? p.is_published) === false ? 'პროდუქტის მაღაზიაში გამოქვეყნება' : 'პროდუქტის მაღაზიიდან დამალვა'}
@@ -6295,8 +6765,8 @@ export default function AdminDashboardPro({
                         {(p.isPublished ?? p.is_published) === false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                         {productPublishBusyIds[String(p.id)] ? 'ინახება…' : (p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}
                       </button>
-                      <button type="button" onClick={() => handleEditProduct(p)} className="text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleEditProduct(p)} aria-label={`რედაქტირება: ${p.name}`} className="inline-flex items-center justify-center gap-2 text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4 shrink-0" /><span>რედაქტირება</span></button>
+                      <button type="button" onClick={() => handleDeleteProduct(p.id)} aria-label={`წაშლა: ${p.name}`} className="inline-flex items-center justify-center gap-2 text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4 shrink-0" /><span>წაშლა</span></button>
                     </div>
                   </div>
                 ))}
@@ -6860,7 +7330,7 @@ export default function AdminDashboardPro({
                 <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
-                <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
@@ -6874,8 +7344,8 @@ export default function AdminDashboardPro({
               {(!filteredUsers || filteredUsers.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">მომხმარებლები ვერ მოიძებნა.</p>
               ) : (
-                filteredUsers.map((u, i) => {
-                  const uId = u.id || u.email || i;
+                paginatedCrmUsers.map((u, i) => {
+                  const uId = u.id || u.email || (safeCrmPage - 1) * CRM_PER_PAGE + i;
                   const isEditing = editingUserId === uId;
 
                   return (
@@ -6894,6 +7364,8 @@ export default function AdminDashboardPro({
 
                         <div className="admin-crm-user-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                           <button 
+                            type="button"
+                            aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isVip ? "VIP მოხსნა" : "VIP მინიჭება"}`}
                             onClick={() => handleToggleVipUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isVip ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-emerald-500/20 hover:text-white'}`}
                             title="VIP სტატუსი"
@@ -6902,6 +7374,8 @@ export default function AdminDashboardPro({
                           </button>
 
                           <button 
+                            type="button"
+                            aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isBlocked ? "CRM შეზღუდვის ნიშნის მოხსნა" : "CRM-ში შეზღუდულად მონიშვნა"}`}
                             onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
                             title="მხოლოდ ლოკალური CRM ჩანაწერის ნიშანი; Auth ანგარიშს არ ბლოკავს"
@@ -6911,6 +7385,9 @@ export default function AdminDashboardPro({
                           </button>
 
                           <button 
+                            type="button"
+                            aria-label={`${u.name || u.email || "მომხმარებელი"} — პერსონალური CRM პარამეტრების რედაქტირება`}
+                            aria-expanded={isEditing}
                             onClick={() => {
                               if (isEditing) {
                                 setEditingUserId(null);
@@ -6923,14 +7400,14 @@ export default function AdminDashboardPro({
                             className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
                             title="პერსონალური ფასდაკლება & შენიშვნები"
                           >
-                            <Edit3 className="w-4 h-4" />
+                            <Edit3 className="w-4 h-4" /> <span>რედაქტირება</span>
                           </button>
 
-                          {!u.isServerCustomer && (<button onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
+                          {!u.isServerCustomer && (<button type="button" aria-label={`${u.name || u.email || "მომხმარებელი"} — ლოკალური CRM ჩანაწერის წაშლა`} onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" /> <span>ლოკალური წაშლა</span>
                           </button>)}
                         </div>
                       </div>
@@ -6971,6 +7448,22 @@ export default function AdminDashboardPro({
                 })
               )}
             </div>
+            {filteredUsers.length > CRM_PER_PAGE && (
+              <nav aria-label="CRM მომხმარებლების გვერდები" className="admin-crm-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                <p className="text-[11px] text-slate-400">
+                  ნაჩვენებია {(safeCrmPage - 1) * CRM_PER_PAGE + 1}–{Math.min(safeCrmPage * CRM_PER_PAGE, filteredUsers.length)} / {filteredUsers.length}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button type="button" onClick={() => setCrmPage(Math.max(1, safeCrmPage - 1))} disabled={safeCrmPage === 1} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">წინა</button>
+                  {crmPaginationItems.map((page, index) => page === '…' ? (
+                    <span key={`crm-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                  ) : (
+                    <button key={page} type="button" onClick={() => setCrmPage(page)} aria-current={safeCrmPage === page ? 'page' : undefined} aria-label={`CRM გვერდი ${page}`} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-bold ${safeCrmPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
+                  ))}
+                  <button type="button" onClick={() => setCrmPage(Math.min(totalCrmPages, safeCrmPage + 1))} disabled={safeCrmPage === totalCrmPages} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">შემდეგი</button>
+                </div>
+              </nav>
+            )}
           </div>
         )}
 

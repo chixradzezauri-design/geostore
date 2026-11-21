@@ -7,6 +7,7 @@ import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
+import ProductMediaImage from './components/ProductMediaImage';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
@@ -30,6 +31,7 @@ import { translations } from './utils/translations';
 import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -665,6 +667,9 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
 
   const [orders, setOrders] = useState([]);
+  const [adminOrdersReady, setAdminOrdersReady] = useState(false);
+  const [adminOrdersError, setAdminOrdersError] = useState('');
+  const [adminOrdersVerifiedPrincipal, setAdminOrdersVerifiedPrincipal] = useState(null);
   const adminOrdersFetchLock = useRef(false);
   // Remember refreshes requested while a previous order snapshot is still loading.
   // Store the session version so a queued read cannot cross an admin logout/login boundary.
@@ -1881,39 +1886,22 @@ export default function App() {
       return;
     }
     const requestSessionVersion = adminOrdersSessionVersion.current;
+    const requestPrincipal = currentUser?.id || null;
     adminOrdersFetchLock.current = true;
     try {
-      // PostgREST commonly caps responses at 1,000 rows. Load the complete
-      // admin order ledger in stable pages so older delivered/cancelled orders
-      // remain available to finance, analytics and CSV exports.
-      const allOrderRows = [];
-      const pageSize = 1000;
-      let completed = false;
-      for (let offset = 0; offset < 100000; offset += pageSize) {
-        const headers = await getSupabaseHeaders({ authenticated: true });
-        headers.Range = `${offset}-${offset + pageSize - 1}`;
-        headers['Range-Unit'] = 'items';
-        const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
-          { headers }
-        );
-        if (!res.ok) {
-          const errorBody = await res.text().catch(() => '');
-          throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
-        }
-        const page = await res.json();
-        if (!Array.isArray(page)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
-        allOrderRows.push(...page);
-        if (page.length < pageSize) {
-          completed = true;
-          break;
-        }
-        if (offset + pageSize >= 100000) {
-          throw new Error('შეკვეთების სრული ისტორიის შემოწმება ვერ დასრულდა; ბოლო წარმატებული სია შენარჩუნებულია.');
-        }
-      }
-      if (!completed) throw new Error('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
-      const data = allOrderRows;
+      // Exercise the same verified multi-page loader as the automated
+      // simulated E2E tests. A null result means the old principal/session
+      // was superseded before publication.
+      const data = await fetchVerifiedAdminOrderLedger({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: requestPrincipal,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch,
+        isCurrent: () => adminOrdersSessionActive.current &&
+          requestSessionVersion === adminOrdersSessionVersion.current
+      });
+      if (data === null) return;
       // Do not restore private admin data after logout while a request is pending.
       if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
       setOrders(data.map((o) => {
@@ -1950,6 +1938,9 @@ export default function App() {
           phone: o.phone || '',
           address: o.address || '',
           totalGEL: normalizeOrderTotal(o.total_gel),
+          // Preserve the persisted amount for finance integrity checks; display
+          // normalization can otherwise hide malformed historical values as 0.
+          rawTotalGEL: o.total_gel,
           checkoutBreakdown,
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
@@ -1962,7 +1953,15 @@ export default function App() {
             : 'პროდუქტები'
         };
       }));
+      setAdminOrdersReady(true);
+      setAdminOrdersError('');
+      setAdminOrdersVerifiedPrincipal(initialSession.userId);
     } catch (error) {
+      if (adminOrdersSessionActive.current && requestSessionVersion === adminOrdersSessionVersion.current) {
+        setAdminOrdersReady(false);
+        setAdminOrdersError(error?.message || 'შეკვეთების სრული ისტორია ვერ დადასტურდა.');
+        setAdminOrdersVerifiedPrincipal(null);
+      }
       console.error('Orders fetch error:', error);
     } finally {
       adminOrdersFetchLock.current = false;
@@ -2223,6 +2222,10 @@ export default function App() {
     };
     document.addEventListener('visibilitychange', refreshProductsWhenVisible);
 
+    // An access/principal transition invalidates the previous finance ledger.
+    setAdminOrdersReady(false);
+    setAdminOrdersError('');
+    setAdminOrdersVerifiedPrincipal(null);
     if (!hasOrdersAccess) {
       adminOrdersSessionActive.current = false;
       adminOrdersSessionVersion.current += 1;
@@ -2233,6 +2236,7 @@ export default function App() {
 
     adminOrdersSessionActive.current = true;
     adminOrdersSessionVersion.current += 1;
+    setOrders([]);
     // Realtime delivers new/updated orders immediately. Keep the 15-second
     // refresh as a recovery path if the websocket disconnects or an event is missed.
     fetchOrders();
@@ -2261,7 +2265,7 @@ export default function App() {
       void supabase.removeChannel(orderChannel);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
-  }, [adminLoggedIn, adminAccess, hasOrdersAccess]);
+  }, [adminLoggedIn, adminAccess, hasOrdersAccess, currentUser?.id]);
 
   useEffect(() => {
     try {
@@ -3562,6 +3566,7 @@ export default function App() {
             <AdminDashboardPro
             key={`${currentUser?.id || 'anonymous'}-${adminAccess.is_admin ? 'owner' : Object.keys(adminAccess.permissions || {}).filter((permission) => adminAccess.permissions[permission]).sort().join('-')}`}
             adminLoggedIn={adminLoggedIn}
+            adminUserId={currentUser?.id || null}
             adminAccess={adminAccess}
             setAdminLoggedIn={setAdminLoggedIn}
             adminLoginForm={
@@ -3576,6 +3581,8 @@ export default function App() {
             handleLogout={handleLogout}
             adminError={adminError}
             orders={orders || []}
+            ordersReady={adminOrdersReady && adminOrdersVerifiedPrincipal === currentUser?.id}
+            ordersError={adminOrdersError}
             setOrders={setOrders}
             usersList={usersList || []}
             setUsersList={setUsersList}
@@ -3635,10 +3642,13 @@ export default function App() {
                     className="gs-wishlist-card bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
                     <div className="flex items-center gap-3.5">
-                      <img
+                      <ProductMediaImage
                         src={prod.image}
-                        alt=""
+                        alt={prod.name || 'GEOSTORE product'}
+                        width={64}
+                        height={64}
                         className="gs-wishlist-image w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
+                        fallbackClassName="gs-wishlist-image flex w-16 h-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950/80 text-[9px] font-bold tracking-wide text-amber-300/70"
                       />
 
                       <div>
@@ -3694,18 +3704,14 @@ export default function App() {
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-start sm:items-center gap-3 text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="gs-cart-item-media relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950/70">
-                        {itemImage ? (
-                          <img
-                            src={itemImage}
-                            alt={item.name || 'GEOSTORE product'}
-                            loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-contain p-1"
-                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                          />
-                        ) : (
-                          <span className="text-[9px] font-black tracking-widest text-amber-400/60">GEOSTORE</span>
-                        )}
+                        <ProductMediaImage
+                          src={itemImage}
+                          alt={item.name || 'GEOSTORE product'}
+                          width={96}
+                          height={96}
+                          className="h-full w-full object-contain p-1"
+                          fallbackClassName="flex h-full w-full items-center justify-center text-center text-[9px] font-black tracking-widest text-amber-400/60"
+                        />
                       </div>
                       <div className="min-w-0 flex-1 space-y-1">
                         <h4 className="gs-cart-item-title break-words font-bold text-xs text-white">
@@ -3738,7 +3744,7 @@ export default function App() {
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} × {item.quantity}
                         </p>
-                        <div className="flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
+                        <div className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
                           <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? 'Decrease quantity' : currentLang === 'ru' ? 'Уменьшить количество' : 'რაოდენობის შემცირება'} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
                           <span className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
                           <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? 'Increase quantity' : currentLang === 'ru' ? 'Увеличить количество' : 'რაოდენობის გაზრდა'} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
@@ -3766,6 +3772,7 @@ export default function App() {
 
                     <select
                       value={selectedRegion}
+                      aria-label={t.deliveryRegion}
                       onChange={(e) =>
                         setSelectedRegion(e.target.value)
                       }
@@ -3806,6 +3813,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => setAppliedCoupon(null)}
+                          aria-label={currentLang === 'en' ? 'Remove promo code' : currentLang === 'ru' ? 'Удалить промокод' : 'პრომოკოდის წაშლა'}
                           className="text-rose-400 hover:text-rose-300 p-1 cursor-pointer"
                         >
                           <X className="w-4 h-4" />
@@ -3814,10 +3822,12 @@ export default function App() {
                     ) : (
                       <form
                         onSubmit={handleApplyCoupon}
-                        className="flex gap-2"
+                        className="gs-cart-coupon-form flex gap-2"
                       >
                         <input
                           type="text"
+                          aria-label={t.promoCode}
+                          autoComplete="off"
                           placeholder="GEOSTORE2026"
                           value={promoInput}
                           onChange={(e) =>

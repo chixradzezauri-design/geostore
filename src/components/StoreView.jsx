@@ -1,11 +1,11 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { buildStorefrontElementStyle, normalizeStorefrontCustomSections } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
-import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown } from '../utils/flashSaleTime.js';
+import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown, getFlashSaleNextTickDelay } from '../utils/flashSaleTime.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -67,6 +67,8 @@ export default function StoreView({
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
+  const productCloseButtonRef = useRef(null);
+  const productReturnFocusRef = useRef(null);
 
   const [sortBy, setSortBy] = useState('default');
   const [minPrice, setMinPrice] = useState('');
@@ -101,9 +103,30 @@ export default function StoreView({
   const [flashSaleClock, setFlashSaleClock] = useState(() => Date.now());
 
   useEffect(() => {
-    const timer = setInterval(() => setFlashSaleClock(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    let timer = null;
+    const schedule = (now) => {
+      // No active or scheduled promotion: do not rerender the whole store every second.
+      if (document.visibilityState === 'hidden') return;
+      const delay = getFlashSaleNextTickDelay(activeProducts, now);
+      if (delay !== null) timer = window.setTimeout(tick, delay);
+    };
+    const tick = () => {
+      const now = Date.now();
+      setFlashSaleClock(now);
+      schedule(now);
+    };
+    const refreshWhenVisible = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = null;
+      if (document.visibilityState === 'visible') tick();
+    };
+    tick();
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [activeProducts]);
 
   const [allReviews, setAllReviews] = useState(() => {
     try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
@@ -124,7 +147,9 @@ export default function StoreView({
       supportsSizeColorInventoryCategory(prod.name);
   };
 
-  const handleOpenProduct = (prod) => {
+  const handleOpenProduct = (prod, triggerNode = null) => {
+    // Keep a stable keyboard return target without changing any product data.
+    productReturnFocusRef.current = triggerNode || (typeof document !== 'undefined' ? document.activeElement : null);
     setSelectedProduct(prod);
     setActiveImage(prod.image || prod.gallery?.[0] || null);
     
@@ -148,6 +173,37 @@ export default function StoreView({
     setNewReviewRating(5);
     setNewReviewImage('');
   };
+
+  const closeProductDetails = () => {
+    setSelectedProduct(null);
+    setIsSmartSizeModalOpen(false);
+    setIsSizeGuideOpen(false);
+  };
+
+  useEffect(() => {
+    if (!selectedProduct) return undefined;
+    // An actual control receives focus after opening (not the overlay itself).
+    productCloseButtonRef.current?.focus();
+    const returnTarget = productReturnFocusRef.current;
+    return () => {
+      if (returnTarget?.isConnected && typeof returnTarget.focus === 'function') {
+        returnTarget.focus();
+      }
+    };
+  }, [selectedProduct]);
+
+  useEffect(() => {
+    if (!selectedProduct) return undefined;
+    const handleProductDialogKeyDown = (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      if (isSmartSizeModalOpen) setIsSmartSizeModalOpen(false);
+      else if (isSizeGuideOpen) setIsSizeGuideOpen(false);
+      else closeProductDetails();
+    };
+    document.addEventListener('keydown', handleProductDialogKeyDown);
+    return () => document.removeEventListener('keydown', handleProductDialogKeyDown);
+  }, [selectedProduct, isSmartSizeModalOpen, isSizeGuideOpen]);
 
   const handleCalculateSmartSize = (e) => {
     e.preventDefault();
@@ -546,7 +602,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
-                  <button onClick={() => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
@@ -614,7 +670,7 @@ export default function StoreView({
                 : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
             }`}
           >
-            <div className="gs-category-photo gs-editorial-category-photo" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88")' }} />
+            <img className="gs-category-photo gs-editorial-category-photo" src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88" alt="" aria-hidden="true" loading="lazy" decoding="async" />
             <div className="flex justify-between items-start z-10">
               <div className="gs-category-icon gs-category-icon--all"><Sparkles className="w-5 h-5" /></div>
               <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
@@ -657,7 +713,7 @@ export default function StoreView({
                 }`}
               >
                 {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
-                <div className="gs-category-photo" style={{ backgroundImage: `url("${catImage}")` }} />
+                {catImage ? <img className="gs-category-photo" src={catImage} alt="" aria-hidden="true" loading="lazy" decoding="async" /> : null}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
                   <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>
@@ -861,7 +917,7 @@ export default function StoreView({
                 <button
                   data-visual-editor-target="product.button"
                   style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.button')}
-                  onClick={() => handleOpenProduct(prod)}
+                  onClick={(event) => handleOpenProduct(prod, event.currentTarget)}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}
@@ -911,15 +967,18 @@ export default function StoreView({
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div className="gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]">
+          <div role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className="gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]">
             
             <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
-              <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+              <span id="gs-product-dialog-title" className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> {storeText.productDetails}
               </span>
-              <button 
-                onClick={() => setSelectedProduct(null)} 
-                className="p-2.5 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/30 transition cursor-pointer shadow"
+              <button
+                type="button"
+                ref={productCloseButtonRef}
+                onClick={closeProductDetails}
+                aria-label={storeText.close}
+                className="gs-product-modal-close p-2.5 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/30 transition cursor-pointer shadow"
                 title={storeText.close}
               >
                 <X className="w-5 h-5" />
@@ -929,7 +988,7 @@ export default function StoreView({
             <div className="gs-product-modal-body p-4 sm:p-7 overflow-y-auto space-y-6 scrollbar-thin pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
-                <div className="gs-product-gallery space-y-4">
+                <div className="gs-product-gallery space-y-4" aria-label={selectedProduct.name || storeText.productDetails}>
                   <div data-visual-editor-target="product.detail.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.image')} className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
                     {(activeImage || selectedProduct.image) ? <img data-visual-editor-target="product.detail.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.image')} src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>

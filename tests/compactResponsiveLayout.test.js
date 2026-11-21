@@ -3,14 +3,18 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+const compatibility = readFileSync(new URL('../src/responsiveCompatibility.css', import.meta.url), 'utf8');
 const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
 const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
 
-const compact = css.slice(css.indexOf('/* GEOSTORE compact responsive pass 2026-11-20'));
+// The compact rules now live in their own cascade-preserving compatibility layer.
+const compact = compatibility.slice(compatibility.indexOf('/* GEOSTORE compact responsive pass 2026-11-20'));
 
 test('compact layout rules follow all legacy storefront and admin CSS overrides', () => {
-  assert.ok(css.includes('/* GEOSTORE compact responsive pass 2026-11-20'));
+  assert.ok(compatibility.includes('/* GEOSTORE compact responsive pass 2026-11-20'));
+  assert.ok(!css.includes('/* GEOSTORE compact responsive pass 2026-11-20'));
+  assert.ok(compatibility.indexOf('/* GEOSTORE compact responsive pass 2026-11-20') >= 0);
   assert.match(compact, /\.admin-dashboard-pro\.admin-dashboard-shell/);
   assert.match(compact, /\[data-admin-visual-header="true"\]/);
   assert.doesNotMatch(compact, /(?:background-color|font-size|color)\s*:/i);
