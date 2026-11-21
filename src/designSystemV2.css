@@ -1591,7 +1591,7 @@
 }
 
 /* Stage 42 — compact, keyboard-accessible details and review submission.
- * Keep visual-editor typography, color palette and persistent product data unchanged. */
+ * Keep the visual editor's type scale, palette and existing product data untouched. */
 .geostore-fashion-store .geostore-storefront .gs-product-description-panel,
 .geostore-fashion-store .geostore-storefront .gs-product-detail-specs,
 .geostore-fashion-store .geostore-storefront .gs-product-reviews,
@@ -1616,7 +1616,6 @@
   list-style: none;
   touch-action: manipulation;
 }
-.geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle::-webkit-details-marker { display: none; }
 .geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
