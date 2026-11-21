@@ -89,6 +89,49 @@ try {
       await context.close();
     }
   }
+
+  // Stage 32: exercise the actual lazily loaded admin route without a session.
+  // This catches the earlier staffList white-screen regression independently of
+  // mock CSS fixtures and verifies that an auth-bypass URL grants no privileges.
+  for (const width of [375, 768, 1440]) {
+    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    try {
+      const pageErrors = [];
+      const forbiddenRequests = [];
+      page.on('pageerror', error => pageErrors.push(String(error.message || error)));
+      page.on('request', request => {
+        const url = new URL(request.url());
+        if (/\/rest\/v1\/(?:orders|expenses)(?:\/|$)/.test(url.pathname) ||
+            url.pathname === '/rest/v1/rpc/has_staff_permission') {
+          forbiddenRequests.push(url.pathname);
+        }
+      });
+      const response = await page.goto(host + '?admin=secret', { waitUntil: 'domcontentloaded', timeout: 30000 });
+      assert.equal(response?.status(), 200, 'Admin fallback route HTTP status at ' + width + 'px');
+      const authGate = page.getByRole('heading', { name: 'ადმინისტრატორის პანელი', exact: true });
+      await authGate.waitFor({ state: 'visible', timeout: 30000 });
+      await page.getByText('პანელზე წვდომისთვის შედით GEOSTORE-ში', { exact: false })
+        .waitFor({ state: 'visible', timeout: 10000 });
+      assert.equal(await page.locator('.admin-dashboard-shell').count(), 0,
+        'Unauthorized admin route must never mount private dashboard content');
+      assert.equal(await page.locator('.geostore-admin-shortcut').count(), 0,
+        'Unauthorized visitor must not receive an admin shortcut');
+      assert.deepEqual(forbiddenRequests, [],
+        'Unauthorized admin route must not initiate protected orders/finance reads');
+      assert.equal(pageErrors.length, 0,
+        'Admin fallback must not white-screen or raise an uncaught exception: ' + pageErrors.join('; '));
+      const dimensions = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth
+      }));
+      assert.ok(dimensions.document <= dimensions.viewport + 2,
+        'Admin auth gate must not overflow at ' + width + 'px: ' + JSON.stringify(dimensions));
+      console.log('PASS unauthorized admin route at ' + width + 'px (no staffList crash, no private access)');
+    } finally {
+      await context.close();
+    }
+  }
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
