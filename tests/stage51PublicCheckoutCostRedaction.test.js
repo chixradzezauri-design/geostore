@@ -37,7 +37,7 @@ test('Stage51 retains every existing customer input bound and public RPC privile
     assert.ok(earlier.includes(check), 'Previous validation: ' + check);
     assert.ok(migration.includes(check), 'Preserved validation: ' + check);
   }
-  assert.match(migration, /LANGUAGE plpgsql\s+SET search_path TO ''/);
+  assert.match(migration, /LANGUAGE plpgsql\s+SECURITY INVOKER\s+SET search_path TO ''/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.create_order_with_stock\(jsonb\) FROM PUBLIC/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.create_order_with_stock\(jsonb\) TO anon, authenticated/);
   assert.match(migration, /BEGIN;[\s\S]*COMMIT;/);
