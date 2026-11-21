@@ -34,8 +34,8 @@ import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId,
 import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
-import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { isAuthRestoreCurrent, isCheckoutOwnerContextCurrent } from './utils/authSafety';
+import { getCheckoutErrorMessage, CHECKOUT_SESSION_UNAVAILABLE } from './utils/checkoutMessages';
+import { isAuthRestoreCurrent, isCheckoutOwnerContextCurrent, validateCheckoutSessionIdentity } from './utils/authSafety';
 import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAccess, hasAdminPermission as hasServerAdminPermission, hasAnyAdminAccess } from './utils/adminAccess';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getCartFeedbackMessage } from './utils/cartFeedback.js';
@@ -3160,7 +3160,15 @@ export default function App() {
       } = await supabase.auth.getSession();
 
       if (abandonCheckoutIfOwnerChanged()) return;
-      if (sessionError) throw sessionError;
+      // Never silently turn a signed-in checkout into a guest order when a
+      // refresh token expires, network auth fails, or another identity is read.
+      if (sessionError || !validateCheckoutSessionIdentity({
+        uiUserId: currentUser?.id || null,
+        activeOwnerId: checkoutStartOwnerId,
+        session
+      }).valid) {
+        throw new Error(CHECKOUT_SESSION_UNAVAILABLE);
+      }
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
 

@@ -99,6 +99,7 @@ export async function runStage49AccountSwitchScenario(browser, host) {
   const intercepted = [];
   const blockedMutations = [];
   const pageErrors = [];
+  let failNextCatalogRead = false;
   const userForRequest = request => {
     const token = (request.headers().authorization || '').replace(/^bearer\s+/i, '');
     return Object.entries(tokens).find(([, value]) => value === token)?.[0] || null;
@@ -135,6 +136,10 @@ export async function runStage49AccountSwitchScenario(browser, host) {
         return route.fulfill({ status: 204 });
       }
       if (path === '/rest/v1/products' && method === 'GET') {
+        if (failNextCatalogRead) {
+          failNextCatalogRead = false;
+          return route.abort('failed');
+        }
         return reply(200, stage49FixtureProductRows);
       }
       if (path === '/rest/v1/rpc/get_my_admin_access' && method === 'POST') {
@@ -190,6 +195,26 @@ export async function runStage49AccountSwitchScenario(browser, host) {
     assert.equal(await checkout.locator('input[name="email"]').getAttribute('readonly'), '',
       'Authenticated email is not manually editable');
     await checkout.locator('input[name="address"]').fill('Private address A');
+
+    // Stage50: a transient catalogue network failure during a signed-in
+    // checkout must preserve both the contact fields and owner-scoped cart.
+    failNextCatalogRead = true;
+    await checkout.locator('.gs-checkout-submit-area button').click();
+    const networkError = checkout.locator('#geostore-checkout-error');
+    await networkError.waitFor({ state: 'visible', timeout: 12000 });
+    assert.match(await networkError.innerText(), /ქსელთან კავშირი შეფერხდა/);
+    assert.equal(await checkout.locator('input[name="name"]').inputValue(), 'Private Customer A');
+    assert.equal(await checkout.locator('input[name="address"]').inputValue(), 'Private address A');
+    assert.equal((await readCart(page, mockUsers.a.id))[0]?.quantity, 1);
+    // Retry with deliberately invalid contact data: local validation runs
+    // but NO order RPC is attempted, even after network recovery.
+    await checkout.locator('input[name="phone"]').fill('++995555123456');
+    await checkout.locator('.gs-checkout-submit-area button').click();
+    await page.waitForFunction(() => document.activeElement?.getAttribute('name') === 'phone');
+    assert.match(await checkout.locator('#geostore-checkout-error').innerText(), /ტელეფონის ნომერი/);
+    await checkout.locator('input[name="phone"]').fill('599123456');
+    await checkout.locator('#geostore-checkout-error').waitFor({ state: 'detached' });
+
     const otherTab = await context.newPage();
     otherTab.on('pageerror', err => pageErrors.push(String(err.message || err)));
     await otherTab.goto(host, { waitUntil: 'domcontentloaded', timeout: 30000 });
