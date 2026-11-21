@@ -1560,3 +1560,32 @@
 .geostore-fashion-store .geostore-storefront .gs-subcategory-chip {
   min-height: 44px !important; max-width: 100%; overflow-wrap: anywhere; touch-action: manipulation;
 }
+
+/* Stage 41 — keyboard-contained product dialog, gallery navigation and stock feedback.
+ * Do not override owner-selected colors, typography, photo ratio or price rules. */
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-toolbar {
+  width: 100%; min-width: 0; gap: 10px;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-step {
+  display: inline-grid; place-items: center;
+  width: 44px; min-width: 44px !important; min-height: 44px !important;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-step > span {
+  font-size: 24px; line-height: 1;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-step:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 2px;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-counter,
+.geostore-fashion-store .geostore-storefront .gs-product-purchase-hint {
+  min-width: 0; overflow-wrap: anywhere;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-purchase-hint {
+  max-width: 100%; line-height: 1.35;
+}
+@media (max-width: 480px) {
+  .geostore-fashion-store .geostore-storefront .gs-product-dialog--purchase-unavailable .gs-product-modal-body {
+    padding-bottom: 164px !important;
+  }
+}

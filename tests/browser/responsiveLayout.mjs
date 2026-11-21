@@ -245,14 +245,19 @@ const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<button class="gs-product-modal-close" aria-label="დახურვა">×</button></div>' +
   '<div class="gs-product-modal-body"><div class="grid">' +
   '<div class="gs-product-gallery"><div class="gs-product-detail-image-stage">სურათი</div>' +
-  '<div class="gs-product-gallery-thumbnails"><button class="gs-product-gallery-thumb">1</button></div></div>' +
+  '<div class="gs-product-gallery-thumbnails"><button class="gs-product-gallery-thumb">1</button></div>' +
+  '<div class="gs-product-gallery-toolbar" role="group" aria-label="გალერეის მართვა">' +
+  '<span class="gs-product-gallery-counter" role="status">1 / 2</span>' +
+  '<div><button class="gs-product-gallery-step" type="button" aria-label="წინა ფოტო">‹</button>' +
+  '<button class="gs-product-gallery-step" type="button" aria-label="შემდეგი ფოტო">›</button></div></div></div>' +
   '<div class="gs-product-detail-info"><div class="gs-size-selector">' +
   '<div class="flex"><span>აირჩიეთ ზომა</span><button>ზომების გიდი</button></div>' +
   '<div class="gs-size-options-grid">' +
   '<button class="gs-size-option">M</button><button class="gs-size-option">L</button></div></div>' +
   '<div class="gs-color-selector"><div class="flex"><button class="gs-color-option">ბეჟი</button></div></div>' +
   '</div></div></div><div class="gs-product-modal-purchase-bar">' +
-  '<button class="gs-modal-add-to-cart"><span>🛍</span>' +
+  '<p class="gs-product-purchase-hint" id="gs-product-purchase-hint" role="status">მარაგში არ არის</p>' +
+  '<button class="gs-modal-add-to-cart" aria-describedby="gs-product-purchase-hint" disabled><span>🛍</span>' +
   '<span class="gs-modal-add-label">კალათაში დამატება · M / ბეჟი</span>' +
   '<span class="gs-modal-add-price">199.00 ₾</span></button></div></div></div>';
 
@@ -312,6 +317,8 @@ try {
         const productBody = document.querySelector('.gs-product-modal-body');
         const purchase = document.querySelector('.gs-modal-add-to-cart');
         const productOptions = [...document.querySelectorAll('.gs-size-option, .gs-color-option')];
+        const gallerySteps = [...document.querySelectorAll('.gs-product-gallery-step')];
+        const purchaseHint = document.querySelector('.gs-product-purchase-hint');
         const categoryImg = document.querySelector('.gs-category-card > img.gs-category-photo');
         const cartQtyButtons = [...document.querySelectorAll('.gs-cart-quantity-controls button')];
         const cartCoupon = document.querySelector('.gs-cart-coupon-form');
@@ -414,6 +421,11 @@ try {
           productDialogMaxHeight: productDialog.getBoundingClientRect().height,
           purchaseRight: purchase.getBoundingClientRect().right,
           minOptionHeight: Math.min(...productOptions.map(element => element.getBoundingClientRect().height)),
+          galleryStepMinHeight: Math.min(...gallerySteps.map(element => element.getBoundingClientRect().height)),
+          galleryStepRight: Math.max(...gallerySteps.map(element => element.getBoundingClientRect().right)),
+          galleryStepsNamed: gallerySteps.length === 2 && gallerySteps.every(element => Boolean(element.getAttribute('aria-label'))),
+          purchaseHintVisible: purchaseHint.getBoundingClientRect().height > 0,
+          purchaseGuardDescribed: purchase.getAttribute('aria-describedby') === purchaseHint.id && purchase.disabled,
           optionMetrics: productOptions.map(element => ({ type: element.className, height: element.getBoundingClientRect().height, display: getComputedStyle(element).display, minHeight: getComputedStyle(element).minHeight, minBlockSize: getComputedStyle(element).minBlockSize })),
           purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0,
           categoryImageFit: getComputedStyle(categoryImg).objectFit,
@@ -543,6 +555,10 @@ try {
       assert.ok(layout.catalogActionMinSize >= 43, width + 'px catalog shortcuts must be touch sized: ' + JSON.stringify(layout));
       assert.ok(layout.catalogActionMaxRight <= width + 2, width + 'px catalog shortcuts must not overflow');
       assert.ok(layout.catalogActionsNamed && layout.catalogTitleActionCount === 2, width + 'px named and keyboard product actions');
+      assert.ok(layout.galleryStepMinHeight >= 43 && layout.galleryStepRight <= width + 2 && layout.galleryStepsNamed,
+        width + 'px gallery navigation touch/label safety: ' + JSON.stringify(layout));
+      assert.ok(layout.purchaseHintVisible && layout.purchaseGuardDescribed,
+        width + 'px disabled purchase action announces its reason: ' + JSON.stringify(layout));
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
       assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets: ' + JSON.stringify(layout.optionMetrics));
       assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');

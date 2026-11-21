@@ -71,6 +71,7 @@ export default function StoreView({
   const [activeImage, setActiveImage] = useState(null);
   const productCloseButtonRef = useRef(null);
   const productReturnFocusRef = useRef(null);
+  const productDialogRef = useRef(null);
 
   const [sortBy, setSortBy] = useState('default');
   const [minPrice, setMinPrice] = useState('');
@@ -211,6 +212,28 @@ export default function StoreView({
   useEffect(() => {
     if (!selectedProduct) return undefined;
     const handleProductDialogKeyDown = (event) => {
+      // Tab stays in the main product dialog; nested size overlays handle their own focus.
+      if (event.key === 'Tab' && !isSmartSizeModalOpen && !isSizeGuideOpen) {
+        const dialog = productDialogRef.current;
+        if (!dialog) return;
+        const focusables = [...dialog.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+          .filter(node => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden');
+        if (focusables.length === 0) {
+          event.preventDefault();
+          productCloseButtonRef.current?.focus();
+          return;
+        }
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (!dialog.contains(active) || (event.shiftKey && active === first)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
       if (event.key !== 'Escape') return;
       event.preventDefault();
       if (isSmartSizeModalOpen) setIsSmartSizeModalOpen(false);
@@ -479,6 +502,13 @@ export default function StoreView({
       : hasCustomProductVariants(selectedProduct)
         ? (selectedCustomVariant?.stock ?? 0)
         : Number(selectedProduct.stock ?? 0);
+  // Read-only guidance mirrors the existing checkout guard, not new inventory rules.
+  const purchaseUnavailableReason = !selectedProduct ? ''
+    : hasCustomProductVariants(selectedProduct) && !selectedCustomVariant ? storeText.variant
+    : hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant ? storeText.sizePrompt
+    : currentAvailableStock <= 0 ? storeText.outOfStock : '';
+  const activeGalleryIndex = selectedProduct && Array.isArray(selectedProduct.gallery)
+    ? selectedProduct.gallery.indexOf(activeImage) : -1;
 
   const renderCustomSections = placement => customSections.filter(section => section.visible && (section.placement || 'after-products') === placement).map(section => {
     const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
@@ -1017,7 +1047,7 @@ export default function StoreView({
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className="gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]">
+          <div ref={productDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className={`gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]${purchaseUnavailableReason ? ' gs-product-dialog--purchase-unavailable' : ''}`}>
             
             <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
               <span id="gs-product-dialog-title" className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -1050,6 +1080,24 @@ export default function StoreView({
                           <img src={img} alt={`${selectedProduct.name || storeText.productDetails} ${idx + 1}`} loading="lazy" decoding="async" draggable={false} className="w-full h-full object-contain rounded-xl" />
                         </button>
                       ))}
+                    </div>
+                  )}
+                  {Array.isArray(selectedProduct.gallery) && selectedProduct.gallery.length > 1 && (
+                    <div className="gs-product-gallery-toolbar flex items-center justify-between gap-3" role="group"
+                      aria-label={currentLang === 'en' ? 'Product gallery navigation' : currentLang === 'ru' ? 'Управление галереей товара' : 'პროდუქტის გალერეის მართვა'}>
+                      <span className="gs-product-gallery-counter text-xs font-bold" role="status" aria-live="polite">
+                        {Math.max(0, activeGalleryIndex) + 1} / {selectedProduct.gallery.length}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Previous product photo' : currentLang === 'ru' ? 'Предыдущее фото товара' : 'წინა ფოტო'}
+                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) - 1 + selectedProduct.gallery.length) % selectedProduct.gallery.length])}>
+                          <span aria-hidden="true">‹</span>
+                        </button>
+                        <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Next product photo' : currentLang === 'ru' ? 'Следующее фото товара' : 'შემდეგი ფოტო'}
+                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) + 1) % selectedProduct.gallery.length])}>
+                          <span aria-hidden="true">›</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1339,7 +1387,14 @@ export default function StoreView({
             </div>
 
             <div data-visual-editor-target="product.detail.purchase" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.purchase')} className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
-              <button 
+              {purchaseUnavailableReason && (
+                <p id="gs-product-purchase-hint" role="status" className="gs-product-purchase-hint text-xs font-bold mb-2 px-1">
+                  {purchaseUnavailableReason}
+                </p>
+              )}
+              <button
+                type="button"
+                aria-describedby={purchaseUnavailableReason ? 'gs-product-purchase-hint' : undefined}
                 disabled={currentAvailableStock <= 0 || (hasCustomProductVariants(selectedProduct) && !selectedCustomVariant) || (hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant)}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
