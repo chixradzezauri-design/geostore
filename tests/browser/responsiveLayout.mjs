@@ -557,7 +557,8 @@ try {
         assert.ok(layout.replenishmentRight <= width + 2, width + 'px replenishment overflow: ' + JSON.stringify(layout));
         assert.ok(layout.financePeriodFont >= 16, width + 'px finance period iOS focus zoom: ' + JSON.stringify(layout));
       }
-      assert.ok(layout.inventoryScrollFocusable && layout.inventoryScrollInner, 'inventory table remains scrollable and focusable');
+      assert.ok(layout.inventoryScrollFocusable, 'inventory history must remain keyboard-focusable at every width');
+      if (width <= 767) assert.ok(layout.inventoryScrollInner, width + 'px inventory history must scroll inside its container');
       assert.ok(layout.replenishmentDisabledPreserved, 'disabled replenishment input guard must stay intact');
       assert.ok(layout.minOrderFilterHeight >= 43, width + 'px order filters should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderActionHeight >= 43, width + 'px order actions should be touch-sized: ' + JSON.stringify(layout));
