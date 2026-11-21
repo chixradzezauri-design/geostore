@@ -156,9 +156,14 @@ export async function runStage46ProductPurchaseScenarios(browser, host) {
       }
 
       const matrix = await openProduct(page, 'Stage46 Matrix Jacket');
-      await matrix.locator('.gs-size-option').filter({ hasText: /^L$/ }).click();
+      // A size unavailable in the current color is intentionally hidden.
+      // Choose an in-stock color first; the UI selects its available size.
+      assert.equal(await matrix.locator('.gs-size-option').filter({ hasText: /^L$/ }).count(), 0);
+      await matrix.locator('.gs-color-option').filter({ hasText: 'ლურჯი' }).click();
       assert.equal(await matrix.locator('.gs-color-option[aria-pressed="true"]').innerText(), 'ლურჯი',
-        'Changing size automatically selects an available color');
+        'Selected color is available');
+      assert.equal(await matrix.locator('.gs-size-option[aria-pressed="true"]').innerText(), 'L',
+        'Choosing a color automatically selects its in-stock size');
       assert.equal(await matrix.locator('.gs-modal-add-price').innerText().then(s => s.includes('115')), true,
         'Selected variant price is reflected in the action');
       await addSelectedProduct(page);
