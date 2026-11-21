@@ -17,7 +17,7 @@ import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../
 import { getFinancialOrderEventDate, getFinancialDeliveryCharge, isReconciledOrderRevenue } from '../utils/financeOrderReconciliation.js';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
-import { getAuthenticatedExpenseHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
+import { getAuthenticatedExpenseHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
 import { escapeSpreadsheetCsvCell, hasVerifiedExpenseLedgerRows } from '../utils/financeExportSafety.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
@@ -2897,7 +2897,16 @@ export default function AdminDashboardPro({
       if (!isCurrentMutation()) return;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
       if (!isCurrentMutation()) return;
-      const headers = new Headers(verifiedHeaders);
+      const currentHeaders = await getRevalidatedExpenseWriteHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: adminUserId,
+        previousHeaders: verifiedHeaders,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch
+      });
+      if (!isCurrentMutation()) return;
+      const headers = new Headers(currentHeaders);
       headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
@@ -2962,7 +2971,16 @@ export default function AdminDashboardPro({
       if (!isCurrentMutation()) return;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
       if (!isCurrentMutation()) return;
-      const headers = new Headers(verifiedHeaders);
+      const currentHeaders = await getRevalidatedExpenseWriteHeaders({
+        loadSession: () => supabase.auth.getSession(),
+        apiKey: SUPABASE_ANON_KEY,
+        expectedUserId: adminUserId,
+        previousHeaders: verifiedHeaders,
+        supabaseUrl: SUPABASE_URL,
+        fetchImpl: fetch
+      });
+      if (!isCurrentMutation()) return;
+      const headers = new Headers(currentHeaders);
       headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(normalizedId)}&select=id`, {
         method: 'DELETE',

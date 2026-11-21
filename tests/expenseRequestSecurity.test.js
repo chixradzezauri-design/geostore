@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ExpenseAccessDeniedError, getAuthenticatedExpenseHeaders, requireExpensePermission, requireExpensePrincipal } from '../src/utils/expenseRequestSecurity.js';
+import { ExpenseAccessDeniedError, getAuthenticatedExpenseHeaders, getRevalidatedExpenseWriteHeaders, requireExpensePermission, requireExpensePrincipal } from '../src/utils/expenseRequestSecurity.js';
 
 const session = (id = 'staff-1', token = 'secure-session-token') => ({
   data: { session: { user: { id }, access_token: token } }, error: null
@@ -121,4 +121,75 @@ test('mount principal remains authoritative when Supabase switches to another au
     expectedUserId: originalAppId
   });
   assert.equal(refreshed.headers.Authorization, 'Bearer rotated-token');
+});
+
+test('expense write keeps initial permission-checked token when same principal and token still match', async () => {
+  let requests = 0;
+  const headers = await getRevalidatedExpenseWriteHeaders({
+    loadSession: async () => session('staff-1', 'token-one'),
+    apiKey: 'public-key',
+    expectedUserId: 'staff-1',
+    previousHeaders: { Authorization: 'Bearer token-one' },
+    supabaseUrl: 'https://test.supabase.co',
+    fetchImpl: async () => { requests += 1; throw new Error('unexpected RPC'); }
+  });
+  assert.equal(headers.Authorization, 'Bearer token-one');
+  assert.equal(requests, 0);
+});
+
+test('expense write re-verifies expenses permission for a refreshed same-user token', async () => {
+  const { calls, fetchImpl } = makeRequest({ ok: true, status: 200, json: async () => true });
+  const headers = await getRevalidatedExpenseWriteHeaders({
+    loadSession: async () => session('staff-1', 'rotated-token'),
+    apiKey: 'public-key',
+    expectedUserId: 'staff-1',
+    previousHeaders: { Authorization: 'Bearer previous-token' },
+    supabaseUrl: 'https://test.supabase.co',
+    fetchImpl
+  });
+  assert.equal(headers.Authorization, 'Bearer rotated-token');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].headers.Authorization, 'Bearer rotated-token');
+  assert.equal(calls[0].body, JSON.stringify({ p_permission: 'expenses' }));
+});
+
+test('revoked permission or switched staff account fails before a finance write', async () => {
+  const base = {
+    apiKey: 'public-key',
+    expectedUserId: 'staff-1',
+    previousHeaders: { Authorization: 'Bearer previous-token' },
+    supabaseUrl: 'https://test.supabase.co'
+  };
+  let calls = 0;
+  const deny = async () => { calls += 1; return { ok: true, status: 200, json: async () => false }; };
+  await assert.rejects(
+    getRevalidatedExpenseWriteHeaders({ ...base, loadSession: async () => session('staff-1', 'rotated-token'), fetchImpl: deny }),
+    (error) => error.expenseAccessDenied === true
+  );
+  assert.equal(calls, 1);
+  await assert.rejects(
+    getRevalidatedExpenseWriteHeaders({ ...base, loadSession: async () => session('staff-2', 'second-staff-token'), fetchImpl: deny }),
+    (error) => error.expenseAccessDenied === true
+  );
+  assert.equal(calls, 1, 'switched principal must be rejected before any permission RPC');
+  await assert.rejects(
+    getRevalidatedExpenseWriteHeaders({ ...base, expectedUserId: null, loadSession: async () => session(), fetchImpl: deny }),
+    (error) => error.expenseAccessDenied === true
+  );
+  await assert.rejects(
+    getRevalidatedExpenseWriteHeaders({ ...base, previousHeaders: null, loadSession: async () => session(), fetchImpl: deny }),
+    (error) => error.expenseAccessDenied === true
+  );
+});
+
+test('a failed refreshed-token permission RPC cannot certify a finance write', async () => {
+  const input = {
+    loadSession: async () => session('staff-1', 'rotated-token'),
+    apiKey: 'public-key',
+    expectedUserId: 'staff-1',
+    previousHeaders: { Authorization: 'Bearer previous-token' },
+    supabaseUrl: 'https://test.supabase.co',
+    fetchImpl: async () => ({ ok: false, status: 503 })
+  };
+  await assert.rejects(getRevalidatedExpenseWriteHeaders(input), (error) => !error.expenseAccessDenied);
 });

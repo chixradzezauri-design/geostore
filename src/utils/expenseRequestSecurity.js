@@ -60,3 +60,22 @@ export async function requireExpensePermission({ supabaseUrl, headers, fetchImpl
   if (allowed !== true) throw new ExpenseAccessDeniedError();
   return true;
 }
+
+// The initial permission RPC may finish while Supabase rotates the token or
+// signs in another staff account. Rebind immediately before a private write.
+// A rotated token must pass the *same* live permission RPC before use.
+export async function getRevalidatedExpenseWriteHeaders({
+  loadSession, apiKey, expectedUserId, previousHeaders, supabaseUrl, fetchImpl
+} = {}) {
+  const principal = requireExpensePrincipal(expectedUserId);
+  if (!previousHeaders?.Authorization) {
+    throw new ExpenseAccessDeniedError('ფინანსური მოთხოვნის საწყისი ავტორიზაცია არ დადასტურდა.');
+  }
+  const { headers } = await getAuthenticatedExpenseHeaders({
+    loadSession, apiKey, expectedUserId: principal
+  });
+  if (headers.Authorization !== previousHeaders.Authorization) {
+    await requireExpensePermission({ supabaseUrl, headers, fetchImpl });
+  }
+  return headers;
+}

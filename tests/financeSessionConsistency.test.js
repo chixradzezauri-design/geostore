@@ -79,3 +79,17 @@ test('expense ledger validation must complete before publishing verified reports
   assert.ok(read.indexOf('hasVerifiedExpenseLedgerRows(allExpenses)') < read.indexOf('setExpensesReady(true)'));
   assert.match(admin, /row\.map\(escapeSpreadsheetCsvCell\)/);
 });
+
+test('both expense mutations re-read user identity and re-authorize rotated tokens immediately before REST write', () => {
+  const add = admin.slice(admin.indexOf('  const handleAddExpense = async (e) => {'), admin.indexOf('  const handleDeleteExpense = async (id) => {'));
+  const del = admin.slice(admin.indexOf('  const handleDeleteExpense = async (id) => {'), admin.indexOf('  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess))'));
+  for (const operation of [add, del]) {
+    const priorCheck = operation.indexOf('await requireExpensePermission(');
+    const finalCheck = operation.indexOf('await getRevalidatedExpenseWriteHeaders(');
+    const write = operation.indexOf('const res = await fetch(');
+    assert.ok(priorCheck >= 0 && priorCheck < finalCheck && finalCheck < write);
+    assert.match(operation, /expectedUserId: adminUserId,/);
+    assert.match(operation, /previousHeaders: verifiedHeaders,/);
+    assert.match(operation, /if \(!isCurrentMutation\(\)\) return;\s*const headers = new Headers\(currentHeaders\)/);
+  }
+});
