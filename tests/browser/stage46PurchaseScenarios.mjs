@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 // Every Supabase request is intercepted in the browser. No live account,
 // inventory, order, checkout, database or Storage mutation is possible.
 const supabaseOrigin = 'https://xmtnszxtnfxnrojionoa.supabase.co';
-const productRows = [
+export const stage49FixtureProductRows = [
   {
     id: 'stage46-simple', name: 'Stage46 Everyday Wallet', category: 'აქსესუარები',
     price_gel: 35, old_price_gel: 45, stock: 3,
