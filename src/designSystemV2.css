@@ -1523,4 +1523,11 @@
   .geostore-fashion-store .gs-filter-panel .gs-sort-control .gs-filter-reset-all {
     grid-column: 1 / -1; justify-self: stretch; width: 100%;
   }
+  /* Legacy catalog-specific rules carry stronger selectors than generic filters.
+   * The additional scope is essential on 320px phones; no palette override. */
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls.gs-filter-panel .gs-price-filter input.gs-price-input,
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls.gs-filter-panel .gs-sort-control select.gs-sort-select {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
 }
