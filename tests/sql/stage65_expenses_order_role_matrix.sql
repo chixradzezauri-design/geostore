@@ -97,11 +97,13 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN blocked := true;
   END;
   IF NOT blocked THEN RAISE EXCEPTION 'Stage65 ledger deny did not run'; END IF;
+  blocked := false;
   BEGIN
     PERFORM public.admin_order_image_refs_page(0,100);
     RAISE EXCEPTION 'Stage65 expenses-only staff used product image references';
   EXCEPTION WHEN insufficient_privilege THEN blocked := true;
   END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Stage65 image references were exposed to expense-only staff'; END IF;
 END $test$;
 
 \echo 'Stage65: verified finance+orders staff retains expense and cost access'
