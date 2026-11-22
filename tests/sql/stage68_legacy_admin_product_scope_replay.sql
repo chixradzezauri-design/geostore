@@ -86,16 +86,16 @@ BEGIN;
   DO $regression$
   DECLARE
     denied boolean:=false;
-    sqlstate text;
+    v_sqlstate text;
   BEGIN
     IF NOT public.has_staff_permission('expenses') THEN
       RAISE EXCEPTION 'Stage68 staff expense permission was lost independently of migration'; END IF;
     BEGIN
       PERFORM 1 FROM private.admin_list_products();
     EXCEPTION WHEN OTHERS THEN
-      GET STACKED DIAGNOSTICS sqlstate=RETURNED_SQLSTATE;
-      IF sqlstate <> '42501' THEN
-        RAISE EXCEPTION 'Stage68 stale listing failed for an unrelated reason: %',sqlstate;
+      GET STACKED DIAGNOSTICS v_sqlstate=RETURNED_SQLSTATE;
+      IF v_sqlstate <> '42501' THEN
+        RAISE EXCEPTION 'Stage68 stale listing failed for an unrelated reason: %',v_sqlstate;
       END IF;
       denied := true;
     END;
