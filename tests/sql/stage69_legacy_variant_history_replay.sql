@@ -15,11 +15,14 @@ BEGIN
     )
     OR to_regprocedure('private.validate_order_item_variants()') IS NOT NULL
     OR NOT EXISTS (
-      SELECT 1 FROM public.orders
-       WHERE id='STG61-VARIANTS-001'
-         AND status='გაუქმებული' AND total_gel=530
-         AND items->0->>'selectedSize'='S'
-         AND items->0->>'selectedColor'='Red'
+      SELECT 1 FROM public.orders o
+       WHERE o.id='STG61-VARIANTS-001'
+         AND o.status='გაუქმებული' AND o.total_gel=530
+         AND EXISTS (
+           SELECT 1 FROM jsonb_array_elements(o.items) AS line(item)
+           WHERE line.item->>'selectedSize'='S'
+             AND line.item->>'selectedColor'='Red'
+         )
     )
     OR (SELECT available_sizes FROM public.products WHERE id='STG61-SHOE')
        IS DISTINCT FROM '["S","M"]'::jsonb
