@@ -19,6 +19,8 @@ on:
       - 'tests/sql/stage62_cancelled_order_variant_reactivation.sql'
       - 'tests/sql/stage65_expenses_order_role_matrix.sql'
       - 'tests/sql/stage66_legacy_checkout_insert_compat_gate.sql'
+      - 'tests/sql/stage67_legacy_checkout_ownership_replay.sql'
+      - 'scripts/stage67LegacyCheckoutReplayFixture.mjs'
       - 'scripts/stage66LegacyCheckoutFixture.mjs'
       - 'supabase/migrations/20261106210000_validate_checkout_input_on_order_insert.sql'
       - 'supabase/migrations/20261117143000_staff_expenses_permission.sql'
@@ -84,3 +86,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage65_expenses_order_role_matrix.sql
           node scripts/stage66LegacyCheckoutFixture.mjs
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage66_legacy_checkout_insert_compat_gate.sql
+          node scripts/stage67LegacyCheckoutReplayFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage67_legacy_checkout_ownership_replay.sql
