@@ -77,6 +77,9 @@ BEGIN
  THEN RAISE EXCEPTION 'Stage70 phase A broke live legacy admin order reads'; END IF;
 END $bridge$;
 
+-- Stage77: actually query both legacy and new APIs as the authentic database roles.
+\ir stage77_phase_a_legacy_role_compat.sql
+
 -- Phase B can run only AFTER the new frontend switches to RPCs.
 -- Fixture runs both phases consecutively, but release operations cannot.
 \ir ../../supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql

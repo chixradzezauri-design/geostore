@@ -13,6 +13,8 @@ on:
       - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
       - 'supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql'
       - 'tests/sql/stage57_order_ledger_scope_contract.sql'
+      - 'tests/sql/stage77_phase_a_legacy_role_compat.sql'
+      - 'tests/stage77PhaseARoleCompatibility.test.js'
       - 'supabase/migrations/20261117231459_staff_orders_permission.sql'
       - 'tests/sql/stage59_order_status_compat_contract.sql'
       - 'tests/sql/stage60_triggers_inventory_contract.sql'
