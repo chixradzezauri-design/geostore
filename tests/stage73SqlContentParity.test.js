@@ -29,6 +29,10 @@ test('Stage73 classifies 112 source-linked applied migrations exactly; never app
   assert.equal(r.comparedLinkedSqlFiles,112);
   assert.equal(r.status,'BLOCKED_UNTIL_MANUAL_SQL_DIFF_REVIEW_AND_FULL_SCHEMA_JWT_STAGING');
   assert.equal(r.totals.exactVersionExactSql+r.totals.exactVersionDifferentSql,80);
+  assert.equal(r.totals.exactVersionExactSql,19);
+  assert.equal(r.totals.exactVersionDifferentSql,61);
+  assert.equal(r.totals.differentVersionExactSql,21);
+  assert.equal(r.totals.differentVersionDifferentSql,11);
   assert.equal(r.totals.differentVersionExactSql+r.totals.differentVersionDifferentSql,32);
   assert.equal(r.stillBlockedOlderFiles,7);
   assert.equal(r.stillPendingSourcePinnedPhaseA,3);

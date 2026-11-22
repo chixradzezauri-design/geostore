@@ -18,11 +18,43 @@ checksum-only snapshot is
 their bytes with the **stored applied** SQL checksum. It classifies all 80
 exact-version/name matches and the 32 same-name/different-version pairs.
 
-**Byte equality** is positive evidence of exact SQL source identity at the
+**byte equality** is positive evidence of exact SQL source identity at the
 time a migration was applied. A different MD5 does *not* prove a different
 runtime effect or establish that replay is safe; it requires source-level
 semantic reconciliation and real end-state checks. MD5 here is only a
 change-detection checksum, not an authorization token or security primitive.
+
+## Verified source-checksum results on the frozen baseline
+
+The existing no-cost PostgreSQL17 CI successfully compared **112** local files
+to the full SQL bodies that Supabase stored as applied migrations:
+
+| Version/name relationship | SQL bytes identical | SQL differs |
+| --- | ---: | ---: |
+| Same version and logical name (80) | **19** | **61** |
+| Same logical name but different version (32) | **21** | **11** |
+
+Therefore **21 of the 32** previously uncertain timestamp-only pairs are now
+confirmed to have exactly the same stored SQL bytes. The remaining **11**
+different-timestamp pairs have different SQL text and need a semantic diff
+before any attempt to repair or replay migration history:
+
+- `20261107001000_add_product_data_integrity_constraints.sql`
+- `20261107002000_harden_flash_sale_rounding.sql`
+- `20261107020000_add_order_status_notifications.sql`
+- `20261107181500_skip_custom_variant_products_in_flash_sales.sql`
+- `20261112133000_guard_legacy_order_product_references.sql`
+- `20261116071600_harden_support_ticket_authorization_and_admin_reply_status.sql`
+- `20261118180000_move_all_support_ticket_history_rpcs_to_private.sql`
+- `20261119090000_revoke_anon_completed_order_reactivation.sql`
+- `20261119110000_add_storefront_hero_storage_scope.sql`
+- `20261119150000_admin_panel_visual_design_sync.sql`
+- `20261119152000_admin_panel_visual_design_concurrency.sql`
+
+The 61 same-version-but-different-SQL migrations also require appropriate
+review. Some differences may be whitespace, comments or intentional local
+updates. Neither different hashes nor identical names prove runtime
+incompatibility; no SQL was applied as part of these checks.
 
 ## Deployment consequences
 
