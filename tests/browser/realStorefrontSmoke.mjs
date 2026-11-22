@@ -75,27 +75,43 @@ try {
          null, { timeout: 5000 });
        const firstCategoryCard = page.locator('.gs-category-card:not(.gs-category-card--all)').first();
        if (await firstCategoryCard.count()) {
-         const chosenCategoryLabel = await firstCategoryCard.getAttribute('aria-label');
-         assert.ok(chosenCategoryLabel, 'A main category has an accessible label');
-         // The accessible label includes a dynamic product count. That count
-         // can change after Enter, so it cannot identify the selected category.
-         // The rendered category title remains stable across count updates.
-         const chosenCategoryTitle = (await firstCategoryCard.locator('h4').innerText()).trim();
-         assert.ok(chosenCategoryTitle, 'A main category has a stable visible title');
-         // Atomic focus/read avoids a race with asynchronous category rerenders
-         // between separate browser calls; actual keyboard focus is still required.
-         assert.ok(await firstCategoryCard.evaluate(node => {
-           node.focus();
-           return document.activeElement === node;
-         }), 'Main category receives keyboard focus');
-         await page.keyboard.press('Enter');
-         // Match the category's visible identity AND committed selection. This
-         // waits for React, but still fails if Enter never selects the category.
-         await page.waitForFunction(title =>
-           [...document.querySelectorAll('.gs-category-card:not(.gs-category-card--all)')]
-             .some(card => card.querySelector('h4')?.textContent?.trim() === title &&
-                           card.getAttribute('aria-pressed') === 'true'),
-           chosenCategoryTitle, { timeout: 5000 });
+         // Initial category data can be refreshed from the server while the
+         // first keyboard action is being processed. Re-target the currently
+         // mounted category if React replaced it, without weakening the
+         // requirement that Enter actually selects the visible category.
+         let categorySelectedWithKeyboard = false;
+         for (let attempt = 0; attempt < 3 && !categorySelectedWithKeyboard; attempt++) {
+           const liveCard = page.locator('.gs-category-card:not(.gs-category-card--all)').first();
+           const chosenCategoryLabel = await liveCard.getAttribute('aria-label');
+           assert.ok(chosenCategoryLabel, 'A main category has an accessible label');
+           const chosenCategoryTitle = (await liveCard.locator('h4').innerText()).trim();
+           assert.ok(chosenCategoryTitle, 'A main category has a stable visible title');
+           assert.ok(await liveCard.evaluate(node => {
+             node.focus();
+             return document.activeElement === node;
+           }), 'Main category receives keyboard focus');
+           await page.keyboard.press('Enter');
+           try {
+             await page.waitForFunction(title =>
+               [...document.querySelectorAll('.gs-category-card:not(.gs-category-card--all)')]
+                 .some(card => card.querySelector('h4')?.textContent?.trim() === title &&
+                               card.getAttribute('aria-pressed') === 'true'),
+               chosenCategoryTitle, { timeout: 3500 });
+             categorySelectedWithKeyboard = true;
+           } catch (error) {
+             if (attempt === 2) {
+               const observed = await page.locator('.gs-category-card:not(.gs-category-card--all)')
+                 .evaluateAll(cards => cards.slice(0, 5).map(card => ({
+                   title: card.querySelector('h4')?.textContent?.trim(),
+                   pressed: card.getAttribute('aria-pressed')
+                 })));
+               throw new Error('Main category Enter never selected the visible category at ' +
+                 width + 'px: expected ' + chosenCategoryTitle +
+                 '; observed ' + JSON.stringify(observed) + '; ' + String(error));
+             }
+           }
+         }
+         assert.ok(categorySelectedWithKeyboard, 'Keyboard Enter selects a main category at ' + width + 'px');
          await allCategoryCard.focus();
          await page.keyboard.press('Space');
          await page.waitForFunction(() =>
