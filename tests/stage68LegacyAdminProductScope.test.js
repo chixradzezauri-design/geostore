@@ -44,7 +44,7 @@ test('Stage68 rollback-only test proves real failure for expense-authorized empl
   ]) assert.ok(scenario.includes(phrase), 'Missing Stage68 compatibility invariant: ' + phrase);
   assert.match(scenario, /\nROLLBACK;\n/);
   assert.match(scenario, /EXCEPTION WHEN OTHERS THEN/);
-  assert.match(scenario, /sqlstate <> '42501'/);
+  assert.match(scenario, /v_sqlstate <> '42501'/);
   assert.doesNotMatch(scenario, /supabase\.co|https?:\/\//);
 });
 
