@@ -6,6 +6,25 @@
 -- until reviewed and explicitly approved as part of the release.
 BEGIN;
 
+-- Stage71: fail closed if this connected database is not the expected
+-- checkout architecture. No order, stock or finance data is changed.
+DO $stage71_checkout_preflight$
+DECLARE v_private oid := to_regprocedure('private.create_order_with_stock(jsonb)');
+        v_public oid := to_regprocedure('public.create_order_with_stock(jsonb)');
+BEGIN
+  IF v_private IS NULL
+     OR (SELECT prosecdef FROM pg_proc WHERE oid = v_private) IS DISTINCT FROM true
+     OR pg_get_function_result(v_private) IS DISTINCT FROM 'jsonb' THEN
+    RAISE EXCEPTION 'Stage71: private security-definer checkout contract is missing or changed; stop release';
+  END IF;
+  IF v_public IS NOT NULL AND
+    ((SELECT prosecdef FROM pg_proc WHERE oid = v_public) IS DISTINCT FROM false
+     OR pg_get_function_result(v_public) IS DISTINCT FROM 'jsonb') THEN
+    RAISE EXCEPTION 'Stage71: public checkout wrapper changed; do not overwrite';
+  END IF;
+END $stage71_checkout_preflight$;
+
+
 -- Bound the public guest-checkout payload before it reaches the stock/price transaction.
 -- The private checkout implementation remains the only writer of orders and stock.
 CREATE OR REPLACE FUNCTION public.create_order_with_stock(p_order jsonb)

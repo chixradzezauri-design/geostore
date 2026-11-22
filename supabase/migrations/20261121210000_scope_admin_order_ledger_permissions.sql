@@ -2,6 +2,44 @@
 -- Staged only in Draft PR #149. Requires existing staff permission foundation.
 BEGIN;
 
+-- Stage71: the actual live Orders/Staff contracts must exist BEFORE an
+-- additive admin RPC is installed. This checks catalog metadata only.
+DO $stage71_order_bridge_preflight$
+BEGIN
+  IF to_regclass('public.orders') IS NULL
+     OR to_regclass('public.admin_staff_members') IS NULL
+     OR to_regprocedure('auth.uid()') IS NULL
+     OR to_regprocedure('public.has_staff_permission(text)') IS NULL
+     OR to_regprocedure('private.has_staff_permission(text)') IS NULL
+     OR NOT coalesce((SELECT relrowsecurity FROM pg_class
+                       WHERE oid=to_regclass('public.orders')),false)
+     OR (SELECT prosecdef FROM pg_proc
+         WHERE oid=to_regprocedure('private.has_staff_permission(text)'))
+         IS DISTINCT FROM true
+  THEN
+    RAISE EXCEPTION 'Stage71: missing live order RLS/staff permission prerequisite; do not publish admin RPCs';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('id','text'), ('created_at','timestamp with time zone'),
+      ('customer_name','text'), ('phone','text'), ('address','text'),
+      ('user_email','text'), ('customer_email','text'), ('user_id','uuid'),
+      ('total_gel','numeric'), ('status','text'), ('admin_note','text'),
+      ('status_changed_at','timestamp with time zone'),
+      ('stock_deducted_at','timestamp with time zone'),
+      ('stock_restored_at','timestamp with time zone'),
+      ('items','jsonb'), ('checkout_result','jsonb'), ('checkout_request','jsonb')
+    ) AS expected(column_name,data_type)
+    LEFT JOIN information_schema.columns actual
+      ON actual.table_schema='public' AND actual.table_name='orders'
+     AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+  ) THEN
+    RAISE EXCEPTION 'Stage71: live order projection schema mismatch; stop before deploying admin RPCs';
+  END IF;
+END $stage71_order_bridge_preflight$;
+
+
 CREATE OR REPLACE FUNCTION private.admin_order_ledger_page(
   p_offset integer DEFAULT 0, p_limit integer DEFAULT 1000
 )

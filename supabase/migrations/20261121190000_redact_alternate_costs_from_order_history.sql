@@ -6,6 +6,30 @@
 -- DRAFT ONLY: do not apply on Production before coordinated release approval.
 BEGIN;
 
+-- Stage71: prevent replacing customer history on a different live schema.
+-- The disposable test fixture intentionally has no preexisting private RPC,
+-- so this guard checks its required tables and auth.uid(), not data rows.
+DO $stage71_history_preflight$
+BEGIN
+  IF to_regclass('public.orders') IS NULL OR to_regprocedure('auth.uid()') IS NULL THEN
+    RAISE EXCEPTION 'Stage71: order ownership or Supabase Auth prerequisite missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('id','text'), ('user_id','uuid'), ('created_at','timestamp with time zone'),
+      ('total_gel','numeric'), ('status','text'), ('items','jsonb'),
+      ('status_changed_at','timestamp with time zone')
+    ) AS expected(column_name,data_type)
+    LEFT JOIN information_schema.columns actual
+      ON actual.table_schema='public' AND actual.table_name='orders'
+     AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+  ) THEN
+    RAISE EXCEPTION 'Stage71: order-history schema drift; no customer RPC replacement';
+  END IF;
+END $stage71_history_preflight$;
+
+
 -- Customer order history keeps its normal item snapshot but removes internal
 -- procurement, vendor, cost, margin, and profit fields from each returned item.
 CREATE OR REPLACE FUNCTION private.get_my_orders()
