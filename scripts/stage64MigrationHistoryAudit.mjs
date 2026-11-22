@@ -19,6 +19,7 @@ export const PENDING_STAGE_MIGRATIONS = Object.freeze([
   '20261121170000_strip_private_costs_from_checkout_rpc.sql',
   '20261121190000_redact_alternate_costs_from_order_history.sql',
   '20261121210000_scope_admin_order_ledger_permissions.sql',
+  '20261121213000_revoke_legacy_order_snapshot_reads.sql',
 ]);
 
 const VERSION_PATTERN = /^\d{14}$/;
