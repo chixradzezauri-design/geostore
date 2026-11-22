@@ -71,3 +71,5 @@ admin-order RPC migrations), new frontend ready and verified, and **Phase B**
 
 No production SQL/DDL/DML, PR merge, new paid environments, live data change,
 or Vercel Production deploy was made. **No paid staging**; **Production unchanged**.
+
+**no paid staging** environment was created or requested. This audit remains fully read-only.
