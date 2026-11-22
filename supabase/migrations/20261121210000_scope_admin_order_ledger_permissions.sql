@@ -150,16 +150,10 @@ REVOKE ALL ON FUNCTION public.admin_order_image_refs_page(integer,integer)
 GRANT EXECUTE ON FUNCTION public.admin_order_image_refs_page(integer,integer)
   TO authenticated;
 
--- Revoke raw finance-bearing snapshots from the client role. Retain the
--- reviewed safe metadata columns for current status/Realtime subscriptions.
--- Existing staff Orders RLS policy, status writes, stock triggers unchanged.
-REVOKE SELECT ON TABLE public.orders FROM PUBLIC, anon, authenticated;
-REVOKE SELECT (items,checkout_result,checkout_request)
-  ON TABLE public.orders FROM PUBLIC, anon, authenticated;
-GRANT SELECT (
-  id, customer_name, phone, address, user_email, customer_email,
-  user_id, total_gel, status, created_at, admin_note, status_changed_at,
-  stock_deducted_at, stock_restored_at
-) ON TABLE public.orders TO authenticated;
+-- Compatibility-first rollout. Leave legacy direct table reads intact until
+-- the new frontend is READY on Production, so old loaded admin clients do not
+-- lose their orders during the Vercel/database cutover.
+-- The required revocation is in 20261121213000_revoke_legacy_order_snapshot_reads.sql.
+-- DO NOT treat this phase alone as finance privacy remediation.
 
 COMMIT;
