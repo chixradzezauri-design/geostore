@@ -15,6 +15,9 @@ on:
       - 'supabase/migrations/20261117103000_staff_orders_permission.sql'
       - 'tests/sql/stage59_order_status_compat_contract.sql'
       - 'tests/sql/stage60_triggers_inventory_contract.sql'
+      - 'tests/sql/stage61_variant_checkout_contract.sql'
+      - 'supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql'
+      - 'supabase/migrations/20261109151847_move_variant_stock_security_definer_to_private.sql'
       - 'scripts/stage60InventoryLedgerFixture.mjs'
       - 'supabase/migrations/20261117084403_private_inventory_movement_ledger_stage92.sql'
       - 'supabase/migrations/20261103155226_track_order_status_change_time.sql'
@@ -67,3 +70,4 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage59_order_status_compat_contract.sql
           node scripts/stage60InventoryLedgerFixture.mjs
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage60_triggers_inventory_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage61_variant_checkout_contract.sql
