@@ -49,6 +49,20 @@ CREATE POLICY "Stage57 fixture orders visibility" ON public.orders
   USING (public.has_staff_permission('orders'));
 COMMIT;
 
+-- Stage71: the later production invoker-wrapper migration moves the
+-- staff permission implementation into private. The earlier synthetic
+-- Stage56 fixture installs only the old public function, so provide the
+-- restricted private delegate in this disposable DB before testing the
+-- Stage71 fail-closed production prerequisite. This is NOT a live migration.
+CREATE OR REPLACE FUNCTION private.has_staff_permission(p_permission text)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO ''
+AS $stage71_fixture$
+  SELECT public.has_staff_permission(p_permission);
+$stage71_fixture$;
+REVOKE ALL ON FUNCTION private.has_staff_permission(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.has_staff_permission(text) TO authenticated, service_role;
+
 -- Execute the exact Stage57 SQL, not a fixture-specific rewrite.
 \ir ../../supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql
 
