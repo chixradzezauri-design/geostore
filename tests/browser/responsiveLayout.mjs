@@ -100,7 +100,7 @@ try {
         const result = await page.evaluate(() => {
           const grid = document.querySelector('.gs-flash-sale-section > .grid');
           const cards = [...grid.querySelectorAll(':scope > .gs-flash-sale-card')];
-          const tracks = getComputedStyle(grid).gridTemplateColumns.split(/\\s+/).filter(Boolean);
+          const tracks = getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean);
           return {
             tracks: tracks.length,
             gridWidth: grid.getBoundingClientRect().width,
@@ -123,7 +123,7 @@ try {
           width + 'px / ' + count + ' cards: action collapsed ' + JSON.stringify(result));
         assert.ok(result.scrollWidth <= width + 2,
           width + 'px / ' + count + ' cards: horizontal overflow ' + JSON.stringify(result));
-        process.stdout.write('PASS Flash Sale ' + width + 'px / ' + count + ' cards\\n');
+        process.stdout.write('PASS Flash Sale ' + width + 'px / ' + count + ' cards\n');
       } finally {
         await page.close();
       }
