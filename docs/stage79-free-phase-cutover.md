@@ -13,3 +13,5 @@ After successful Phase A assertions, Stage79 applies the exact reviewed Phase B 
 Release order remains Phase A, verified frontend production cutover, Phase B only after old browser tabs have a reload path. Never run Phase B before the new UI is live.
 
 **Production unchanged.** No remote DDL/DML, live account creation, order or inventory change, PR merge, or Production deployment. **No paid staging** project or branch created.
+
+The guest HTTP client is NEVER signed in during tests; each synthetic identity signs in through its own isolated temporary client. There is no paid staging environment.

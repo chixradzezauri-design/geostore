@@ -21,6 +21,8 @@ test('Stage79 refuses nonlocal target and covers signed receipt, history, role a
    'admin_order_ledger_page','admin_order_image_refs_page',
    'Phase B','stage79-phase-b.sql','127.0.0.1','SELECT * denied'])
    assert.ok(script.includes(phrase),'Stage79 missing '+phrase);
+ assert.doesNotMatch(script,/anon\.auth\.signInWithPassword/);
+ assert.match(script,/isolatedSignIn\.auth\.signInWithPassword/);
  assert.match(a,/synthetic/);
  assert.match(a,/SECURITY INVOKER SET search_path TO ''/);
  for(const phrase of ['NOT RELEASE-READY','full-schema','no paid staging',

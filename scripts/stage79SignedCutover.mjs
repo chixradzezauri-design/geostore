@@ -36,7 +36,8 @@ async function user(name){
   const password='CiLocal-7!'+randomUUID();
   const created=success(await admin.auth.admin.createUser({
     email,password,email_confirm:true}),'Create disposable user '+name);
-  const signed=success(await anon.auth.signInWithPassword({email,password}),
+  const isolatedSignIn=createClient(API_URL,ANON_KEY,opts);
+  const signed=success(await isolatedSignIn.auth.signInWithPassword({email,password}),
     'GoTrue signed sign-in '+name);
   ok(Boolean(signed.session?.access_token),'JWT issued '+name);
   return {id:created.user.id,email,token:signed.session.access_token};
