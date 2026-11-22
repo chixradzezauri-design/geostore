@@ -37,7 +37,7 @@ test('Stage67 existing checkout preserves user identity, stock-order audit and i
   assert.doesNotMatch(old,/'gallery',/);
 });
 
-test('Stage67 real PostgreSQL integration uses ROLLBACK, synthetic JWT, real variant and source SQL',()=>{
+test('Stage67 real PostgreSQL integration proves original missing-image failure inside ROLLBACK',()=>{
   for (const phrase of [
     "ROLLBACK TO SAVEPOINT stage67_clean_original",
     "\\i /tmp/stage67_original_legacy_variant_checkout.sql",
