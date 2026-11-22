@@ -34,7 +34,7 @@ export function verifyStage74({evidence,baseline,digests,files,source}){
       block('unexpected privilege delta');
   }else block('unknown review status');
  }
- if(unmatched.size||commentOnly!==10||acl!==1||preflight.pending.length!==4)
+ if(unmatched.size||commentOnly!==10||acl!==1||preflight.PhaseA.length!==3||preflight.PhaseB.length!==1)
    block('mismatch counts or release phases changed');
  return {status:'BLOCKED_AUTHENTICATED_FULL_SCHEMA_STAGING_REQUIRED',
     oneTimeReadOnlyTokenMatched:commentOnly,realAclAndTransactionDelta:acl,
