@@ -1,38 +1,36 @@
-# Stage 67 — historical variant checkout replay would silently corrupt order ownership and audit attribution
+# Stage 67 — original legacy checkout blocks valid orders (no-cost integration proof)
 
-**NOT RELEASE-READY. Draft PR #149 only. No Production write, merge, deployment, or paid staging.**
+**NOT RELEASE-READY. Draft PR #149 only. No Production writes or paid staging.**
 
-## Verified with production metadata, read-only (2026-11-22)
+## Exact regression discovered
 
-The present `private.create_order_with_stock(jsonb)` is a SECURITY DEFINER implementation that:
+Live Supabase catalog inspection (read-only, November 22, 2026) confirmed that the present `private.create_order_with_stock(jsonb)` persists `orders.user_id=auth.uid()`, stores the item's `gallery` snapshot, and sets `geostore.inventory_reason='order_deduction'` plus `geostore.inventory_order_id` to connect stock movements to the order.
 
-- Persists `auth.uid()` to `public.orders.user_id` when an authenticated customer checks out, so the existing `get_my_orders()` ownership filter can find that order.
-- Records `geostore.inventory_reason='order_deduction'` and `geostore.inventory_order_id=v_order_id` before decrementing inventory; the append-only ledger can associate stock consumption with a specific order.
-- Snapshots `image` and `gallery` fields in the order item so product images remain meaningful even if the catalog later changes.
+The historical, **unapplied** `20261107170000_integrate_custom_product_variants.sql` replaces that same checkout function but has several independent regressions:
 
-The outdated **unapplied** `20261107170000_integrate_custom_product_variants.sql` would `CREATE OR REPLACE` this same private checkout function without the `user_id` insert, without the `inventory_reason` / `inventory_order_id` audit context and without item `gallery` snapshots. It also redefines the status and reactivation functions, so replaying this historical migration would revert multiple newer safeguards.
+1. **Direct confirmed runtime failure:** the old checkout's SELECT for `v_product` does not retrieve `image`, but later it references `v_product.image` in the order-item JSON. In the genuine disposable PostgreSQL17 integration this fails with the exact error `record "v_product" has no field "image"` on an otherwise valid authenticated variant checkout. **No order is created.** Blindly applying this function could stop valid purchases.
+2. **Source-level latent regression:** the obsolete INSERT omits `orders.user_id`. If its runtime error were repaired without updating the legacy logic, authenticated purchases could be stored without their owner's ID and be absent from `get_my_orders()`.
+3. **Source-level latent regression:** it omits the newer `gallery` image snapshot and `geostore.inventory_reason` / `geostore.inventory_order_id` inventory attribution. These behaviors are already present in the current function.
 
-An old SQL timestamp is not evidence of safe migration ordering. This is a **new, independent** blocking incompatibility in addition to Stage66's guest-email validator mismatch and Stage64's 42 migration-history version mismatches.
+The same old SQL file also overwrites status and cancellation/reactivation functions. These source-level differences are not proof that its historical SQL is equivalent or safe to replay.
 
-## Free executable proof
+## Free, rollback-only executable regression test
 
-`scripts/stage67LegacyCheckoutReplayFixture.mjs` extracts the **exact original** `private.create_order_with_stock(jsonb)` source from the legacy 35 KB migration. It rejects missing markers or unexpected additional function bodies, and emits only a test-only SQL artifact.
+`scripts/stage67LegacyCheckoutReplayFixture.mjs` extracts **only the exact historical checkout function** from the old migration. It does not edit the original SQL or run any database update outside the existing disposable test instance.
 
-The existing disposable **PostgreSQL 17** GitHub Actions job now calls `tests/sql/stage67_legacy_checkout_ownership_replay.sql` after all earlier Stages52–66. It reuses the genuine newer checkout, redacting public wrapper, synthetic Auth function, product size/color variants, stock trigger and inventory movement ledger.
+`tests/sql/stage67_legacy_checkout_ownership_replay.sql` runs after Stage52–66 on **isolated PostgreSQL 17** in the existing CI service:
 
-In ONE transaction ending with unconditional `ROLLBACK`, the integration:
+- It inserts a synthetic Auth user in a transaction, checks out a synthetic red/S variant using the **current** original checkout: verifies signed-in owner ID, gallery, stock movement tied to order, and finance-redacted public receipt.
+- It rolls that order and stock change back to a savepoint, temporarily installs the **exact obsolete** checkout function, and submits the same legitimate request.
+- It requires the **specific** missing-image-field error. Unrelated permission, stock, schema or network errors fail the test.
+- It confirms the failed historic call did not create order, change inventory, or add order audit records. The entire test ends with **ROLLBACK**, after which current function definition and all synthetic data are verified unchanged.
 
-1. Creates one synthetic, confirmed Auth identity; checks out a real synthetic size/color variant using an authenticated JWT. The current implementation must persist the matching `user_id`, snapshot its `gallery`, record `order_deduction` with the exact order ID, and return a finance-redacted receipt.
-2. Rolls back that checkout to a savepoint, so the same starting variant stock is available for comparison.
-3. Temporarily replaces **only** the private checkout function with its unmodified legacy SQL source, then performs the equivalent signed-in checkout. It verifies that checkout can appear successful yet its stored order loses `user_id` and `gallery`, and the stock audit no longer attributes the deduction to the new order.
-4. Ends the entire experiment with `ROLLBACK`; verifies the current function definition, synthetic user, order records, inventory movements and variant stock were restored.
+`tests/stage67HistoricalCheckoutParity.test.js` guards the exact SQL source, the extraction boundaries and the required workflow steps.
 
-This test cannot make new paid resources or write live Supabase data. Passing proves a **specific regression if this obsolete SQL is replayed**, not that the full Supabase environment is approved for Production.
+## Production release decision
 
-## Release consequence
+**Do NOT replay `20261107170000_integrate_custom_product_variants.sql` or mark its migration as applied** to bypass a history mismatch. Do not auto-run obsolete checkout validators from Stage66. More than forty migration version/name mismatches remain; the later pending Stage51/54/57 redaction/projection migrations are separate and not yet deployed.
 
-**Never apply or mark as applied** `20261107170000_integrate_custom_product_variants.sql` as part of a blind database replay. Keep this migration and the obsolete email/variant triggers quarantined until SQL-by-SQL equivalence reconciliation. Do not bypass the migration history classifier with manual "repair".
+A passing disposable integration test proves this concrete negative case; it **does not replace full-schema Supabase staging** and real signed JWT/customer/finance role end-to-end tests, nor a coordinated migration+frontend deployment. The user refused paid staging; **no paid staging was created**. Production remains unchanged and Draft PR #149 is unmerged.
 
-The later, staged Stage51/54/57 redaction migrations still require their own controlled, full-schema Supabase staging and real-authenticated user/staff/finance checkout checks. The user explicitly refused paid staging; **no paid staging** was created. No automatic Production merge will be attempted based only on disposable fixture tests.
-
-Pending: SQL history reconciliation, staging JWT and real HTTP integration, full-schema Supabase staging, checked multi-device UI, and a safe coordinated release after all gates are green.
+Next release gate: continue SQL-by-SQL reconciliation and no-cost negative compatibility tests without changing existing live customers, orders, stock or financial records.
