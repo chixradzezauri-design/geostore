@@ -68,16 +68,29 @@ try {
        assert.equal(await allCategoryCard.getAttribute('role'), 'button', 'All-category is keyboard operable');
        await allCategoryCard.focus();
        await page.keyboard.press('Space');
-       assert.equal(await allCategoryCard.getAttribute('aria-pressed'), 'true', 'Space selects all categories at ' + width + 'px');
+       // React's category selection commits after the keyboard event. A
+       // one-shot attribute read can race the state render on slower CI hosts.
+       await page.waitForFunction(() =>
+         document.querySelector('.gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
+         null, { timeout: 5000 });
        const firstCategoryCard = page.locator('.gs-category-card:not(.gs-category-card--all)').first();
        if (await firstCategoryCard.count()) {
-         assert.ok(await firstCategoryCard.getAttribute('aria-label'), 'A main category has an accessible label');
+         const chosenCategoryLabel = await firstCategoryCard.getAttribute('aria-label');
+         assert.ok(chosenCategoryLabel, 'A main category has an accessible label');
          await firstCategoryCard.focus();
          await page.keyboard.press('Enter');
-         assert.equal(await firstCategoryCard.getAttribute('aria-pressed'), 'true', 'Enter selects category at ' + width + 'px');
+         // Keep the originally focused category identity, not just whichever
+         // category happens to be .first() after an asynchronous catalog update.
+         await page.waitForFunction(label =>
+           [...document.querySelectorAll('.gs-category-card:not(.gs-category-card--all)')]
+             .some(card => card.getAttribute('aria-label') === label &&
+                           card.getAttribute('aria-pressed') === 'true'),
+           chosenCategoryLabel, { timeout: 5000 });
          await allCategoryCard.focus();
          await page.keyboard.press('Space');
-         assert.equal(await allCategoryCard.getAttribute('aria-pressed'), 'true', 'All-category restored at ' + width + 'px');
+         await page.waitForFunction(() =>
+           document.querySelector('.gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
+           null, { timeout: 5000 });
        }
        const firstProduct = page.locator('.gs-catalog-product-card').first();
        if (await firstProduct.count()) {
