@@ -121,8 +121,8 @@ BEGIN
  THEN RAISE EXCEPTION 'Stage61 variant deduction movement audit mismatch'; END IF;
  IF (SELECT count(*) FROM public.orders WHERE id='STG61-VARIANTS-001')<>1
     OR (SELECT total_gel FROM public.orders WHERE id='STG61-VARIANTS-001')<>530
-    OR (SELECT items->0->>'purchase_cost' FROM public.orders
-        WHERE id='STG61-VARIANTS-001') IS DISTINCT FROM '52'
+    OR (SELECT (items->0->>'purchase_cost')::numeric FROM public.orders
+        WHERE id='STG61-VARIANTS-001') IS DISTINCT FROM 52
  THEN RAISE EXCEPTION 'Stage61 guest order accounting snapshot missing'; END IF;
 END $test$;
 
@@ -206,8 +206,8 @@ BEGIN
     OR (SELECT coalesce(sum(quantity_delta),0) FROM private.inventory_movements
       WHERE related_order_id='STG61-VARIANTS-001')<>0
  THEN RAISE EXCEPTION 'Stage61 variant stock movement reconciliation failed'; END IF;
- IF (SELECT items->0->>'purchase_cost' FROM public.orders
-     WHERE id='STG61-VARIANTS-001') IS DISTINCT FROM '52'
+ IF (SELECT (items->0->>'purchase_cost')::numeric FROM public.orders
+     WHERE id='STG61-VARIANTS-001') IS DISTINCT FROM 52
     OR (SELECT total_gel FROM public.orders WHERE id='STG61-VARIANTS-001')<>530
  THEN RAISE EXCEPTION 'Stage61 cancellation modified private financial history'; END IF;
 END $test$;
