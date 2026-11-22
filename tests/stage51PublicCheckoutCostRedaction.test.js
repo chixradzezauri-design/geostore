@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { redactCustomerCheckoutItems } from '../src/utils/orderSafety.js';
 
 const migration = readFileSync(new URL('../supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql', import.meta.url), 'utf8');
-const privateCheckout = readFileSync(new URL('../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql', import.meta.url), 'utf8');
+const privateCheckout = readFileSync(new URL('../supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql', import.meta.url), 'utf8');
 const precedingWrapper = readFileSync(new URL('../supabase/migrations/20261107115218_persist_checkout_addons_server_pricing.sql', import.meta.url), 'utf8');
 
 test('Stage51 public checkout wrapper excludes financial purchase cost from new orders and idempotent replays', () => {

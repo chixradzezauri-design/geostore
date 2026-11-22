@@ -5,7 +5,7 @@ import { redactCustomerCheckoutItems } from '../src/utils/orderSafety.js';
 
 const checkout=readFileSync(new URL('../supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql',import.meta.url),'utf8');
 const history=readFileSync(new URL('../supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql',import.meta.url),'utf8');
-const writer=readFileSync(new URL('../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql',import.meta.url),'utf8');
+const writer=readFileSync(new URL('../supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql',import.meta.url),'utf8');
 const sqlTest=readFileSync(new URL('./sql/stage52_checkout_contract.sql',import.meta.url),'utf8');
 
 const collect=(sql,re)=> {

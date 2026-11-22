@@ -5,7 +5,7 @@ import { extractLegacyCheckoutValidator } from '../scripts/stage66LegacyCheckout
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const original = read('../supabase/migrations/20261106210000_validate_checkout_input_on_order_insert.sql');
-const checkout = read('../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql');
+const checkout = read('../supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql');
 const wrapper = read('../supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql');
 const integration = read('./sql/stage66_legacy_checkout_insert_compat_gate.sql');
 const workflow = read('../.github/workflows/stage52-isolated-postgres.yml');

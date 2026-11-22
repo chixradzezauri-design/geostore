@@ -4,11 +4,11 @@ import { readFileSync } from 'node:fs';
 
 const contract=readFileSync(new URL('./sql/stage56_staff_auth_contract.sql',import.meta.url),'utf8');
 const workflow=readFileSync(new URL('../.github/workflows/stage52-isolated-postgres.yml',import.meta.url),'utf8');
-const source=readFileSync(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql',import.meta.url),'utf8');
+const source=readFileSync(new URL('../supabase/migrations/20261117231455_admin_staff_auth_foundation.sql',import.meta.url),'utf8');
 const notes=readFileSync(new URL('../docs/release-security-preflight-stage53.md',import.meta.url),'utf8');
 
 test('Stage56 tests original staff authorization source in disposable PostgreSQL',()=>{
- assert.match(contract,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261117100000_admin_staff_auth_foundation\.sql/);
+ assert.match(contract,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261117231455_admin_staff_auth_foundation\.sql/);
  assert.match(source,/CREATE OR REPLACE FUNCTION public\.has_staff_permission\(p_permission text\)/);
  assert.match(source,/CREATE OR REPLACE FUNCTION public\.get_my_admin_access\(\)/);
  assert.match(workflow,/postgres:17-alpine/);

@@ -5,7 +5,7 @@ import { extractLegacyVariantCheckout } from '../scripts/stage67LegacyCheckoutRe
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const historical = read('../supabase/migrations/20261107170000_integrate_custom_product_variants.sql');
-const current = read('../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql');
+const current = read('../supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql');
 const fixture = read('./sql/stage67_legacy_checkout_ownership_replay.sql');
 const pipeline = read('../.github/workflows/stage52-isolated-postgres.yml');
 

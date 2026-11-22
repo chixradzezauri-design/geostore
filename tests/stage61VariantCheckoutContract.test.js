@@ -4,11 +4,11 @@ import { readFileSync } from 'node:fs';
 
 const fixture=readFileSync(new URL('./sql/stage61_variant_checkout_contract.sql',import.meta.url),'utf8');
 const workflow=readFileSync(new URL('../.github/workflows/stage52-isolated-postgres.yml',import.meta.url),'utf8');
-const actualCheckout=readFileSync(new URL('../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql',import.meta.url),'utf8');
+const actualCheckout=readFileSync(new URL('../supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql',import.meta.url),'utf8');
 const actualAdmin=readFileSync(new URL('../supabase/migrations/20261109151847_move_variant_stock_security_definer_to_private.sql',import.meta.url),'utf8');
 
 test('Stage61 executes the actual versioned private checkout and size/color stock editor',()=>{
- assert.match(fixture,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261117160000_stable_checkout_idempotency_ordering\.sql/);
+ assert.match(fixture,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261117231546_stable_checkout_idempotency_ordering\.sql/);
  assert.match(fixture,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261109151847_move_variant_stock_security_definer_to_private\.sql/);
  assert.match(workflow,/psql -v ON_ERROR_STOP=1 -f tests\/sql\/stage61_variant_checkout_contract\.sql/);
  assert.match(workflow,/postgres:17-alpine/);

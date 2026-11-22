@@ -5,11 +5,11 @@ import { readFileSync } from 'node:fs';
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const fixture = read('./sql/stage65_expenses_order_role_matrix.sql');
 const workflow = read('../.github/workflows/stage52-isolated-postgres.yml');
-const expenses = read('../supabase/migrations/20261117143000_staff_expenses_permission.sql');
+const expenses = read('../supabase/migrations/20261117231531_staff_expenses_permission.sql');
 const orderLedger = read('../supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql');
 
 test('Stage65 runs the exact existing staff expense migration, not fixture replacement', () => {
-  assert.match(fixture, /\\ir \.\.\/\.\.\/supabase\/migrations\/20261117143000_staff_expenses_permission\.sql/);
+  assert.match(fixture, /\\ir \.\.\/\.\.\/supabase\/migrations\/20261117231531_staff_expenses_permission\.sql/);
   assert.match(expenses, /CREATE POLICY "Staff with expenses permission can manage expenses"/);
   assert.match(expenses, /USING \(public\.has_staff_permission\('expenses'\)\)/);
   assert.match(expenses, /WITH CHECK \(public\.has_staff_permission\('expenses'\)\)/);
@@ -44,7 +44,7 @@ test('Stage65 uses the existing isolated PostgreSQL17 CI runner after prior cont
   const stage62Index = workflow.indexOf('psql -v ON_ERROR_STOP=1 -f tests/sql/stage62_cancelled_order_variant_reactivation.sql');
   const stage65Index = workflow.indexOf('psql -v ON_ERROR_STOP=1 -f tests/sql/stage65_expenses_order_role_matrix.sql');
   assert.ok(stage62Index > 0 && stage65Index > stage62Index);
-  assert.match(workflow, /'supabase\/migrations\/20261117143000_staff_expenses_permission\.sql'/);
+  assert.match(workflow, /'supabase\/migrations\/20261117231531_staff_expenses_permission\.sql'/);
   assert.match(workflow, /'tests\/sql\/stage65_expenses_order_role_matrix\.sql'/);
   assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE|DATABASE_URL|SUPABASE_ACCESS_TOKEN/);
   assert.match(workflow, /postgres:17-alpine/);

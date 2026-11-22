@@ -22,7 +22,7 @@ test('Stage60 executable Postgres fixture loads original order status/notificati
   '20261103155226_track_order_status_change_time.sql',
   '20261103122121_prevent_stock_restore_after_dispatch.sql',
   '20261107130302_add_order_status_notifications.sql',
-  '20261117130000_reopen_completed_orders.sql'
+  '20261117231504_reopen_completed_orders.sql'
  ]) assert.ok(fixture.includes('\\ir ../../supabase/migrations/'+file),file);
  assert.match(fixture,/\\i \/tmp\/stage60_original_inventory_trigger_prefix\.sql/);
  assert.match(workflow,/node scripts\/stage60InventoryLedgerFixture\.mjs/);
