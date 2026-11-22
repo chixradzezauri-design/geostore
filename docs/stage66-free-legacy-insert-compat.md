@@ -4,18 +4,20 @@
 
 ## Concrete conflict discovered in the source SQL
 
+This is an **optional guest email** compatibility contract, not a suggestion to loosen other checkout validations.
+
 The live-compatible current guest checkout contract in the version-controlled
-\`private.create_order_with_stock(jsonb)\` accepts an anonymous guest when
-\`user_email='guest'\`; the \`customer_email\` field is optional. The Stage51
+`private.create_order_with_stock(jsonb)` accepts an anonymous guest when
+`user_email='guest'`; the `customer_email` field is optional. The Stage51
 public response wrapper validates email length if supplied, but does not make
 the field mandatory.
 
 The older *unapplied* SQL file
-\`20261106210000_validate_checkout_input_on_order_insert.sql\` adds a
-\`BEFORE INSERT\` trigger that **requires an email for every guest order**.
+`20261106210000_validate_checkout_input_on_order_insert.sql` adds a
+`BEFORE INSERT` trigger that **requires an email for every guest order**.
 If blindly applied, this would reject valid guest checkouts that currently
 succeed. The mismatch is an example of why a name/version reconciliation
-cannot be replaced with automatic \`supabase db push\`.
+cannot be replaced with automatic `supabase db push`.
 
 This finding concerns one particular legacy file. It does NOT establish that
 the newer Stage51/54/57 security migrations have passed full-schema Supabase
@@ -23,7 +25,7 @@ staging, nor does it prove that any other historical SQL file is safe to apply.
 
 ## Evidence: real source SQL in no-cost isolated PostgreSQL 17
 
-\`tests/sql/stage66_legacy_checkout_insert_compat_gate.sql\` is run at the
+`tests/sql/stage66_legacy_checkout_insert_compat_gate.sql` is run at the
 end of the **existing** GitHub Actions disposable PostgreSQL 17 job. It uses
 the previously installed genuine Stage51 public checkout redaction wrapper,
 the real Stage61 private checkout, the Stage60 inventory movement triggers,
@@ -42,17 +44,17 @@ It checks three independent synthetic behaviors:
    installing the old trigger. Exact stock decrement and inventory ledger
    bookkeeping remain consistent.
 
-The original historical SQL is NOT changed. Its \`BEGIN/COMMIT\` wrapper
+The original historical SQL is NOT changed. Its `BEGIN/COMMIT` wrapper
 is safely omitted by the validated source-extraction helper
-\`scripts/stage66LegacyCheckoutFixture.mjs\` to let the entire experiment
-run in ONE caller-owned transaction ending in \`ROLLBACK\`. A final assertion
+`scripts/stage66LegacyCheckoutFixture.mjs` to let the entire experiment
+run in ONE caller-owned transaction ending in `ROLLBACK`. A final assertion
 checks that the trigger/function, synthetic orders and stock adjustments do
 not survive. Its purpose is compatibility discovery, not a migration script.
 
 ## Recommended release decision
 
 **Do not replay** the obsolete
-\`20261106210000_validate_checkout_input_on_order_insert.sql\` on Production
+`20261106210000_validate_checkout_input_on_order_insert.sql` on Production
 without a separately reviewed behavior change. Requiring guests to supply
 email may be a product decision, but cannot be introduced accidentally as a
 side effect of timestamp reconciliation. Existing customers and live order
