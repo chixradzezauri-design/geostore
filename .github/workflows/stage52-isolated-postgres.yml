@@ -28,6 +28,10 @@ on:
       - 'release/stage73-production-sql-digests.json'
       - 'scripts/stage73SqlContentParity.mjs'
       - 'tests/stage73SqlContentParity.test.js'
+      - 'release/stage74-reviewed-sql-evidence.json'
+      - 'scripts/stage74SqlExecutableTokenizer.mjs'
+      - 'scripts/stage74ReviewedMismatchGate.mjs'
+      - 'tests/stage74ReviewedMismatchGate.test.js'
       - 'tests/stage72ReconciledReleaseGate.test.js'
       - 'supabase/migrations/20261106120000_validate_order_item_variants.sql'
       - 'supabase/migrations/20261107172000_stabilize_admin_product_order.sql'
@@ -104,3 +108,4 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage69_legacy_variant_history_replay.sql
           node scripts/stage72ReconciledReleaseGate.mjs --verify-pinned
           node scripts/stage73SqlContentParity.mjs --verify-frozen-digests
+          node scripts/stage74ReviewedMismatchGate.mjs --verify-frozen
