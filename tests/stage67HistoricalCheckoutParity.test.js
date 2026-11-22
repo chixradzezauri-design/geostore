@@ -45,7 +45,9 @@ test('Stage67 real PostgreSQL integration proves original missing-image failure 
     "'id','STG67-LEGACY-AUTH-001'",
     "member@stage67.test",
     "Stage67 current function must preserve account ownership",
-    "Stage67 old function no longer reproduces ownership/gallery/ledger regression",
+    "Stage67 failed obsolete checkout changed orders/stock/ledger",
+    "Stage67 unexpected legacy checkout failure:",
+    'record "v_product" has no field "image"',
     "Stage67 transaction rollback did not preserve the current checkout schema"
   ]) assert.ok(fixture.includes(phrase),'Stage67 fixture missing: '+phrase);
   assert.match(fixture,/\nROLLBACK;\n/);
