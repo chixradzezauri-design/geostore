@@ -16,6 +16,9 @@ on:
       - 'tests/sql/stage59_order_status_compat_contract.sql'
       - 'tests/sql/stage60_triggers_inventory_contract.sql'
       - 'tests/sql/stage61_variant_checkout_contract.sql'
+      - 'tests/sql/stage62_cancelled_order_variant_reactivation.sql'
+      - 'scripts/stage62ReactivationFixture.mjs'
+      - 'supabase/migrations/20261107170000_integrate_custom_product_variants.sql'
       - 'supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql'
       - 'supabase/migrations/20261109151847_move_variant_stock_security_definer_to_private.sql'
       - 'scripts/stage60InventoryLedgerFixture.mjs'
@@ -71,3 +74,5 @@ jobs:
           node scripts/stage60InventoryLedgerFixture.mjs
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage60_triggers_inventory_contract.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage61_variant_checkout_contract.sql
+          node scripts/stage62ReactivationFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage62_cancelled_order_variant_reactivation.sql
