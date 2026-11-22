@@ -82,9 +82,12 @@ try {
          // The rendered category title remains stable across count updates.
          const chosenCategoryTitle = (await firstCategoryCard.locator('h4').innerText()).trim();
          assert.ok(chosenCategoryTitle, 'A main category has a stable visible title');
-         await firstCategoryCard.focus();
-         assert.ok(await firstCategoryCard.evaluate(node => document.activeElement === node),
-           'Main category receives keyboard focus');
+         // Atomic focus/read avoids a race with asynchronous category rerenders
+         // between separate browser calls; actual keyboard focus is still required.
+         assert.ok(await firstCategoryCard.evaluate(node => {
+           node.focus();
+           return document.activeElement === node;
+         }), 'Main category receives keyboard focus');
          await page.keyboard.press('Enter');
          // Match the category's visible identity AND committed selection. This
          // waits for React, but still fails if Enter never selects the category.
