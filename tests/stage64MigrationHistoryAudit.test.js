@@ -23,7 +23,7 @@ test('Stage64 fails closed for same logical name with a different applied timest
   assert.equal(report.classification, 'BLOCKED_RECONCILE_MANUALLY');
   assert.equal(report.counts.exactVersionAndName, 1);
   assert.equal(report.counts.sameNameDifferentVersion, 1);
-  assert.equal(report.counts.pending, 3);
+  assert.equal(report.counts.pending, 4);
   assert.deepEqual(report.nameAtDifferentVersion, [{
     file: '20261117100000_admin_staff_auth_foundation.sql',
     appliedVersions: ['20261117231455'],
