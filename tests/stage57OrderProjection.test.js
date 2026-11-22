@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const migration=readFileSync(new URL('../supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql',import.meta.url),'utf8');
+const finalAcl=readFileSync(new URL('../supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql',import.meta.url),'utf8');
 const contract=readFileSync(new URL('./sql/stage57_order_ledger_scope_contract.sql',import.meta.url),'utf8');
 const workflow=readFileSync(new URL('../.github/workflows/stage52-isolated-postgres.yml',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',import.meta.url),'utf8');
@@ -16,9 +17,9 @@ test('Stage57 admin ledger is projected server-side, with costs gated by expense
  assert.match(migration,/SECURITY DEFINER SET search_path TO ''/);
  assert.match(migration,/SECURITY INVOKER SET search_path TO ''/);
  assert.doesNotMatch(migration,/to_jsonb\(o\)|to_jsonb\(row\)/);
- assert.match(migration,/REVOKE SELECT ON TABLE public\.orders FROM PUBLIC, anon, authenticated/);
- assert.match(migration,/REVOKE SELECT \(items,checkout_result,checkout_request\)/);
- assert.match(migration,/GRANT SELECT \([\s\S]*?\) ON TABLE public\.orders TO authenticated/);
+ assert.match(finalAcl,/REVOKE SELECT ON TABLE public\.orders FROM PUBLIC, anon, authenticated/);
+ assert.match(finalAcl,/REVOKE SELECT \(items,checkout_result,checkout_request\)/);
+ assert.match(finalAcl,/GRANT SELECT \([\s\S]*?\) ON TABLE public\.orders TO authenticated/);
 });
 
 test('Stage57 all admin order read paths switched to paged guarded RPCs',()=>{
