@@ -68,7 +68,7 @@ stock, pricing and size/color consistency.
   authenticated Supabase/JWT + HTTP/PostgREST tests and **full-schema staging**
   remain necessary for eventual synchronized Production deployment.
 
-The user declined billable resources. **No paid staging** was created; there
+The user declined billable resources. **No paid staging** was created; this work uses no paid staging environment; there
 are no Production SQL writes, real customer/order/finance records, merged PR
 or Production deployment in Stage69. All SQL checks use an isolated,
 no-cost fixture and always end in `ROLLBACK`.
