@@ -12,11 +12,12 @@ const pending = [
   '20261121170000_strip_private_costs_from_checkout_rpc.sql',
   '20261121190000_redact_alternate_costs_from_order_history.sql',
   '20261121210000_scope_admin_order_ledger_permissions.sql',
+  '20261121213000_revoke_legacy_order_snapshot_reads.sql',
 ];
 const stagingGate = read('./sql/stage63_full_schema_release_gate.sql');
 const partialFixtureWorkflow = read('../.github/workflows/stage52-isolated-postgres.yml');
 
-test('Stage63 migration preflight preserves the three staged contracts in dependency order', () => {
+test('Stage63 migration preflight preserves the four staged contracts in dependency order', () => {
   for (const file of pending) {
     assert.equal(migrationFiles.filter((name) => name === file).length, 1, file);
   }
@@ -29,6 +30,7 @@ test('Stage63 migration preflight preserves the three staged contracts in depend
   const checkout = readMigration(pending[0]);
   const history = readMigration(pending[1]);
   const ledger = readMigration(pending[2]);
+  const aclCutover = readMigration(pending[3]);
   assert.match(checkout, /CREATE OR REPLACE FUNCTION public\.create_order_with_stock\(p_order jsonb\)/);
   assert.match(checkout, /SECURITY INVOKER/);
   assert.match(checkout, /private\.create_order_with_stock\(p_order\)/);
@@ -37,7 +39,8 @@ test('Stage63 migration preflight preserves the three staged contracts in depend
   assert.match(ledger, /CREATE OR REPLACE FUNCTION private\.admin_order_ledger_page/);
   assert.match(ledger, /public\.has_staff_permission\('orders'\)/);
   assert.match(ledger, /public\.has_staff_permission\('expenses'\)/);
-  assert.match(ledger, /REVOKE SELECT \(items,checkout_result,checkout_request\)/);
+  assert.match(aclCutover, /REVOKE SELECT \(items,checkout_result,checkout_request\)/);
+  assert.doesNotMatch(ledger, /REVOKE SELECT ON TABLE public\.orders/);
   assert.match(ledger, /CREATE OR REPLACE FUNCTION public\.admin_order_image_refs_page/);
 });
 
