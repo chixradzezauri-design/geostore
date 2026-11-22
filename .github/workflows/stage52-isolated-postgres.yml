@@ -14,6 +14,13 @@ on:
       - 'tests/sql/stage57_order_ledger_scope_contract.sql'
       - 'supabase/migrations/20261117103000_staff_orders_permission.sql'
       - 'tests/sql/stage59_order_status_compat_contract.sql'
+      - 'tests/sql/stage60_triggers_inventory_contract.sql'
+      - 'scripts/stage60InventoryLedgerFixture.mjs'
+      - 'supabase/migrations/20261117084403_private_inventory_movement_ledger_stage92.sql'
+      - 'supabase/migrations/20261103155226_track_order_status_change_time.sql'
+      - 'supabase/migrations/20261103122121_prevent_stock_restore_after_dispatch.sql'
+      - 'supabase/migrations/20261107130302_add_order_status_notifications.sql'
+      - 'supabase/migrations/20261117130000_reopen_completed_orders.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -58,3 +65,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage56_staff_auth_contract.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage57_order_ledger_scope_contract.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage59_order_status_compat_contract.sql
+          node scripts/stage60InventoryLedgerFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage60_triggers_inventory_contract.sql
