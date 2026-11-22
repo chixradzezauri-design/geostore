@@ -11,6 +11,12 @@ on:
       - 'supabase/migrations/20261117231455_admin_staff_auth_foundation.sql'
       - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
       - 'docs/stage78-free-auth-postgrest-ci.md'
+      - 'docs/stage79-free-phase-cutover.md'
+      - 'scripts/stage79SignedCutover.mjs'
+      - 'tests/stage79FreePhaseCutover.test.js'
+      - 'supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql'
+      - 'supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql'
+      - 'supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql'
   workflow_dispatch:
 
 permissions:
@@ -55,6 +61,9 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -f prepare.sql
           node "$GITHUB_WORKSPACE/scripts/stage78AuthPostgrest.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage79-phase-a.sql
+          node "$GITHUB_WORKSPACE/scripts/stage79SignedCutover.mjs"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase
