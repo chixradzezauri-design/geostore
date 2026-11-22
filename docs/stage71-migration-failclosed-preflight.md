@@ -52,3 +52,5 @@ option is available: verify checkout/finance and permissions against real
 Supabase JWT/Data API roles, then apply Phase A, release the exact reviewed
 frontend, and apply Phase B only when new clients are healthy. Stop immediately
 on an unexpected live migration-history or catalog difference.
+
+**CI scope:** the same six existing workflows run on the exact final PR head; this stage does not create new preview workflows or a separate Supabase branch. The dry-run is PostgreSQL-only, while Supabase production inspection has used SELECT-only catalog queries.
