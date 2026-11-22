@@ -64,7 +64,7 @@ The earlier migration history audit still reports **42 migration** files
 without matching applied version; three intentional newer finance/checkout
 migrations remain staged only. No automatic migration repair is authorized.
 
-Full-schema Supabase staging and live-authenticated JWT/role, checkout,
+The full-schema Supabase staging gate is not passed. Live-authenticated JWT/role, checkout,
 idempotency, stock, order status/reactivation and finance boundary tests
 remain necessary before a coordinated Production deployment. The user
 declined any paid staging environment; do not create one, incur usage fees,
