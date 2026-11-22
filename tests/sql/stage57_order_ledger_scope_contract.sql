@@ -41,6 +41,9 @@ INSERT INTO public.admin_staff_members(
  '{"orders":true,"expenses":false,"products":false}'::jsonb,true
 );
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+-- Mirror the ACTUAL current Production grant: legacy admin reads SELECT *.
+-- Phase A must remain backwards-compatible with this grant until cutover.
+GRANT SELECT ON TABLE public.orders TO authenticated;
 CREATE POLICY "Stage57 fixture orders visibility" ON public.orders
   FOR SELECT TO authenticated
   USING (public.has_staff_permission('orders'));
