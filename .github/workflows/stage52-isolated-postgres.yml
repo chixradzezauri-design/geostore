@@ -17,6 +17,8 @@ on:
       - 'tests/sql/stage60_triggers_inventory_contract.sql'
       - 'tests/sql/stage61_variant_checkout_contract.sql'
       - 'tests/sql/stage62_cancelled_order_variant_reactivation.sql'
+      - 'tests/sql/stage65_expenses_order_role_matrix.sql'
+      - 'supabase/migrations/20261117143000_staff_expenses_permission.sql'
       - 'scripts/stage62ReactivationFixture.mjs'
       - 'supabase/migrations/20261107170000_integrate_custom_product_variants.sql'
       - 'supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql'
@@ -76,3 +78,4 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage61_variant_checkout_contract.sql
           node scripts/stage62ReactivationFixture.mjs
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage62_cancelled_order_variant_reactivation.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage65_expenses_order_role_matrix.sql
