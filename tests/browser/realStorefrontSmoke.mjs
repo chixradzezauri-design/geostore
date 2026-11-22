@@ -77,15 +77,22 @@ try {
        if (await firstCategoryCard.count()) {
          const chosenCategoryLabel = await firstCategoryCard.getAttribute('aria-label');
          assert.ok(chosenCategoryLabel, 'A main category has an accessible label');
+         // The accessible label includes a dynamic product count. That count
+         // can change after Enter, so it cannot identify the selected category.
+         // The rendered category title remains stable across count updates.
+         const chosenCategoryTitle = (await firstCategoryCard.locator('h4').innerText()).trim();
+         assert.ok(chosenCategoryTitle, 'A main category has a stable visible title');
          await firstCategoryCard.focus();
+         assert.ok(await firstCategoryCard.evaluate(node => document.activeElement === node),
+           'Main category receives keyboard focus');
          await page.keyboard.press('Enter');
-         // Keep the originally focused category identity, not just whichever
-         // category happens to be .first() after an asynchronous catalog update.
-         await page.waitForFunction(label =>
+         // Match the category's visible identity AND committed selection. This
+         // waits for React, but still fails if Enter never selects the category.
+         await page.waitForFunction(title =>
            [...document.querySelectorAll('.gs-category-card:not(.gs-category-card--all)')]
-             .some(card => card.getAttribute('aria-label') === label &&
+             .some(card => card.querySelector('h4')?.textContent?.trim() === title &&
                            card.getAttribute('aria-pressed') === 'true'),
-           chosenCategoryLabel, { timeout: 5000 });
+           chosenCategoryTitle, { timeout: 5000 });
          await allCategoryCard.focus();
          await page.keyboard.press('Space');
          await page.waitForFunction(() =>
