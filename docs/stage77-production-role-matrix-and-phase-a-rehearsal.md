@@ -70,3 +70,5 @@ approved and verified, followed by the new frontend, followed by **Phase B**
 only when old browser tabs have a safe reload/transition plan.
 **No paid staging** was created, and **Production unchanged**:
 no live SQL, no order/stock mutations, no GitHub merge or deploy.
+
+There was **no paid staging** provisioned for Stage77. The fixture is an existing disposable CI PostgreSQL 17 database only.
