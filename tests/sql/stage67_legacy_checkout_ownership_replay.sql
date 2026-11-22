@@ -1,6 +1,7 @@
 -- Stage67: prove on the existing disposable PG17 checkout + staff + stock fixture
--- that replaying a historic variant migration would silently corrupt NEW order
--- ownership and inventory attribution. NEVER execute against Production.
+-- that replaying a historic variant migration would BREAK CHECKOUT (old SQL
+-- references v_product.image without selecting it) and also revert owner/
+-- gallery/inventory attribution safeguards. NEVER execute against Production.
 -- All temporary auth, order, trigger, function and inventory changes ROLLBACK.
 \set ON_ERROR_STOP on
 \echo 'Stage67: verify original current checkout and actual Stage60 inventory ledger'
@@ -86,50 +87,56 @@ BEGIN;
   SET request.jwt.claim.sub='67000000-0000-4000-8000-000000000001';
   SET request.jwt.claim.jwt='{"email":"member@stage67.test"}';
   DO $legacy$
-  DECLARE receipt jsonb;
+  DECLARE
+    v_error text;
+    v_failed boolean := false;
   BEGIN
-    receipt := public.create_order_with_stock(jsonb_build_object(
-      'id','STG67-LEGACY-AUTH-001',
-      'customer_name','Stage67 Synthetic Member',
-      'phone','+995555123456','address','Fixture address 7',
-      'user_email','member@stage67.test',
-      'customer_email','member@stage67.test',
-      'delivery_region','tbilisi',
-      'items',jsonb_build_array(jsonb_build_object(
-        'id','STG61-SHOE','quantity',1,'custom_variant_id','red-s',
-        'selected_size','S','selected_color','Red'
-      ))
-    ));
-    IF receipt->>'total_gel' <> '125'
-       OR receipt->'items'->0->>'customVariantId' <> 'red-s'
-       OR receipt->'items'->0 ? 'purchase_cost'
-       OR receipt->'items'->0 ? 'vendor'
-    THEN RAISE EXCEPTION 'Stage67 historic function did not produce comparable public receipt'; END IF;
+    BEGIN
+      PERFORM public.create_order_with_stock(jsonb_build_object(
+        'id','STG67-LEGACY-AUTH-001',
+        'customer_name','Stage67 Synthetic Member',
+        'phone','+995555123456','address','Fixture address 7',
+        'user_email','member@stage67.test',
+        'customer_email','member@stage67.test',
+        'delivery_region','tbilisi',
+        'items',jsonb_build_array(jsonb_build_object(
+          'id','STG61-SHOE','quantity',1,'custom_variant_id','red-s',
+          'selected_size','S','selected_color','Red'
+        ))
+      ));
+    EXCEPTION WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT;
+      -- The old query omits v_product.image from SELECT but references it
+      -- later. Accept ONLY this exact runtime regression, not an unrelated
+      -- authorization/stock/DDL/network failure.
+      IF v_error <> 'record "v_product" has no field "image"' THEN
+        RAISE EXCEPTION 'Stage67 unexpected legacy checkout failure: %', v_error;
+      END IF;
+      v_failed := true;
+    END;
+    IF NOT v_failed THEN
+      RAISE EXCEPTION 'Stage67 obsolete checkout unexpectedly succeeded';
+    END IF;
   END $legacy$;
   RESET ROLE;
   RESET request.jwt.claim.sub;
   RESET request.jwt.claim.jwt;
 
-  \echo 'Stage67: old function silently loses owner and gallery even on successful checkout'
+  \echo 'Stage67: original legacy checkout fails before order/stock/ledger mutation'
   DO $legacy_regression$
   BEGIN
-    IF (SELECT count(*) FROM public.orders WHERE id='STG67-LEGACY-AUTH-001') <> 1
-       OR (SELECT user_id FROM public.orders WHERE id='STG67-LEGACY-AUTH-001') IS NOT NULL
-       OR (SELECT items->0 ? 'gallery' FROM public.orders WHERE id='STG67-LEGACY-AUTH-001') IS DISTINCT FROM false
+    IF (SELECT count(*) FROM public.orders WHERE id LIKE 'STG67-%') <> 0
        OR (SELECT count(*) FROM private.inventory_movements
-            WHERE product_id='STG61-SHOE'
-              AND variant_id='red-s'
-              AND quantity_delta=-1
-              AND related_order_id='STG67-LEGACY-AUTH-001'
-              AND reason='order_deduction') <> 0
-       OR (SELECT count(*) FROM private.inventory_movements
-            WHERE product_id='STG61-SHOE' AND variant_id='red-s'
-              AND quantity_delta=-1 AND related_order_id IS NULL) < 1
-    THEN RAISE EXCEPTION 'Stage67 old function no longer reproduces ownership/gallery/ledger regression'; END IF;
-    IF (SELECT (e.value->>'stock')::integer
-        FROM public.products p,jsonb_array_elements(p.variants) e(value)
-        WHERE p.id='STG61-SHOE' AND e.value->>'id'='red-s') <> 3
-    THEN RAISE EXCEPTION 'Stage67 legacy function did not deduct exactly one synthetic variant'; END IF;
+            WHERE related_order_id LIKE 'STG67-%') <> 0
+       OR (SELECT (e.value->>'stock')::integer
+            FROM public.products p,jsonb_array_elements(p.variants) e(value)
+            WHERE p.id='STG61-SHOE' AND e.value->>'id'='red-s') <> 4
+    THEN RAISE EXCEPTION 'Stage67 failed obsolete checkout changed orders/stock/ledger'; END IF;
+    IF position('user_email, user_id, customer_email'
+                 IN pg_get_functiondef('private.create_order_with_stock(jsonb)'::regprocedure)) > 0
+       OR position('geostore.inventory_reason'
+                 IN pg_get_functiondef('private.create_order_with_stock(jsonb)'::regprocedure)) > 0
+    THEN RAISE EXCEPTION 'Stage67 function was not actually replaced with the legacy source'; END IF;
   END $legacy_regression$;
 
 ROLLBACK;
@@ -151,4 +158,4 @@ BEGIN
         WHERE p.id='STG61-SHOE' AND e.value->>'id'='red-s') <> 4
   THEN RAISE EXCEPTION 'Stage67 transaction rollback did not preserve the current checkout schema and inventory'; END IF;
 END $after_rollback$;
-\echo 'PASS Stage67 PG17: old source checkout breaks authenticated order ownership, historical gallery and inventory attribution; all synthetic DDL/data rolled back'
+\echo 'PASS Stage67 PG17: original obsolete checkout throws exact missing-image-field error before stock/order mutation; current ownership/gallery/ledger preserved after rollback'
