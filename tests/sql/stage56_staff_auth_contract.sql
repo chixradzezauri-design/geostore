@@ -17,7 +17,7 @@ INSERT INTO auth.users(id,email_confirmed_at) VALUES
 COMMIT;
 
 -- Test the source migration, not a reimplemented permission function.
-\ir ../../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql
+\ir ../../supabase/migrations/20261117231455_admin_staff_auth_foundation.sql
 
 INSERT INTO public.admin_staff_members (
  user_id,email,display_name,role,permissions,is_active

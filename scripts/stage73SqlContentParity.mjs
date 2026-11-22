@@ -47,7 +47,7 @@ export function analyzeStoredSqlParity({ baseline, digestSnapshot, localFiles, s
   }
   const checked=reviewReleaseBaseline(baseline,{files:localFiles,source});
   const history=classifyMigrationHistory(localFiles,{migrations:baseline.appliedMigrations});
-  if(history.counts.exactVersionAndName!==80 || history.counts.sameNameDifferentVersion!==32) {
+  if(history.counts.exactVersionAndName!==101 || history.counts.sameNameDifferentVersion!==11) {
     stop('unexpected migration source/history bucket changes');
   }
   const byVersion=new Map(rows.map(x=>[x.version,x]));
@@ -73,9 +73,9 @@ export function analyzeStoredSqlParity({ baseline, digestSnapshot, localFiles, s
     matches[bucket].push({file:name,appliedVersion:remote.version});
   }
   const totals=Object.fromEntries(Object.entries(matches).map(([key,files])=>[key,files.length]));
-  if(totals.exactVersionExactSql+totals.exactVersionDifferentSql!==80 ||
-     totals.differentVersionExactSql+totals.differentVersionDifferentSql!==32) {
-    stop('source parity count cannot account for all 112 linked local migrations');
+  if(totals.exactVersionExactSql+totals.exactVersionDifferentSql!==101 ||
+     totals.differentVersionExactSql+totals.differentVersionDifferentSql!==11) {
+    stop('source parity count cannot account for all 112 linked local migrations after verified Stage75 timestamp reconciliation');
   }
   return {
     status: 'BLOCKED_UNTIL_MANUAL_SQL_DIFF_REVIEW_AND_FULL_SCHEMA_JWT_STAGING',

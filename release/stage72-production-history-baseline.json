@@ -6,13 +6,13 @@
   "expected": {
     "local": 123,
     "remote": 135,
-    "exactVersionAndName": 80,
-    "sameNameDifferentVersion": 32,
+    "exactVersionAndName": 101,
+    "sameNameDifferentVersion": 11,
     "versionNameMismatch": 0,
     "oldUnmatched": 7,
     "pending": 4,
     "otherUnmatched": 0,
-    "appliedRemoteWithoutMatchingLocalVersion": 55,
+    "appliedRemoteWithoutMatchingLocalVersion": 34,
     "duplicateLocalNames": 4
   },
   "blockedOldFiles": [
@@ -587,5 +587,11 @@
       "version": "20261120124250",
       "name": "storefront_publish_concurrency_safe_compat"
     }
-  ]
+  ],
+  "localReconciliation": {
+    "stage": 75,
+    "method": "Rename 21 locally byte-identical SQL blobs to their already-applied Supabase version; SQL contents unmodified",
+    "evidenceFile": "release/stage75-reviewed-local-renames.json",
+    "sqlAppliedToProduction": false
+  }
 }

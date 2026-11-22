@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261117143000_staff_expenses_permission.sql', import.meta.url), 'utf8');
-const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
-const products = await readFile(new URL('../supabase/migrations/20261117140000_staff_products_permission.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261117231531_staff_expenses_permission.sql', import.meta.url), 'utf8');
+const foundation = await readFile(new URL('../supabase/migrations/20261117231455_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const products = await readFile(new URL('../supabase/migrations/20261117231508_staff_products_permission.sql', import.meta.url), 'utf8');
 
 test('expenses table is protected by the active expenses module permission', () => {
   assert.match(migration, /Staff with expenses permission can manage expenses/);

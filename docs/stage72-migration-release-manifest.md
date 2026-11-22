@@ -10,10 +10,10 @@ the four specifically reviewed SQL source files.
 ## Fresh live baseline (read-only, 2026-11-22)
 
 - 135 applied Supabase migrations; latest `20261120124250`.
-- 80 exact local version/name matches, 32 same-name/different-version,
+- 101 exact local version/name matches, 11 same-name/different-version,
   seven older unmatched, and **four pinned SQL files** awaiting deployment.
-- 43 local versions have no matching remote version (32 + 7 + 4).
-- Production has **55 remote-only** applied migration versions that do not
+- 22 local versions have no matching remote version (11 + 7 + 4).
+- Production has **34 remote-only** applied migration versions that do not
   exist locally with the same version number. Some are logically equivalent
   by name, but their SQL content has NOT been proven identical.
 - Four duplicate logical migration names in the local migrations directory.
@@ -82,3 +82,7 @@ HTTP/JWT tests, historical SQL-by-SQL migration reconciliation, and a
 coordinated cutover with checkout, stock, staff-orders, accounting and
 web-client compatibility checks. The user declined paid development
 infrastructure; **no paid staging** was created. **Production unchanged**.
+
+## Stage75 safe local version reconciliation
+
+21 previously different-timestamp SQL files were **byte-identical** to already applied Supabase SQL and have been renamed **locally only**, with original Git blob SHA preserved. The Production migration table was not edited. New totals: 101 exact version/name, 11 same-name/different-version, 7 older unmatched, and 4 staged; 22 unmatched local versions and 34 remote-only applied versions. See `release/stage75-reviewed-local-renames.json` and the CI gate for the 21 one-to-one references.

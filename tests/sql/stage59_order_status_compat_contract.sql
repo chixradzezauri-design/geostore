@@ -19,7 +19,7 @@ COMMIT;
 
 -- Run the EXACT existing staff-orders authorization/status migration.
 -- Its private functions are not reimplemented or edited for this fixture.
-\ir ../../supabase/migrations/20261117103000_staff_orders_permission.sql
+\ir ../../supabase/migrations/20261117231459_staff_orders_permission.sql
 
 -- The current Production SQL uses SECURITY INVOKER wrappers for both RPCs.
 -- These minimal fixture wrappers emulate that established API boundary,

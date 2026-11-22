@@ -15,7 +15,7 @@ COMMIT;
 \ir ../../supabase/migrations/20261103155226_track_order_status_change_time.sql
 \ir ../../supabase/migrations/20261103122121_prevent_stock_restore_after_dispatch.sql
 \ir ../../supabase/migrations/20261107130302_add_order_status_notifications.sql
-\ir ../../supabase/migrations/20261117130000_reopen_completed_orders.sql
+\ir ../../supabase/migrations/20261117231504_reopen_completed_orders.sql
 -- The Production trigger was introduced in the Stage70 status transition
 -- migration. Here its function is the exact latest Stage100 revision above.
 CREATE TRIGGER orders_guard_status_transition

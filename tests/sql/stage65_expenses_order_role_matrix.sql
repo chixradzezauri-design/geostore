@@ -29,7 +29,7 @@ INSERT INTO public.admin_staff_members(user_id,email,display_name,role,permissio
 COMMIT;
 
 -- Use the actual migration from the repository, not a copied approximation.
-\ir ../../supabase/migrations/20261117143000_staff_expenses_permission.sql
+\ir ../../supabase/migrations/20261117231531_staff_expenses_permission.sql
 
 \echo 'Stage65: ensure only server permission policy survives and grants stay scoped'
 DO $check$

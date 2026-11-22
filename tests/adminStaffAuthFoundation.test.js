@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261117231455_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const edge = await readFile(new URL('../supabase/functions/manage-admin-staff/index.ts', import.meta.url), 'utf8');
 
 test('staff membership is linked to real Auth users and cannot be read or written from the browser', () => {
@@ -50,7 +50,7 @@ test('staff invitations, role updates and revocation use Supabase Auth and the s
   assert.match(edge, /Keep both the Auth account and pending invitation marker intact/);
 });
 
-const pendingInviteMigration = await readFile(new URL('../supabase/migrations/20261117170000_admin_staff_pending_invites.sql', import.meta.url), 'utf8');
+const pendingInviteMigration = await readFile(new URL('../supabase/migrations/20261117231549_admin_staff_pending_invites.sql', import.meta.url), 'utf8');
 
 test('pending staff invite recovery ledger is server-only and cannot be accessed by browser roles', () => {
   assert.match(pendingInviteMigration, /CREATE TABLE public\.admin_staff_pending_invites/);

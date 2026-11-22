@@ -16,11 +16,11 @@ test('Stage72 freezes 135 real metadata-only Supabase migrations; disallows clai
   assert.equal(migrationHistoryMd5(base.appliedMigrations),'4f09258df9fbd7b415cc2d3dc5ffbe6f');
   const result=reviewReleaseBaseline(base,input());
   assert.equal(result.outcome,'BLOCKED_PENDING_FULL_SCHEMA_STAGING_AND_MANUAL_SQL_HISTORY_RECONCILIATION');
-  assert.equal(result.counts.exactVersionAndName,80);
-  assert.equal(result.counts.sameNameDifferentVersion,32);
+  assert.equal(result.counts.exactVersionAndName,101);
+  assert.equal(result.counts.sameNameDifferentVersion,11);
   assert.equal(result.counts.oldUnmatched,7);
   assert.equal(result.counts.pending,4);
-  assert.equal(result.remoteOnlyVersions,55);
+  assert.equal(result.remoteOnlyVersions,34);
   assert.equal(result.duplicateLocalLogicalNames.length,4);
   assert.equal(result.PhaseA.length,3);
   assert.equal(result.PhaseB.length,1);
@@ -57,7 +57,7 @@ test('Stage72 cannot be mistaken for full-schema Supabase authenticated release 
   const doc=readFileSync(new URL('../docs/stage72-migration-release-manifest.md',import.meta.url),'utf8');
   const script=readFileSync(new URL('../scripts/stage72ReconciledReleaseGate.mjs',import.meta.url),'utf8');
   const ci=readFileSync(new URL('../.github/workflows/stage52-isolated-postgres.yml',import.meta.url),'utf8');
-  for(const term of ['NOT RELEASE-READY','43 local versions','55 remote-only',
+  for(const term of ['NOT RELEASE-READY','22 local versions','34 remote-only',
     'four pinned SQL files','Phase A','Phase B','full-schema Supabase','JWT',
     'Production unchanged','no paid staging']) assert.ok(doc.includes(term),'Missing: '+term);
   assert.match(ci,/node scripts\/stage72ReconciledReleaseGate\.mjs --verify-pinned/);

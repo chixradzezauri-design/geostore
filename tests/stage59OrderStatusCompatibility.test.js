@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const migration=readFileSync(new URL('../supabase/migrations/20261117103000_staff_orders_permission.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/migrations/20261117231459_staff_orders_permission.sql',import.meta.url),'utf8');
 const contract=readFileSync(new URL('./sql/stage59_order_status_compat_contract.sql',import.meta.url),'utf8');
 const workflow=readFileSync(new URL('../.github/workflows/stage52-isolated-postgres.yml',import.meta.url),'utf8');
 const finalAcl=readFileSync(new URL('../supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql',import.meta.url),'utf8');
@@ -11,7 +11,7 @@ const projected=readFileSync(new URL('../supabase/migrations/20261121210000_scop
 test('Stage59 uses real staff status and note implementations after Stage57 sensitive-column revocation',()=>{
   assert.match(migration,/CREATE OR REPLACE FUNCTION private\.admin_update_order_status\(p_order_id text, p_new_status text\)/);
   assert.match(migration,/CREATE OR REPLACE FUNCTION private\.admin_save_order_note\(p_order_id text, p_admin_note text\)/);
-  assert.match(contract,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261117103000_staff_orders_permission\.sql/);
+  assert.match(contract,/\\ir \.\.\/\.\.\/supabase\/migrations\/20261117231459_staff_orders_permission\.sql/);
   assert.match(contract,/CREATE TABLE public\.products/);
   assert.match(contract,/CREATE FUNCTION public\.admin_update_order_status/);
   assert.match(contract,/SECURITY INVOKER SET search_path TO ''/);

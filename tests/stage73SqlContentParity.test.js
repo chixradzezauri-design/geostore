@@ -28,12 +28,12 @@ test('Stage73 classifies 112 source-linked applied migrations exactly; never app
   assert.equal(r.baselineApplied,135);
   assert.equal(r.comparedLinkedSqlFiles,112);
   assert.equal(r.status,'BLOCKED_UNTIL_MANUAL_SQL_DIFF_REVIEW_AND_FULL_SCHEMA_JWT_STAGING');
-  assert.equal(r.totals.exactVersionExactSql+r.totals.exactVersionDifferentSql,80);
-  assert.equal(r.totals.exactVersionExactSql,19);
+  assert.equal(r.totals.exactVersionExactSql+r.totals.exactVersionDifferentSql,101);
+  assert.equal(r.totals.exactVersionExactSql,40);
   assert.equal(r.totals.exactVersionDifferentSql,61);
-  assert.equal(r.totals.differentVersionExactSql,21);
+  assert.equal(r.totals.differentVersionExactSql,0);
   assert.equal(r.totals.differentVersionDifferentSql,11);
-  assert.equal(r.totals.differentVersionExactSql+r.totals.differentVersionDifferentSql,32);
+  assert.equal(r.totals.differentVersionExactSql+r.totals.differentVersionDifferentSql,11);
   assert.equal(r.stillBlockedOlderFiles,7);
   assert.equal(r.stillPendingSourcePinnedPhaseA,3);
   assert.equal(r.stillPendingSourcePinnedPhaseB,1);
@@ -58,7 +58,7 @@ test('Stage73 uses existing isolated PostgreSQL CI and no credentials/remote SQL
   const doc=readFileSync(new URL('../docs/stage73-applied-sql-content-parity.md',import.meta.url),'utf8');
   assert.match(ci,/node scripts\/stage73SqlContentParity\.mjs --verify-frozen-digests/);
   assert.doesNotMatch(source,/fetch\(|execute_sql|apply_migration|service_role|SUPABASE_ACCESS_TOKEN/);
-  for(const phrase of ['NOT RELEASE-READY','135', '80', '32',
+  for(const phrase of ['NOT RELEASE-READY','135', '101', '11',
     'PostgreSQL','no paid staging','Production unchanged','Phase A','Phase B','byte equality']) {
       assert.ok(doc.includes(phrase),'Doc missing '+phrase);
   }

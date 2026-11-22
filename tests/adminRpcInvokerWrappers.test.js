@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(
-  new URL('../supabase/migrations/20261118190000_admin_rpc_invoker_wrappers.sql', import.meta.url),
+  new URL('../supabase/migrations/20261119071952_admin_rpc_invoker_wrappers.sql', import.meta.url),
   'utf8'
 );
 

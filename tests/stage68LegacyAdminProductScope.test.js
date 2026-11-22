@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const legacy = read('../supabase/migrations/20261107172000_stabilize_admin_product_order.sql');
-const staff = read('../supabase/migrations/20261117140000_staff_products_permission.sql');
+const staff = read('../supabase/migrations/20261117231508_staff_products_permission.sql');
 const scenario = read('./sql/stage68_legacy_admin_product_scope_replay.sql');
 const pipeline = read('../.github/workflows/stage52-isolated-postgres.yml');
 const client = read('../src/App.jsx');
@@ -52,7 +52,7 @@ test('Stage68 keeps CI isolated and after Stage67 without billable credentials',
   const stage67 = pipeline.indexOf('psql -v ON_ERROR_STOP=1 -f tests/sql/stage67_legacy_checkout_ownership_replay.sql');
   const stage68 = pipeline.indexOf('psql -v ON_ERROR_STOP=1 -f tests/sql/stage68_legacy_admin_product_scope_replay.sql');
   assert.ok(stage67 >= 0 && stage68 > stage67);
-  assert.match(pipeline, /'supabase\/migrations\/20261117140000_staff_products_permission\.sql'/);
+  assert.match(pipeline, /'supabase\/migrations\/20261117231508_staff_products_permission\.sql'/);
   assert.match(pipeline, /'tests\/sql\/stage68_legacy_admin_product_scope_replay\.sql'/);
   assert.match(pipeline, /postgres:17-alpine/);
   assert.doesNotMatch(pipeline, /SUPABASE_ACCESS_TOKEN|SUPABASE_SERVICE_ROLE|DATABASE_URL/);

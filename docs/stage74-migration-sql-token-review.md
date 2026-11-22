@@ -42,3 +42,7 @@ then **Phase B** (restrict old raw financial order reads), only after
 real **full-schema Supabase** authenticated **JWT**/PostgREST validation
 and coordinated safe release rehearsal. No automatic migration repair
 or schema deploy, no live DDL/DML, **no paid staging** or Production changes.
+
+## Stage75 local-only historical version reconciliation
+
+21 byte-identical old-version SQL files were renamed to exact already-applied Supabase timestamps. The previous 32 different-timestamp pair count is now 11, with the same 10 comment/formatting-only pairs and one actual service_role privilege difference. No database history was repaired, no SQL was executed, and Phase A/B deployment prerequisites remain unchanged.

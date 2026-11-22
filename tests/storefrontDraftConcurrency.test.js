@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
-const migration = await readFile(new URL('../supabase/migrations/20261119170000_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
-const compatibilityMigration = await readFile(new URL('../supabase/migrations/20261119200000_legacy_storefront_draft_save_compat.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261119181855_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
+const compatibilityMigration = await readFile(new URL('../supabase/migrations/20261119181955_legacy_storefront_draft_save_compat.sql', import.meta.url), 'utf8');
 
 test('storefront draft loader captures the shared version used by the next save', () => {
   assert.match(app, /select=draft_config,draft_updated_at/);

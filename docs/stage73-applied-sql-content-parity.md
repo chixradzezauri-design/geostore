@@ -15,8 +15,8 @@ checksum-only snapshot is
 `release/stage73-production-sql-digests.json`, tied to Stage72's frozen
 135-migration history fingerprint. The script
 `scripts/stage73SqlContentParity.mjs` hashes local SQL files and compares
-their bytes with the **stored applied** SQL checksum. It classifies all 80
-exact-version/name matches and the 32 same-name/different-version pairs.
+their bytes with the **stored applied** SQL checksum. It originally classified 80
+exact-version/name matches and 32 same-name/different-version pairs before Stage75 local-only renaming.
 
 **byte equality** is positive evidence of exact SQL source identity at the
 time a migration was applied. A different MD5 does *not* prove a different
@@ -24,7 +24,7 @@ runtime effect or establish that replay is safe; it requires source-level
 semantic reconciliation and real end-state checks. MD5 here is only a
 change-detection checksum, not an authorization token or security primitive.
 
-## Verified source-checksum results on the frozen baseline
+## Original Stage73 source-checksum results before Stage75
 
 The existing no-cost PostgreSQL17 CI successfully compared **112** local files
 to the full SQL bodies that Supabase stored as applied migrations:
@@ -80,3 +80,7 @@ Full-schema authenticated Supabase **JWT** + PostgREST staging tests and
 manual analysis of every SQL difference remain release blockers. The user
 previously declined paid resources. **No paid staging** was created and
 **Production unchanged**. PR #149 remains Draft/unmerged.
+
+## Stage75 post-reconciliation snapshot (updated repository filenames)
+
+After locally renaming the 21 byte-identical historical SQL files to their confirmed already-applied remote version IDs (without changing bytes or Production), the same 112 linked local files now classify as **101 exact version/name** (40 byte-identical, 61 SQL-different) and **11 same-name/different-version** (0 byte-identical, 11 SQL-different). The other seven older and four new unapplied migrations remain blocked. The original 80/32 comparison above is preserved as historical audit evidence, not the present folder state.

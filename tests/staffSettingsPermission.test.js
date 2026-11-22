@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
-const draftConcurrencyMigration = await readFile(new URL('../supabase/migrations/20261119170000_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261117231538_staff_settings_permission.sql', import.meta.url), 'utf8');
+const draftConcurrencyMigration = await readFile(new URL('../supabase/migrations/20261119181855_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
 const heroStorageMigration = await readFile(new URL('../supabase/migrations/20261119110000_add_storefront_hero_storage_scope.sql', import.meta.url), 'utf8');
-const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const foundation = await readFile(new URL('../supabase/migrations/20261117231455_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
 test('store settings, coupons, delivery fees and media are protected by settings permission', () => {

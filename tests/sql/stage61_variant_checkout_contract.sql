@@ -37,7 +37,7 @@ COMMIT;
 
 -- Existing true private checkout implementation replaces Stage52's mock.
 -- Stage51/55 public SECURITY INVOKER redaction remains installed unchanged.
-\ir ../../supabase/migrations/20261117160000_stable_checkout_idempotency_ordering.sql
+\ir ../../supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql
 -- Actual owner-only size/color stock editor (not fixture-implemented).
 \ir ../../supabase/migrations/20261109151847_move_variant_stock_security_definer_to_private.sql
 
