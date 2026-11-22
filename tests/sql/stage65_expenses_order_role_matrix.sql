@@ -52,7 +52,6 @@ BEGIN
      OR has_table_privilege('anon','public.expenses','INSERT')
      OR has_table_privilege('authenticated','public.admin_staff_members','SELECT')
      OR has_table_privilege('authenticated','public.admin_staff_members','UPDATE')
-     OR has_table_privilege('authenticated','public.admin_staff_pending_invites','SELECT')
      OR has_column_privilege('authenticated','public.orders','items','SELECT')
      OR has_column_privilege('authenticated','public.orders','checkout_result','SELECT')
      OR has_column_privilege('authenticated','public.orders','checkout_request','SELECT')
