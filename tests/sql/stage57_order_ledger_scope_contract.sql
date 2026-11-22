@@ -49,6 +49,21 @@ COMMIT;
 -- Execute the exact Stage57 SQL, not a fixture-specific rewrite.
 \ir ../../supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql
 
+-- Phase A must keep the original deployed admin's read paths working until
+-- the new frontend has deployed. Never revoke raw order grants first.
+DO $bridge$
+BEGIN
+ IF NOT has_column_privilege('authenticated','public.orders','items','SELECT')
+    OR NOT has_column_privilege('authenticated','public.orders','checkout_result','SELECT')
+    OR to_regprocedure('public.admin_order_ledger_page(integer,integer)') IS NULL
+    OR to_regprocedure('public.admin_order_image_refs_page(integer,integer)') IS NULL
+ THEN RAISE EXCEPTION 'Stage70 phase A broke live legacy admin order reads'; END IF;
+END $bridge$;
+
+-- Phase B can run only AFTER the new frontend switches to RPCs.
+-- Fixture runs both phases consecutively, but release operations cannot.
+\ir ../../supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql
+
 \echo 'Stage57: check grants, private SECURITY DEFINER, public SECURITY INVOKER'
 DO $check$
 BEGIN
