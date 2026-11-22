@@ -23,6 +23,9 @@ on:
       - 'tests/sql/stage67_legacy_checkout_ownership_replay.sql'
       - 'tests/sql/stage68_legacy_admin_product_scope_replay.sql'
       - 'tests/sql/stage69_legacy_variant_history_replay.sql'
+      - 'release/stage72-production-history-baseline.json'
+      - 'scripts/stage72ReconciledReleaseGate.mjs'
+      - 'tests/stage72ReconciledReleaseGate.test.js'
       - 'supabase/migrations/20261106120000_validate_order_item_variants.sql'
       - 'supabase/migrations/20261107172000_stabilize_admin_product_order.sql'
       - 'supabase/migrations/20261117140000_staff_products_permission.sql'
@@ -96,3 +99,4 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage67_legacy_checkout_ownership_replay.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage68_legacy_admin_product_scope_replay.sql
           psql -v ON_ERROR_STOP=1 -f tests/sql/stage69_legacy_variant_history_replay.sql
+          node scripts/stage72ReconciledReleaseGate.mjs --verify-pinned
