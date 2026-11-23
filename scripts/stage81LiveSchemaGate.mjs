@@ -16,6 +16,9 @@ const history=JSON.parse(readFileSync(historyFile,'utf8'));
 function blocked(message){throw new Error('Stage81 release preflight BLOCKED: '+message)}
 function invariant(condition,message){if(!condition)blocked(message)}
 const asMap=items=>new Map(items.map(x=>[x.name||x.signature,x]));
+const stable=value=>Array.isArray(value)?value.map(stable):
+ (value&&typeof value==='object'?
+  Object.fromEntries(Object.keys(value).sort().map(k=>[k,stable(value[k])])):value);
 const requiredOrderColumns={
  id:'text',created_at:'timestamp with time zone',customer_name:'text',
  phone:'text',address:'text',user_email:'text',customer_email:'text',
@@ -134,7 +137,7 @@ export function validateStage81(captured,expectedHistory=history,freshCatalog=nu
   const supplied=typeof freshCatalog?.snapshot==='string'?
    JSON.parse(freshCatalog.snapshot):(freshCatalog?.snapshot||freshCatalog?.catalog||freshCatalog);
   const target=supplied===freshCatalog?.catalog ? freshCatalog.catalog:supplied;
-  invariant(JSON.stringify(target)===JSON.stringify(c),
+  invariant(JSON.stringify(stable(target))===JSON.stringify(stable(c)),
    'fresh live catalog differs from pinned before-Phase-A catalog');
  }
  if(freshMigrations!==null){
@@ -154,7 +157,7 @@ export function validateStage81(captured,expectedHistory=history,freshCatalog=nu
 }
 function main(){
  const args=process.argv.slice(2);
- if(args.length!==1&&args.length!==5)blocked('use --verify-pinned OR --fresh-catalog-json FILE --fresh-migrations-json FILE');
+ if(args.length!==1&&args.length!==4)blocked('use --verify-pinned OR --fresh-catalog-json FILE --fresh-migrations-json FILE');
  if(args.length===1&&args[0]==='--verify-pinned'){
   console.log(JSON.stringify(validateStage81(pinned),null,2));return;
  }

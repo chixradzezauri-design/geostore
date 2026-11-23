@@ -47,3 +47,25 @@ test('Stage81 is strictly read-only and always identifies unverified release req
   'Phase A','Phase B','no paid staging','historical','fresh'])
  assert.ok(notes.includes(phrase),'Missing safety note: '+phrase);
 });
+
+test('Stage81 fresh CLI accepts both read-only exports, independent of JSON object key order',async()=>{
+ const {mkdtempSync,writeFileSync,rmSync}=await import('node:fs');
+ const {join}=await import('node:path');
+ const {tmpdir}=await import('node:os');
+ const {execFileSync}=await import('node:child_process');
+ const {fileURLToPath}=await import('node:url');
+ const d=mkdtempSync(join(tmpdir(),'geostore-stage81-'));
+ try{
+  const catalogFile=join(d,'catalog.json'),migrationFile=join(d,'migrations.json');
+  const reverse=val=>Array.isArray(val)?val.map(reverse):
+   (val&&typeof val==='object'?
+    Object.fromEntries(Object.keys(val).reverse().map(k=>[k,reverse(val[k])])):val);
+  writeFileSync(catalogFile,JSON.stringify({snapshot:reverse(manifest.catalog)}));
+  writeFileSync(migrationFile,JSON.stringify({migrations:history.appliedMigrations}));
+  const result=execFileSync(process.execPath,[
+   fileURLToPath(new URL('../scripts/stage81LiveSchemaGate.mjs',import.meta.url)),
+   '--fresh-catalog-json',catalogFile,'--fresh-migrations-json',migrationFile
+  ],{encoding:'utf8',timeout:10000});
+  assert.match(result,/RELEASE_STILL_BLOCKED/);
+ }finally{rmSync(d,{recursive:true,force:true})}
+});
