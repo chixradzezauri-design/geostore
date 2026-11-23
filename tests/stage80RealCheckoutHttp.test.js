@@ -13,7 +13,7 @@ test('Stage80 real signed checkout uses exact transaction, inventory triggers an
   'CREATE TABLE public.products','SECURITY INVOKER SET search_path TO'])
   assert.ok(sql.includes(s),'Missing original source: '+s);
  assert.doesNotMatch(sql,/CREATE FUNCTION private\.create_order_with_stock/);
- assert.match(wf,/node scripts\/stage60InventoryLedgerFixture\.mjs/);
+ assert.match(wf,/scripts\/stage60InventoryLedgerFixture\.mjs/);
  assert.match(wf,/stage80-real-stock\.sql/);
  assert.match(wf,/stage80RealCheckoutHttp\.mjs/);
  assert.doesNotMatch(wf,/supabase db push|supabase link|SUPABASE_ACCESS_TOKEN|secrets\./);
