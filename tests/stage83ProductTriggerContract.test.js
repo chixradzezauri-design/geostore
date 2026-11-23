@@ -17,7 +17,8 @@ test('Stage83 genuine PostgreSQL trigger extraction preserves original versioned
 test('Stage83 extraction blocks nonexistent definitions and malformed original SQL',()=>{
  const source=read('../supabase/migrations/20261109203329_admin_manage_custom_variant_stock.sql');
  assert.throws(()=>functionSql(source,'private.not_a_function'),/original marker absent or duplicate/);
- const invalid=source.replace('$function$;', '');
+ const actual=functionSql(source,'private.sync_size_color_aggregate_stock');
+ const invalid=source.replace(actual,actual.replace(/\$function\$;$/, ''));
  assert.throws(()=>functionSql(invalid,'private.sync_size_color_aggregate_stock'));
 });
 test('Stage83 local HTTP CI installs source product triggers before real signed checkout',()=>{

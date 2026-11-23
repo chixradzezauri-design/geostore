@@ -1,6 +1,6 @@
 # Stage83 — authentic Production product-stock trigger integration
 
-**NOT RELEASE-READY. Production unchanged. No paid staging.** All work in Draft PR #149.
+**NOT RELEASE-READY. Production unchanged. No paid staging. The rule is explicit: no paid staging is required or created.** All work in Draft PR #149.
 
 Stage80 checked the genuine versioned GEOSTORE checkout/stock function using local signed GoTrue Auth and PostgREST, with the original inventory ledger trigger. Its synthetic products schema did not yet have two important Production product triggers:
 - private.preserve_product_variant_stock() guards untrusted product edits against overwriting transactionally deducted variant stock, and blocks deleting a variant referenced by prior order history.
