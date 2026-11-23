@@ -67,7 +67,7 @@ const redacted=row=>costKeys.every(key=>!(key in row));
 const request={
  id:'STAGE80-VARIANTS-001',customer_name:'Synthetic Stage80 Guest',
  phone:'+995555123456',address:'CI-only location 80',
- user_email:'guest',delivery_region:'tbilisi',
+ user_email:'guest',customer_email:'stage84-guest@example.test',delivery_region:'tbilisi',
  items:[
   {id:'STAGE80-SHOE',quantity:1,custom_variant_id:'red-s',
    selected_size:'S',selected_color:'Red'},
@@ -111,7 +111,7 @@ ok(num('orders')===1&&num('movements')===2,
  'Rejected requests leave order and movement counts unchanged');
 const base={id:'STAGE80-BASE-001',customer_name:'Stage80 Guest',
  phone:'+995555123456',address:'Synthetic CI-only address',
- user_email:'guest',delivery_region:'tbilisi',coupon_code:'STAGE80TEN',
+ user_email:'guest',customer_email:'stage84-guest@example.test',delivery_region:'tbilisi',coupon_code:'STAGE80TEN',
  items:[{id:'STAGE80-BASE',quantity:2}]};
 const coupon=success(await rpc(anon,'create_order_with_stock',{p_order:base}),
  'Real server-side coupon pricing and stock transaction');
