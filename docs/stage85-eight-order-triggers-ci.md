@@ -1,6 +1,6 @@
 # Stage85 — all 8 Production order trigger definitions in isolated Auth/PostgREST CI
 
-**NOT RELEASE-READY. Production unchanged. No paid staging.** Draft PR #149 only.
+**NOT RELEASE-READY. Production unchanged. No paid staging. This stage uses no paid staging resources.** Draft PR #149 only.
 
 Stage84 exercised three of eight production order triggers. This stage adds the other five to the same disposable local Supabase project, before authentic Stage80 private checkout using signed Auth/PostgREST:
 
