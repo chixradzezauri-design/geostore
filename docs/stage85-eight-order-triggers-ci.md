@@ -2,9 +2,9 @@
 
 **NOT RELEASE-READY. Production unchanged. No paid staging. This stage uses no paid staging resources.** Draft PR #149 only.
 
-Stage84 exercised three of eight production order triggers. This stage adds the other five to the same disposable local Supabase project, before authentic Stage80 private checkout using signed Auth/PostgREST:
+Stage84 exercised three of eight production order triggers. A test-run source-fingerprint mismatch revealed that 20261117231504 replaced the older 20261107084940 guard: it adds a protected completed-order reopening path. Stage85 now uses the newer exact historical function body. Never replay the old definition over Production. This stage adds the other five to the same disposable local Supabase project, before authentic Stage80 private checkout using signed Auth/PostgREST:
 
-1. \`private.guard_order_status_transition()\` — historical source 20261107084940, prevents canceled reactivation without a primary owner session and protected transaction marker, shipped-order regressions, and completed-order rollback.
+1. \`private.guard_order_status_transition()\` — current function body from 20261117231504 (replaces the older 20261107084940 implementation; its trigger DDL is reused), prevents canceled reactivation without a primary owner session and protected transaction marker, shipped-order regressions, and completed-order rollback.
 2. \`private.prevent_cancellation_after_dispatch()\` — historical source 20261103122121, with the exact subsequent 20261103122611 search_path hardening.
 3–4. \`private.record_order_notification()\` — historical function source 20261108215548 and the two original CREATE TRIGGER statements from 20261107130302; authentic UUID-owned notification creation and nonduplicate status-change updates.
 5. \`private.reject_unpublished_products_in_new_orders()\` — **untracked historical provenance**. Its exact present-day FUNCTION body and trigger definition were inspected via a read-only Production pg_catalog SELECT on 2026-11-23. The source was **not** found in the versioned GitHub migration files, so it is kept as an explicitly labeled **fixture-only live copy** in tests/stage78-supabase/stage85-live-published-guard.sql. This file is NOT a Production migration and must not be applied to Production. Source origin must still be reconciled.

@@ -14,6 +14,8 @@ test('Stage85 extracts four historical order lifecycle SQL triggers without repl
  "ALTER FUNCTION private.prevent_cancellation_after_dispatch() SET search_path = ''"])
  assert.ok(t.includes(name),'Lost original SQL '+name);
  assert.doesNotMatch(t,/ALTER TABLE public.orders|UPDATE public.orders SET user_id/);
+ assert.match(t,/geostore\.completed_order_reactivation/);
+ assert.match(t,/geostore\.order_reactivation/);
 });
 test('Stage85 untracked published guard is explicitly fixture-only and source hash is checked',()=>{
  const fixture=read('./stage78-supabase/stage85-live-published-guard.sql');

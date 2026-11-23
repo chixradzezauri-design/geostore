@@ -31,6 +31,9 @@ const expected={
  record_order_notification:'32a3405eecdb3731a9d53305ea61d405',
  reject_unpublished_products_in_new_orders:'83728cba6f42d3c645d7da353a508d0e'
 };
+const drift=Object.entries(expected).filter(([name,hash])=>funcs[name]!==hash)
+ .map(([name,hash])=>({name,local:funcs[name],live:hash}));
+if(drift.length)console.error('Stage85 current/local function MD5 drift:',JSON.stringify(drift));
 for(const [name,hash] of Object.entries(expected))
  ok(funcs[name]===hash,'Compiled source differs from read-only effective Production: '+name);
 const triggerHash=JSON.parse(sql(

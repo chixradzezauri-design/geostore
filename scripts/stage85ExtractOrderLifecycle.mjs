@@ -7,6 +7,7 @@ import {extract as sourceTrigger} from './stage84ExtractOrderTriggers.mjs';
 import {functionSql} from './stage83ExtractTriggers.mjs';
 const read=n=>readFileSync(new URL('../supabase/migrations/'+n,import.meta.url),'utf8');
 const transition=read('20261107084940_harden_order_status_stock_transitions.sql');
+const finalGuard=read('20261117231504_reopen_completed_orders.sql');
 const dispatch=read('20261103122121_prevent_stock_restore_after_dispatch.sql');
 const hardened=read('20261103122611_lock_down_rpc_search_paths.sql');
 const ownership=read('20261108215548_bind_order_ownership_to_auth_user_uuid.sql');
@@ -29,8 +30,17 @@ function notificationTrigger(text,name){
  return extracted;
 }
 export function build(){
- const guard=sourceTrigger(transition,{
+ const historicalTrigger=sourceTrigger(transition,{
   name:'guard_order_status_transition',trigger:'orders_guard_status_transition'});
+ const ddlMarker='DROP TRIGGER IF EXISTS orders_guard_status_transition ON public.orders';
+ const start=historicalTrigger.indexOf(ddlMarker);
+ assert.ok(start>0,'Original status trigger DDL missing');
+ // The 20261117231504 migration REPLACED the older status callback so
+ // completed orders can be securely reopened via recent-password/AMR RPC.
+ // Replaying the earlier 20261107084940 body would silently break this.
+ const guard=functionSql(finalGuard,'private.guard_order_status_transition')+
+   '\n\nREVOKE ALL ON FUNCTION private.guard_order_status_transition() FROM PUBLIC, anon, authenticated;\n\n'+
+   historicalTrigger.slice(start);
  const prevent=sourceTrigger(dispatch,{
   name:'prevent_cancellation_after_dispatch',trigger:'prevent_cancellation_after_dispatch'});
  const lock='ALTER FUNCTION private.prevent_cancellation_after_dispatch() SET search_path = \'\';';

@@ -29,6 +29,7 @@ on:
       - 'tests/stage85OrderLifecycle.test.js'
       - 'docs/stage85-eight-order-triggers-ci.md'
       - 'supabase/migrations/20261107084940_harden_order_status_stock_transitions.sql'
+      - 'supabase/migrations/20261117231504_reopen_completed_orders.sql'
       - 'supabase/migrations/20261103122121_prevent_stock_restore_after_dispatch.sql'
       - 'supabase/migrations/20261103122611_lock_down_rpc_search_paths.sql'
       - 'supabase/migrations/20261108215548_bind_order_ownership_to_auth_user_uuid.sql'
