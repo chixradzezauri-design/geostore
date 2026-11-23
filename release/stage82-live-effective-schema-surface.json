@@ -1,0 +1,1014 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "captureDate": "2026-11-23",
+  "phase": "PRE_PHASE_A",
+  "historyMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "stage81Date": "2026-11-23",
+  "highRiskHistoricalMismatches": [
+    {
+      "file": "20261103044438_add_idempotent_checkout_replay.sql",
+      "risk": "COMMERCE",
+      "appliedSqlMd5": "82ae11815608adf36bab44bea876d8e9",
+      "gitBlobSha": "5910b20b89b983edc652d27f6a87cd409dd7b7cb"
+    },
+    {
+      "file": "20261103151704_use_amr_for_admin_order_reactivation.sql",
+      "risk": "AUTHORIZATION",
+      "appliedSqlMd5": "5926396ee94d3ce606003e66865a19cc",
+      "gitBlobSha": "efe983cdae7e32ac82d54a036c3f10c3364df030"
+    },
+    {
+      "file": "20261103194444_secure_admin_save_order_note.sql",
+      "risk": "SQL_SYNTAX",
+      "appliedSqlMd5": "1052f52d01c2288673f1258302e3ae02",
+      "gitBlobSha": "193707611c4056c3d5e946af838f6f61e1599c51"
+    },
+    {
+      "file": "20261106103325_preserve_order_item_variants.sql",
+      "risk": "COMMERCE",
+      "appliedSqlMd5": "fd2419634c2b78d237af96ee47cdc374",
+      "gitBlobSha": "ae536311f85e453286ad57021e9376f5a02d5401"
+    },
+    {
+      "file": "20261107115218_persist_checkout_addons_server_pricing.sql",
+      "risk": "COMMERCE",
+      "appliedSqlMd5": "b1d3ca3509df21e13a9c53d4daa95061",
+      "gitBlobSha": "f7ed53b2e90c16c4de7be8d0b45c3a1da655e603"
+    },
+    {
+      "file": "20261107130302_add_order_status_notifications.sql",
+      "risk": "SECURITY_DEFINER",
+      "appliedSqlMd5": "e54482e97e69d244f771649cbf82e0f9",
+      "gitBlobSha": "76002b509fc8aedbe8be7d83cab8fb00db053886"
+    },
+    {
+      "file": "20261109102126_support_ticket_threading_and_secure_access.sql",
+      "risk": "SUPPORT_AUTH",
+      "appliedSqlMd5": "8b0fe2d8ffc2f9180ceb30ad3560f928",
+      "gitBlobSha": "60ed3ca87c745ade19c2fcefce5d54e55efa80c3"
+    },
+    {
+      "file": "20261109102221_fix_support_ticket_message_lookup.sql",
+      "risk": "SUPPORT_AUTH",
+      "appliedSqlMd5": "e332f39115a5ce0e1d457dd9fa132ab8",
+      "gitBlobSha": "340ea89a51c13e532ac414fc0efe87796788556e"
+    },
+    {
+      "file": "20261109102338_harden_support_ticket_rpc_wrappers.sql",
+      "risk": "SUPPORT_AUTH",
+      "appliedSqlMd5": "02304f838a45373f9ccdc947a50c16fc",
+      "gitBlobSha": "b31f16f69ff59fca523379906377ed53823bbfb8"
+    },
+    {
+      "file": "20261109160629_allow_partial_size_color_stock_updates.sql",
+      "risk": "MESSAGE_TEXT",
+      "appliedSqlMd5": "e7bbfe7940e4df95c965f82bbd695f69",
+      "gitBlobSha": "0a65b8b457e8fabc87c8f9ff9400752292d54cb5"
+    },
+    {
+      "file": "20261120122908_replenishment_optimistic_concurrency.sql",
+      "risk": "TRANSACTION_SCOPE",
+      "appliedSqlMd5": "479595aa17b006df5f295eede41fac6b",
+      "gitBlobSha": "276199f8f34d174a1fdbdf08289f4f11df0247b6"
+    }
+  ],
+  "surface": {
+    "triggers": [
+      {
+        "name": "orders_bind_auth_user_before_insert",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.bind_order_to_auth_user()",
+        "definition_md5": "f7cd1c4420c85eab64793a44b091b5c6"
+      },
+      {
+        "name": "orders_guard_status_transition",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.guard_order_status_transition()",
+        "definition_md5": "01650b9479acbecb4a74260e8011be60"
+      },
+      {
+        "name": "orders_record_notification_after_insert",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.record_order_notification()",
+        "definition_md5": "93a7d463be9be0f727e51fec88f01ab2"
+      },
+      {
+        "name": "orders_record_notification_after_status_update",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.record_order_notification()",
+        "definition_md5": "175e39d569346a415f921487dcf02112"
+      },
+      {
+        "name": "orders_require_valid_guest_checkout_email",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.require_valid_guest_checkout_email()",
+        "definition_md5": "69f6535b6e326d555bb267b2efd842e8"
+      },
+      {
+        "name": "orders_set_status_changed_at",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.set_order_status_changed_at()",
+        "definition_md5": "1cede2ead7805a65d6d4505e81091f71"
+      },
+      {
+        "name": "prevent_cancellation_after_dispatch",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.prevent_cancellation_after_dispatch()",
+        "definition_md5": "682e1db2c45a4f7aa4ab4cfe80a5cc56"
+      },
+      {
+        "name": "reject_unpublished_products_in_new_orders",
+        "table": "public.orders",
+        "enabled": "O",
+        "routine": "private.reject_unpublished_products_in_new_orders()",
+        "definition_md5": "36d0286796dc2a750e913c4107028d07"
+      },
+      {
+        "name": "preserve_product_variant_stock",
+        "table": "public.products",
+        "enabled": "O",
+        "routine": "private.preserve_product_variant_stock()",
+        "definition_md5": "8af2ae3cadb197c87dd77f5e41af36e2"
+      },
+      {
+        "name": "products_inventory_movement_after_change",
+        "table": "public.products",
+        "enabled": "O",
+        "routine": "private.record_product_inventory_movement()",
+        "definition_md5": "32d06e46ff20415b6e558b251becbfde"
+      },
+      {
+        "name": "zz_sync_size_color_aggregate_stock",
+        "table": "public.products",
+        "enabled": "O",
+        "routine": "private.sync_size_color_aggregate_stock()",
+        "definition_md5": "0f967c0f47bf395f065ba90ffc5e4270"
+      }
+    ],
+    "functions": [
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "8da301bdca14816b3718d51916ed6da3",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.add_support_ticket_message_idempotent(p_ticket_id text, p_message text, p_access_token text, p_request_id uuid)",
+        "anon_execute": true,
+        "definition_md5": "c42f458e01b2b6d84b4e83ee6f2fef28",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.admin_reactivate_cancelled_order(p_order_id text)",
+        "anon_execute": false,
+        "definition_md5": "b83a84313312e64c89c61a702da335ef",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.admin_reopen_completed_order(p_order_id text)",
+        "anon_execute": false,
+        "definition_md5": "d3f012718e950ceb8c039d381e93b162",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "boolean",
+        "definer": true,
+        "signature": "private.admin_save_order_note(p_order_id text, p_admin_note text)",
+        "anon_execute": false,
+        "definition_md5": "bb21cd4a9fd9bd26e620e8dceb8d2b36",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.admin_set_product_custom_variant_stocks(p_product_id text, p_variant_stocks jsonb)",
+        "anon_execute": false,
+        "definition_md5": "28055766c24b44649e61a80fa659bf0a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.admin_set_product_variant_stock_batches(p_product_id text, p_size_color_stocks jsonb, p_custom_variant_stocks jsonb)",
+        "anon_execute": false,
+        "definition_md5": "8d5d90dd553dfd88b585517ea8d1ec05",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.admin_set_product_variant_stocks(p_product_id text, p_variant_stocks jsonb)",
+        "anon_execute": false,
+        "definition_md5": "047d3699796e6a08714cfe16811e3880",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.admin_update_order_status(p_order_id text, p_new_status text)",
+        "anon_execute": false,
+        "definition_md5": "abdafdece9a90593e614992cba91dc12",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.create_order_with_stock(p_order jsonb)",
+        "anon_execute": true,
+        "definition_md5": "cbd5624b31d24281f1e2088b08523b90",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "d468c7f14c9e9cc8f03347d06fc4f01a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.create_support_ticket_idempotent(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text, p_request_id uuid)",
+        "anon_execute": true,
+        "definition_md5": "3e8980ba13609eb2ea6c2f546563cf1a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "trigger",
+        "definer": true,
+        "signature": "private.enforce_support_ticket_rate_limit()",
+        "anon_execute": false,
+        "definition_md5": "889542058ab90a975aa4780a23dff60c",
+        "locked_search_path": true,
+        "authenticated_execute": false
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.get_my_order_notifications()",
+        "anon_execute": false,
+        "definition_md5": "3c732341e2752d738d19763999e58007",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(ticket_id text, subject text, status text, created_at timestamp with time zone, last_message_at timestamp with time zone, unread_count bigint)",
+        "definer": true,
+        "signature": "private.get_my_support_tickets(p_limit integer)",
+        "anon_execute": false,
+        "definition_md5": "8c20aa48e1ea12ce14f750f2fe472c50",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(ticket_id text, subject text, status text, created_at timestamp with time zone, last_message_at timestamp with time zone, unread_count bigint)",
+        "definer": true,
+        "signature": "private.get_my_support_tickets_page(p_limit integer, p_before_last_message_at timestamp with time zone, p_before_ticket_id text)",
+        "anon_execute": false,
+        "definition_md5": "611c769b6ad0c8b94b8f7bb77f2ca3df",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(id bigint, sender_role text, sender_name text, message text, created_at timestamp with time zone)",
+        "definer": true,
+        "signature": "private.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "acb5b90b297b07c2b0681d6a29097932",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(status text, created_at timestamp with time zone, last_message_at timestamp with time zone)",
+        "definer": true,
+        "signature": "private.get_support_ticket_status(p_ticket_id text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "2c940c9d658cb637c7a5d786cf67101e",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(ticket_id text, unread_count bigint)",
+        "definer": true,
+        "signature": "private.get_support_ticket_unread_counts()",
+        "anon_execute": false,
+        "definition_md5": "18bd40f5d4013dc96ffb4eab386a7fbf",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "trigger",
+        "definer": false,
+        "signature": "private.guard_order_status_transition()",
+        "anon_execute": true,
+        "definition_md5": "1d9416404461fe1a62cfd48c6360fdd3",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.list_inventory_replenishment_settings(p_limit integer)",
+        "anon_execute": false,
+        "definition_md5": "0b7ce435399d34d54a77ee5517e81cb6",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "integer",
+        "definer": true,
+        "signature": "private.mark_my_order_notifications_read()",
+        "anon_execute": false,
+        "definition_md5": "2ea5e8d145f570220fde8ca33e8cb8cb",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "integer",
+        "definer": true,
+        "signature": "private.mark_support_ticket_messages_read(p_ticket_id text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "5fdab1ba72ed2898b2d4df3f7f5d2c83",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "trigger",
+        "definer": false,
+        "signature": "private.preserve_product_variant_stock()",
+        "anon_execute": false,
+        "definition_md5": "6cd5f0a9ad0927af1e17368d43491995",
+        "locked_search_path": true,
+        "authenticated_execute": false
+      },
+      {
+        "result": "trigger",
+        "definer": true,
+        "signature": "private.record_order_notification()",
+        "anon_execute": false,
+        "definition_md5": "32a3405eecdb3731a9d53305ea61d405",
+        "locked_search_path": true,
+        "authenticated_execute": false
+      },
+      {
+        "result": "trigger",
+        "definer": false,
+        "signature": "private.require_valid_guest_checkout_email()",
+        "anon_execute": false,
+        "definition_md5": "8054195435f9246d9be2a04aadb27804",
+        "locked_search_path": true,
+        "authenticated_execute": false
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)",
+        "anon_execute": false,
+        "definition_md5": "b6fb85e2f37339dd1f881ffcd477fe47",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": true,
+        "signature": "private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer, p_expected_updated_at timestamp with time zone)",
+        "anon_execute": false,
+        "definition_md5": "4fe999a95f98c5ff5e9ce3213f2c0c3a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "trigger",
+        "definer": false,
+        "signature": "private.set_order_status_changed_at()",
+        "anon_execute": false,
+        "definition_md5": "760ff7476bfcfcf7007a07df49f6e262",
+        "locked_search_path": true,
+        "authenticated_execute": false
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "4d2da50f9f5f6ab52cdb2fa5b46181ab",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.add_support_ticket_message_idempotent(p_ticket_id text, p_message text, p_access_token text, p_request_id uuid)",
+        "anon_execute": true,
+        "definition_md5": "a4e6d697bfcaad4036863d0fbcf10b00",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_list_inventory_replenishment_settings(p_limit integer)",
+        "anon_execute": false,
+        "definition_md5": "5b09deb53bb2bb0e452d38e94aa0c05a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_reactivate_cancelled_order(p_order_id text)",
+        "anon_execute": false,
+        "definition_md5": "7ad284b13425323bc0139f36171483f4",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_reopen_completed_order(p_order_id text)",
+        "anon_execute": false,
+        "definition_md5": "aacc89f2e11796ffd9912a9e114588e9",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)",
+        "anon_execute": false,
+        "definition_md5": "b6ae0ef5ef4cf92ba31196ada1e01380",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer, p_expected_updated_at timestamp with time zone)",
+        "anon_execute": false,
+        "definition_md5": "7d898d9abec77c253b93f6235a7ee08a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "boolean",
+        "definer": false,
+        "signature": "public.admin_save_order_note(p_order_id text, p_admin_note text)",
+        "anon_execute": false,
+        "definition_md5": "672221983c281f4eef7979a8a6e77be7",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_set_product_custom_variant_stocks(p_product_id text, p_variant_stocks jsonb)",
+        "anon_execute": false,
+        "definition_md5": "0a2e55366a7d43d71202be04f4fc65c5",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_set_product_variant_stock_batches(p_product_id text, p_size_color_stocks jsonb, p_custom_variant_stocks jsonb)",
+        "anon_execute": false,
+        "definition_md5": "7d6364ac13d99d5d71c7977e1204e1ef",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_set_product_variant_stocks(p_product_id text, p_variant_stocks jsonb)",
+        "anon_execute": false,
+        "definition_md5": "36576659629db95fec387a6a3ab8b872",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.admin_update_order_status(p_order_id text, p_new_status text)",
+        "anon_execute": false,
+        "definition_md5": "5f8aa749298558b2aaac992e69e565ed",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.create_order_with_stock(p_order jsonb)",
+        "anon_execute": true,
+        "definition_md5": "eb98f58ecf5c0cbf2b67201d9a77dd1a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "7404f95eaf484e74bcd7d24e0ab5d637",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.create_support_ticket_idempotent(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text, p_request_id uuid)",
+        "anon_execute": true,
+        "definition_md5": "3b8e7a8daaa03a207b7a289a04feb804",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "jsonb",
+        "definer": false,
+        "signature": "public.get_my_order_notifications()",
+        "anon_execute": false,
+        "definition_md5": "a129369a2a5b682658d1911a83a2ac0b",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(ticket_id text, subject text, status text, created_at timestamp with time zone, last_message_at timestamp with time zone, unread_count bigint)",
+        "definer": false,
+        "signature": "public.get_my_support_tickets(p_limit integer)",
+        "anon_execute": false,
+        "definition_md5": "30ee29174684afc3d7b49b8fe9d4c18a",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(ticket_id text, subject text, status text, created_at timestamp with time zone, last_message_at timestamp with time zone, unread_count bigint)",
+        "definer": false,
+        "signature": "public.get_my_support_tickets_page(p_limit integer, p_before_last_message_at timestamp with time zone, p_before_ticket_id text)",
+        "anon_execute": false,
+        "definition_md5": "f8728928a3ba45e61df529e7a1faa219",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(id bigint, sender_role text, sender_name text, message text, created_at timestamp with time zone)",
+        "definer": false,
+        "signature": "public.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "fcd13ba9a9404172863a52c0310c1e44",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(status text, created_at timestamp with time zone, last_message_at timestamp with time zone)",
+        "definer": false,
+        "signature": "public.get_support_ticket_status(p_ticket_id text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "5c74c249861e99baba02a33d5ead148f",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "TABLE(ticket_id text, unread_count bigint)",
+        "definer": false,
+        "signature": "public.get_support_ticket_unread_counts()",
+        "anon_execute": false,
+        "definition_md5": "7e8128cc901217e0079595698a586479",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "integer",
+        "definer": false,
+        "signature": "public.mark_my_order_notifications_read()",
+        "anon_execute": false,
+        "definition_md5": "02f6a63187a56c06019a3c2a4eedda47",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      },
+      {
+        "result": "integer",
+        "definer": false,
+        "signature": "public.mark_support_ticket_messages_read(p_ticket_id text, p_access_token text)",
+        "anon_execute": true,
+        "definition_md5": "866f32be7d5c4e65e69ffa67305fa4e1",
+        "locked_search_path": true,
+        "authenticated_execute": true
+      }
+    ],
+    "constraints": [
+      {
+        "name": "inventory_movements_after_quantity_check",
+        "type": "c",
+        "table": "private.inventory_movements",
+        "validated": true,
+        "definition_md5": "0c5990969ab2ba97134a6b1c7e891227"
+      },
+      {
+        "name": "inventory_movements_before_quantity_check",
+        "type": "c",
+        "table": "private.inventory_movements",
+        "validated": true,
+        "definition_md5": "3a6176e42e9ca6ae6129e17fa63606e8"
+      },
+      {
+        "name": "inventory_movements_delta_matches_quantities",
+        "type": "c",
+        "table": "private.inventory_movements",
+        "validated": true,
+        "definition_md5": "ae339ca0db5941b7a913318cf45b9df0"
+      },
+      {
+        "name": "inventory_movements_nonzero_delta",
+        "type": "c",
+        "table": "private.inventory_movements",
+        "validated": true,
+        "definition_md5": "a045f6970adb90eae8aabf92b7ebb8a3"
+      },
+      {
+        "name": "inventory_movements_pkey",
+        "type": "p",
+        "table": "private.inventory_movements",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "inventory_movements_reason_check",
+        "type": "c",
+        "table": "private.inventory_movements",
+        "validated": true,
+        "definition_md5": "fa7015e0c366323c40d6079b4412fd7e"
+      },
+      {
+        "name": "inventory_replenishment_settings_low_stock_threshold_check",
+        "type": "c",
+        "table": "private.inventory_replenishment_settings",
+        "validated": true,
+        "definition_md5": "b7fb800c2c2d5235d97f64195f7823a8"
+      },
+      {
+        "name": "inventory_replenishment_settings_pkey",
+        "type": "p",
+        "table": "private.inventory_replenishment_settings",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "inventory_replenishment_settings_target_stock_check",
+        "type": "c",
+        "table": "private.inventory_replenishment_settings",
+        "validated": true,
+        "definition_md5": "b36cbc70c0c86f0f7e38e34698ca1359"
+      },
+      {
+        "name": "inventory_replenishment_target_gt_threshold",
+        "type": "c",
+        "table": "private.inventory_replenishment_settings",
+        "validated": true,
+        "definition_md5": "10036e35f6f83927b022ede4da711696"
+      },
+      {
+        "name": "admin_staff_display_name_length",
+        "type": "c",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "565418a1cd057e7a350485cca20c520c"
+      },
+      {
+        "name": "admin_staff_email_normalized",
+        "type": "c",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "b697c9e0f056fe063f7468daa950f187"
+      },
+      {
+        "name": "admin_staff_members_invited_by_fkey",
+        "type": "f",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "a69b0a652c9ebb326a06cb48b47c5215"
+      },
+      {
+        "name": "admin_staff_members_permissions_check",
+        "type": "c",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "56a68937da05b0734eae4dc1ce53a2f1"
+      },
+      {
+        "name": "admin_staff_members_pkey",
+        "type": "p",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "admin_staff_members_role_check",
+        "type": "c",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "1b631acf74f6ab96b10cddf3a4f5fbc5"
+      },
+      {
+        "name": "admin_staff_members_user_id_fkey",
+        "type": "f",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "85d8b2f5f0c0f6b4dcb854efb61a8cb1"
+      },
+      {
+        "name": "admin_staff_members_user_id_key",
+        "type": "u",
+        "table": "public.admin_staff_members",
+        "validated": true,
+        "definition_md5": "180ab7ada944bc4434863ec0e09cc727"
+      },
+      {
+        "name": "order_notifications_event_key_valid",
+        "type": "c",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "715a9a87917b51bf17ea70a241d4b46c"
+      },
+      {
+        "name": "order_notifications_order_event_unique",
+        "type": "u",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "ed9719151d589b7ad05c1a28179bc8a7"
+      },
+      {
+        "name": "order_notifications_order_id_fkey",
+        "type": "f",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "25aa7307969164af40ae7aa4a4b0d54e"
+      },
+      {
+        "name": "order_notifications_pkey",
+        "type": "p",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "order_notifications_recipient_email_valid",
+        "type": "c",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "c02452c5b2fae66b729927c5d339ff9e"
+      },
+      {
+        "name": "order_notifications_recipient_user_id_fkey",
+        "type": "f",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "fb5643313d808c020777f915f0b48d71"
+      },
+      {
+        "name": "order_notifications_status_valid",
+        "type": "c",
+        "table": "public.order_notifications",
+        "validated": true,
+        "definition_md5": "55effcf34c3dba8f081be63e9bb09611"
+      },
+      {
+        "name": "orders_pkey",
+        "type": "p",
+        "table": "public.orders",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "orders_user_id_fkey",
+        "type": "f",
+        "table": "public.orders",
+        "validated": true,
+        "definition_md5": "c3025b918f5d330db0d4b19482474b87"
+      },
+      {
+        "name": "products_available_colors_array_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "8b51b45554897d003ad578ce9e409dde"
+      },
+      {
+        "name": "products_available_sizes_array_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "958519f49ef2dc337c36f7aa69bb93ac"
+      },
+      {
+        "name": "products_flash_sale_metadata_valid_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "820a8214b3765d6387eaa734e127ae6d"
+      },
+      {
+        "name": "products_gallery_array_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "a15095fd6ec631910a44f7c92b5f0773"
+      },
+      {
+        "name": "products_old_price_gel_valid_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "8e19131c79069310bea14d01769b9908"
+      },
+      {
+        "name": "products_pkey",
+        "type": "p",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "products_price_gel_valid_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "af6e15cc25aa2898d082a79b99a8b8c3"
+      },
+      {
+        "name": "products_purchase_cost_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "aa1259d5a370b60d5ea8a0b6d6e335e4"
+      },
+      {
+        "name": "products_purchase_cost_valid_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "d34d32c547fa5649418fc68e940a2250"
+      },
+      {
+        "name": "products_stock_nonnegative_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "5bb5bafe022293c45db82082f6b1c16d"
+      },
+      {
+        "name": "products_stock_valid_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "f896820ce17cd1dab7ecfdae68e41b95"
+      },
+      {
+        "name": "products_tags_array_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "03b896065ac4cfbba2f04aa730f9dab2"
+      },
+      {
+        "name": "products_variants_array_check",
+        "type": "c",
+        "table": "public.products",
+        "validated": true,
+        "definition_md5": "6af09ea3d092e40a8a5e8234a7d12c43"
+      },
+      {
+        "name": "support_ticket_messages_message_check",
+        "type": "c",
+        "table": "public.support_ticket_messages",
+        "validated": true,
+        "definition_md5": "0b9c073f1dc8f50e24e63e38f99dc136"
+      },
+      {
+        "name": "support_ticket_messages_pkey",
+        "type": "p",
+        "table": "public.support_ticket_messages",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "support_ticket_messages_sender_name_check",
+        "type": "c",
+        "table": "public.support_ticket_messages",
+        "validated": true,
+        "definition_md5": "08f6e45714866f8509b4f3a03a6dddfb"
+      },
+      {
+        "name": "support_ticket_messages_sender_role_check",
+        "type": "c",
+        "table": "public.support_ticket_messages",
+        "validated": true,
+        "definition_md5": "70448e08c40fbd5570569333353da58d"
+      },
+      {
+        "name": "support_ticket_messages_ticket_id_fkey",
+        "type": "f",
+        "table": "public.support_ticket_messages",
+        "validated": true,
+        "definition_md5": "6a7461ac3f0a958f89c09f1d904eae6a"
+      },
+      {
+        "name": "support_ticket_messages_ticket_ref_check",
+        "type": "c",
+        "table": "public.support_ticket_messages",
+        "validated": true,
+        "definition_md5": "abb9eeb32fca65eb4223f205e0d390a8"
+      },
+      {
+        "name": "support_tickets_access_token_hash_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "caf6c882272d32277c68e2af11d62d66"
+      },
+      {
+        "name": "support_tickets_customer_name_length_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "ca782fa21c7ed991df989978b1bcf5dc"
+      },
+      {
+        "name": "support_tickets_customer_user_id_fkey",
+        "type": "f",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "ac5ff2eee196ea57ff1f4c85751ccc81"
+      },
+      {
+        "name": "support_tickets_email_length_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "06cabbf316fccb856c18e8c870398873"
+      },
+      {
+        "name": "support_tickets_id_length_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "d2924d26b91a10c5aec3f1aa2f2e8103"
+      },
+      {
+        "name": "support_tickets_message_length_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "0b9c073f1dc8f50e24e63e38f99dc136"
+      },
+      {
+        "name": "support_tickets_pkey",
+        "type": "p",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "4c6419b3704337bbfe50f018842a9ad3"
+      },
+      {
+        "name": "support_tickets_reply_length_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "53d642a8e648c0cb91eed5a6f32591d5"
+      },
+      {
+        "name": "support_tickets_subject_length_check",
+        "type": "c",
+        "table": "public.support_tickets",
+        "validated": true,
+        "definition_md5": "ef27102c40e540460dc5a441d35d4077"
+      }
+    ]
+  }
+}

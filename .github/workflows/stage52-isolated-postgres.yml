@@ -39,6 +39,11 @@ on:
       - 'tests/stage75LocalHistoryReconcile.test.js'
       - 'release/stage76-existing-version-sql-divergence.json'
       - 'scripts/stage76ExistingVersionSqlDivergenceGate.mjs'
+      - 'release/stage82-live-effective-schema-surface.json'
+      - 'release/stage82-read-only-surface-query.sql'
+      - 'scripts/stage82LiveEffectiveSchemaGate.mjs'
+      - 'tests/stage82LiveEffectiveSchemaGate.test.js'
+      - 'docs/stage82-live-effective-schema-review.md'
       - 'release/stage81-production-schema-baseline.json'
       - 'release/stage81-read-only-schema-query.sql'
       - 'scripts/stage81LiveSchemaGate.mjs'
@@ -125,3 +130,4 @@ jobs:
           node scripts/stage75LocalHistoryReconcile.mjs --verify-local-renames
           node scripts/stage76ExistingVersionSqlDivergenceGate.mjs --verify-frozen-review
           node scripts/stage81LiveSchemaGate.mjs --verify-pinned
+          node scripts/stage82LiveEffectiveSchemaGate.mjs --verify-pinned
