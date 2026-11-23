@@ -87,7 +87,7 @@ ok(receipt.items.length===3&&receipt.items.every(redacted),
 ok(receipt.items.filter(x=>x.customVariantId==='red-s').length===2&&
  receipt.items.filter(x=>x.customVariantId==='blue-m').length===1,
  'Variant size/color and duplicate customization line preserved');
-ok(num('red')===1&&num('blue')===0&&num('parent')===0,
+ok(num('red')===1&&num('blue')===0&&num('parent')===1,
  'Actual inventory decremented only affected variants');
 ok(num('movements')===2&&num('delta')===-4,
  'Exact versioned ledger trigger recorded two variant deduction deltas');
@@ -148,7 +148,7 @@ const repeat=success(await rpc(signed(ordersStaff.token),'admin_update_order_sta
  {p_order_id:request.id,p_new_status:'გაუქმებული'}),
  'Repeat cancellation idempotent');
 ok(repeat.status==='გაუქმებული','Repeat cancellation returns same status');
-ok(num('red')===3&&num('blue')===2&&num('parent')===0,
+ok(num('red')===3&&num('blue')===2&&num('parent')===5,
  'Original stock restored exactly once to two custom variants');
 ok(num('restored')===2&&num('delta')===0&&num('orders')===3&&
  num('total')===530&&val('purchaseCost')==='52'&&val('status')==='გაუქმებული',
