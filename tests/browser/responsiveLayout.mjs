@@ -75,6 +75,9 @@ try {
       await page.close();
     }
   }
+  // Stage 43: use the actual StoreView direct-child div (not article).
+  // The production CSS explicitly targets div.gs-flash-sale-card, so a tag
+  // mismatch here produces false failures and misses the real cascade.
   // Stage 43: browser-computed CSS regression using the actual StoreView
   // section > .grid > .gs-flash-sale-card > .py-3 > .flex structure.
   // This tests the production CSS cascade, not just source-text selectors.
@@ -83,12 +86,12 @@ try {
       const page = await browser.newPage({ viewport: { width, height: 820 } });
       try {
         const flashCards = Array.from({ length: count }, (_, i) =>
-          '<article class="gs-flash-sale-card group">' +
+          '<div class="gs-flash-sale-card group">' +
           '<div class="gs-flash-sale-media relative">Photo</div>' +
-          '<div class="py-3 space-y-1.5"><h3>Flash Sale Product ' + i + '</h3>' +
-          '<div class="flex items-baseline gap-2"><strong>123.45 ₾</strong>' +
+          '<div class="py-3 space-y-1.5"><h4>Flash Sale Product ' + i + '</h4>' +
+          '<div class="flex items-baseline gap-2"><span>123.45 ₾</span>' +
           '<span>199.99 ₾</span></div></div>' +
-          '<button class="w-full bg-[#16161a]">კალათაში დამატება</button></article>'
+          '<button class="w-full bg-[#16161a]">კალათაში დამატება</button></div>'
         ).join('');
         await page.setContent('<!doctype html><html lang="ka"><head>' +
           '<meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
