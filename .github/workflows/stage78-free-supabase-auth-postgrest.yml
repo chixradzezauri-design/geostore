@@ -22,6 +22,9 @@ on:
       - 'supabase/migrations/20261117084403_private_inventory_movement_ledger_stage92.sql'
       - 'scripts/stage60InventoryLedgerFixture.mjs'
       - 'scripts/stage83ExtractTriggers.mjs'
+      - 'scripts/stage83ProductTriggerContract.mjs'
+      - 'tests/stage83ProductTriggerContract.test.js'
+      - 'docs/stage83-product-trigger-compatibility.md'
       - 'supabase/migrations/20261107170000_integrate_custom_product_variants.sql'
       - 'supabase/migrations/20261108225558_size_color_inventory_stock.sql'
       - 'supabase/migrations/20261109203329_admin_manage_custom_variant_stock.sql'
@@ -82,6 +85,7 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -f stage83-product-triggers.sql
           node "$GITHUB_WORKSPACE/scripts/stage80RealCheckoutHttp.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage83ProductTriggerContract.mjs"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase
