@@ -42,6 +42,12 @@ on:
       - 'release/stage82-live-effective-schema-surface.json'
       - 'release/stage82-read-only-surface-query.sql'
       - 'scripts/stage82LiveEffectiveSchemaGate.mjs'
+      - 'release/stage86-production-only-migration-origin.json'
+      - 'release/stage86-historical-sql-risk-disposition.json'
+      - 'release/stage86-read-only-origin-query.sql'
+      - 'scripts/stage86MissingHistoryProvenanceGate.mjs'
+      - 'tests/stage86MissingHistoryProvenanceGate.test.js'
+      - 'docs/stage86-historical-source-provenance-and-release-blockers.md'
       - 'tests/stage82LiveEffectiveSchemaGate.test.js'
       - 'docs/stage82-live-effective-schema-review.md'
       - 'release/stage81-production-schema-baseline.json'
@@ -131,3 +137,4 @@ jobs:
           node scripts/stage76ExistingVersionSqlDivergenceGate.mjs --verify-frozen-review
           node scripts/stage81LiveSchemaGate.mjs --verify-pinned
           node scripts/stage82LiveEffectiveSchemaGate.mjs --verify-pinned
+          node scripts/stage86MissingHistoryProvenanceGate.mjs --verify-pinned
