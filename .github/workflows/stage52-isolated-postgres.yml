@@ -39,6 +39,11 @@ on:
       - 'tests/stage75LocalHistoryReconcile.test.js'
       - 'release/stage76-existing-version-sql-divergence.json'
       - 'scripts/stage76ExistingVersionSqlDivergenceGate.mjs'
+      - 'release/stage81-production-schema-baseline.json'
+      - 'release/stage81-read-only-schema-query.sql'
+      - 'scripts/stage81LiveSchemaGate.mjs'
+      - 'tests/stage81LiveSchemaGate.test.js'
+      - 'docs/stage81-frozen-live-schema-release-gate.md'
       - 'tests/stage76ExistingVersionSqlDivergenceGate.test.js'
       - 'tests/stage72ReconciledReleaseGate.test.js'
       - 'supabase/migrations/20261106120000_validate_order_item_variants.sql'
@@ -119,3 +124,4 @@ jobs:
           node scripts/stage74ReviewedMismatchGate.mjs --verify-frozen
           node scripts/stage75LocalHistoryReconcile.mjs --verify-local-renames
           node scripts/stage76ExistingVersionSqlDivergenceGate.mjs --verify-frozen-review
+          node scripts/stage81LiveSchemaGate.mjs --verify-pinned
