@@ -1,6 +1,6 @@
 # Stage87 — Live Phase A catalog preflight + nine-high-risk source/entrypoint parity
 
-**NOT RELEASE-READY. Production unchanged. No paid staging.** Draft PR #149 only. Captured 2026-11-23.
+**NOT RELEASE-READY. Production unchanged. No paid staging. This work uses no paid staging environment.** Draft PR #149 only. Captured 2026-11-23.
 
 ## What was checked read-only on actual Production
 
