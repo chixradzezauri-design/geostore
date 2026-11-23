@@ -46,6 +46,13 @@ on:
       - 'release/stage86-historical-sql-risk-disposition.json'
       - 'release/stage86-read-only-origin-query.sql'
       - 'scripts/stage86MissingHistoryProvenanceGate.mjs'
+      - 'release/stage87-phase-a-live-preflight.json'
+      - 'release/stage87-high-risk-live-boundary-matrix.json'
+      - 'release/stage87-read-only-phase-a-preflight.sql'
+      - 'release/stage87-read-only-high-risk-functions.sql'
+      - 'scripts/stage87PhaseAPreflightHighRiskGate.mjs'
+      - 'tests/stage87PhaseAPreflightHighRiskGate.test.js'
+      - 'docs/stage87-phase-a-preflight-nine-high-risk-contracts.md'
       - 'tests/stage86MissingHistoryProvenanceGate.test.js'
       - 'docs/stage86-historical-source-provenance-and-release-blockers.md'
       - 'tests/stage82LiveEffectiveSchemaGate.test.js'
@@ -138,3 +145,4 @@ jobs:
           node scripts/stage81LiveSchemaGate.mjs --verify-pinned
           node scripts/stage82LiveEffectiveSchemaGate.mjs --verify-pinned
           node scripts/stage86MissingHistoryProvenanceGate.mjs --verify-pinned
+          node scripts/stage87PhaseAPreflightHighRiskGate.mjs --verify-pinned
