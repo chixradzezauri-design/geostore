@@ -1,6 +1,6 @@
 # Stage84 — source-real checkout ownership, email and status triggers
 
-**NOT RELEASE-READY. Production unchanged. No paid staging.** All work is Draft PR #149.
+**NOT RELEASE-READY. Production unchanged. No paid staging. This stage requires no paid staging environment.** All work is Draft PR #149.
 
 Current Production has **8 enabled order triggers**. Stage83 already added the three real product stock triggers to the disposable local Auth/PostgREST checkout. Stage84 adds three safe, source-verbatim original order trigger FUNCTION bodies and their original trigger DDL:
 - \`private.bind_order_to_auth_user()\` from 20261108215548, binding an authenticated order's immutable user UUID to auth.uid(), and nullifying guest ownership;
