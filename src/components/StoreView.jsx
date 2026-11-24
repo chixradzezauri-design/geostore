@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
+import {productPath,categoryPath,findPublishedRouteProduct,resolveCatalogueCategory} from '../utils/catalogueSeo.js';
 import { buildStorefrontElementStyle, withStorefrontVideoTokens, normalizeStorefrontCustomSections, getStorefrontSectionOrder, storefrontViewportForWidth, buildStorefrontSectionGeometryProps } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
@@ -56,7 +57,12 @@ export default function StoreView({
   toggleComparison,
   addToCart,
   formatPrice,
-  onProductOrderChange
+  onProductOrderChange,
+  catalogueNavigation=false,
+  catalogueRoute=null,
+  catalogueReady=false,
+  catalogueProducts=[],
+  onCatalogueNavigate
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -117,9 +123,7 @@ export default function StoreView({
     Boolean(selectedSubCategory) || minPrice !== '' || maxPrice !== '' || sortBy !== 'default';
   const resetCatalogFilters = () => {
     setSearchQuery?.('');
-    setSelectedCategory?.('ყველა');
-    setSelectedSubCategory(null);
-    setOpenParentCatId(null);
+    selectCatalogueCategory('ყველა');
     setMinPrice('');
     setMaxPrice('');
     setSortBy('default');
@@ -179,7 +183,8 @@ export default function StoreView({
       supportsSizeColorInventoryCategory(prod.name);
   };
 
-  const handleOpenProduct = (prod, triggerNode = null) => {
+  const handleOpenProduct = (prod, triggerNode = null, fromRoute=false) => {
+    if(catalogueNavigation&&!fromRoute&&productPath(prod.id))onCatalogueNavigate?.(productPath(prod.id));
     // Keep a stable keyboard return target without changing any product data.
     productReturnFocusRef.current = triggerNode || (typeof document !== 'undefined' ? document.activeElement : null);
     setSelectedProduct(prod);
@@ -213,11 +218,36 @@ export default function StoreView({
     onSavedProductRequestHandled?.(null);
   }, [requestedSavedProductId, activeProducts, onSavedProductRequestHandled]);
 
-  const closeProductDetails = () => {
+  const closeProductDetails = (fromRoute=false) => {
+    if(catalogueNavigation&&fromRoute!==true&&catalogueRoute?.kind==='product')onCatalogueNavigate?.(categoryPath(selectedSubCategory||selectedCategory)||'/',{replace:true});
     setSelectedProduct(null);
     setIsSmartSizeModalOpen(false);
     setIsSizeGuideOpen(false);
   };
+
+  // Direct route resolution waits for a verified server catalogue, never cached
+  // or hidden products. Editor instances opt out of browser navigation.
+  useEffect(()=>{
+    if(!catalogueNavigation||!catalogueRoute)return;
+    if(catalogueRoute.kind==='product'){
+      const product=findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,catalogueReady);
+      if(product&&String(selectedProduct?.id)!==String(product.id))handleOpenProduct(product,null,true);
+      else if(!product&&selectedProduct&&catalogueReady)closeProductDetails(true);
+    }else{
+      if(selectedProduct)closeProductDetails(true);
+      if(catalogueRoute.kind==='category'){
+        const target=resolveCatalogueCategory(categories,catalogueRoute.value);
+        setSelectedCategory(target.category);setSelectedSubCategory(target.subcategory);setOpenParentCatId(target.parentId);
+      }else{
+        setSelectedCategory('ყველა');setSelectedSubCategory(null);setOpenParentCatId(null);
+      }
+    }
+  },[catalogueNavigation,catalogueRoute,catalogueReady,catalogueProducts,categories]);
+  const selectCatalogueCategory=(name,subcategory=null,parentId=null)=>{
+    if(catalogueNavigation)onCatalogueNavigate?.(categoryPath(subcategory||name)||'/');
+    setSelectedCategory(name);setSelectedSubCategory(subcategory);setOpenParentCatId(parentId);
+  };
+  const unavailableRoute=catalogueNavigation&&catalogueReady&&catalogueRoute?.kind==='product'&&!findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,true);
 
   useEffect(() => {
     if (!selectedProduct) return undefined;
@@ -569,7 +599,7 @@ export default function StoreView({
           <h1 data-visual-editor-target="hero.title" style={videoElementStyle('hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
           <p data-visual-editor-target="hero.description" style={videoElementStyle('hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
+            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { selectCatalogueCategory('ყველა'); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
           </div>
         </div>
@@ -712,7 +742,7 @@ export default function StoreView({
           <div className="gs-category-breadcrumb flex items-center gap-2 text-xs bg-[#121216] px-4 py-3 rounded-2xl border border-amber-500/30 shadow">
             <span className="text-slate-400 font-bold">{storeText.navigation}</span>
             <button 
-              onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
+              onClick={() => { selectCatalogueCategory('ყველა'); }}
               className="text-amber-400 hover:underline font-black cursor-pointer"
             >
               {storeText.allCategories}
@@ -726,7 +756,7 @@ export default function StoreView({
               </>
             )}
             <button 
-              onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
+              onClick={() => { selectCatalogueCategory('ყველა'); }}
               className="ml-auto text-rose-400 hover:text-rose-300 font-bold text-[11px] underline cursor-pointer"
             >
               {storeText.clear} ✕
@@ -743,8 +773,8 @@ export default function StoreView({
             tabIndex={0}
             aria-label={storeText.allCategories}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
-            onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCatalogueCategory('ყველა'); } }}
+            onClick={() => { selectCatalogueCategory('ყველა'); }}
             className={`gs-category-card gs-editorial-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
                 ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
@@ -784,11 +814,9 @@ export default function StoreView({
                 aria-pressed={isSelected}
                 aria-expanded={subCats.length > 0 ? isOpen : undefined}
                 aria-controls={subCats.length > 0 && isOpen ? 'gs-subcategory-panel' : undefined}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory(catName); setSelectedSubCategory(null); setOpenParentCatId(isOpen ? null : catId); } }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCatalogueCategory(catName,null,isOpen ? null : catId); } }}
                 onClick={() => { 
-                  setSelectedCategory(catName); 
-                  setSelectedSubCategory(null);
-                  setOpenParentCatId(isOpen ? null : catId);
+                  selectCatalogueCategory(catName,null,isOpen ? null : catId);
                 }}
                 className={`gs-category-card gs-editorial-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
                   isSelected 
@@ -828,7 +856,7 @@ export default function StoreView({
               <button
                 type="button"
                 aria-pressed={!selectedSubCategory}
-                onClick={() => setSelectedSubCategory(null)}
+                onClick={() => selectCatalogueCategory(selectedCategory,null,openParentCatId)}
                 className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
               >
                 {storeText.allItems} ({selectedCategory})
@@ -841,7 +869,7 @@ export default function StoreView({
                     key={sub.id || sub.name}
                     type="button"
                     aria-pressed={isSubSel}
-                    onClick={() => setSelectedSubCategory(sub.name)}
+                    onClick={() => selectCatalogueCategory(selectedCategory,sub.name,openParentCatId)}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
                     <span>{sub.name}</span>
@@ -1085,6 +1113,10 @@ export default function StoreView({
       {sectionOrder.map(id=><React.Fragment key={id}>{sectionGroups[id]}</React.Fragment>)}
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
+      {unavailableRoute&&<div role="alert" className="rounded-xl border border-amber-500/30 p-4 text-sm text-slate-200">
+        {currentLang==='en'?'This product is not available.':currentLang==='ru'?'Товар недоступен.':'პროდუქტი ხელმისაწვდომი აღარ არის.'}
+        <button type="button" className="ml-3 underline font-bold" onClick={()=>selectCatalogueCategory('ყველა')}>{storeText.fullCollection}</button>
+      </div>}
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
@@ -1465,7 +1497,7 @@ export default function StoreView({
                     customVariantName: selectedInventoryVariant?.name || '',
                     stock: selectedInventoryVariant ? selectedInventoryVariant.stock : selectedProduct.stock
                   }); 
-                  if (added !== false) setSelectedProduct(null); 
+                  if (added !== false) closeProductDetails(); 
                 }} 
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >

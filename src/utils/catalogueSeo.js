@@ -44,3 +44,23 @@ export function buildCatalogueSitemap(origin,publicProducts){
  if(new TextEncoder().encode(xml).length>50000000)throw Error('Sitemap byte limit exceeded');
  return xml;
 }
+
+export function catalogueRouteFromLocation(location){
+ if(!location||new URLSearchParams(location.search||'').get('admin')==='secret')return null;
+ return parseCataloguePath(location.pathname);
+}
+export function catalogueNavigationTarget(location,path){
+ if(!catalogueRouteFromLocation(location)||!parseCataloguePath(path))return null;
+ return path+(location.search||'')+(location.hash||'');
+}
+export function findPublishedRouteProduct(products,id,ready){
+ if(!ready||!productPath(id)||!Array.isArray(products))return null;
+ return products.find(p=>p&&p.isPublished!==false&&p.is_published!==false&&String(p.id)===String(id))||null;
+}
+export function resolveCatalogueCategory(categories,name){
+ const items=(Array.isArray(categories)?categories:[]).map(c=>typeof c==='string'?{id:c,name:c}:c).filter(c=>c&&typeof c.name==='string');
+ const item=items.find(c=>c.name===name);
+ if(!item)return {category:name,subcategory:null,parentId:null};
+ const parent=item.parentId==null?null:items.find(c=>String(c.id||c.name)===String(item.parentId));
+ return parent?{category:parent.name,subcategory:item.name,parentId:parent.id||parent.name}:{category:item.name,subcategory:null,parentId:item.id||item.name};
+}

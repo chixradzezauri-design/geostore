@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {productPath,categoryPath,parseCataloguePath,cataloguePaths,buildCatalogueSitemap} from '../src/utils/catalogueSeo.js';
+import {productPath,categoryPath,parseCataloguePath,cataloguePaths,buildCatalogueSitemap,catalogueRouteFromLocation,catalogueNavigationTarget,findPublishedRouteProduct,resolveCatalogueCategory} from '../src/utils/catalogueSeo.js';
 test('product and Georgian category paths round-trip exactly',()=>{
  for(const [kind,value,path] of [['product','sku-123',productPath('sku-123')],['category','ქალის ფეხსაცმელი',categoryPath('ქალის ფეხსაცმელი')],['product','item?x#y & 1',productPath('item?x#y & 1')]]){
   assert.deepEqual(parseCataloguePath(path),{kind,value});
@@ -25,4 +25,24 @@ test('fail closed on origin and snapshot shape, enforce canonical absolute URLs'
  const xml=buildCatalogueSitemap('https://shop.example',[{id:'x&y',category:'ქალი'}]);
  assert.ok(xml.includes('/product/x%26y'));
  assert.ok(xml.includes(categoryPath('ქალი')));
+});
+
+test('catalogue navigation preserves query/hash and does not hijack admin routes',()=>{
+ const l={pathname:'/',search:'?utm_source=test',hash:'#a'};
+ assert.equal(catalogueNavigationTarget(l,'/product/a'),'/product/a?utm_source=test#a');
+ assert.equal(catalogueNavigationTarget({...l,pathname:'/admin'},'/product/a'),null);
+ assert.equal(catalogueRouteFromLocation({...l,search:'?admin=secret'}),null);
+ assert.equal(catalogueNavigationTarget(l,'//evil.invalid'),null);
+});
+test('direct product requires verified catalogue and ignores hidden products',()=>{
+ const products=[{id:'visible',isPublished:true},{id:'hidden',isPublished:false}];
+ assert.equal(findPublishedRouteProduct(products,'visible',false),null);
+ assert.equal(findPublishedRouteProduct(products,'hidden',true),null);
+ assert.equal(findPublishedRouteProduct(products,'visible',true),products[0]);
+});
+test('category route resolves current parent and child without changing names',()=>{
+ const categories=[{id:'p',name:'Shoes'},{id:'s',name:'Boots',parentId:'p'}];
+ assert.deepEqual(resolveCatalogueCategory(categories,'Boots'),{category:'Shoes',subcategory:'Boots',parentId:'p'});
+ assert.deepEqual(resolveCatalogueCategory(categories,'Shoes'),{category:'Shoes',subcategory:null,parentId:'p'});
+ assert.deepEqual(resolveCatalogueCategory(categories,'Unknown'),{category:'Unknown',subcategory:null,parentId:null});
 });

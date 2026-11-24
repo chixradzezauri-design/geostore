@@ -43,6 +43,7 @@ import { getCartFeedbackMessage } from './utils/cartFeedback.js';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
+import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath, resolveCatalogueCategory } from './utils/catalogueSeo.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -557,6 +558,36 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
   const [requestedSavedProductId, setRequestedSavedProductId] = useState(null);
+  const [catalogueRoute,setCatalogueRoute]=useState(()=>catalogueRouteFromLocation(window.location));
+  const [catalogueVerifiedEpoch,setCatalogueVerifiedEpoch]=useState(-1);
+  const catalogueRouteRef=useRef(catalogueRoute);
+  catalogueRouteRef.current=catalogueRoute;
+  const navigateCatalogue=(path,{replace=false}={})=>{
+    const target=catalogueNavigationTarget(window.location,path);
+    if(!target)return false;
+    if(window.location.pathname!==path)window.history[replace?'replaceState':'pushState'](window.history.state,'',target);
+    const next=catalogueRouteFromLocation(window.location);
+    catalogueRouteRef.current=next;setCatalogueRoute(next);
+    return true;
+  };
+  useEffect(()=>{
+    const onPop=()=>{
+      const next=catalogueRouteFromLocation(window.location);
+      catalogueRouteRef.current=next;setCatalogueRoute(next);
+      if(next){setActiveTab('store');setSearchQuery('');}
+    };
+    window.addEventListener('popstate',onPop);
+    return()=>window.removeEventListener('popstate',onPop);
+  },[]);
+  useEffect(()=>{
+    if(activeTab!=='store'&&catalogueRouteRef.current?.kind!=='home'&&catalogueRouteRef.current){
+      navigateCatalogue('/',{replace:true});
+    }
+  },[activeTab]);
+  const selectHeaderCategory=name=>{
+    setSelectedCategory(name);
+    navigateCatalogue(categoryPath(name)||'/');
+  };
 
   const [cart, setCart] = useState(() =>
     sanitizeCartSnapshot(loadSafeStorage('geostore_cart:guest', loadSafeStorage('geostore_cart', [])))
@@ -2158,8 +2189,10 @@ export default function App() {
 
         // The products state persistence effect below owns the local cache write.
         setProducts(formatted);
+        setCatalogueVerifiedEpoch(requestAccessEpoch);
       }
     } catch (error) {
+      if(requestAccessEpoch===productsAccessEpoch.current)setCatalogueVerifiedEpoch(-1);
       console.error('Products fetch error:', error);
     } finally {
       productsFetchLock.current = false;
@@ -3523,6 +3556,7 @@ export default function App() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      if(p?.isPublished===false||p?.is_published===false)return false;
       const matchesVendor =
         selectedVendorFilter === t.allVendors ||
         selectedVendorFilter === 'ყველა' ||
@@ -3587,7 +3621,7 @@ export default function App() {
           setSearchQuery={setSearchQuery}
           categories={categories}
           selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+          setSelectedCategory={selectHeaderCategory}
           handleInstallClick={handleInstallClick}
           currentLang={currentLang}
           setCurrLang={setCurrLang}
@@ -3624,6 +3658,11 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
+            catalogueNavigation
+            catalogueRoute={catalogueRoute}
+            catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current}
+            catalogueProducts={products}
+            onCatalogueNavigate={navigateCatalogue}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             requestedSavedProductId={requestedSavedProductId}
