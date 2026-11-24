@@ -39,6 +39,7 @@ import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } fr
 import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
 import { analyzeBusinessCampaigns } from '../utils/businessCampaignAnalytics.js';
 import AdminSupplierWorkspace from './AdminSupplierWorkspace';
+import AdminPurchaseWorkspace from './AdminPurchaseWorkspace';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -979,6 +980,7 @@ export default function AdminDashboardPro({
   setUsersList,
   products = [],
   setProducts,
+  refreshProducts,
   vendorsList = [],
   setVendorsList,
   coupons = [],
@@ -7868,6 +7870,7 @@ export default function AdminDashboardPro({
         {(visibleAdminTab === 'vendors' || adminContentTab === 'vendors') && (
           <div className="admin-vendors-panel space-y-4">
             {isOwner && visibleAdminTab === 'vendors' && <AdminSupplierWorkspace key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} localRows={vendorsList}/>}
+            {isOwner && visibleAdminTab === 'vendors' && <AdminPurchaseWorkspace key={'purchases-'+adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} products={products} refreshProducts={refreshProducts}/>}
             {visibleAdminTab === 'admin_visual_editor' && <p className="text-xs text-slate-400">სერვერული მომწოდებლების მართვა ხელმისაწვდომია რეალურ განყოფილებაში, არა დიზაინის წინასწარ ხედში.</p>}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">

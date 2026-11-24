@@ -3695,6 +3695,7 @@ export default function App() {
             setUsersList={setUsersList}
             products={adminDashboardProducts}
             setProducts={setProducts}
+            refreshProducts={fetchProductsFromDatabase}
             vendorsList={vendorsList || []}
             setVendorsList={setVendorsList}
             coupons={coupons || []}

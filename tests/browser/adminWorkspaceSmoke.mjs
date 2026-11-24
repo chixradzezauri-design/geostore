@@ -99,6 +99,10 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await fee.inputValue(), before, 'Delivery draft cancellation restores the original value');
         }
         if (tab === 'vendors') {
+          const purchase = shell.locator('.admin-purchase-workspace');
+          await purchase.locator('[data-purchase-state="ready"]').waitFor({state:'visible'});
+          assert.equal(await purchase.getByRole('button',{name:'შესყიდვის მონახაზის შექმნა',exact:true}).isDisabled(),true);
+          await purchase.getByRole('combobox',{name:'შესყიდვის სტატუსი',exact:true}).selectOption('partial');
           const supplier = shell.locator('.admin-supplier-workspace');
           await supplier.locator('[data-supplier-state="ready"]').waitFor({state:'visible'});
           await supplier.getByRole('button',{name:'სერვერული საკომისიოს შეცვლა: Fixture supplier',exact:true}).click();
