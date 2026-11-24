@@ -61,3 +61,10 @@ test('video 07 profile and account dialogs retain identity and security handlers
 });
 
 test('video 08 preserves assistance actions and restores sticky checkout',()=>{const app=read('src/App.jsx'), image=read('src/components/ImageSearchModal.jsx');for(const term of ['gs-video-assistance-obscured','gs-video-support-open','setIsAiAssistantOpen(true)'])assert.ok(app.includes(term),term);for(const term of ['validateImageFile(file, 5 * 1024 * 1024','handleStartVisualSearch','gs-video-image-search-title','fileInputRef.current?.click()'])assert.ok(image.includes(term),term);for(const term of ['gs-checkout-submit-area { position: sticky !important','scroll-padding-bottom: 116px','gs-video-assistance-obscured','gs-ai-message-text','gs-image-search-notice','gs-product-compare-specs','gs-wardrobe-add-form'])assert.ok(css.includes(term),term);});
+
+test('video 09 footer keeps legal navigation and editor controls and adds existing support entry',()=>{
+ const footer=read('src/components/StorefrontFooter.jsx'), app=read('src/App.jsx');
+ for(const term of ['footer.termsLink','footer.privacyLink','footer.warrantyLink','footer.copyright','setIsTermsOpen?.(true)',"setActiveTab?.('privacy')",'setIsWarrantyOpen?.(true)','onClick={onOpenSupport}',"activeTab !== 'admin'","siteSettings?.storeName"])assert.ok(footer.includes(term),term);
+ assert.ok(app.includes('onOpenSupport={() => { setSupportSubmission(null); setSupportOpen(true); }}'));
+ for(const term of ['--gs-video-footer-backgroundColor','--gs-video-footer-termsLink-color','--gs-video-footer-privacyLink-fontSize','--gs-video-footer-warrantyLink-color','--gs-video-footer-copyright-fontSize','gs-video-footer-support','grid-template-columns:repeat(2,minmax(0,1fr))'])assert.ok(css.includes(term),term);
+});

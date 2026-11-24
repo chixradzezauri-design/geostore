@@ -33,3 +33,6 @@ Replaced conflicting dark profile surfaces with storefront theme tokens, removed
 
 ## Batch 08 — assistance and additional services
 Hide launchers behind active dialogs and AI launcher while support is open. Refine assistance messages, support inputs, photo upload keyboard access and truthful visual search limitation, compare and wardrobe surfaces. Restore sticky mobile checkout submit and scroll padding after 320px browser failure on batch 07 (other four checks passed). No service integration, database or production change. CI pending.
+
+## Batch 09 — footer and shared visual consistency
+Use theme-aware footer surfaces and explicit visual-editor values for legal controls and copyright. Added existing customer-support entry and configured store identity, no fabricated social/contact addresses. Legal links and admin footer behavior retained; mobile two-column links and narrow single-column fallback. Batch 08 build, dependency and isolated checkout contract succeeded; browser and CodeQL were still running at inspection. No production/preview change. Next: editor compatibility and consolidated visual/functional tests.

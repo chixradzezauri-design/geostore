@@ -4900,6 +4900,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         setIsTermsOpen={setIsTermsOpen}
         setIsWarrantyOpen={setIsWarrantyOpen}
+        onOpenSupport={() => { setSupportSubmission(null); setSupportOpen(true); }}
         currentLang={currentLang}
       />
     </div>
