@@ -30,16 +30,18 @@ import {
 import { translations } from './utils/translations';
 import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
-import { fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, redactCustomerCheckoutItems, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { AdminOrderLedgerAccessError, fetchVerifiedAdminOrderLedger } from './utils/adminOrderLedgerSafety.js';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
-import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { isAuthRestoreCurrent } from './utils/authSafety';
+import { getCheckoutErrorMessage, CHECKOUT_SESSION_UNAVAILABLE } from './utils/checkoutMessages';
+import { isAuthRestoreCurrent, isCheckoutOwnerContextCurrent, validateCheckoutSessionIdentity } from './utils/authSafety';
 import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAccess, hasAdminPermission as hasServerAdminPermission, hasAnyAdminAccess } from './utils/adminAccess';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
-import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
+import { getCartFeedbackMessage } from './utils/cartFeedback.js';
+import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
+import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -553,6 +555,7 @@ export default function App() {
   const [selectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
+  const [requestedSavedProductId, setRequestedSavedProductId] = useState(null);
 
   const [cart, setCart] = useState(() =>
     sanitizeCartSnapshot(loadSafeStorage('geostore_cart:guest', loadSafeStorage('geostore_cart', [])))
@@ -560,6 +563,7 @@ export default function App() {
 
   const cartRef = useRef(cart);
   const activeCartOwnerRef = useRef({ initialized: false, userId: null });
+  const checkoutOwnerEpochRef = useRef(0);
   useEffect(() => {
     cartRef.current = cart;
   }, [cart]);
@@ -685,6 +689,7 @@ export default function App() {
   const authSubmitLock = useRef(false);
   const pendingCheckoutRef = useRef(null);
   const [checkoutError, setCheckoutError] = useState('');
+  const [checkoutErrorField, setCheckoutErrorField] = useState(null);
   const [orderConfirmation, setOrderConfirmation] = useState(null);
 
   const [checkoutForm, setCheckoutForm] = useState({
@@ -1095,10 +1100,26 @@ export default function App() {
       // არაფერია გასაკეთებელი.
     }
 
+    // Customer contact data and order confirmations must never survive
+    // an account switch, including during initial session restoration.
+    const clearPrivateCheckout = () => {
+      checkoutOwnerEpochRef.current += 1;
+      setIsCheckoutOpen(false);
+      setCheckoutForm({ name: '', phone: '', email: '', address: '' });
+      setCheckoutError('');
+      setCheckoutErrorField(null);
+      setOrderConfirmation(null);
+      pendingCheckoutRef.current = null;
+      try { window.sessionStorage.removeItem('geostore.pendingCheckout'); } catch {}
+    };
+
     const activateCartOwner = (userId) => {
       const nextOwnerId = userId || null;
       const activeOwner = activeCartOwnerRef.current;
       if (activeOwner.initialized && String(activeOwner.userId ?? '') === String(nextOwnerId ?? '')) return;
+      if (String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
+        clearPrivateCheckout();
+      }
       try {
         const switched = switchCartStorageOwner({
           storage: window.localStorage,
@@ -1137,12 +1158,13 @@ export default function App() {
           setNotificationsError('');
           setNotificationsLoading(false);
           setIsNotificationsOpen(false);
-          setCheckoutForm({ name: '', phone: '', email: '', address: '' });
           setAppliedCoupon(null);
           setPromoInput('');
         }
         activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
       } catch (error) {
+        // Storage failures must not leave private checkout details visible.
+        clearPrivateCheckout();
         // Fail closed: never persist the outgoing owner's cart under a new account.
         console.error('Cart owner switch failed:', error);
         cartRef.current = [];
@@ -1350,10 +1372,19 @@ export default function App() {
   };
 
   const [toastMessage, setToastMessage] = useState('');
-
-  const showToast = (msg) => {
+  const [toastTone, setToastTone] = useState('success');
+  const toastTimerRef = useRef(null);
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+  }, []);
+  const showToast = (msg, tone = 'success') => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+    setToastTone(tone);
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage('');
+      toastTimerRef.current = null;
+    }, 3000);
   };
 
   const markAllNotificationsAsRead = async () => {
@@ -1955,12 +1986,17 @@ export default function App() {
       }));
       setAdminOrdersReady(true);
       setAdminOrdersError('');
-      setAdminOrdersVerifiedPrincipal(initialSession.userId);
+      setAdminOrdersVerifiedPrincipal(requestPrincipal);
     } catch (error) {
       if (adminOrdersSessionActive.current && requestSessionVersion === adminOrdersSessionVersion.current) {
         setAdminOrdersReady(false);
         setAdminOrdersError(error?.message || 'შეკვეთების სრული ისტორია ვერ დადასტურდა.');
         setAdminOrdersVerifiedPrincipal(null);
+        if (error instanceof AdminOrderLedgerAccessError) {
+          // Revoked or changed permissions must not leave a stale, privileged
+          // finance-bearing order list visible in the admin UI.
+          setOrders([]);
+        }
       }
       console.error('Orders fetch error:', error);
     } finally {
@@ -2454,7 +2490,7 @@ export default function App() {
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Number(quantity);
     if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
-      showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidQuantity'), 'error');
       return false;
     }
 
@@ -2471,11 +2507,11 @@ export default function App() {
     const allowedColors = getAvailableProductColors(product);
 
     if (selectedSize && !allowedSizes.includes(selectedSize)) {
-      showToast('არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidSize'), 'error');
       return false;
     }
     if (selectedColor && !allowedColors.includes(selectedColor)) {
-      showToast('არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidColor'), 'error');
       return false;
     }
     if (sizeColorInventory && (
@@ -2483,15 +2519,15 @@ export default function App() {
       sizeColorVariant.stock <= 0 ||
       sizeColorVariant.id !== customVariantId
     )) {
-      showToast('არჩეული ზომისა და ფერის კომბინაცია მარაგში აღარ არის.');
+      showToast(getCartFeedbackMessage(currentLang, 'invalidCombination'), 'error');
       return false;
     }
     if (customVariantId && !selectedInventoryVariant) {
-      showToast('არჩეული ვარიანტი აღარ არის ხელმისაწვდომი.');
+      showToast(getCartFeedbackMessage(currentLang, 'unavailableVariant'), 'error');
       return false;
     }
     if (hasCustomProductVariants(product) && !customVariant) {
-      showToast('შეკვეთამდე აირჩიეთ პროდუქტის ინდივიდუალური ვარიანტი.');
+      showToast(getCartFeedbackMessage(currentLang, 'selectVariant'), 'error');
       return false;
     }
 
@@ -2508,18 +2544,18 @@ export default function App() {
 
     if (!result.valid) {
       if (result.reason === 'stock') {
-        showToast('პროდუქტი ამჟამად მარაგში არ არის.');
+        showToast(getCartFeedbackMessage(currentLang, 'outOfStock'), 'error');
       } else if (result.reason === 'limit') {
-        showToast(`მარაგში დარჩენილია მხოლოდ ${result.remaining} ცალი.`);
+        showToast(getCartFeedbackMessage(currentLang, 'stockLimit', { remaining: result.remaining }), 'error');
       } else {
-        showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
+        showToast(getCartFeedbackMessage(currentLang, 'invalidQuantity'), 'error');
       }
       return false;
     }
 
     cartRef.current = result.cart;
     setCart(result.cart);
-    showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
+    showToast(getCartFeedbackMessage(currentLang, 'added', { name: product.name }));
     return true;
   };
 
@@ -2594,6 +2630,32 @@ export default function App() {
 
       return [...prev, product];
     });
+  };
+
+  const handleFindSavedProduct = (product) => {
+    // Match by stable ID, not a non-unique name or persisted price/stock snapshot.
+    const currentProduct = findCurrentSavedProduct(products, product);
+    if (!currentProduct) {
+      showToast(currentLang === 'en' ? 'This product is no longer available in the catalog.' :
+        currentLang === 'ru' ? 'Товар больше не доступен в каталоге.' : 'ეს პროდუქტი კატალოგში აღარ არის.');
+      return false;
+    }
+    setSelectedCategory('ყველა');
+    setSearchQuery('');
+    setRequestedSavedProductId(String(currentProduct.id));
+    setActiveTab('store');
+    setIsComparisonOpen(false);
+    return true;
+  };
+
+  const handleAddSavedProduct = (savedProduct) => {
+    const currentProduct = findCurrentSavedProduct(products, savedProduct);
+    if (!currentProduct) {
+      showToast(currentLang === 'en' ? 'This product is no longer available in the catalog.' :
+        currentLang === 'ru' ? 'Товар больше не доступен в каталоге.' : 'ეს პროდუქტი კატალოგში აღარ არის.');
+      return false;
+    }
+    return hasProductVariantOptions(currentProduct) ? handleFindSavedProduct(currentProduct) : addToCart(currentProduct);
   };
 
   const handleShareWishlist = () => {
@@ -2954,8 +3016,26 @@ export default function App() {
     // Synchronous lock prevents rapid double taps before React rerenders.
     if (orderSubmitLock.current) return;
     orderSubmitLock.current = true;
+    const checkoutStartEpoch = checkoutOwnerEpochRef.current;
+    const checkoutStartOwnerId = activeCartOwnerRef.current.userId;
+    const abandonCheckoutIfOwnerChanged = () => {
+      if (isCheckoutOwnerContextCurrent({
+        startEpoch: checkoutStartEpoch,
+        currentEpoch: checkoutOwnerEpochRef.current,
+        startOwnerId: checkoutStartOwnerId,
+        currentOwnerId: activeCartOwnerRef.current.userId
+      })) return false;
+      // An in-flight request may already have reached the server. Never show
+      // its private receipt or change the newly active user's cart.
+      pendingCheckoutRef.current = null;
+      try { window.sessionStorage.removeItem('geostore.pendingCheckout'); } catch {}
+      orderSubmitLock.current = false;
+      setIsSubmittingOrder(false);
+      return true;
+    };
     setIsSubmittingOrder(true);
     setCheckoutError('');
+    setCheckoutErrorField(null);
     // The submit button already shows the loading state; avoid a stale toast
     // covering the order confirmation dialog after the server commits.
 
@@ -2995,7 +3075,8 @@ export default function App() {
       };
       const message = (messages[currentLang] || messages.ka)[contactValidation.field];
       setCheckoutError(message);
-      showToast(message);
+      setCheckoutErrorField(contactValidation.field);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3042,7 +3123,7 @@ export default function App() {
           ? 'Корзина пуста. Добавьте товар перед оформлением заказа.'
           : 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
       setCheckoutError(message);
-      showToast(message);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3057,7 +3138,7 @@ export default function App() {
       };
       const message = messages[currentLang] || messages.ka;
       setCheckoutError(message);
-      showToast(message);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
@@ -3083,7 +3164,16 @@ export default function App() {
         error: sessionError
       } = await supabase.auth.getSession();
 
-      if (sessionError) throw sessionError;
+      if (abandonCheckoutIfOwnerChanged()) return;
+      // Never silently turn a signed-in checkout into a guest order when a
+      // refresh token expires, network auth fails, or another identity is read.
+      if (sessionError || !validateCheckoutSessionIdentity({
+        uiUserId: currentUser?.id || null,
+        activeOwnerId: checkoutStartOwnerId,
+        session
+      }).valid) {
+        throw new Error(CHECKOUT_SESSION_UNAVAILABLE);
+      }
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
 
@@ -3098,6 +3188,7 @@ export default function App() {
         throw new Error('პროდუქტების მიმდინარე ფასისა და მარაგის შემოწმება ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.');
       }
       const latestCatalogue = await catalogueResponse.json();
+      if (abandonCheckoutIfOwnerChanged()) return;
       if (!Array.isArray(latestCatalogue)) {
         throw new Error('პროდუქტების მიმდინარე მონაცემები არასწორია. გთხოვთ, სცადოთ თავიდან.');
       }
@@ -3150,7 +3241,7 @@ export default function App() {
               ? `არჩეული ზომა ან ფერი აღარ არის ხელმისაწვდომი: ${changedNames}. წაშალეთ ეს ნივთი კალათიდან ან აირჩიეთ ხელმისაწვდომი ვარიანტი და სცადეთ თავიდან.`
               : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
         setCheckoutError(message);
-        showToast(message);
+        showToast(message, 'error');
         setIsSubmittingOrder(false);
         orderSubmitLock.current = false;
         return;
@@ -3175,6 +3266,7 @@ export default function App() {
         freshCouponResponse.json(),
         freshDeliveryResponse.json()
       ]);
+      if (abandonCheckoutIfOwnerChanged()) return;
       if (!Array.isArray(freshCouponRows) || !Array.isArray(freshDeliveryRows)) {
         throw new Error('Checkout pricing settings are invalid.');
       }
@@ -3233,7 +3325,7 @@ export default function App() {
             ? 'Условия доставки или купона изменились. Показаны актуальные цены. Проверьте заказ и отправьте его повторно.'
             : 'მიწოდების ან კუპონის პირობები შეიცვალა. ნაჩვენებია განახლებული ფასები. გადაამოწმეთ შეკვეთა და ხელახლა დაადასტურეთ.';
         setCheckoutError(message);
-        showToast(message);
+        showToast(message, 'error');
         setIsSubmittingOrder(false);
         orderSubmitLock.current = false;
         return;
@@ -3299,6 +3391,8 @@ export default function App() {
         }
       }
 
+      // Never start a server-side order for an account that has switched.
+      if (abandonCheckoutIfOwnerChanged()) return;
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/create_order_with_stock`,
         {
@@ -3335,23 +3429,26 @@ export default function App() {
       }
 
       serverOrderResult = await response.json();
+      if (abandonCheckoutIfOwnerChanged()) return;
       const orderConfirmationCheck = validateOrderCreationResponse(serverOrderResult, orderId);
       if (!orderConfirmationCheck.valid) {
         throw new Error('სერვერისგან შეკვეთის დადასტურება ვერ მივიღეთ.');
       }
       orderId = orderConfirmationCheck.orderId;
     } catch (err) {
+      if (abandonCheckoutIfOwnerChanged()) return;
       console.error('Order submission failed:', err);
       const message = getCheckoutErrorMessage(err, currentLang);
       setCheckoutError(message);
-      showToast(message);
+      showToast(message, 'error');
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
     }
 
+    if (abandonCheckoutIfOwnerChanged()) return;
     const confirmedItems = normalizeOrderItems(
-      Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder
+      redactCustomerCheckoutItems(Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder)
     );
     const confirmedTotal = Number(serverOrderResult.total_gel);
     const confirmedDelivery = Number(serverOrderResult.delivery_gel);
@@ -3449,7 +3546,11 @@ export default function App() {
         </div>
       )}
       {toastMessage && (
-        <div className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-6 right-6'} z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs`} >
+        <div
+          role={toastTone === 'error' ? 'alert' : 'status'}
+          aria-live={toastTone === 'error' ? 'assertive' : 'polite'}
+          className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-4 left-3 right-3 sm:left-auto sm:top-6 sm:right-6'} z-50 max-w-[min(480px,calc(100vw-24px))] break-words font-bold px-4 py-3 rounded-2xl shadow-2xl border motion-reduce:animate-none flex items-center gap-2.5 text-xs ${toastTone === 'error' ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-emerald-500 text-slate-950 border-emerald-300'}`}
+        >
           {toastMessage}
         </div>
       )}
@@ -3520,6 +3621,10 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            requestedSavedProductId={requestedSavedProductId}
+            onSavedProductRequestHandled={setRequestedSavedProductId}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             comparisonList={comparisonList}
@@ -3636,12 +3741,15 @@ export default function App() {
               </p>
             ) : (
               <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {wishlist.map((prod) => (
+                {wishlist.map((savedProd) => {
+                  const liveProduct = findCurrentSavedProduct(products, savedProd);
+                  const prod = liveProduct || savedProd;
+                  return (
                   <div
-                    key={prod.id}
-                    className="gs-wishlist-card bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
+                    key={savedProd.id}
+                    className="gs-wishlist-card gs-wishlist-card--actions bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="gs-wishlist-main flex items-center gap-3.5 min-w-0">
                       <ProductMediaImage
                         src={prod.image}
                         alt={prod.name || 'GEOSTORE product'}
@@ -3651,25 +3759,38 @@ export default function App() {
                         fallbackClassName="gs-wishlist-image flex w-16 h-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-950/80 text-[9px] font-bold tracking-wide text-amber-300/70"
                       />
 
-                      <div>
-                        <h4 className="gs-wishlist-product-title font-bold text-xs line-clamp-1">
-                          {prod.name}
+                      <div className="gs-wishlist-meta min-w-0">
+                        <h4 className="gs-wishlist-product-title font-bold text-xs">
+                          <button type="button" className="gs-wishlist-detail-link text-left" onClick={() => handleFindSavedProduct(savedProd)}
+                            disabled={!liveProduct} aria-label={`${currentLang === 'en' ? 'View details' : currentLang === 'ru' ? 'Подробнее' : 'დეტალურად ნახვა'}: ${prod.name}`}>
+                            {prod.name}
+                          </button>
                         </h4>
 
                         <p className="gs-wishlist-product-price font-black text-xs mt-1">
-                          {formatPrice(prod.priceGEL)}
+                          {getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => addToCart(prod)}
-                      className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer"
-                    >
-                      {t.addToCart}
-                    </button>
+                    <div className="gs-wishlist-actions flex flex-wrap gap-2">
+                      <button type="button"
+                        onClick={() => handleAddSavedProduct(savedProd)}
+                        disabled={!liveProduct || getProductAvailableStock(prod) <= 0}
+                        aria-label={`${hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}: ${prod.name}`}
+                        className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        {!liveProduct ? (currentLang === 'en' ? 'Unavailable' : currentLang === 'ru' ? 'Недоступен' : 'მიუწვდომელია')
+                          : getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
+                          : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}
+                      </button>
+                      <button type="button" className="gs-wishlist-remove inline-flex items-center justify-center rounded-xl border px-3 cursor-pointer"
+                        onClick={() => toggleWishlist(savedProd)} aria-label={`${currentLang === 'en' ? 'Remove from wishlist' : currentLang === 'ru' ? 'Удалить из избранного' : 'სურვილებიდან წაშლა'}: ${prod.name}`}>
+                        <X className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </div>
@@ -3744,14 +3865,15 @@ export default function App() {
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} × {item.quantity}
                         </p>
-                        <div className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
-                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? 'Decrease quantity' : currentLang === 'ru' ? 'Уменьшить количество' : 'რაოდენობის შემცირება'} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
-                          <span className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
-                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? 'Increase quantity' : currentLang === 'ru' ? 'Увеличить количество' : 'რაოდენობის გაზრდა'} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
+                        <div role="group" className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? `Quantity for ${item.name}` : currentLang === 'ru' ? `Количество: ${item.name}` : `რაოდენობა: ${item.name}`}>
+                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? `Decrease quantity: ${item.name}` : currentLang === 'ru' ? `Уменьшить количество: ${item.name}` : `რაოდენობის შემცირება: ${item.name}`} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
+                          <span aria-live="polite" aria-atomic="true" className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
+                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? `Increase quantity: ${item.name}` : currentLang === 'ru' ? `Увеличить количество: ${item.name}` : `რაოდენობის გაზრდა: ${item.name}`} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
                         </div>
                       </div>
 
                       <button
+                        type="button"
                         onClick={() => removeFromCart(item)}
                         aria-label={currentLang === 'en' ? `Remove ${item.name} from cart` : currentLang === 'ru' ? `Удалить ${item.name} из корзины` : `წაშალე ${item.name} კალათიდან`}
                         className="gs-cart-remove shrink-0 self-start text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
@@ -3828,7 +3950,7 @@ export default function App() {
                           type="text"
                           aria-label={t.promoCode}
                           autoComplete="off"
-                          placeholder="GEOSTORE2026"
+                          placeholder={currentLang === 'en' ? 'Promo code' : currentLang === 'ru' ? 'Промокод' : 'პრომოკოდი'}
                           value={promoInput}
                           onChange={(e) =>
                             setPromoInput(e.target.value)
@@ -3885,8 +4007,10 @@ export default function App() {
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => {
                       setCheckoutError('');
+                      setCheckoutErrorField(null);
                       setIsCheckoutOpen(true);
                     }}
                     className="gs-cart-checkout w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
@@ -4649,6 +4773,11 @@ export default function App() {
         orderConfirmation={orderConfirmation}
         setOrderConfirmation={setOrderConfirmation}
         checkoutError={checkoutError}
+        checkoutErrorField={checkoutErrorField}
+        onCheckoutValidationEdit={() => {
+          setCheckoutError('');
+          setCheckoutErrorField(null);
+        }}
         isAuthOpen={isAuthOpen}
         setIsAuthOpen={setIsAuthOpen}
         authMode={authMode}
@@ -4716,6 +4845,9 @@ export default function App() {
             setIsComparisonOpen={setIsComparisonOpen}
             comparisonList={comparisonList}
             setComparisonList={setComparisonList}
+            catalogProducts={products}
+            onFindProduct={handleFindSavedProduct}
+            currentLang={currentLang}
             addToCart={addToCart}
             formatPrice={formatPrice}
           />

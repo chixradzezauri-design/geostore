@@ -46,6 +46,10 @@ export default function StoreView({
   selectedCategory,
   setSelectedCategory,
   filteredProducts: initialFilteredProducts,
+  requestedSavedProductId = null,
+  onSavedProductRequestHandled,
+  searchQuery = '',
+  setSearchQuery,
   wishlist,
   toggleWishlist,
   comparisonList = [],
@@ -69,6 +73,7 @@ export default function StoreView({
   const [activeImage, setActiveImage] = useState(null);
   const productCloseButtonRef = useRef(null);
   const productReturnFocusRef = useRef(null);
+  const productDialogRef = useRef(null);
 
   const [sortBy, setSortBy] = useState('default');
   const [minPrice, setMinPrice] = useState('');
@@ -93,6 +98,20 @@ export default function StoreView({
 
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openParentCatId, setOpenParentCatId] = useState(null);
+
+  const hasActiveCatalogFilters = Boolean(String(searchQuery || '').trim()) ||
+    (Boolean(selectedCategory) && selectedCategory !== 'ყველა') ||
+    Boolean(selectedSubCategory) || minPrice !== '' || maxPrice !== '' || sortBy !== 'default';
+  const resetCatalogFilters = () => {
+    setSearchQuery?.('');
+    setSelectedCategory?.('ყველა');
+    setSelectedSubCategory(null);
+    setOpenParentCatId(null);
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('default');
+    setProductPage(1);
+  };
 
   useEffect(() => {
     setProductPage(1);
@@ -174,6 +193,13 @@ export default function StoreView({
     setNewReviewImage('');
   };
 
+  useEffect(() => {
+    if (requestedSavedProductId === null || requestedSavedProductId === undefined) return;
+    const currentProduct = activeProducts.find(product => String(product?.id) === String(requestedSavedProductId));
+    if (currentProduct) handleOpenProduct(currentProduct);
+    onSavedProductRequestHandled?.(null);
+  }, [requestedSavedProductId, activeProducts, onSavedProductRequestHandled]);
+
   const closeProductDetails = () => {
     setSelectedProduct(null);
     setIsSmartSizeModalOpen(false);
@@ -195,6 +221,28 @@ export default function StoreView({
   useEffect(() => {
     if (!selectedProduct) return undefined;
     const handleProductDialogKeyDown = (event) => {
+      // Tab stays in the main product dialog; nested size overlays handle their own focus.
+      if (event.key === 'Tab' && !isSmartSizeModalOpen && !isSizeGuideOpen) {
+        const dialog = productDialogRef.current;
+        if (!dialog) return;
+        const focusables = [...dialog.querySelectorAll('button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+          .filter(node => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden');
+        if (focusables.length === 0) {
+          event.preventDefault();
+          productCloseButtonRef.current?.focus();
+          return;
+        }
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (!dialog.contains(active) || (event.shiftKey && active === first)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
       if (event.key !== 'Escape') return;
       event.preventDefault();
       if (isSmartSizeModalOpen) setIsSmartSizeModalOpen(false);
@@ -284,7 +332,7 @@ export default function StoreView({
   };
 
   const mainCategories = useMemo(() => {
-    return (categories || []).filter(c => !c.parentId);
+    return (categories || []).filter(c => !c?.parentId).map(c => typeof c === 'string' ? { id: c, name: c } : c);
   }, [categories]);
 
   const getSubCategories = (parentId) => {
@@ -313,7 +361,11 @@ export default function StoreView({
   const processedProducts = useMemo(() => {
     let result = [...activeProducts];
 
-    if (selectedSubCategory) {
+    // External main-category navigation must not keep a stale child filter active.
+    const selectedParent = mainCategories.find(c => (typeof c === 'object' ? c.name : c) === selectedCategory);
+    const validSubcategory = selectedSubCategory && selectedParent &&
+      getSubCategories(selectedParent.id || selectedParent.name).some(sub => sub.name === selectedSubCategory);
+    if (validSubcategory) {
       result = result.filter(p => p.category === selectedSubCategory);
     } else if (selectedCategory && selectedCategory !== 'ყველა') {
       const matchedParent = mainCategories.find(c => (typeof c === 'object' ? c.name : c) === selectedCategory);
@@ -459,6 +511,13 @@ export default function StoreView({
       : hasCustomProductVariants(selectedProduct)
         ? (selectedCustomVariant?.stock ?? 0)
         : Number(selectedProduct.stock ?? 0);
+  // Read-only guidance mirrors the existing checkout guard, not new inventory rules.
+  const purchaseUnavailableReason = !selectedProduct ? ''
+    : hasCustomProductVariants(selectedProduct) && !selectedCustomVariant ? storeText.variant
+    : hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant ? storeText.sizePrompt
+    : currentAvailableStock <= 0 ? storeText.outOfStock : '';
+  const activeGalleryIndex = selectedProduct && Array.isArray(selectedProduct.gallery)
+    ? selectedProduct.gallery.indexOf(activeImage) : -1;
 
   const renderCustomSections = placement => customSections.filter(section => section.visible && (section.placement || 'after-products') === placement).map(section => {
     const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
@@ -589,12 +648,12 @@ export default function StoreView({
               const availableStock = getProductAvailableStock(prod);
               return (
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
-                  <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
+                  <button type="button" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 w-full flex items-center justify-center cursor-pointer overflow-hidden">
                     {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
                     <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
-                  </div>
+                  </button>
                   <div className="py-3 space-y-1.5">
-                    <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
+                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300"><button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button></h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
                       {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
@@ -602,7 +661,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
-                  <button onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
@@ -661,6 +720,7 @@ export default function StoreView({
             style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
             role="button"
             tabIndex={0}
+            aria-label={storeText.allCategories}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
@@ -699,7 +759,10 @@ export default function StoreView({
                 style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
                 role="button"
                 tabIndex={0}
+                aria-label={`${catName} — ${pCount} ${storeText.productsOnDisplay}`}
                 aria-pressed={isSelected}
+                aria-expanded={subCats.length > 0 ? isOpen : undefined}
+                aria-controls={subCats.length > 0 && isOpen ? 'gs-subcategory-panel' : undefined}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory(catName); setSelectedSubCategory(null); setOpenParentCatId(isOpen ? null : catId); } }}
                 onClick={() => { 
                   setSelectedCategory(catName); 
@@ -731,17 +794,19 @@ export default function StoreView({
           })}
         </div>
 
-        {openParentCatId && getSubCategories(openParentCatId).length > 0 && (
-          <div className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
+        {openParentCatId && mainCategories.some(cat => String(cat.id || cat.name) === String(openParentCatId) && cat.name === selectedCategory) && getSubCategories(openParentCatId).length > 0 && (
+          <div id="gs-subcategory-panel" className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
                 <CornerDownRight className="w-4 h-4" /> {storeText.subcategories} <b className="text-white underline">{selectedCategory}</b>
               </span>
-              <button onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
+              <button type="button" onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
             </div>
             
             <div className="flex flex-wrap gap-2.5 pt-1">
               <button
+                type="button"
+                aria-pressed={!selectedSubCategory}
                 onClick={() => setSelectedSubCategory(null)}
                 className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
               >
@@ -753,6 +818,8 @@ export default function StoreView({
                 return (
                   <button
                     key={sub.id || sub.name}
+                    type="button"
+                    aria-pressed={isSubSel}
                     onClick={() => setSelectedSubCategory(sub.name)}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
@@ -781,6 +848,8 @@ export default function StoreView({
             inputMode="decimal"
             placeholder={storeText.minPrice}
             aria-label={storeText.minPrice}
+            aria-invalid={hasInvalidPriceRange}
+            aria-describedby={hasInvalidPriceRange ? 'gs-price-range-error' : undefined}
             value={minPrice}
             onChange={e => setMinPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
             data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
@@ -793,6 +862,8 @@ export default function StoreView({
             inputMode="decimal"
             placeholder={storeText.maxPrice}
             aria-label={storeText.maxPrice}
+            aria-invalid={hasInvalidPriceRange}
+            aria-describedby={hasInvalidPriceRange ? 'gs-price-range-error' : undefined}
             value={maxPrice}
             onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
             data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
@@ -817,13 +888,20 @@ export default function StoreView({
             <option value="price-desc">{storeText.priceHigh}</option>
             <option value="name-asc">{storeText.nameSort}</option>
           </select>
+          {hasActiveCatalogFilters && (
+            <button type="button" className="gs-filter-reset-all rounded-xl px-3 py-2 font-bold"
+              onClick={resetCatalogFilters}
+              aria-label={currentLang === 'en' ? 'Clear all product filters' : currentLang === 'ru' ? 'Сбросить все фильтры товаров' : 'პროდუქტის ყველა ფილტრის გასუფთავება'}>
+              {currentLang === 'en' ? 'Clear all filters' : currentLang === 'ru' ? 'Сбросить все фильтры' : 'ყველა ფილტრის გასუფთავება'}
+            </button>
+          )}
         </div>
       </div>
 
       {renderCustomSections('after-filters')}
 
       {hasInvalidPriceRange && (
-        <p className="gs-price-range-error" role="alert">
+        <p id="gs-price-range-error" className="gs-price-range-error" role="alert">
           {currentLang === 'en'
             ? 'Minimum price cannot be greater than maximum price.'
             : currentLang === 'ru'
@@ -836,6 +914,11 @@ export default function StoreView({
       {processedProducts.length === 0 ? (
         <div className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
+          {hasActiveCatalogFilters && (
+            <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
+              {currentLang === 'en' ? 'Show all products' : currentLang === 'ru' ? 'Показать все товары' : 'ყველა პროდუქტის ნახვა'}
+            </button>
+          )}
         </div>
       ) : (
         <div id="gs-catalog-products" className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
@@ -866,21 +949,23 @@ export default function StoreView({
                 >
                   {prod.image ? <img data-visual-editor-target="product.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.image')} src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
-                    className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2.5 sm:p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }}
+                    className="gs-catalog-media-toggle gs-catalog-wishlist-toggle absolute top-3 right-3 sm:top-4 sm:right-4 p-2.5 sm:p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
                     title={storeText.wishlistTitle}
-                    aria-label={storeText.wishlistTitle}
+                    aria-label={`${storeText.wishlistTitle}: ${prod.name}`}
                     aria-pressed={isWish}
                   >
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
 
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
-                    className={`absolute top-14 right-3 sm:top-16 sm:right-4 p-2.5 sm:p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }}
+                    className={`gs-catalog-media-toggle gs-catalog-comparison-toggle absolute top-14 right-3 sm:top-16 sm:right-4 p-2.5 sm:p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
                     title={storeText.compareTitle}
-                    aria-label={storeText.compareTitle}
+                    aria-label={`${storeText.compareTitle}: ${prod.name}`}
                     aria-pressed={isCompared}
                   >
                     <Scale className="w-4 h-4" />
@@ -907,7 +992,9 @@ export default function StoreView({
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 data-visual-editor-target="product.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.title')} onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <h3 data-visual-editor-target="product.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                    <button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>
+                  </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
@@ -915,9 +1002,11 @@ export default function StoreView({
                 </div>
 
                 <button
+                  type="button"
                   data-visual-editor-target="product.button"
                   style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.button')}
                   onClick={(event) => handleOpenProduct(prod, event.currentTarget)}
+                  aria-label={`${visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}: ${prod.name}`}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}
@@ -967,7 +1056,7 @@ export default function StoreView({
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className="gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]">
+          <div ref={productDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className={`gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]${purchaseUnavailableReason ? ' gs-product-dialog--purchase-unavailable' : ''}`}>
             
             <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
               <span id="gs-product-dialog-title" className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -1002,6 +1091,24 @@ export default function StoreView({
                       ))}
                     </div>
                   )}
+                  {Array.isArray(selectedProduct.gallery) && selectedProduct.gallery.length > 1 && (
+                    <div className="gs-product-gallery-toolbar flex items-center justify-between gap-3" role="group"
+                      aria-label={currentLang === 'en' ? 'Product gallery navigation' : currentLang === 'ru' ? 'Управление галереей товара' : 'პროდუქტის გალერეის მართვა'}>
+                      <span className="gs-product-gallery-counter text-xs font-bold" role="status" aria-live="polite">
+                        {Math.max(0, activeGalleryIndex) + 1} / {selectedProduct.gallery.length}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Previous product photo' : currentLang === 'ru' ? 'Предыдущее фото товара' : 'წინა ფოტო'}
+                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) - 1 + selectedProduct.gallery.length) % selectedProduct.gallery.length])}>
+                          <span aria-hidden="true">‹</span>
+                        </button>
+                        <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Next product photo' : currentLang === 'ru' ? 'Следующее фото товара' : 'შემდეგი ფოტო'}
+                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) + 1) % selectedProduct.gallery.length])}>
+                          <span aria-hidden="true">›</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="gs-product-detail-info min-w-0 text-xs w-full">
@@ -1022,7 +1129,7 @@ export default function StoreView({
                   </div>
 
                   {(selectedProduct.material || selectedProduct.durability) && (
-                    <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" aria-label={currentLang === 'en' ? 'Product specifications' : currentLang === 'ru' ? 'Характеристики товара' : 'პროდუქტის მახასიათებლები'}>
                       {selectedProduct.material && (
                         <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                           <span className="text-slate-400 block text-[10px]">{storeText.material}</span>
@@ -1049,9 +1156,9 @@ export default function StoreView({
                           <button key={variant.id} type="button" disabled={variant.stock <= 0}
                             onClick={() => setSelectedCustomVariantId(variant.id)}
                             aria-pressed={selectedCustomVariantId === variant.id}
-                            className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-xs transition disabled:opacity-40 disabled:cursor-not-allowed ${selectedCustomVariantId === variant.id ? 'border-amber-400 bg-amber-500/10 text-amber-200' : 'border-amber-500/20 bg-[#08080a] text-slate-300'}`}>
-                            <span className="font-bold">{variant.name}</span>
-                            <span className="shrink-0 text-right"><b>{formatPrice(variant.priceGEL)}</b><small className="block text-slate-500">{variant.stock > 0 ? `${variant.stock} ც.` : storeText.outOfStock}</small></span>
+                            className={`gs-custom-variant-option flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-xs transition disabled:opacity-40 disabled:cursor-not-allowed ${selectedCustomVariantId === variant.id ? 'border-amber-400 bg-amber-500/10 text-amber-200' : 'border-amber-500/20 bg-[#08080a] text-slate-300'}`}>
+                            <span className="gs-custom-variant-name font-bold">{variant.name}</span>
+                            <span className="gs-custom-variant-meta shrink-0 text-right"><b>{formatPrice(variant.priceGEL)}</b><small className="block text-slate-500">{variant.stock > 0 ? `${variant.stock} ც.` : storeText.outOfStock}</small></span>
                           </button>
                         ))}
                       </div>
@@ -1196,26 +1303,32 @@ export default function StoreView({
                     <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
                   </label>
 
-                  <div className="gs-product-description-panel space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
+                  <section aria-label={storeText.description} className="gs-product-description-panel space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="gs-product-description-label text-amber-300 font-bold block text-sm">{storeText.description}</span>
                     <p data-visual-editor-target="product.detail.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.description')} className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
-                  </div>
+                  </section>
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                     <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
                     <span>{storeText.inStock} <b className="text-amber-400 font-black">{currentAvailableStock > 0 ? currentAvailableStock : storeText.outOfStock}</b> {currentAvailableStock > 0 ? storeText.deliveryFit : ''}</span>
                   </div>
 
-                  <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
-                    <h3 className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
+                  <section className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20" aria-labelledby="gs-product-reviews-title">
+                    <h3 id="gs-product-reviews-title" className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-amber-400" /> {storeText.reviews} ({(allReviews[selectedProduct.id] || []).length})
                     </h3>
 
-                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
-                      <span className="text-amber-300 font-bold block text-xs">{storeText.leaveReview}</span>
+                    <details className="gs-product-review-entry">
+                      <summary className="gs-product-review-entry-toggle cursor-pointer font-bold flex items-center justify-between gap-2 px-3 py-2">
+                        <span>{storeText.leaveReview}</span>
+                        <ChevronDown className="gs-product-review-entry-chevron w-4 h-4 shrink-0" aria-hidden="true" />
+                      </summary>
+                      <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3"
+                        aria-label={storeText.leaveReview}>
                       <div className="gs-product-review-rating flex gap-2 items-center">
-                        <span className="text-slate-400">{storeText.rating}</span>
-                        <select 
+                        <label className="text-slate-400" htmlFor="gs-product-review-rating">{storeText.rating}</label>
+                        <select
+                          id="gs-product-review-rating"
                           value={newReviewRating} 
                           onChange={e => setNewReviewRating(Number(e.target.value))}
                           className="gs-product-review-rating-select bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
@@ -1229,14 +1342,18 @@ export default function StoreView({
                       </div>
                       <input 
                         type="text" 
-                        placeholder={storeText.yourName} 
+                        placeholder={storeText.yourName}
+                        aria-label={storeText.yourName}
+                        maxLength={100}
                         value={newReviewAuthor} 
                         onChange={e => setNewReviewAuthor(e.target.value)}
                         required
                         className="gs-product-review-field w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
                       />
                       <textarea 
-                        placeholder={storeText.reviewPlaceholder} 
+                        placeholder={storeText.reviewPlaceholder}
+                        aria-label={storeText.reviewPlaceholder}
+                        maxLength={1500}
                         value={newReviewComment} 
                         onChange={e => setNewReviewComment(e.target.value)}
                         required
@@ -1247,7 +1364,7 @@ export default function StoreView({
                       <div className="gs-product-review-upload flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                         <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
-                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} aria-label={storeText.uploadPhoto} className="gs-product-review-file-input sr-only" />
                         </label>
                         {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
@@ -1255,7 +1372,8 @@ export default function StoreView({
                       <button type="submit" className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
                         {storeText.publishReview}
                       </button>
-                    </form>
+                      </form>
+                    </details>
 
                     <div className="gs-product-review-list space-y-3 pt-2">
                       {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
@@ -1275,21 +1393,28 @@ export default function StoreView({
                             <p className="gs-product-review-comment-text text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
                             {rev.image && (
                               <div className="mt-2">
-                                <img src={rev.image} alt="UGC" loading="lazy" decoding="async" className="gs-product-review-image w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
+                                <img src={rev.image} alt={`${rev.author} — ${storeText.reviews}`} loading="lazy" decoding="async" className="gs-product-review-image w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
                               </div>
                             )}
                           </div>
                         ))
                       )}
                     </div>
-                  </div>
+                  </section>
 
                 </div>
               </div>
             </div>
 
             <div data-visual-editor-target="product.detail.purchase" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.purchase')} className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
-              <button 
+              {purchaseUnavailableReason && (
+                <p id="gs-product-purchase-hint" role="status" className="gs-product-purchase-hint text-xs font-bold mb-2 px-1">
+                  {purchaseUnavailableReason}
+                </p>
+              )}
+              <button
+                type="button"
+                aria-describedby={purchaseUnavailableReason ? 'gs-product-purchase-hint' : undefined}
                 disabled={currentAvailableStock <= 0 || (hasCustomProductVariants(selectedProduct) && !selectedCustomVariant) || (hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant)}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);

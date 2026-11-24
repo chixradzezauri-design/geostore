@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const root = new URL('../', import.meta.url);
-const expenseRls = readFileSync(new URL('supabase/migrations/20261117143000_staff_expenses_permission.sql', root), 'utf8');
-const staffAuth = readFileSync(new URL('supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', root), 'utf8');
+const expenseRls = readFileSync(new URL('supabase/migrations/20261117231531_staff_expenses_permission.sql', root), 'utf8');
+const staffAuth = readFileSync(new URL('supabase/migrations/20261117231455_admin_staff_auth_foundation.sql', root), 'utf8');
 
 test('expenses RLS protects SELECT, INSERT, UPDATE, DELETE with live server permission', () => {
   assert.match(expenseRls, /ON public\.expenses\s+FOR ALL\s+TO authenticated\s+USING \(public\.has_staff_permission\('expenses'\)\)\s+WITH CHECK \(public\.has_staff_permission\('expenses'\)\)/);

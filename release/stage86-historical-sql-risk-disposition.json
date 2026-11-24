@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "capturedDate": "2026-11-23",
+  "remoteHistoryMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "status": "11_HISTORICAL_TOKEN_MISMATCHES_NOT_APPROVED_FOR_REPLAY",
+  "riskRows": [
+    {
+      "file": "20261103044438_add_idempotent_checkout_replay.sql",
+      "risk": "COMMERCE",
+      "severity": "HIGH",
+      "gitBlobSha": "5910b20b89b983edc652d27f6a87cd409dd7b7cb",
+      "appliedSqlMd5": "82ae11815608adf36bab44bea876d8e9",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Signed synthetic checkout/variant/add-on tests; historical deployed SQL still differs"
+    },
+    {
+      "file": "20261103151704_use_amr_for_admin_order_reactivation.sql",
+      "risk": "AUTHORIZATION",
+      "severity": "HIGH",
+      "gitBlobSha": "efe983cdae7e32ac82d54a036c3f10c3364df030",
+      "appliedSqlMd5": "5926396ee94d3ce606003e66865a19cc",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Live current private/public RPC and owner/AMR modes inspected; past account literal differs"
+    },
+    {
+      "file": "20261103194444_secure_admin_save_order_note.sql",
+      "risk": "SQL_SYNTAX",
+      "severity": "MEDIUM",
+      "gitBlobSha": "193707611c4056c3d5e946af838f6f61e1599c51",
+      "appliedSqlMd5": "1052f52d01c2288673f1258302e3ae02",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Current admin note RPC catalog checked; historical stray terminator not safe to replay"
+    },
+    {
+      "file": "20261106103325_preserve_order_item_variants.sql",
+      "risk": "COMMERCE",
+      "severity": "HIGH",
+      "gitBlobSha": "ae536311f85e453286ad57021e9376f5a02d5401",
+      "appliedSqlMd5": "fd2419634c2b78d237af96ee47cdc374",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Signed synthetic checkout/variant/add-on tests; historical deployed SQL still differs"
+    },
+    {
+      "file": "20261107115218_persist_checkout_addons_server_pricing.sql",
+      "risk": "COMMERCE",
+      "severity": "HIGH",
+      "gitBlobSha": "f7ed53b2e90c16c4de7be8d0b45c3a1da655e603",
+      "appliedSqlMd5": "b1d3ca3509df21e13a9c53d4daa95061",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Signed synthetic checkout/variant/add-on tests; historical deployed SQL still differs"
+    },
+    {
+      "file": "20261107130302_add_order_status_notifications.sql",
+      "risk": "SECURITY_DEFINER",
+      "severity": "HIGH",
+      "gitBlobSha": "76002b509fc8aedbe8be7d83cab8fb00db053886",
+      "appliedSqlMd5": "e54482e97e69d244f771649cbf82e0f9",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Current public invoker/private definer RPC contract checked; historic wrapper differed"
+    },
+    {
+      "file": "20261109102126_support_ticket_threading_and_secure_access.sql",
+      "risk": "SUPPORT_AUTH",
+      "severity": "HIGH",
+      "gitBlobSha": "60ed3ca87c745ade19c2fcefce5d54e55efa80c3",
+      "appliedSqlMd5": "8b0fe2d8ffc2f9180ceb30ad3560f928",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Current support RPC metadata recorded; full original applied ticket SQL is not reconciled"
+    },
+    {
+      "file": "20261109102221_fix_support_ticket_message_lookup.sql",
+      "risk": "SUPPORT_AUTH",
+      "severity": "HIGH",
+      "gitBlobSha": "340ea89a51c13e532ac414fc0efe87796788556e",
+      "appliedSqlMd5": "e332f39115a5ce0e1d457dd9fa132ab8",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Current support RPC metadata recorded; full original applied ticket SQL is not reconciled"
+    },
+    {
+      "file": "20261109102338_harden_support_ticket_rpc_wrappers.sql",
+      "risk": "SUPPORT_AUTH",
+      "severity": "HIGH",
+      "gitBlobSha": "b31f16f69ff59fca523379906377ed53823bbfb8",
+      "appliedSqlMd5": "02304f838a45373f9ccdc947a50c16fc",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Current support RPC metadata recorded; full original applied ticket SQL is not reconciled"
+    },
+    {
+      "file": "20261109160629_allow_partial_size_color_stock_updates.sql",
+      "risk": "MESSAGE_TEXT",
+      "severity": "LOW",
+      "gitBlobSha": "0a65b8b457e8fabc87c8f9ff9400752292d54cb5",
+      "appliedSqlMd5": "e7bbfe7940e4df95c965f82bbd695f69",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Only original error localization differs per Stage76 token review; never replay history"
+    },
+    {
+      "file": "20261120122908_replenishment_optimistic_concurrency.sql",
+      "risk": "TRANSACTION_SCOPE",
+      "severity": "HIGH",
+      "gitBlobSha": "276199f8f34d174a1fdbdf08289f4f11df0247b6",
+      "appliedSqlMd5": "479595aa17b006df5f295eede41fac6b",
+      "status": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "limitedCurrentEvidence": "Current replenishment overload metadata recorded; applied/local transaction boundary differs"
+    }
+  ],
+  "riskCounts": {
+    "HIGH": 9,
+    "MEDIUM": 1,
+    "LOW": 1
+  },
+  "note": "9 high 1 medium 1 low all source-unreconciled; risk rank does not authorize historical replay. The new Phase A/B four files are separate."
+}

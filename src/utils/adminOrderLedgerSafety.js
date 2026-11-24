@@ -1,5 +1,16 @@
+import { redactCustomerCheckoutItems } from './orderSafety.js';
+
 export class AdminOrderLedgerAccessError extends Error {
   constructor() { super('შეკვეთების მიმდინარე მომხმარებელი ან უფლება ვერ დადასტურდა.'); this.name = 'AdminOrderLedgerAccessError'; }
+}
+
+// Triggered when permissions change while a multi-page ledger is in flight.
+export class AdminOrderFinanceAccessChangedError extends AdminOrderLedgerAccessError {
+  constructor() {
+    super();
+    this.name = 'AdminOrderFinanceAccessChangedError';
+    this.message = 'ფინანსურ მონაცემებზე წვდომა შეიცვალა. ხელახლა განაახლეთ შეკვეთები.';
+  }
 }
 
 export async function getAuthenticatedAdminOrderHeaders({ loadSession, apiKey, expectedUserId } = {}) {
@@ -31,6 +42,28 @@ export async function requireAdminOrderPermission({ supabaseUrl, headers, fetchI
   catch { throw new Error('შეკვეთების უფლების შემოწმების პასუხი არასწორია.'); }
   if (allowed !== true) throw new AdminOrderLedgerAccessError();
   return true;
+}
+
+// Unlike the orders permission, finance access can legitimately be false.
+ // A failed or malformed response must never be interpreted as false.
+export async function readAdminOrderFinancePermission({ supabaseUrl, headers, fetchImpl } = {}) {
+  if (typeof fetchImpl !== 'function' || !supabaseUrl || !headers?.Authorization) {
+    throw new AdminOrderLedgerAccessError();
+  }
+  const response = await fetchImpl(`${supabaseUrl}/rest/v1/rpc/has_staff_permission`, {
+    method: 'POST', headers, body: JSON.stringify({ p_permission: 'expenses' })
+  });
+  if (!response?.ok) {
+    if (response?.status === 401 || response?.status === 403) throw new AdminOrderLedgerAccessError();
+    throw new Error(`ფინანსური უფლება ვერ გადამოწმდა (HTTP ${response?.status ?? 'unknown'}).`);
+  }
+  let allowed;
+  try { allowed = await response.json(); }
+  catch { throw new Error('ფინანსური უფლების შემოწმების პასუხი არასწორია.'); }
+  if (allowed !== true && allowed !== false) {
+    throw new Error('ფინანსური უფლების შემოწმების პასუხი არასწორია.');
+  }
+  return allowed;
 }
 
 export function hasVerifiedAdminOrderLedgerRows(rows) {
@@ -67,6 +100,10 @@ export async function fetchVerifiedAdminOrderLedger({
   if (!isCurrent()) return null;
   await requireAdminOrderPermission({ supabaseUrl, headers: initialSession.headers, fetchImpl });
   if (!isCurrent()) return null;
+  const initialFinancePermission = await readAdminOrderFinancePermission({
+    supabaseUrl, headers: initialSession.headers, fetchImpl
+  });
+  if (!isCurrent()) return null;
 
   const allOrderRows = [];
   let completed = false;
@@ -75,11 +112,9 @@ export async function fetchVerifiedAdminOrderLedger({
       loadSession, apiKey, expectedUserId: initialSession.userId
     });
     if (!isCurrent()) return null;
-    headers.Range = `${offset}-${offset + pageSize - 1}`;
-    headers['Range-Unit'] = 'items';
     const response = await fetchImpl(
-      `${supabaseUrl}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
-      { headers }
+      `${supabaseUrl}/rest/v1/rpc/admin_order_ledger_page`,
+      { method: 'POST', headers, body: JSON.stringify({ p_offset: offset, p_limit: pageSize }) }
     );
     if (!isCurrent()) return null;
     if (!response?.ok) {
@@ -89,7 +124,23 @@ export async function fetchVerifiedAdminOrderLedger({
     const page = await response.json();
     if (!isCurrent()) return null;
     if (!Array.isArray(page)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
-    allOrderRows.push(...page);
+    // Never combine an old finance-scoped page with a newly restricted one.
+    // Re-read current identity and finance permission after each page request.
+    const pageSession = await getAuthenticatedAdminOrderHeaders({
+      loadSession, apiKey, expectedUserId: initialSession.userId
+    });
+    if (!isCurrent()) return null;
+    const pageFinancePermission = await readAdminOrderFinancePermission({
+      supabaseUrl, headers: pageSession.headers, fetchImpl
+    });
+    if (!isCurrent()) return null;
+    if (pageFinancePermission !== initialFinancePermission) {
+      throw new AdminOrderFinanceAccessChangedError();
+    }
+    allOrderRows.push(...page.map((order) => {
+      if (initialFinancePermission) return order;
+      return { ...order, items: redactCustomerCheckoutItems(order.items) };
+    }));
     if (page.length < pageSize) {
       completed = true;
       break;
@@ -108,5 +159,12 @@ export async function fetchVerifiedAdminOrderLedger({
   if (!isCurrent()) return null;
   await requireAdminOrderPermission({ supabaseUrl, headers: finalSession.headers, fetchImpl });
   if (!isCurrent()) return null;
+  const finalFinancePermission = await readAdminOrderFinancePermission({
+    supabaseUrl, headers: finalSession.headers, fetchImpl
+  });
+  if (!isCurrent()) return null;
+  if (finalFinancePermission !== initialFinancePermission) {
+    throw new AdminOrderFinanceAccessChangedError();
+  }
   return allOrderRows;
 }

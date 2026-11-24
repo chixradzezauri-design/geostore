@@ -1,0 +1,953 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "snapshotDate": "2026-11-22",
+  "parentHistoryMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "records": [
+    {
+      "version": "20261102180130",
+      "name": "order_stock_automation",
+      "sql_md5": "57d69c7a74fa7a713525c0849982e38f",
+      "sql_bytes": 6124,
+      "chunks": 1
+    },
+    {
+      "version": "20261102181854",
+      "name": "add_product_purchase_cost",
+      "sql_md5": "6c726ca44042dec9d5580027bb74bb0d",
+      "sql_bytes": 258,
+      "chunks": 1
+    },
+    {
+      "version": "20261103042140",
+      "name": "server_checkout_prices_and_store_config",
+      "sql_md5": "e6806a3c716cb50ca536268579f0ff4a",
+      "sql_bytes": 6993,
+      "chunks": 1
+    },
+    {
+      "version": "20261103044438",
+      "name": "add_idempotent_checkout_replay",
+      "sql_md5": "82ae11815608adf36bab44bea876d8e9",
+      "sql_bytes": 7196,
+      "chunks": 1
+    },
+    {
+      "version": "20261103044704",
+      "name": "validate_checkout_idempotency_payload",
+      "sql_md5": "1597af00bcc84472622617f210c7ac58",
+      "sql_bytes": 7651,
+      "chunks": 1
+    },
+    {
+      "version": "20261103044919",
+      "name": "minimize_checkout_idempotency_snapshot",
+      "sql_md5": "1346e846c301fe9b1f11df5a90acac8f",
+      "sql_bytes": 7686,
+      "chunks": 1
+    },
+    {
+      "version": "20261103083543",
+      "name": "add_optional_customer_email_to_orders",
+      "sql_md5": "1bc3d99a0c5e3816805f9d27ead19138",
+      "sql_bytes": 7908,
+      "chunks": 1
+    },
+    {
+      "version": "20261103113219",
+      "name": "restrict_unused_public_order_tracking_rpc",
+      "sql_md5": "eab886ed27f900e44944803921543cbe",
+      "sql_bytes": 105,
+      "chunks": 1
+    },
+    {
+      "version": "20261103114054",
+      "name": "restrict_anon_products_to_public_catalog_columns",
+      "sql_md5": "cad115030a6db2e4e3f2ba3a00e97306",
+      "sql_bytes": 363,
+      "chunks": 1
+    },
+    {
+      "version": "20261103114610",
+      "name": "restore_secure_order_tracking_and_admin_notes",
+      "sql_md5": "bd9cdc543a3e59c7766d7f097e8b0d4c",
+      "sql_bytes": 247,
+      "chunks": 1
+    },
+    {
+      "version": "20261103114846",
+      "name": "protect_product_cost_from_authenticated_customers",
+      "sql_md5": "0c13a6b2f034889790cb7f91ed9ea250",
+      "sql_bytes": 1148,
+      "chunks": 1
+    },
+    {
+      "version": "20261103114947",
+      "name": "optimize_admin_rls_policies_without_changing_access",
+      "sql_md5": "531f95b8131f0fbdd8cae2466144c1ac",
+      "sql_bytes": 6232,
+      "chunks": 1
+    },
+    {
+      "version": "20261103114954",
+      "name": "correct_admin_email_in_message_rls",
+      "sql_md5": "c60aff6b539981a11216dd6dd32719b6",
+      "sql_bytes": 613,
+      "chunks": 1
+    },
+    {
+      "version": "20261103115012",
+      "name": "restore_exact_admin_email_in_rls_policies",
+      "sql_md5": "4e4ae2f59cffa450fae9793ff603cec3",
+      "sql_bytes": 4203,
+      "chunks": 1
+    },
+    {
+      "version": "20261103115142",
+      "name": "move_privileged_rpc_implementations_to_private_schema",
+      "sql_md5": "62eac5033be85eb0828764564d6af4b8",
+      "sql_bytes": 3219,
+      "chunks": 1
+    },
+    {
+      "version": "20261103115237",
+      "name": "keep_current_main_admin_catalog_compatible_until_pr18_merge",
+      "sql_md5": "771e7759557d541acfae22a3770143b3",
+      "sql_bytes": 55,
+      "chunks": 1
+    },
+    {
+      "version": "20261103120657",
+      "name": "geostore_order_security_hardening",
+      "sql_md5": "133d8b79a6b487e8ebdd954828c4a236",
+      "sql_bytes": 3760,
+      "chunks": 1
+    },
+    {
+      "version": "20261103120854",
+      "name": "optimize_admin_product_insert_policy",
+      "sql_md5": "00b20c958a55bfc07705e1a6a29ea661",
+      "sql_bytes": 238,
+      "chunks": 1
+    },
+    {
+      "version": "20261103121325",
+      "name": "persist_admin_coupons_and_delivery_fees",
+      "sql_md5": "539afef137119abdce1a08247f78f50d",
+      "sql_bytes": 1281,
+      "chunks": 1
+    },
+    {
+      "version": "20261103121548",
+      "name": "remove_duplicate_coupon_delivery_select_policies",
+      "sql_md5": "87d744e10e50df5a982f489ec20e34b7",
+      "sql_bytes": 2361,
+      "chunks": 1
+    },
+    {
+      "version": "20261103122121",
+      "name": "prevent_stock_restore_after_dispatch",
+      "sql_md5": "6a012447a763c81e4d4dd20de3000c55",
+      "sql_bytes": 1054,
+      "chunks": 1
+    },
+    {
+      "version": "20261103122611",
+      "name": "lock_down_rpc_search_paths",
+      "sql_md5": "634af65437fb4f11f32f6b1690a1f3eb",
+      "sql_bytes": 935,
+      "chunks": 1
+    },
+    {
+      "version": "20261103124219",
+      "name": "grant_admin_product_purchase_cost_write",
+      "sql_md5": "337495537f56c5f14ef6976e8e89e9b7",
+      "sql_bytes": 550,
+      "chunks": 1
+    },
+    {
+      "version": "20261103124349",
+      "name": "align_product_admin_access_with_app_metadata",
+      "sql_md5": "962071f12f7c1c198cc3678118b7ba60",
+      "sql_bytes": 1258,
+      "chunks": 1
+    },
+    {
+      "version": "20261103124427",
+      "name": "optimize_product_admin_role_policy_jwt_calls",
+      "sql_md5": "ccb81fe584ddabd338f0c1b7b860bdd1",
+      "sql_bytes": 1133,
+      "chunks": 1
+    },
+    {
+      "version": "20261103151704",
+      "name": "use_amr_for_admin_order_reactivation",
+      "sql_md5": "5926396ee94d3ce606003e66865a19cc",
+      "sql_bytes": 3967,
+      "chunks": 1
+    },
+    {
+      "version": "20261103153931",
+      "name": "correct_admin_reactivation_email_guard",
+      "sql_md5": "c47c365dacc811e72d830b0e968eac00",
+      "sql_bytes": 3759,
+      "chunks": 1
+    },
+    {
+      "version": "20261103155226",
+      "name": "track_order_status_change_time",
+      "sql_md5": "9706c43b8bdf0891149d2d7d65fa962a",
+      "sql_bytes": 672,
+      "chunks": 1
+    },
+    {
+      "version": "20261103160155",
+      "name": "restrict_product_cost_to_primary_admin",
+      "sql_md5": "83d9bbd8dfa9dd5b3eb3c93b32c7e729",
+      "sql_bytes": 1899,
+      "chunks": 1
+    },
+    {
+      "version": "20261103162615",
+      "name": "secure_admin_product_crud",
+      "sql_md5": "b1232b78b18de87394ae06189aa69d22",
+      "sql_bytes": 3443,
+      "chunks": 1
+    },
+    {
+      "version": "20261103164324",
+      "name": "admin_product_auth_uid",
+      "sql_md5": "2e386d1e0c6d990c9110b971cb84517f",
+      "sql_bytes": 3700,
+      "chunks": 1
+    },
+    {
+      "version": "20261103164717",
+      "name": "admin_authorization_use_auth_uid",
+      "sql_md5": "252dea629d3c15d29269212f80970747",
+      "sql_bytes": 3042,
+      "chunks": 1
+    },
+    {
+      "version": "20261103194444",
+      "name": "secure_admin_save_order_note",
+      "sql_md5": "1052f52d01c2288673f1258302e3ae02",
+      "sql_bytes": 838,
+      "chunks": 1
+    },
+    {
+      "version": "20261103205301",
+      "name": "snapshot_order_item_cost_vendor_category",
+      "sql_md5": "9dec0a16492b2565384e2f8397dbca76",
+      "sql_bytes": 7704,
+      "chunks": 1
+    },
+    {
+      "version": "20261103213006",
+      "name": "harden_admin_rpcs_and_minimize_order_tracking_data",
+      "sql_md5": "079c8b21e91734938783a4e06e973ce5",
+      "sql_bytes": 4220,
+      "chunks": 1
+    },
+    {
+      "version": "20261103225225",
+      "name": "create_storefront_studio_foundation",
+      "sql_md5": "3b00fd727aca952c4ce98daf81b5bc53",
+      "sql_bytes": 4752,
+      "chunks": 1
+    },
+    {
+      "version": "20261103225301",
+      "name": "tighten_storefront_studio_rls_and_indexes",
+      "sql_md5": "586574787d9726460f7315407dde30cb",
+      "sql_bytes": 4664,
+      "chunks": 1
+    },
+    {
+      "version": "20261103230610",
+      "name": "create_storefront_media_bucket_and_admin_policies",
+      "sql_md5": "b16551f67a094b526fe09d17c0b5855d",
+      "sql_bytes": 1917,
+      "chunks": 1
+    },
+    {
+      "version": "20261106085242",
+      "name": "minimize_public_order_tracking_payload",
+      "sql_md5": "58327ba776b6bd70cb12fcea5fe56fbf",
+      "sql_bytes": 1266,
+      "chunks": 1
+    },
+    {
+      "version": "20261106085349",
+      "name": "persist_admin_flash_sale_updates",
+      "sql_md5": "da538b6ede1c7e89dde8880aa63c720f",
+      "sql_bytes": 1890,
+      "chunks": 1
+    },
+    {
+      "version": "20261106085602",
+      "name": "restrict_customer_order_reads_to_admin",
+      "sql_md5": "3a848fdc91891886fd9f99e6cb97d6dc",
+      "sql_bytes": 568,
+      "chunks": 1
+    },
+    {
+      "version": "20261106085622",
+      "name": "revoke_anon_direct_order_reads",
+      "sql_md5": "620b4b31dbe638d516c774789c63b39e",
+      "sql_bytes": 47,
+      "chunks": 1
+    },
+    {
+      "version": "20261106090007",
+      "name": "optimize_storefront_rls_auth_initplans",
+      "sql_md5": "159155c8dccd9d84b51ba2166f78ec0c",
+      "sql_bytes": 5360,
+      "chunks": 1
+    },
+    {
+      "version": "20261106103315",
+      "name": "align_product_admin_authorization_with_auth_uid",
+      "sql_md5": "950ff8ff2c7dadf6fce3810d17ac185a",
+      "sql_bytes": 7365,
+      "chunks": 1
+    },
+    {
+      "version": "20261106103320",
+      "name": "harden_public_support_submission_permissions",
+      "sql_md5": "5b876505364c76458636e557874eab96",
+      "sql_bytes": 2275,
+      "chunks": 1
+    },
+    {
+      "version": "20261106103325",
+      "name": "preserve_order_item_variants",
+      "sql_md5": "fd2419634c2b78d237af96ee47cdc374",
+      "sql_bytes": 11318,
+      "chunks": 1
+    },
+    {
+      "version": "20261106110051",
+      "name": "fix_flash_sale_stale_original_price",
+      "sql_md5": "cb80b1c3a373335d34ca203b815d609a",
+      "sql_bytes": 1961,
+      "chunks": 1
+    },
+    {
+      "version": "20261107083528",
+      "name": "atomic_storefront_publish_and_append_only_versions",
+      "sql_md5": "6ac444a472e2134e85cdd7ed486af479",
+      "sql_bytes": 6284,
+      "chunks": 1
+    },
+    {
+      "version": "20261107083600",
+      "name": "validate_storefront_publish_snapshot_shape",
+      "sql_md5": "a1c9f07cab25895f065eda6a9c84122c",
+      "sql_bytes": 5238,
+      "chunks": 1
+    },
+    {
+      "version": "20261107084940",
+      "name": "harden_order_status_stock_transitions",
+      "sql_md5": "2cc8e8b1db86581cd2847be19a0b4496",
+      "sql_bytes": 13852,
+      "chunks": 1
+    },
+    {
+      "version": "20261107085444",
+      "name": "secure_support_intake_and_persist_admin_activity",
+      "sql_md5": "d664ef7af4207ce6428ad25bc687dfb6",
+      "sql_bytes": 8147,
+      "chunks": 1
+    },
+    {
+      "version": "20261107085535",
+      "name": "return_http_429_for_support_rate_limits",
+      "sql_md5": "64da264069961174ae4ec8147bb9e225",
+      "sql_bytes": 3370,
+      "chunks": 1
+    },
+    {
+      "version": "20261107093727",
+      "name": "admin_product_create_no_upsert",
+      "sql_md5": "00d5f0e2fb10cae4b2e8f796d00df4e3",
+      "sql_bytes": 1351,
+      "chunks": 1
+    },
+    {
+      "version": "20261107094312",
+      "name": "rate_limit_public_order_tracking",
+      "sql_md5": "35e36b63038f84570f00e4642248b377",
+      "sql_bytes": 5394,
+      "chunks": 1
+    },
+    {
+      "version": "20261107094358",
+      "name": "bound_public_guest_checkout_input",
+      "sql_md5": "6b950e80a92bdca14a54c733ce463e8d",
+      "sql_bytes": 3070,
+      "chunks": 1
+    },
+    {
+      "version": "20261107100015",
+      "name": "secure_authenticated_order_history",
+      "sql_md5": "48d7396161c5158b26e0a150e47e7639",
+      "sql_bytes": 1640,
+      "chunks": 1
+    },
+    {
+      "version": "20261107110746",
+      "name": "enforce_nonnegative_product_stock",
+      "sql_md5": "083457003d3c69aaf8a29f21d8000df3",
+      "sql_bytes": 350,
+      "chunks": 1
+    },
+    {
+      "version": "20261107115218",
+      "name": "persist_checkout_addons_server_pricing",
+      "sql_md5": "b1d3ca3509df21e13a9c53d4daa95061",
+      "sql_bytes": 19666,
+      "chunks": 1
+    },
+    {
+      "version": "20261107130302",
+      "name": "add_order_status_notifications",
+      "sql_md5": "e54482e97e69d244f771649cbf82e0f9",
+      "sql_bytes": 5723,
+      "chunks": 1
+    },
+    {
+      "version": "20261107130319",
+      "name": "harden_order_notification_rpc_wrappers",
+      "sql_md5": "300512211c9126e871cc9435baf7b246",
+      "sql_bytes": 904,
+      "chunks": 1
+    },
+    {
+      "version": "20261107130422",
+      "name": "restrict_support_ticket_insert_columns",
+      "sql_md5": "f84b68463eab39efd98623e8df27baf7",
+      "sql_bytes": 352,
+      "chunks": 1
+    },
+    {
+      "version": "20261107130453",
+      "name": "harden_flash_sale_rounding",
+      "sql_md5": "b40ebc35e01d4fc2d0e968a15795b205",
+      "sql_bytes": 1689,
+      "chunks": 1
+    },
+    {
+      "version": "20261107130536",
+      "name": "add_product_data_integrity_constraints",
+      "sql_md5": "819077653615764a7e7749a75fee4a24",
+      "sql_bytes": 3299,
+      "chunks": 1
+    },
+    {
+      "version": "20261107130549",
+      "name": "validate_product_data_integrity_constraints",
+      "sql_md5": "9d3c227f6c73b78073bec74187e6f904",
+      "sql_bytes": 746,
+      "chunks": 1
+    },
+    {
+      "version": "20261107135028",
+      "name": "skip_custom_variant_products_in_flash_sales",
+      "sql_md5": "e86399b5fb0b9f1be16a0b0b829a2407",
+      "sql_bytes": 1738,
+      "chunks": 1
+    },
+    {
+      "version": "20261107150014",
+      "name": "require_valid_guest_checkout_email",
+      "sql_md5": "e67b98057b72cf85423eb5f9f863b642",
+      "sql_bytes": 1374,
+      "chunks": 1
+    },
+    {
+      "version": "20261107160152",
+      "name": "minimize_customer_order_history_payload",
+      "sql_md5": "7f9b3b7f509cdcca500d0628c4e14796",
+      "sql_bytes": 1543,
+      "chunks": 1
+    },
+    {
+      "version": "20261107221605",
+      "name": "revoke_direct_order_note_column_update",
+      "sql_md5": "dd7822d10c6b9290c601be73377434a5",
+      "sql_bytes": 385,
+      "chunks": 1
+    },
+    {
+      "version": "20261108215548",
+      "name": "bind_order_ownership_to_auth_user_uuid",
+      "sql_md5": "be253fa11476aa00ba41edca53407cc1",
+      "sql_bytes": 7065,
+      "chunks": 1
+    },
+    {
+      "version": "20261108225558",
+      "name": "size_color_inventory_stock",
+      "sql_md5": "d407113588ed9ed6732aea30e8a1bc16",
+      "sql_bytes": 26980,
+      "chunks": 1
+    },
+    {
+      "version": "20261108231918",
+      "name": "order_item_image_snapshot",
+      "sql_md5": "25c40a436df398c6633ba93b0db5338c",
+      "sql_bytes": 21229,
+      "chunks": 1
+    },
+    {
+      "version": "20261109092744",
+      "name": "set_created_at_for_new_products",
+      "sql_md5": "e3148022785a6c401fe8fff18439be98",
+      "sql_bytes": 1632,
+      "chunks": 1
+    },
+    {
+      "version": "20261109102126",
+      "name": "support_ticket_threading_and_secure_access",
+      "sql_md5": "8b0fe2d8ffc2f9180ceb30ad3560f928",
+      "sql_bytes": 10278,
+      "chunks": 1
+    },
+    {
+      "version": "20261109102221",
+      "name": "fix_support_ticket_message_lookup",
+      "sql_md5": "e332f39115a5ce0e1d457dd9fa132ab8",
+      "sql_bytes": 1875,
+      "chunks": 1
+    },
+    {
+      "version": "20261109102338",
+      "name": "harden_support_ticket_rpc_wrappers",
+      "sql_md5": "02304f838a45373f9ccdc947a50c16fc",
+      "sql_bytes": 8934,
+      "chunks": 1
+    },
+    {
+      "version": "20261109151649",
+      "name": "restrict_public_product_purchase_cost",
+      "sql_md5": "3effce3b72021b6c073cf8e9c86ca070",
+      "sql_bytes": 401,
+      "chunks": 1
+    },
+    {
+      "version": "20261109151806",
+      "name": "restrict_public_storefront_config_to_published_fields",
+      "sql_md5": "d4263dbd44c83f56fce87e005e06b841",
+      "sql_bytes": 183,
+      "chunks": 1
+    },
+    {
+      "version": "20261109151847",
+      "name": "move_variant_stock_security_definer_to_private",
+      "sql_md5": "95540516cbe2bcacd89cbff6bb0b27f7",
+      "sql_bytes": 5565,
+      "chunks": 1
+    },
+    {
+      "version": "20261109152039",
+      "name": "sanitize_customer_order_history_item_fields",
+      "sql_md5": "48d47b93808eccf2b5db503610e7061c",
+      "sql_bytes": 1123,
+      "chunks": 1
+    },
+    {
+      "version": "20261109152543",
+      "name": "restrict_authenticated_product_cost_select",
+      "sql_md5": "3e819ad901dae1ed5e761ef4786aa181",
+      "sql_bytes": 587,
+      "chunks": 1
+    },
+    {
+      "version": "20261109154122",
+      "name": "20261109160000_preserve_customer_order_owner",
+      "sql_md5": "e9cda5174ff01e801652a277a3f93bac",
+      "sql_bytes": 1639,
+      "chunks": 1
+    },
+    {
+      "version": "20261109160629",
+      "name": "allow_partial_size_color_stock_updates",
+      "sql_md5": "e7bbfe7940e4df95c965f82bbd695f69",
+      "sql_bytes": 4738,
+      "chunks": 1
+    },
+    {
+      "version": "20261109203329",
+      "name": "admin_manage_custom_variant_stock",
+      "sql_md5": "d115c13402df4d95565bbb356df7d475",
+      "sql_bytes": 5953,
+      "chunks": 1
+    },
+    {
+      "version": "20261109211019",
+      "name": "enable_customer_order_notification_realtime",
+      "sql_md5": "0317323aaaf7786f1b7e254e1a94d152",
+      "sql_bytes": 665,
+      "chunks": 1
+    },
+    {
+      "version": "20261109211210",
+      "name": "enable_admin_legacy_message_realtime",
+      "sql_md5": "941001d3212de315313db5b3b50f4738",
+      "sql_bytes": 290,
+      "chunks": 1
+    },
+    {
+      "version": "20261109212150",
+      "name": "prevent_deleting_products_used_in_orders",
+      "sql_md5": "b8fcc7689d50a909d59b97a8d574b813",
+      "sql_bytes": 1900,
+      "chunks": 1
+    },
+    {
+      "version": "20261110043433",
+      "name": "admin_atomic_variant_stock_batches",
+      "sql_md5": "bf2acb8300f4495643dadf9238439896",
+      "sql_bytes": 3253,
+      "chunks": 1
+    },
+    {
+      "version": "20261110054145",
+      "name": "add_idempotent_support_ticket_replies",
+      "sql_md5": "1f43f0ac84b1d88d6db3898cfe6de733",
+      "sql_bytes": 4680,
+      "chunks": 1
+    },
+    {
+      "version": "20261110054535",
+      "name": "add_idempotent_support_ticket_creation",
+      "sql_md5": "3907847355de83694485924c2a3dae29",
+      "sql_bytes": 4522,
+      "chunks": 1
+    },
+    {
+      "version": "20261110075809",
+      "name": "grant_public_product_catalog_read",
+      "sql_md5": "e7cfd4d7a88175c5a5bc71b7ed322f99",
+      "sql_bytes": 61,
+      "chunks": 1
+    },
+    {
+      "version": "20261110075829",
+      "name": "restrict_public_product_catalog_columns",
+      "sql_md5": "c422e1b897b5a605a2388bfe4b166997",
+      "sql_bytes": 375,
+      "chunks": 1
+    },
+    {
+      "version": "20261110100653",
+      "name": "hide_test_products_from_storefront",
+      "sql_md5": "63bf0c1562a9e5f31009bc50e655d642",
+      "sql_bytes": 1825,
+      "chunks": 1
+    },
+    {
+      "version": "20261110133651",
+      "name": "admin_update_product_with_stock",
+      "sql_md5": "b92efa2a6518e139de74fb6922755101",
+      "sql_bytes": 5288,
+      "chunks": 1
+    },
+    {
+      "version": "20261112234156",
+      "name": "guard_legacy_order_product_references",
+      "sql_md5": "16ec00f1aeef11079cfe06bb90b03bb3",
+      "sql_bytes": 2136,
+      "chunks": 1
+    },
+    {
+      "version": "20261116120900",
+      "name": "harden_support_ticket_authorization_and_admin_reply_status",
+      "sql_md5": "2a5073e8eea84f06803510443469431a",
+      "sql_bytes": 8931,
+      "chunks": 1
+    },
+    {
+      "version": "20261116120907",
+      "name": "support_ticket_read_receipts",
+      "sql_md5": "766538c6f3f69249c4129f61a2b12116",
+      "sql_bytes": 4097,
+      "chunks": 1
+    },
+    {
+      "version": "20261116120914",
+      "name": "add_owner_checked_support_ticket_status",
+      "sql_md5": "77d97de6d64f80cbaf72de7d62250110",
+      "sql_bytes": 2320,
+      "chunks": 1
+    },
+    {
+      "version": "20261116121216",
+      "name": "customer_support_ticket_history",
+      "sql_md5": "6dc46fab21b404d2fe9f69d6d1f0ff11",
+      "sql_bytes": 1529,
+      "chunks": 1
+    },
+    {
+      "version": "20261116121952",
+      "name": "restrict_direct_product_deletes_to_guarded_rpc",
+      "sql_md5": "7b1f52afaa0ebbcbe82ce3f8b9750727",
+      "sql_bytes": 294,
+      "chunks": 1
+    },
+    {
+      "version": "20261116124315",
+      "name": "revoke_authenticated_product_purchase_cost_select",
+      "sql_md5": "e9de676f15c5d7d2a3effc62a6f1131d",
+      "sql_bytes": 251,
+      "chunks": 1
+    },
+    {
+      "version": "20261116124349",
+      "name": "restore_authenticated_product_column_allowlist",
+      "sql_md5": "ce06db949c824b9e2fedfe2042ec35a7",
+      "sql_bytes": 552,
+      "chunks": 1
+    },
+    {
+      "version": "20261116124647",
+      "name": "protect_support_tickets_from_direct_deletion",
+      "sql_md5": "e69cd512d3cf915ff8010776bbc9582c",
+      "sql_bytes": 330,
+      "chunks": 1
+    },
+    {
+      "version": "20261116132211",
+      "name": "persist_flash_sale_expiry_and_auto_restore",
+      "sql_md5": "b3039069e82247fb88ecb5ad9c3ee153",
+      "sql_bytes": 6675,
+      "chunks": 1
+    },
+    {
+      "version": "20261116132313",
+      "name": "align_legacy_flash_sale_rpc",
+      "sql_md5": "2e81e9398faeafbf3973cd8fe75fec68",
+      "sql_bytes": 359,
+      "chunks": 1
+    },
+    {
+      "version": "20261116132703",
+      "name": "persistent_flash_sale_campaigns",
+      "sql_md5": "8e06783f6c63c251754e6afc3c030a2e",
+      "sql_bytes": 10233,
+      "chunks": 1
+    },
+    {
+      "version": "20261116133134",
+      "name": "flash_sale_expiry_compatibility",
+      "sql_md5": "39ea0aee88efeaa71a85b85258a17e9a",
+      "sql_bytes": 1940,
+      "chunks": 1
+    },
+    {
+      "version": "20261116134150",
+      "name": "correct_flash_sale_expiry_and_scheduler",
+      "sql_md5": "7b629e616fa4ac204287679a94bc707b",
+      "sql_bytes": 8296,
+      "chunks": 1
+    },
+    {
+      "version": "20261116134800",
+      "name": "flash_sale_price_snapshot_safety",
+      "sql_md5": "a71df30c78f3804ea682d50916f6e033",
+      "sql_bytes": 5510,
+      "chunks": 1
+    },
+    {
+      "version": "20261116135251",
+      "name": "restore_single_flash_sale_expiry_job",
+      "sql_md5": "ca184180548020a9d4d2e4a33b484373",
+      "sql_bytes": 2714,
+      "chunks": 1
+    },
+    {
+      "version": "20261117084403",
+      "name": "private_inventory_movement_ledger_stage92",
+      "sql_md5": "2bbc5ae600f8180894f4ce6e56bc2deb",
+      "sql_bytes": 17888,
+      "chunks": 1
+    },
+    {
+      "version": "20261117084443",
+      "name": "customer_support_ticket_history_pagination",
+      "sql_md5": "5767d4fa0889f4b27ca60489ed3f7dd3",
+      "sql_bytes": 2665,
+      "chunks": 1
+    },
+    {
+      "version": "20261117084528",
+      "name": "inventory_replenishment_settings",
+      "sql_md5": "35aa7da6d5c23ba2709d10c2a464518f",
+      "sql_bytes": 6618,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231455",
+      "name": "20261117100000_admin_staff_auth_foundation",
+      "sql_md5": "7fc5f95eff880cc9261cede447abc9a8",
+      "sql_bytes": 5408,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231459",
+      "name": "20261117103000_staff_orders_permission",
+      "sql_md5": "1b1470f1440fe6955cb9a9e8a54d031d",
+      "sql_bytes": 8323,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231504",
+      "name": "20261117130000_reopen_completed_orders",
+      "sql_md5": "9c02503541877264f658a5ef51cf7ff7",
+      "sql_bytes": 7507,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231508",
+      "name": "20261117140000_staff_products_permission",
+      "sql_md5": "eb284b697cf110ca872df698ff9cfada",
+      "sql_bytes": 14697,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231531",
+      "name": "20261117143000_staff_expenses_permission",
+      "sql_md5": "f2928568eb4f1d6bb2a4e87cf7982bbf",
+      "sql_bytes": 431,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231534",
+      "name": "20261117144500_staff_crm_support_permissions",
+      "sql_md5": "386680087cf2d85533e26c5e50698242",
+      "sql_bytes": 4217,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231538",
+      "name": "20261117150000_staff_settings_permission",
+      "sql_md5": "a1731a40e65edfedc0770e3b025abf74",
+      "sql_bytes": 10684,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231542",
+      "name": "20261117153000_staff_analytics_summary",
+      "sql_md5": "cba21396bb1c74fa84bf3b00616ed216",
+      "sql_bytes": 10992,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231546",
+      "name": "20261117160000_stable_checkout_idempotency_ordering",
+      "sql_md5": "e5bc9c87792464f12425269c60417df2",
+      "sql_bytes": 21629,
+      "chunks": 1
+    },
+    {
+      "version": "20261117231549",
+      "name": "20261117170000_admin_staff_pending_invites",
+      "sql_md5": "7886e66bc4d95627d1ed9322079f0540",
+      "sql_bytes": 986,
+      "chunks": 1
+    },
+    {
+      "version": "20261119071946",
+      "name": "move_all_support_ticket_history_rpcs_to_private",
+      "sql_md5": "e43eb2fe844c1d574c04e8b9713bde36",
+      "sql_bytes": 12370,
+      "chunks": 1
+    },
+    {
+      "version": "20261119071952",
+      "name": "admin_rpc_invoker_wrappers",
+      "sql_md5": "27dfba76c7521e926310bcdb5a391336",
+      "sql_bytes": 23601,
+      "chunks": 1
+    },
+    {
+      "version": "20261119071959",
+      "name": "add_secure_admin_customer_crm",
+      "sql_md5": "10a626cb9ab6ba46392412969dea8a9b",
+      "sql_bytes": 6228,
+      "chunks": 1
+    },
+    {
+      "version": "20261119094446",
+      "name": "revoke_anon_completed_order_reactivation",
+      "sql_md5": "8743205612d05c46ad6f7008e5929856",
+      "sql_bytes": 387,
+      "chunks": 1
+    },
+    {
+      "version": "20261119140237",
+      "name": "admin_panel_visual_design_sync",
+      "sql_md5": "7fbeb33ee15bb7d95dd566f681e384f3",
+      "sql_bytes": 3722,
+      "chunks": 1
+    },
+    {
+      "version": "20261119140327",
+      "name": "admin_panel_visual_settings_owner_policy",
+      "sql_md5": "86de3d1d6738417828418f006be12e08",
+      "sql_bytes": 829,
+      "chunks": 1
+    },
+    {
+      "version": "20261119160433",
+      "name": "admin_panel_visual_design_concurrency",
+      "sql_md5": "f7b288d0e078ae8fddd9f997eb03bba9",
+      "sql_bytes": 5117,
+      "chunks": 1
+    },
+    {
+      "version": "20261119160821",
+      "name": "add_storefront_hero_storage_scope",
+      "sql_md5": "e40ecb5ea6f4fe584c889985903ff699",
+      "sql_bytes": 2319,
+      "chunks": 1
+    },
+    {
+      "version": "20261119181855",
+      "name": "storefront_draft_concurrency",
+      "sql_md5": "626fd010d3576ec180daf9b4fe494630",
+      "sql_bytes": 3930,
+      "chunks": 1
+    },
+    {
+      "version": "20261119181911",
+      "name": "restore_storefront_version_to_draft",
+      "sql_md5": "82b8245125afaa277412f9977a989cda",
+      "sql_bytes": 4240,
+      "chunks": 1
+    },
+    {
+      "version": "20261119181955",
+      "name": "legacy_storefront_draft_save_compat",
+      "sql_md5": "a6f9e1b0361e82d073d914edf679bf7d",
+      "sql_bytes": 1151,
+      "chunks": 1
+    },
+    {
+      "version": "20261120122908",
+      "name": "replenishment_optimistic_concurrency",
+      "sql_md5": "479595aa17b006df5f295eede41fac6b",
+      "sql_bytes": 5701,
+      "chunks": 1
+    },
+    {
+      "version": "20261120124250",
+      "name": "storefront_publish_concurrency_safe_compat",
+      "sql_md5": "a236cdca2ea77aed513a690c18845ca9",
+      "sql_bytes": 7786,
+      "chunks": 1
+    }
+  ]
+}

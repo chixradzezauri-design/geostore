@@ -20378,3 +20378,10 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     max-width: 100% !important;
   }
 }
+
+
+/* Stage 42: native closed review disclosures must override the legacy
+   forced grid layout on review forms, while retaining the open form layout. */
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry:not([open]) > .gs-product-review-form {
+  display: none !important;
+}

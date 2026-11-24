@@ -1,0 +1,261 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "capturedDate": "2026-11-24",
+  "phase": "PRE_PHASE_A",
+  "source": "Production read-only PostgreSQL catalog, no customer or identity rows",
+  "historyMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "supportSurface": {
+    "rpcs": [
+      {
+        "md5": "8da301bdca14816b3718d51916ed6da3",
+        "sig": "private.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+        "anon": true,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "d468c7f14c9e9cc8f03347d06fc4f01a",
+        "sig": "private.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+        "anon": true,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "8c20aa48e1ea12ce14f750f2fe472c50",
+        "sig": "private.get_my_support_tickets(p_limit integer)",
+        "anon": false,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "611c769b6ad0c8b94b8f7bb77f2ca3df",
+        "sig": "private.get_my_support_tickets_page(p_limit integer, p_before_last_message_at timestamp with time zone, p_before_ticket_id text)",
+        "anon": false,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "acb5b90b297b07c2b0681d6a29097932",
+        "sig": "private.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+        "anon": true,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "18bd40f5d4013dc96ffb4eab386a7fbf",
+        "sig": "private.get_support_ticket_unread_counts()",
+        "anon": false,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "b29b4f0dc08a23ded9b87b09b93d56ce",
+        "sig": "private.has_staff_permission(p_permission text)",
+        "anon": false,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "5fdab1ba72ed2898b2d4df3f7f5d2c83",
+        "sig": "private.mark_support_ticket_messages_read(p_ticket_id text, p_access_token text)",
+        "anon": true,
+        "definer": true,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "4d2da50f9f5f6ab52cdb2fa5b46181ab",
+        "sig": "public.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+        "anon": true,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "7404f95eaf484e74bcd7d24e0ab5d637",
+        "sig": "public.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+        "anon": true,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "30ee29174684afc3d7b49b8fe9d4c18a",
+        "sig": "public.get_my_support_tickets(p_limit integer)",
+        "anon": false,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "f8728928a3ba45e61df529e7a1faa219",
+        "sig": "public.get_my_support_tickets_page(p_limit integer, p_before_last_message_at timestamp with time zone, p_before_ticket_id text)",
+        "anon": false,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "fcd13ba9a9404172863a52c0310c1e44",
+        "sig": "public.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+        "anon": true,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "7e8128cc901217e0079595698a586479",
+        "sig": "public.get_support_ticket_unread_counts()",
+        "anon": false,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "64e488d7e1efa9c0504b894914585783",
+        "sig": "public.has_staff_permission(p_permission text)",
+        "anon": false,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      },
+      {
+        "md5": "866f32be7d5c4e65e69ffa67305fa4e1",
+        "sig": "public.mark_support_ticket_messages_read(p_ticket_id text, p_access_token text)",
+        "anon": true,
+        "definer": false,
+        "pathLocked": true,
+        "authenticated": true
+      }
+    ],
+    "tables": [
+      {
+        "rls": true,
+        "name": "public.admin_staff_members",
+        "forced": true,
+        "anonSelect": false,
+        "authenticatedDelete": false,
+        "authenticatedSelect": false,
+        "authenticatedUpdate": false
+      },
+      {
+        "rls": true,
+        "name": "public.admin_staff_pending_invites",
+        "forced": true,
+        "anonSelect": false,
+        "authenticatedDelete": false,
+        "authenticatedSelect": false,
+        "authenticatedUpdate": false
+      },
+      {
+        "rls": true,
+        "name": "public.messages",
+        "forced": false,
+        "anonSelect": false,
+        "authenticatedDelete": true,
+        "authenticatedSelect": true,
+        "authenticatedUpdate": true
+      },
+      {
+        "rls": true,
+        "name": "public.support_ticket_messages",
+        "forced": false,
+        "anonSelect": false,
+        "authenticatedDelete": false,
+        "authenticatedSelect": true,
+        "authenticatedUpdate": false
+      },
+      {
+        "rls": true,
+        "name": "public.support_tickets",
+        "forced": false,
+        "anonSelect": false,
+        "authenticatedDelete": false,
+        "authenticatedSelect": true,
+        "authenticatedUpdate": true
+      }
+    ],
+    "policies": [
+      {
+        "cmd": "DELETE",
+        "name": "Staff with CRM permission can delete chat messages",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "public.messages",
+        "checkMd5": "d41d8cd98f00b204e9800998ecf8427e",
+        "usingMd5": "190ed8f6308ae82f7264099e38974dee"
+      },
+      {
+        "cmd": "SELECT",
+        "name": "Staff with CRM permission can read chat messages",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "public.messages",
+        "checkMd5": "d41d8cd98f00b204e9800998ecf8427e",
+        "usingMd5": "190ed8f6308ae82f7264099e38974dee"
+      },
+      {
+        "cmd": "UPDATE",
+        "name": "Staff with CRM permission can update chat messages",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "public.messages",
+        "checkMd5": "190ed8f6308ae82f7264099e38974dee",
+        "usingMd5": "190ed8f6308ae82f7264099e38974dee"
+      },
+      {
+        "cmd": "SELECT",
+        "name": "Staff with support permission can read support ticket messages",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "public.support_ticket_messages",
+        "checkMd5": "d41d8cd98f00b204e9800998ecf8427e",
+        "usingMd5": "c0ddc486653df8d967b6aa1522ed1a9d"
+      },
+      {
+        "cmd": "SELECT",
+        "name": "Staff with support permission can read support tickets",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "public.support_tickets",
+        "checkMd5": "d41d8cd98f00b204e9800998ecf8427e",
+        "usingMd5": "c0ddc486653df8d967b6aa1522ed1a9d"
+      },
+      {
+        "cmd": "UPDATE",
+        "name": "Staff with support permission can update support tickets",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "public.support_tickets",
+        "checkMd5": "c0ddc486653df8d967b6aa1522ed1a9d",
+        "usingMd5": "c0ddc486653df8d967b6aa1522ed1a9d"
+      },
+      {
+        "cmd": "INSERT",
+        "name": "Visitors can submit validated support tickets",
+        "roles": [
+          "anon",
+          "authenticated"
+        ],
+        "table": "public.support_tickets",
+        "checkMd5": "d920b74e35dc2afa0f0ccc6fa3db01be",
+        "usingMd5": "d41d8cd98f00b204e9800998ecf8427e"
+      }
+    ]
+  },
+  "note": "Current RLS/ACL/SECURITY metadata only; no full-schema Auth support customer pathways, no permission for Production deploy."
+}

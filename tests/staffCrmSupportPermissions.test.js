@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261117144500_staff_crm_support_permissions.sql', import.meta.url), 'utf8');
-const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261117231534_staff_crm_support_permissions.sql', import.meta.url), 'utf8');
+const foundation = await readFile(new URL('../supabase/migrations/20261117231455_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 
 test('legacy customer messages require the CRM permission', () => {
   assert.match(migration, /Staff with CRM permission can read chat messages/);

@@ -10,8 +10,10 @@ const css = stylesheets.map(file => readFileSync(resolve(assets, file), 'utf8'))
 const stage6CssPresent = css.includes('.admin-products-panel .admin-product-controls');
 assert.ok(stage6CssPresent, 'Stage 6 admin product rules must be included in the built stylesheet');
 const cards = Array.from({ length: 2 }, (_, i) =>
-  '<article class="gs-catalog-product-card"><div class="gs-catalog-product-media">Image</div>' +
-  '<div class="gs-catalog-product-info"><h3>Product ' + i + '</h3><button>დამატება</button></div></article>'
+  '<article class="gs-catalog-product-card"><div class="gs-catalog-product-media">Image' +
+  '<button type="button" class="gs-catalog-media-toggle gs-catalog-wishlist-toggle" aria-label="სურვილები: Product ' + i + '" aria-pressed="false">♡</button>' +
+  '<button type="button" class="gs-catalog-media-toggle gs-catalog-comparison-toggle" aria-label="შედარება: Product ' + i + '" aria-pressed="false">⇄</button>' +
+  '</div><div class="gs-catalog-product-info"><h3 class="gs-catalog-product-title"><button type="button" class="gs-catalog-product-title-action">Product ' + i + '</button></h3><button>დამატება</button></div></article>'
 ).join('');
 const nav = Array.from({ length: 23 }, (_, i) =>
   '<button type="button" data-admin-visual-nav-item="true" class="w-full min-w-0 px-3.5 py-3 rounded-2xl flex items-center justify-between">' +
@@ -24,16 +26,22 @@ const storefront = '<section class="geostore-fashion-store" style="width:100%;ma
   '<button>კონფიდენციალურობა</button><span aria-hidden="true">•</span>' +
   '<button>საგარანტიო წესები</button></div></footer></section>';
 const admin = '<section class="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 w-full" data-admin-visual-design="enabled">' +
-  '<div class="w-full lg:w-72 shrink-0"><div>GEOSTORE Admin</div><div class="space-y-1.5">' + nav + '</div></div>' +
-  '<div class="flex-1 w-full"><div data-admin-visual-header="true" class="flex flex-col lg:flex-row p-5 gap-3">' +
+  '<div class="w-full lg:w-72 shrink-0" data-admin-sidebar="true"><div>GEOSTORE Admin</div><div id="geostore-admin-desktop-modules" class="space-y-1.5">' + nav + '</div>' +
+  '<div class="admin-mobile-section-picker"><label for="fixture-mobile-admin-section">სექციაზე გადასვლა</label>' +
+  '<select id="fixture-mobile-admin-section"><option>მთავარი</option><option>შეკვეთები</option></select></div></div>' +
+  '<div class="flex-1 w-full"><div data-admin-visual-header="true" class="flex flex-col lg:flex-row p-5 gap-3" style="height:480px;justify-content:space-between">' +
   '<div><h2>მოგესალმებით, მთავარო ადმინისტრატორო</h2></div>' +
   '<div class="grid grid-cols-2 gap-2"><button>მონახაზის შენახვა</button><button>ცვლილებების გამოქვეყნება</button></div>' +
   '</div><div class="admin-command-hero"><h3>მთავარი მართვის ცენტრი</h3></div>' +
   '<div class="admin-command-kpis"><button class="admin-command-kpi"><span>ახალი შეკვეთები</span><strong>120</strong></button></div>' +
   '</div></section>';
 
+const stage37ProductFiltersFixture = '<div class="admin-product-list-filters flex flex-col sm:flex-row gap-2">' +
+  '<select aria-label="კატეგორია"><option>ყველა კატეგორია</option></select>' +
+  '<div class="admin-product-search"><input type="search" aria-label="პროდუქტის ძებნა"></div></div>';
+
 const adminProductFixture =
-  '<section class="admin-products-panel"><div class="admin-product-row flex flex-col sm:flex-row justify-between gap-4">' +
+  '<section class="admin-products-panel">' + stage37ProductFiltersFixture + '<div class="admin-product-row flex flex-col sm:flex-row justify-between gap-4">' +
   '<div class="admin-product-identity flex min-w-0 items-center gap-3.5">' +
   '<div style="width:56px;height:56px;flex-shrink:0"></div><div>' +
   '<h4>გრძელი დასახელების ქართული პროდუქტი სხვადასხვა ზომით და ფერით</h4>' +
@@ -56,15 +64,45 @@ const adminOrdersFixture =
   '<div class="admin-order-card-heading"><strong>შეკვეთა #1001</strong><span>120.00 ₾</span></div>' +
   '<div class="admin-order-card-customer"><p>მყიდველი: გრძელისახელისგრძელიმომხმარებელი</p></div>' +
   '<div class="admin-order-actions flex gap-2"><button>სრული დეტალები</button><button>ინვოისი</button>' +
-  '<div class="admin-order-status-actions flex gap-1"><button>ახალი</button><button>მუშავდება</button></div></div>' +
+  '<div class="admin-order-status-actions flex gap-1"><button>ახალი</button><button>მუშავდება</button>' +
+   '<button>გაგზავნილი</button><button>ჩაბარებული</button><button>გაუქმება</button></div></div>' +
   '</article></div>' +
   '<nav class="admin-orders-pagination" aria-label="შეკვეთების გვერდები"><div class="flex gap-2">' +
   '<button>წინა</button><button>1</button><button>შემდეგი</button></div></nav></section>';
 
+
+const stage36OperationsFixture = '<section class="admin-inventory-panel">' +
+  '<div class="admin-inventory-history-toolbar flex w-full flex-col sm:flex-row gap-2">' +
+  '<input aria-label="მარაგის ძებნა" type="search" /><button>ფილტრი</button><button>განახლება</button></div>' +
+  '<div class="admin-inventory-table-scroll overflow-x-auto" role="region" tabindex="0">' +
+  '<table style="min-width:900px"><tbody><tr><td>მარაგის ცვლილება</td></tr></tbody></table></div></section>' +
+  '<section class="admin-inventory-panel"><div class="admin-replenishment-row grid grid-cols-2 gap-3">' +
+  '<div class="admin-replenishment-metric"><label for="fixture-threshold">დაბალი მარაგის ზღვარი</label>' +
+  '<input id="fixture-threshold" type="number" value="5"></div>' +
+  '<div class="admin-replenishment-metric"><label for="fixture-target">სამიზნე მარაგი</label>' +
+  '<input id="fixture-target" type="number" disabled value="20"></div>' +
+  '<div class="admin-replenishment-save"><button disabled>შენახვა</button></div></div></section>';
+
+
+const stage37SupportFixture = '<section class="admin-support-panel">' +
+  '<article class="admin-support-ticket"><div class="admin-support-ticket-header">' +
+  '<div class="admin-support-ticket-controls flex flex-wrap gap-2">' +
+  '<div class="admin-support-status-actions flex gap-1">' +
+  '<button type="button">ღია</button><button type="button">მუშავდება</button><button type="button">მოგვარებული</button></div>' +
+  '<button type="button">მიმოწერის ნახვა</button></div></div>' +
+  '<div class="admin-support-reply-form flex flex-col sm:flex-row gap-3 pt-2">' +
+  '<textarea class="admin-support-reply-input" rows="3" aria-label="პასუხის ტექსტი"></textarea>' +
+  '<button type="button">გაგზავნა</button></div></article></section>';
+const stage37CrmEditorFixture = '<div class="admin-crm-edit-panel">' +
+  '<div><label for="test-crm-discount">ფასდაკლება</label>' +
+  '<input id="test-crm-discount" type="number" value="10"></div>' +
+  '<div><label for="test-crm-note">შენიშვნა</label>' +
+  '<input id="test-crm-note" type="text" value="სატესტო"></div>' +
+  '<div><button type="button">გაუქმება</button><button type="button">შენახვა</button></div></div>';
 const adminCrmFixture =
   '<section class="admin-crm-panel"><div class="admin-crm-search">' +
   '<input type="text" aria-label="CRM მომხმარებლების ძებნა"></div>' +
-  '<div class="admin-crm-list"><article class="admin-crm-user-card">' +
+  stage37CrmEditorFixture + '<div class="admin-crm-list"><article class="admin-crm-user-card">' +
   '<div><h4>ძალიან გრძელი ქართული მომხმარებლის სახელი სატესტო მონაცემებით</h4>' +
   '<p>user.with.long.email.address@example.test | +995555555555</p></div>' +
   '<div class="admin-crm-user-actions flex flex-wrap gap-2 w-full sm:w-auto justify-end">' +
@@ -207,14 +245,30 @@ const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<button class="gs-product-modal-close" aria-label="დახურვა">×</button></div>' +
   '<div class="gs-product-modal-body"><div class="grid">' +
   '<div class="gs-product-gallery"><div class="gs-product-detail-image-stage">სურათი</div>' +
-  '<div class="gs-product-gallery-thumbnails"><button class="gs-product-gallery-thumb">1</button></div></div>' +
+  '<div class="gs-product-gallery-thumbnails"><button class="gs-product-gallery-thumb">1</button></div>' +
+  '<div class="gs-product-gallery-toolbar" role="group" aria-label="გალერეის მართვა">' +
+  '<span class="gs-product-gallery-counter" role="status">1 / 2</span>' +
+  '<div><button class="gs-product-gallery-step" type="button" aria-label="წინა ფოტო">‹</button>' +
+  '<button class="gs-product-gallery-step" type="button" aria-label="შემდეგი ფოტო">›</button></div></div></div>' +
   '<div class="gs-product-detail-info"><div class="gs-size-selector">' +
   '<div class="flex"><span>აირჩიეთ ზომა</span><button>ზომების გიდი</button></div>' +
   '<div class="gs-size-options-grid">' +
   '<button class="gs-size-option">M</button><button class="gs-size-option">L</button></div></div>' +
   '<div class="gs-color-selector"><div class="flex"><button class="gs-color-option">ბეჟი</button></div></div>' +
+  '</div><section class="gs-product-description-panel" aria-label="პროდუქტის აღწერა"><p class="gs-product-description-copy">გრძელიდასახელებისსაკომპოზიციომასალა012345678901234567890 გრძელი აღწერა</p></section>' +
+  '<div class="gs-product-detail-specs"><div><b>გრძელიმასალისსახელიABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</b></div></div>' +
+  '<section class="gs-product-reviews" aria-labelledby="fixture-review-title"><h3 id="fixture-review-title">შეფასებები</h3>' +
+  '<details class="gs-product-review-entry"><summary class="gs-product-review-entry-toggle"><span>დატოვეთ შეფასება და ატვირთეთ ფოტო</span></summary>' +
+  '<form class="gs-product-review-form"><div class="gs-product-review-rating"><label for="fixture-rating">შეფასება</label>' +
+  '<select id="fixture-rating" class="gs-product-review-rating-select"><option>5</option></select></div>' +
+  '<input class="gs-product-review-field" aria-label="თქვენი სახელი" type="text" placeholder="სახელი">' +
+  '<textarea class="gs-product-review-field gs-product-review-comment" aria-label="კომენტარი"></textarea>' +
+  '<div class="gs-product-review-upload"><label>ფოტოს ატვირთვა<input type="file" class="gs-product-review-file-input sr-only"></label></div>' +
+  '<button class="gs-product-review-submit" type="submit">გამოქვეყნება</button></form></details>' +
+  '<div class="gs-product-review-list"><article class="gs-product-review-card"><b class="gs-product-review-author">გრძელისახელითტექსტი0123456789</b><p class="gs-product-review-comment-text">ძალიანგრძელიშეფასებისტექსტი12345678901234567890123456789</p></article></div></section>' +
   '</div></div></div><div class="gs-product-modal-purchase-bar">' +
-  '<button class="gs-modal-add-to-cart"><span>🛍</span>' +
+  '<p class="gs-product-purchase-hint" id="gs-product-purchase-hint" role="status">მარაგში არ არის</p>' +
+  '<button class="gs-modal-add-to-cart" aria-describedby="gs-product-purchase-hint" disabled><span>🛍</span>' +
   '<span class="gs-modal-add-label">კალათაში დამატება · M / ბეჟი</span>' +
   '<span class="gs-modal-add-price">199.00 ₾</span></button></div></div></div>';
 
@@ -223,11 +277,11 @@ const cartFixture =
   '<div class="gs-cart-items-list lg:col-span-2"><div class="gs-cart-item flex items-start gap-3">' +
   '<div class="gs-cart-item-media relative flex w-20 h-20 shrink-0">სურათი</div>' +
   '<div class="min-w-0 flex-1"><h4 class="gs-cart-item-title">ქართული პროდუქტის დასახელება</h4>' +
-  '<div class="gs-cart-quantity-controls flex items-center gap-2">' +
-  '<button type="button" class="w-8 h-8">−</button><span>2</span><button type="button" class="w-8 h-8">+</button></div></div>' +
+  '<div class="gs-cart-quantity-controls flex items-center gap-2" role="group" aria-label="რაოდენობა: სატესტო პროდუქტი">' +
+  '<button type="button" class="w-8 h-8" aria-label="რაოდენობის შემცირება: სატესტო პროდუქტი">−</button><span aria-live="polite">2</span><button type="button" class="w-8 h-8" aria-label="რაოდენობის გაზრდა: სატესტო პროდუქტი">+</button></div></div>' +
   '<button class="gs-cart-remove">წაშლა</button></div></div>' +
-  '<div class="gs-cart-summary"><form class="gs-cart-coupon-form flex gap-2">' +
-  '<input placeholder="GEOSTORE2026"><button type="submit">გამოყენება</button></form>' +
+  '<div class="gs-cart-summary"><label>მიწოდების რეგიონი<select aria-label="მიწოდების რეგიონი"><option>თბილისი</option></select></label><form class="gs-cart-coupon-form flex gap-2">' +
+  '<input placeholder="პრომოკოდი"><button type="submit">გამოყენება</button></form>' +
   '<div class="gs-cart-totals"><div class="flex justify-between"><span>სრული თანხა</span><span>199.00 ₾</span></div></div>' +
   '<button class="gs-cart-checkout">შეკვეთის გაფორმება</button></div></div></div>';
 
@@ -244,7 +298,7 @@ const checkoutFixture =
   '<label><span>ელ-ფოსტა</span><input type="email" /></label>' +
   '<label><span>მიწოდების რეგიონი</span><select><option>თბილისი</option></select></label>' +
   '<label><span>მისამართი</span><input type="text" /></label>' +
-  '<p class="gs-checkout-error" role="alert">გთხოვთ გადაამოწმოთ მონაცემები.</p>' +
+  '<p class="gs-checkout-error" role="alert" tabindex="-1">გთხოვთ გადაამოწმოთ მონაცემები.</p>' +
   '<div class="gs-checkout-submit-area"><button type="submit">შეკვეთის დადასტურება</button></div>' +
   '</form></section></div>';
 
@@ -253,16 +307,36 @@ const categoryArtworkFixture = '<div class="gs-category-grid"><div class="gs-cat
   'src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2230%22%20height=%2230%22/%3E" />' +
   '<div><h4>ყველა კატეგორია</h4></div></div></div>';
 
+
+const stage43Fixture = '<section class="geostore-fashion-store"><div class="gs-wishlist-page"><div class="gs-wishlist-grid">' +
+  '<div class="gs-wishlist-card gs-wishlist-card--actions"><div class="gs-wishlist-main flex items-center gap-3.5 min-w-0">' +
+  '<div class="gs-wishlist-image">image</div><div class="gs-wishlist-meta min-w-0">' +
+  '<h3 class="gs-wishlist-product-title"><button type="button" class="gs-wishlist-detail-link" aria-label="დეტალურად ნახვა">გრძელისასურველინივთისდასახელება0000000</button></h3></div></div>' +
+  '<div class="gs-wishlist-actions flex flex-wrap gap-2"><button class="gs-wishlist-add">აირჩიეთ ვარიანტი</button>' +
+  '<button class="gs-wishlist-remove" aria-label="წაშლა">×</button></div></div></div></div></section>' +
+  '<div class="gs-product-compare-overlay fixed inset-0"><div class="gs-product-compare-dialog" role="dialog" aria-modal="true">' +
+  '<div class="gs-product-compare-header flex justify-between"><div><h2>შედარება</h2></div>' +
+  '<button class="gs-product-compare-clear">გასუფთავება</button><button class="gs-product-compare-close">×</button></div>' +
+  '<div class="gs-product-compare-scroll overflow-x-auto" tabindex="0" role="region">' +
+  '<div class="gs-product-compare-grid grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-6">' +
+  Array.from({length:4}, (_,i) => '<article class="gs-product-compare-card"><button class="gs-product-compare-remove" aria-label="წაშლა ' + i + '">×</button>' +
+    '<h3 class="gs-product-compare-heading"><button class="gs-product-compare-detail-link" type="button" aria-label="დეტალურად ნახვა: პროდუქტი ' + i + '">პროდუქტი ' + i + '</button></h3>' +
+    '<div class="gs-product-compare-specs">გრძელიმახასიათებელი012345678901234567890</div>' +
+    '<button class="gs-product-compare-action">კალათაში</button></article>').join('') +
+  '</div></div></div></div>';
+
 const browser = await chromium.launch({ headless: true });
 try {
   for (const width of [320, 359, 375, 430, 640, 768, 1024, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + stage36OperationsFixture + stage37SupportFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + adminFinanceFormsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
+        const catalogActions = [...document.querySelectorAll('.gs-catalog-product-media > button.gs-catalog-media-toggle')];
+        const catalogTitleActions = [...document.querySelectorAll('.gs-catalog-product-title-action')];
         const links = document.querySelector('.geostore-footer-links');
         const dots = [...links.querySelectorAll('span[aria-hidden="true"]')];
         const buttons = [...links.querySelectorAll('button')];
@@ -272,6 +346,15 @@ try {
         const productBody = document.querySelector('.gs-product-modal-body');
         const purchase = document.querySelector('.gs-modal-add-to-cart');
         const productOptions = [...document.querySelectorAll('.gs-size-option, .gs-color-option')];
+        const gallerySteps = [...document.querySelectorAll('.gs-product-gallery-step')];
+        const purchaseHint = document.querySelector('.gs-product-purchase-hint');
+        const reviewDetails = document.querySelector('.gs-product-review-entry');
+        const reviewSummary = document.querySelector('.gs-product-review-entry-toggle');
+        const reviewForm = document.querySelector('.gs-product-review-form');
+        const reviewRating = document.querySelector('.gs-product-review-rating-select');
+        const reviewField = document.querySelector('.gs-product-review-field');
+        const description = document.querySelector('.gs-product-description-panel');
+        const specification = document.querySelector('.gs-product-detail-specs');
         const categoryImg = document.querySelector('.gs-category-card > img.gs-category-photo');
         const cartQtyButtons = [...document.querySelectorAll('.gs-cart-quantity-controls button')];
         const cartCoupon = document.querySelector('.gs-cart-coupon-form');
@@ -279,6 +362,10 @@ try {
         const checkoutInput = document.querySelector('.gs-checkout-form input');
         const checkoutError = document.querySelector('.gs-checkout-error');
         const checkoutSubmit = document.querySelector('.gs-checkout-submit-area button');
+        const checkoutSubmitArea = document.querySelector('.gs-checkout-submit-area');
+        const cartCouponInput = document.querySelector('.gs-cart-coupon-form input');
+        const cartRegionSelect = document.querySelector('.gs-cart-summary select');
+        const cartQtyGroup = document.querySelector('.gs-cart-quantity-controls');
         const adminProductRow = document.querySelector('.admin-product-row');
         const adminProductControls = document.querySelector('.admin-product-controls');
         const adminProductButtons = [...adminProductControls.querySelectorAll('button')];
@@ -289,6 +376,24 @@ try {
         const orderActionButtons = [...adminOrders.querySelectorAll('.admin-order-actions button')];
         const orderPaginationButtons = [...adminOrders.querySelectorAll('.admin-orders-pagination button')];
         const orderSearch = adminOrders.querySelector('.admin-orders-search input');
+        const orderActionsGroup = adminOrders.querySelector('.admin-order-actions');
+        const orderStatusActions = adminOrders.querySelector('.admin-order-status-actions');
+        const inventoryBar = document.querySelector('.admin-inventory-history-toolbar');
+        const inventorySearch = inventoryBar.querySelector('input');
+        const inventoryButtons = [...inventoryBar.querySelectorAll('button')];
+        const inventoryScroll = document.querySelector('.admin-inventory-table-scroll');
+        const replenishmentRow = document.querySelector('.admin-replenishment-row');
+        const replenishmentInputs = [...replenishmentRow.querySelectorAll('input[type="number"]')];
+        const support = document.querySelector('.admin-support-panel');
+        const supportControls = support.querySelector('.admin-support-ticket-controls');
+        const supportStatusButtons = [...support.querySelectorAll('.admin-support-status-actions button')];
+        const supportStatusGroup = support.querySelector('.admin-support-status-actions');
+        const supportTextarea = support.querySelector('.admin-support-reply-input');
+        const supportSend = support.querySelector('.admin-support-reply-form button');
+        const crmEditor = document.querySelector('.admin-crm-edit-panel');
+        const crmEditorInputs = [...crmEditor.querySelectorAll('input')];
+        const productFilters = document.querySelector('.admin-product-list-filters');
+        const productFilterInputs = [...productFilters.querySelectorAll('input, select')];
         const adminCrm = document.querySelector('.admin-crm-panel');
         const adminCrmActions = [...adminCrm.querySelectorAll('.admin-crm-user-actions button')];
         const adminCrmPagination = [...adminCrm.querySelectorAll('.admin-crm-pagination button')];
@@ -329,6 +434,11 @@ try {
           scrollWidth: document.documentElement.scrollWidth,
           width: window.innerWidth,
           gridTracks: getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          catalogActionsCount: catalogActions.length,
+          catalogActionMinSize: Math.min(...catalogActions.map(el => Math.min(el.getBoundingClientRect().height, el.getBoundingClientRect().width))),
+          catalogActionMaxRight: Math.max(...catalogActions.map(el => el.getBoundingClientRect().right)),
+          catalogActionsNamed: catalogActions.every(el => Boolean(el.getAttribute('aria-label')) && el.hasAttribute('aria-pressed')),
+          catalogTitleActionCount: catalogTitleActions.length,
           footerDisplay: getComputedStyle(links).display,
           hiddenDots: dots.every(dot => getComputedStyle(dot).display === 'none'),
           footerMinButtonHeight: Math.min(...buttons.map(button => button.getBoundingClientRect().height)),
@@ -336,18 +446,39 @@ try {
           sidebarOverflowY: getComputedStyle(sidebar).overflowY,
           sidebarHeight: sidebar.getBoundingClientRect().height,
           welcomeRight: welcome.getBoundingClientRect().right,
+          welcomeHeight: welcome.getBoundingClientRect().height,
+          mobilePickerDisplay: getComputedStyle(document.querySelector('.admin-mobile-section-picker')).display,
+          mobilePickerHeight: document.querySelector('.admin-mobile-section-picker select').getBoundingClientRect().height,
+          mobilePickerFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-mobile-section-picker select')).fontSize),
+          navRailDisplay: getComputedStyle(document.querySelector('[data-admin-sidebar="true"] > div:nth-child(2)')).display,
           kpiFontSize: parseFloat(getComputedStyle(document.querySelector('.admin-command-kpi > strong')).fontSize),
           productDialogRight: productDialog.getBoundingClientRect().right,
           productBodyScrollable: ['auto', 'scroll'].includes(getComputedStyle(productBody).overflowY),
           productDialogMaxHeight: productDialog.getBoundingClientRect().height,
           purchaseRight: purchase.getBoundingClientRect().right,
           minOptionHeight: Math.min(...productOptions.map(element => element.getBoundingClientRect().height)),
+          galleryStepMinHeight: Math.min(...gallerySteps.map(element => element.getBoundingClientRect().height)),
+          galleryStepRight: Math.max(...gallerySteps.map(element => element.getBoundingClientRect().right)),
+          galleryStepsNamed: gallerySteps.length === 2 && gallerySteps.every(element => Boolean(element.getAttribute('aria-label'))),
+          purchaseHintVisible: purchaseHint.getBoundingClientRect().height > 0,
+          purchaseGuardDescribed: purchase.getAttribute('aria-describedby') === purchaseHint.id && purchase.disabled,
+          reviewCollapsedInitially: !reviewDetails.open && reviewForm.getClientRects().length === 0,
+          reviewSummaryHeight: reviewSummary.getBoundingClientRect().height,
+          reviewSummaryRight: reviewSummary.getBoundingClientRect().right,
+          descriptionRight: description.getBoundingClientRect().right,
+          specificationRight: specification.getBoundingClientRect().right,
+          reviewFieldNamed: Boolean(reviewField.getAttribute('aria-label')),
+          reviewRatingNamed: Boolean(document.querySelector('label[for="fixture-rating"]')),
           optionMetrics: productOptions.map(element => ({ type: element.className, height: element.getBoundingClientRect().height, display: getComputedStyle(element).display, minHeight: getComputedStyle(element).minHeight, minBlockSize: getComputedStyle(element).minBlockSize })),
           purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0,
           categoryImageFit: getComputedStyle(categoryImg).objectFit,
           categoryImageLoading: categoryImg.loading,
-          categoryImageWidth: categoryImg.getBoundingClientRect().width,
-          categoryCardWidth: categoryImg.parentElement.getBoundingClientRect().width,
+          // Stage53: compare layout widths, not transformed visual bounds.
+          // Category images intentionally zoom on :hover (up to 1.035x);
+          // getBoundingClientRect() includes that transient transform and
+          // caused a false failure at the 1440px viewport.
+          categoryImageWidth: categoryImg.offsetWidth,
+          categoryCardWidth: categoryImg.parentElement.offsetWidth,
           cartQtyMinHeight: Math.min(...cartQtyButtons.map(node => node.getBoundingClientRect().height)),
           cartCouponRight: cartCoupon.getBoundingClientRect().right,
           checkoutDialogRight: checkoutDialog.getBoundingClientRect().right,
@@ -355,6 +486,13 @@ try {
           checkoutInputFontSize: parseFloat(getComputedStyle(checkoutInput).fontSize),
           checkoutErrorRight: checkoutError.getBoundingClientRect().right,
           checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height,
+          checkoutSubmitPosition: getComputedStyle(checkoutSubmitArea).position,
+          checkoutErrorFocusable: checkoutError.tabIndex === -1,
+          cartCouponPlaceholder: cartCouponInput.placeholder,
+          cartQuantityGroupNamed: cartQtyGroup.getAttribute('role') === 'group' && Boolean(cartQtyGroup.getAttribute('aria-label')),
+          cartQuantityButtonsNamed: cartQtyButtons.every(button => button.getAttribute('aria-label')?.includes('სატესტო პროდუქტი')),
+          cartCouponFont: parseFloat(getComputedStyle(cartCouponInput).fontSize),
+          cartRegionFont: parseFloat(getComputedStyle(cartRegionSelect).fontSize),
           adminProductRowRight: adminProductRow.getBoundingClientRect().right,
           adminProductControlsRight: adminProductControls.getBoundingClientRect().right,
           adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
@@ -366,6 +504,33 @@ try {
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
           orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
+          orderActionsColumns: getComputedStyle(orderActionsGroup).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          orderStatusesColumns: getComputedStyle(orderStatusActions).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          inventoryToolbarColumns: getComputedStyle(inventoryBar).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          inventorySearchFont: parseFloat(getComputedStyle(inventorySearch).fontSize),
+          inventorySearchRight: inventorySearch.getBoundingClientRect().right,
+          inventoryButtonMinHeight: Math.min(...inventoryButtons.map(button => button.getBoundingClientRect().height)),
+          inventoryScrollFocusable: inventoryScroll.tabIndex === 0,
+          inventoryScrollInner: inventoryScroll.scrollWidth > inventoryScroll.clientWidth,
+          replenishmentInputMinFont: Math.min(...replenishmentInputs.map(input => parseFloat(getComputedStyle(input).fontSize))),
+          replenishmentInputMinHeight: Math.min(...replenishmentInputs.map(input => input.getBoundingClientRect().height)),
+          replenishmentRight: replenishmentRow.getBoundingClientRect().right,
+          replenishmentDisabledPreserved: replenishmentInputs[1].disabled,
+          financePeriodFont: parseFloat(getComputedStyle(adminAnalytics.querySelector('.admin-analytics-actions select')).fontSize),
+          supportRight: support.getBoundingClientRect().right,
+          supportStatusColumns: getComputedStyle(supportStatusGroup).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          supportControlsColumns: getComputedStyle(supportControls).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          supportStatusButtonMinHeight: Math.min(...supportStatusButtons.map(el => el.getBoundingClientRect().height)),
+          supportReplyFont: parseFloat(getComputedStyle(supportTextarea).fontSize),
+          supportReplyHeight: supportTextarea.getBoundingClientRect().height,
+          supportReplyRight: supportTextarea.getBoundingClientRect().right,
+          supportSendHeight: supportSend.getBoundingClientRect().height,
+          crmEditInputFont: Math.min(...crmEditorInputs.map(el => parseFloat(getComputedStyle(el).fontSize))),
+          crmEditInputMinHeight: Math.min(...crmEditorInputs.map(el => el.getBoundingClientRect().height)),
+          crmEditLabelsLinked: crmEditorInputs.every(input => crmEditor.querySelector('label[for="' + input.id + '"]')),
+          productFilterMinFont: Math.min(...productFilterInputs.map(el => parseFloat(getComputedStyle(el).fontSize))),
+          productFilterMinHeight: Math.min(...productFilterInputs.map(el => el.getBoundingClientRect().height)),
+          productFilterRight: productFilters.getBoundingClientRect().right,
           crmPanelRight: adminCrm.getBoundingClientRect().right,
           crmActionMinHeight: Math.min(...adminCrmActions.map(node => node.getBoundingClientRect().height)),
           crmPaginationMinHeight: Math.min(...adminCrmPagination.map(node => node.getBoundingClientRect().height)),
@@ -421,9 +586,43 @@ try {
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
       assert.ok(layout.welcomeRight <= width + 2, width + 'px header overflow ' + JSON.stringify(layout));
+      if (width <= 640) {
+        assert.ok(layout.welcomeHeight < 230, width + 'px greeting must not be 480px on phones: ' + JSON.stringify(layout));
+        assert.equal(layout.mobilePickerDisplay, 'grid', width + 'px native section picker must be visible');
+        assert.equal(layout.navRailDisplay, 'none', width + 'px 23-module scroll rail must be replaced');
+        assert.ok(layout.mobilePickerHeight >= 44, width + 'px native picker touch target');
+        assert.ok(layout.mobilePickerFontSize >= 16, width + 'px iOS select text prevents focus zoom');
+      } else if (width >= 768) {
+        assert.equal(layout.mobilePickerDisplay, 'none', width + 'px desktop/tablet nav is unchanged');
+      }
       assert.ok(layout.productDialogRight <= width + 2, width + 'px product dialog overflow: ' + JSON.stringify(layout));
       assert.ok(layout.purchaseRight <= width + 2, width + 'px purchase CTA overflow: ' + JSON.stringify(layout));
       assert.ok(layout.productDialogMaxHeight <= 820 + 2, width + 'px product dialog height: ' + JSON.stringify(layout));
+      assert.equal(layout.catalogActionsCount, 4, width + 'px catalog wish/compare shortcuts exist');
+      assert.ok(layout.catalogActionMinSize >= 43, width + 'px catalog shortcuts must be touch sized: ' + JSON.stringify(layout));
+      assert.ok(layout.catalogActionMaxRight <= width + 2, width + 'px catalog shortcuts must not overflow');
+      assert.ok(layout.catalogActionsNamed && layout.catalogTitleActionCount === 2, width + 'px named and keyboard product actions');
+      assert.ok(layout.galleryStepMinHeight >= 43 && layout.galleryStepRight <= width + 2 && layout.galleryStepsNamed,
+        width + 'px gallery navigation touch/label safety: ' + JSON.stringify(layout));
+      assert.ok(layout.reviewCollapsedInitially && layout.reviewSummaryHeight >= 43,
+        width + 'px review form should be collapsible with a 44px keyboard target: ' + JSON.stringify(layout));
+      assert.ok(layout.reviewSummaryRight <= width + 2 && layout.descriptionRight <= width + 2 && layout.specificationRight <= width + 2,
+        width + 'px descriptions and review disclosure must fit the screen');
+      assert.ok(layout.reviewFieldNamed && layout.reviewRatingNamed, width + 'px review fields have readable labels');
+      const reviewEntry = page.locator('.gs-product-review-entry');
+      await reviewEntry.locator('summary').evaluate(node => node.click());
+      assert.ok(await reviewEntry.evaluate(node => node.open), width + 'px review form opens');
+      if (width <= 640) {
+        const ratingFont = await page.locator('.gs-product-review-rating-select').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+        const fieldFont = await page.locator('.gs-product-review-field').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+        assert.ok(ratingFont >= 16 && fieldFont >= 16, width + 'px review inputs must avoid iOS zoom');
+      }
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= width + 2,
+        width + 'px expanded review form must not overflow');
+      await reviewEntry.locator('summary').evaluate(node => node.click());
+      assert.equal(await reviewEntry.evaluate(node => node.open), false, width + 'px review form closes');
+      assert.ok(layout.purchaseHintVisible && layout.purchaseGuardDescribed,
+        width + 'px disabled purchase action announces its reason: ' + JSON.stringify(layout));
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
       assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets: ' + JSON.stringify(layout.optionMetrics));
       assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');
@@ -436,6 +635,14 @@ try {
       assert.ok(layout.checkoutErrorRight <= width + 2, width + 'px checkout error overflow: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutDialogHeight <= 822, width + 'px checkout dialog height: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutSubmitHeight >= 43, width + 'px checkout action must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.checkoutErrorFocusable, 'checkout error must accept programmatic focus');
+      assert.ok(layout.cartQuantityGroupNamed && layout.cartQuantityButtonsNamed, 'cart quantity controls must identify the product');
+      assert.equal(layout.cartCouponPlaceholder, 'პრომოკოდი', 'cart must not advertise an expired demo promo');
+      if (width <= 640) {
+        assert.equal(layout.checkoutSubmitPosition, 'sticky', width + 'px checkout submit remains visible in scrolling form');
+        assert.ok(layout.cartCouponFont >= 16, width + 'px promo field avoids iOS focus zoom');
+        assert.ok(layout.cartRegionFont >= 16, width + 'px delivery selector avoids iOS focus zoom');
+      }
       assert.ok(layout.adminProductRowRight <= width + 2, width + 'px admin product row overflow: ' + JSON.stringify(layout));
       assert.ok(layout.adminOrdersRight <= width + 2, width + 'px admin orders overflow: ' + JSON.stringify(layout));
       assert.ok(layout.crmPanelRight <= width + 2, width + 'px CRM panel overflow: ' + JSON.stringify(layout));
@@ -490,10 +697,39 @@ try {
         assert.equal(layout.financeProfitabilityColumnCount, 1, width + 'px profit labels should stack: ' + JSON.stringify(layout));
       }
       if (width <= 768) assert.ok(layout.analyticsChartScrollWidth > layout.analyticsChartClientWidth, width + 'px dense chart should scroll inside its own viewport: ' + JSON.stringify(layout));
+      assert.ok(layout.crmEditLabelsLinked, 'CRM edit form must associate both labels with controls');
+      assert.ok(layout.supportRight <= width + 2, width + 'px support panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.supportReplyRight <= width + 2, width + 'px support reply overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.productFilterRight <= width + 2, width + 'px product filter overflow: ' + JSON.stringify(layout));
+      if (width <= 640) {
+        assert.equal(layout.supportControlsColumns, 1, width + 'px support controls stack: ' + JSON.stringify(layout));
+        assert.equal(layout.supportStatusColumns, 2, width + 'px support status layout: ' + JSON.stringify(layout));
+        assert.ok(layout.supportReplyFont >= 16, width + 'px reply iOS focus safety: ' + JSON.stringify(layout));
+        assert.ok(layout.supportReplyHeight >= 80, width + 'px multiline reply should be readable: ' + JSON.stringify(layout));
+        assert.ok(layout.supportSendHeight >= 43, width + 'px send reply touch target: ' + JSON.stringify(layout));
+        assert.ok(layout.crmEditInputFont >= 16 && layout.crmEditInputMinHeight >= 43, width + 'px CRM editor touch/zoom safety: ' + JSON.stringify(layout));
+        assert.ok(layout.productFilterMinFont >= 16 && layout.productFilterMinHeight >= 43, width + 'px product filter touch/zoom safety: ' + JSON.stringify(layout));
+      }
+      assert.ok(layout.supportStatusButtonMinHeight >= 43, width + 'px support statuses touch targets: ' + JSON.stringify(layout));
       assert.ok(layout.crmActionMinHeight >= 43, width + 'px CRM customer actions must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.crmPaginationMinHeight >= 43, width + 'px CRM pagination must be touch-sized: ' + JSON.stringify(layout));
       if (width <= 640) assert.ok(layout.crmSearchFontSize >= 16, width + 'px CRM search must avoid iOS focus zoom: ' + JSON.stringify(layout));
       if (width <= 639) assert.equal(layout.crmActionGridColumns, width <= 380 ? 1 : 2, width + 'px CRM actions should use narrow safe grid: ' + JSON.stringify(layout));
+      if (width <= 767) {
+        assert.equal(layout.orderActionsColumns, width <= 359 ? 1 : 2, width + 'px order action columns: ' + JSON.stringify(layout));
+        assert.equal(layout.orderStatusesColumns, 2, width + 'px status button columns: ' + JSON.stringify(layout));
+        assert.equal(layout.inventoryToolbarColumns, 2, width + 'px inventory toolbar columns: ' + JSON.stringify(layout));
+        assert.ok(layout.inventorySearchFont >= 16, width + 'px inventory search iOS focus zoom: ' + JSON.stringify(layout));
+        assert.ok(layout.inventorySearchRight <= width + 2, width + 'px inventory filter overflow: ' + JSON.stringify(layout));
+        assert.ok(layout.inventoryButtonMinHeight >= 43, width + 'px inventory touch targets: ' + JSON.stringify(layout));
+        assert.ok(layout.replenishmentInputMinFont >= 16, width + 'px replenishment iOS focus zoom: ' + JSON.stringify(layout));
+        assert.ok(layout.replenishmentInputMinHeight >= 43, width + 'px replenishment touch targets: ' + JSON.stringify(layout));
+        assert.ok(layout.replenishmentRight <= width + 2, width + 'px replenishment overflow: ' + JSON.stringify(layout));
+        assert.ok(layout.financePeriodFont >= 16, width + 'px finance period iOS focus zoom: ' + JSON.stringify(layout));
+      }
+      assert.ok(layout.inventoryScrollFocusable, 'inventory history must remain keyboard-focusable at every width');
+      if (width <= 767) assert.ok(layout.inventoryScrollInner, width + 'px inventory history must scroll inside its container');
+      assert.ok(layout.replenishmentDisabledPreserved, 'disabled replenishment input guard must stay intact');
       assert.ok(layout.minOrderFilterHeight >= 43, width + 'px order filters should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderActionHeight >= 43, width + 'px order actions should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderPaginationHeight >= 43, width + 'px order pagination should be touch-sized: ' + JSON.stringify(layout));
@@ -520,6 +756,40 @@ try {
         assert.equal(layout.sidebarOverflowY, 'auto', width + 'px nav overflow');
         assert.ok(layout.sidebarHeight <= 820, width + 'px sidebar max height');
       }
+      // Isolate comparison modal from the product/checkout overlay fixture.
+      await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>' + stage43Fixture + '</body></html>');
+      await page.addStyleTag({ content: css });
+      const saved = await page.evaluate(() => {
+        const card = document.querySelector('.gs-wishlist-card');
+        const actions = [...document.querySelectorAll('.gs-wishlist-actions > button')];
+        const dialog = document.querySelector('.gs-product-compare-dialog');
+        const closeActions = [...document.querySelectorAll('.gs-product-compare-clear, .gs-product-compare-close, .gs-product-compare-remove')];
+        const scroller = document.querySelector('.gs-product-compare-scroll');
+        const detailActions = [...document.querySelectorAll('.gs-wishlist-detail-link, .gs-product-compare-detail-link')];
+        return {
+          pageWidth: document.documentElement.scrollWidth,
+          cardRight: card.getBoundingClientRect().right,
+          controlsMinHeight: Math.min(...actions.map(b => b.getBoundingClientRect().height)),
+          dialogRight: dialog.getBoundingClientRect().right,
+          compareControlsMinHeight: Math.min(...closeActions.map(b => b.getBoundingClientRect().height)),
+          scrollWidth: scroller.scrollWidth,
+          clientWidth: scroller.clientWidth,
+          scrollFocusable: scroller.tabIndex === 0,
+          detailActionCount: detailActions.length,
+          detailActionMinHeight: Math.min(...detailActions.map(button => button.getBoundingClientRect().height)),
+          detailActionsNamed: detailActions.every(button => Boolean(button.getAttribute('aria-label')))
+        };
+      });
+      assert.ok(saved.pageWidth <= width + 2 && saved.cardRight <= width + 2 && saved.dialogRight <= width + 2,
+        width + 'px wishlist/compare viewport overflow: ' + JSON.stringify(saved));
+      assert.ok(saved.detailActionCount === 5 && saved.detailActionMinHeight >= 43 && saved.detailActionsNamed,
+        width + 'px saved and compared product detail actions must be 44px and named: ' + JSON.stringify(saved));
+      assert.ok(saved.controlsMinHeight >= 43 && saved.compareControlsMinHeight >= 43,
+        width + 'px wishlist/compare action touch size: ' + JSON.stringify(saved));
+      assert.ok(saved.scrollFocusable && (width < 1200
+        ? saved.scrollWidth > saved.clientWidth
+        : saved.scrollWidth >= saved.clientWidth),
+        width + 'px comparison must scroll on narrow screens and fit when space allows: ' + JSON.stringify(saved));
       process.stdout.write('PASS viewport ' + width + 'px\n');
     } finally {
       await page.close();

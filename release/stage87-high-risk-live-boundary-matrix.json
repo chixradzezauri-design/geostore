@@ -1,0 +1,420 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "capturedDate": "2026-11-23",
+  "phase": "PRE_PHASE_A",
+  "provenance": "fresh pg_catalog SELECT compared with Stage82 frozen function fingerprints",
+  "nineHighRiskHistoricalSources": [
+    {
+      "file": "20261103044438_add_idempotent_checkout_replay.sql",
+      "risk": "COMMERCE",
+      "severity": "HIGH",
+      "appliedSqlMd5": "82ae11815608adf36bab44bea876d8e9",
+      "gitBlobSha": "5910b20b89b983edc652d27f6a87cd409dd7b7cb",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.create_order_with_stock(p_order jsonb)",
+          "md5": "cbd5624b31d24281f1e2088b08523b90",
+          "securityDefiner": true,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.create_order_with_stock(p_order jsonb)",
+          "md5": "eb98f58ecf5c0cbf2b67201d9a77dd1a",
+          "securityDefiner": false,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Signed Auth checkout/variant/add-on subset; no full-schema/transaction race parity."
+    },
+    {
+      "file": "20261103151704_use_amr_for_admin_order_reactivation.sql",
+      "risk": "AUTHORIZATION",
+      "severity": "HIGH",
+      "appliedSqlMd5": "5926396ee94d3ce606003e66865a19cc",
+      "gitBlobSha": "efe983cdae7e32ac82d54a036c3f10c3364df030",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.admin_reactivate_cancelled_order(p_order_id text)",
+          "md5": "b83a84313312e64c89c61a702da335ef",
+          "securityDefiner": true,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.admin_reactivate_cancelled_order(p_order_id text)",
+          "md5": "7ad284b13425323bc0139f36171483f4",
+          "securityDefiner": false,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Current guarded reactivation roles and signed AMR checks; historic privileged principal changed."
+    },
+    {
+      "file": "20261106103325_preserve_order_item_variants.sql",
+      "risk": "COMMERCE",
+      "severity": "HIGH",
+      "appliedSqlMd5": "fd2419634c2b78d237af96ee47cdc374",
+      "gitBlobSha": "ae536311f85e453286ad57021e9376f5a02d5401",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.create_order_with_stock(p_order jsonb)",
+          "md5": "cbd5624b31d24281f1e2088b08523b90",
+          "securityDefiner": true,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "private.preserve_product_variant_stock()",
+          "md5": "6cd5f0a9ad0927af1e17368d43491995",
+          "securityDefiner": false,
+          "anonExecute": false,
+          "authenticatedExecute": false
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Signed Auth checkout/variant/add-on subset; no full-schema/transaction race parity."
+    },
+    {
+      "file": "20261107115218_persist_checkout_addons_server_pricing.sql",
+      "risk": "COMMERCE",
+      "severity": "HIGH",
+      "appliedSqlMd5": "b1d3ca3509df21e13a9c53d4daa95061",
+      "gitBlobSha": "f7ed53b2e90c16c4de7be8d0b45c3a1da655e603",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.create_order_with_stock(p_order jsonb)",
+          "md5": "cbd5624b31d24281f1e2088b08523b90",
+          "securityDefiner": true,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.create_order_with_stock(p_order jsonb)",
+          "md5": "eb98f58ecf5c0cbf2b67201d9a77dd1a",
+          "securityDefiner": false,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Signed Auth checkout/variant/add-on subset; no full-schema/transaction race parity."
+    },
+    {
+      "file": "20261107130302_add_order_status_notifications.sql",
+      "risk": "SECURITY_DEFINER",
+      "severity": "HIGH",
+      "appliedSqlMd5": "e54482e97e69d244f771649cbf82e0f9",
+      "gitBlobSha": "76002b509fc8aedbe8be7d83cab8fb00db053886",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.record_order_notification()",
+          "md5": "32a3405eecdb3731a9d53305ea61d405",
+          "securityDefiner": true,
+          "anonExecute": false,
+          "authenticatedExecute": false
+        },
+        {
+          "signature": "private.get_my_order_notifications()",
+          "md5": "3c732341e2752d738d19763999e58007",
+          "securityDefiner": true,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.get_my_order_notifications()",
+          "md5": "a129369a2a5b682658d1911a83a2ac0b",
+          "securityDefiner": false,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Current public invoker/private definer split and signed event tests; historical public wrapper differed."
+    },
+    {
+      "file": "20261109102126_support_ticket_threading_and_secure_access.sql",
+      "risk": "SUPPORT_AUTH",
+      "severity": "HIGH",
+      "appliedSqlMd5": "8b0fe2d8ffc2f9180ceb30ad3560f928",
+      "gitBlobSha": "60ed3ca87c745ade19c2fcefce5d54e55efa80c3",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+          "md5": "d468c7f14c9e9cc8f03347d06fc4f01a",
+          "securityDefiner": true,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+          "md5": "7404f95eaf484e74bcd7d24e0ab5d637",
+          "securityDefiner": false,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Current support RPC privilege boundary; full-schema signed support-token owner-access tests incomplete."
+    },
+    {
+      "file": "20261109102221_fix_support_ticket_message_lookup.sql",
+      "risk": "SUPPORT_AUTH",
+      "severity": "HIGH",
+      "appliedSqlMd5": "e332f39115a5ce0e1d457dd9fa132ab8",
+      "gitBlobSha": "340ea89a51c13e532ac414fc0efe87796788556e",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+          "md5": "acb5b90b297b07c2b0681d6a29097932",
+          "securityDefiner": true,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+          "md5": "fcd13ba9a9404172863a52c0310c1e44",
+          "securityDefiner": false,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Current support RPC privilege boundary; full-schema signed support-token owner-access tests incomplete."
+    },
+    {
+      "file": "20261109102338_harden_support_ticket_rpc_wrappers.sql",
+      "risk": "SUPPORT_AUTH",
+      "severity": "HIGH",
+      "appliedSqlMd5": "02304f838a45373f9ccdc947a50c16fc",
+      "gitBlobSha": "b31f16f69ff59fca523379906377ed53823bbfb8",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+          "md5": "8da301bdca14816b3718d51916ed6da3",
+          "securityDefiner": true,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+          "md5": "4d2da50f9f5f6ab52cdb2fa5b46181ab",
+          "securityDefiner": false,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+          "md5": "fcd13ba9a9404172863a52c0310c1e44",
+          "securityDefiner": false,
+          "anonExecute": true,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Current support RPC privilege boundary; full-schema signed support-token owner-access tests incomplete."
+    },
+    {
+      "file": "20261120122908_replenishment_optimistic_concurrency.sql",
+      "risk": "TRANSACTION_SCOPE",
+      "severity": "HIGH",
+      "appliedSqlMd5": "479595aa17b006df5f295eede41fac6b",
+      "gitBlobSha": "276199f8f34d174a1fdbdf08289f4f11df0247b6",
+      "replayStatus": "HISTORICAL_SOURCE_UNRECONCILED_DO_NOT_REPLAY",
+      "currentFunctions": [
+        {
+          "signature": "private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)",
+          "md5": "b6fb85e2f37339dd1f881ffcd477fe47",
+          "securityDefiner": true,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer, p_expected_updated_at timestamp with time zone)",
+          "md5": "4fe999a95f98c5ff5e9ce3213f2c0c3a",
+          "securityDefiner": true,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)",
+          "md5": "b6ae0ef5ef4cf92ba31196ada1e01380",
+          "securityDefiner": false,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        },
+        {
+          "signature": "public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer, p_expected_updated_at timestamp with time zone)",
+          "md5": "7d898d9abec77c253b93f6235a7ee08a",
+          "securityDefiner": false,
+          "anonExecute": false,
+          "authenticatedExecute": true
+        }
+      ],
+      "coverage": "CURRENT_LIVE_METADATA_PLUS_PARTIAL_CI_NOT_HISTORIC_SQL_PROOF",
+      "remainingGap": "Current five-argument concurrency RPC and legacy overloads; historical COMMIT scope differs."
+    }
+  ],
+  "liveFunctionCount": 18,
+  "liveFunctions": [
+    {
+      "md5": "8da301bdca14816b3718d51916ed6da3",
+      "signature": "private.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+      "anonExecute": true,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "b83a84313312e64c89c61a702da335ef",
+      "signature": "private.admin_reactivate_cancelled_order(p_order_id text)",
+      "anonExecute": false,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "cbd5624b31d24281f1e2088b08523b90",
+      "signature": "private.create_order_with_stock(p_order jsonb)",
+      "anonExecute": true,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "d468c7f14c9e9cc8f03347d06fc4f01a",
+      "signature": "private.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+      "anonExecute": true,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "3c732341e2752d738d19763999e58007",
+      "signature": "private.get_my_order_notifications()",
+      "anonExecute": false,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "acb5b90b297b07c2b0681d6a29097932",
+      "signature": "private.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+      "anonExecute": true,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "6cd5f0a9ad0927af1e17368d43491995",
+      "signature": "private.preserve_product_variant_stock()",
+      "anonExecute": false,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": false
+    },
+    {
+      "md5": "32a3405eecdb3731a9d53305ea61d405",
+      "signature": "private.record_order_notification()",
+      "anonExecute": false,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": false
+    },
+    {
+      "md5": "b6fb85e2f37339dd1f881ffcd477fe47",
+      "signature": "private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)",
+      "anonExecute": false,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "4fe999a95f98c5ff5e9ce3213f2c0c3a",
+      "signature": "private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer, p_expected_updated_at timestamp with time zone)",
+      "anonExecute": false,
+      "securityDefiner": true,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "4d2da50f9f5f6ab52cdb2fa5b46181ab",
+      "signature": "public.add_support_ticket_message(p_ticket_id text, p_message text, p_access_token text)",
+      "anonExecute": true,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "7ad284b13425323bc0139f36171483f4",
+      "signature": "public.admin_reactivate_cancelled_order(p_order_id text)",
+      "anonExecute": false,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "b6ae0ef5ef4cf92ba31196ada1e01380",
+      "signature": "public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)",
+      "anonExecute": false,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "7d898d9abec77c253b93f6235a7ee08a",
+      "signature": "public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer, p_expected_updated_at timestamp with time zone)",
+      "anonExecute": false,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "eb98f58ecf5c0cbf2b67201d9a77dd1a",
+      "signature": "public.create_order_with_stock(p_order jsonb)",
+      "anonExecute": true,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "7404f95eaf484e74bcd7d24e0ab5d637",
+      "signature": "public.create_support_ticket(p_id text, p_customer_name text, p_email text, p_subject text, p_message text, p_access_token text)",
+      "anonExecute": true,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "a129369a2a5b682658d1911a83a2ac0b",
+      "signature": "public.get_my_order_notifications()",
+      "anonExecute": false,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    },
+    {
+      "md5": "fcd13ba9a9404172863a52c0310c1e44",
+      "signature": "public.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+      "anonExecute": true,
+      "securityDefiner": false,
+      "searchPathLocked": true,
+      "authenticatedExecute": true
+    }
+  ],
+  "classification": "9_HIGH_SOURCES_REMAIN_UNRECONCILED_NO_HISTORICAL_REPLAY_AUTHORIZED",
+  "notice": "Effective current function source and grants are verified. Historic applied SQL semantic parity and full-schema tests remain unproved."
+}

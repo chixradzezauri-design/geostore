@@ -1,3 +1,11 @@
+export const CHECKOUT_SESSION_UNAVAILABLE = 'GEOSTORE_CHECKOUT_SESSION_UNAVAILABLE';
+
+export const getCheckoutSessionUnavailableMessage = (language = 'ka') => ({
+  ka: 'თქვენი ავტორიზაციის სესია აღარ დასტურდება. ხელახლა შედით ანგარიშში და სცადეთ შეკვეთის გაფორმება. კალათა შენარჩუნებულია.',
+  en: 'Your sign-in session could not be verified. Sign in again before placing the order. Your cart is preserved.',
+  ru: 'Не удалось подтвердить сеанс входа. Войдите снова перед оформлением заказа. Корзина сохранена.'
+})[language] || 'თქვენი ავტორიზაციის სესია აღარ დასტურდება. ხელახლა შედით ანგარიშში და სცადეთ შეკვეთის გაფორმება. კალათა შენარჩუნებულია.';
+
 const CHECKOUT_ERROR_TRANSLATIONS = [
   { match: 'მომხმარებლის სახელი არასწორია', en: 'The name must contain 2–100 characters.', ru: 'Имя должно содержать 2–100 символов.' },
   { match: 'ტელეფონის ნომერში დაუშვებელი სიმბოლოებია', en: 'The phone number contains unsupported characters.', ru: 'Номер телефона содержит недопустимые символы.' },
@@ -33,6 +41,18 @@ export const getCheckoutErrorMessage = (error, language = 'ka') => {
     // The API may return a plain-text error rather than JSON.
   }
 
+  if (message === CHECKOUT_SESSION_UNAVAILABLE) {
+    return getCheckoutSessionUnavailableMessage(language);
+  }
+  // Browser network errors should be understandable, localized and should
+  // not reveal browser-internal error strings to the checkout user.
+  if (/^(failed to fetch|load failed|networkerror|network request failed|fetch failed)/i.test(message)) {
+    return ({
+      ka: 'ქსელთან კავშირი შეფერხდა. გადაამოწმეთ ინტერნეტი და სცადეთ ხელახლა. კალათა შენარჩუნებულია.',
+      en: 'The network connection failed. Check your connection and retry. Your cart is preserved.',
+      ru: 'Сбой сетевого соединения. Проверьте интернет и повторите попытку. Корзина сохранена.'
+    })[language] || 'ქსელთან კავშირი შეფერხდა. გადაამოწმეთ ინტერნეტი და სცადეთ ხელახლა. კალათა შენარჩუნებულია.';
+  }
   if (language === 'ka') return message || 'შეკვეთის გაფორმება ვერ მოხერხდა. სცადეთ თავიდან.';
   const translation = CHECKOUT_ERROR_TRANSLATIONS.find((entry) => message.includes(entry.match));
   if (translation) return translation[language] || translation.en;

@@ -494,7 +494,7 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
   const api = readFileSync(new URL('../src/utils/adminPanelVisualDesignApi.js', import.meta.url), 'utf8');
   const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
   const migration = readFileSync(new URL('../supabase/migrations/20261119150000_admin_panel_visual_design_sync.sql', import.meta.url), 'utf8');
-  const policyMigration = readFileSync(new URL('../supabase/migrations/20261119151000_admin_panel_visual_settings_owner_policy.sql', import.meta.url), 'utf8');
+  const policyMigration = readFileSync(new URL('../supabase/migrations/20261119140327_admin_panel_visual_settings_owner_policy.sql', import.meta.url), 'utf8');
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
 
   assert.match(api, /rpc\('get_admin_panel_visual_design_state'\)/);

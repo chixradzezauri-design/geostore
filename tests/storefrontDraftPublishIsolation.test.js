@@ -5,8 +5,8 @@ import { readFile } from 'node:fs/promises';
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const publishMigration = await readFile(new URL('../supabase/migrations/20261107083528_atomic_storefront_publish_and_append_only_versions.sql', import.meta.url), 'utf8');
 const publicReadMigration = await readFile(new URL('../supabase/migrations/20261109151806_restrict_public_storefront_config_to_published_fields.sql', import.meta.url), 'utf8');
-const draftMigration = await readFile(new URL('../supabase/migrations/20261119170000_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
-const restoreMigration = await readFile(new URL('../supabase/migrations/20261119190000_restore_storefront_version_to_draft.sql', import.meta.url), 'utf8');
+const draftMigration = await readFile(new URL('../supabase/migrations/20261119181855_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
+const restoreMigration = await readFile(new URL('../supabase/migrations/20261119181911_restore_storefront_version_to_draft.sql', import.meta.url), 'utf8');
 
 test('admin editor loads only the shared draft through an authenticated request', () => {
   const adminLoader = app.split('const loadStorefrontDraft = async () => {')[1]?.split('};')[0] || '';

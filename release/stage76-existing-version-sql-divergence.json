@@ -1,0 +1,398 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "reviewDate": "2026-11-22",
+  "remoteHistoryMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "evidence": "One-time read-only SQL lexing of all 61 distinct-MD5 same-version historical files; applied SQL body NOT stored in GitHub",
+  "note": "Token-equal does not mean safe to replay SQL or repair Supabase version history. Exact source blobs and stored applied MD5 remain pinned.",
+  "entries": [
+    {
+      "file": "20261103044438_add_idempotent_checkout_replay.sql",
+      "gitBlobSha": "5910b20b89b983edc652d27f6a87cd409dd7b7cb",
+      "appliedSqlMd5": "82ae11815608adf36bab44bea876d8e9",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "COMMERCE",
+      "why": "Local historical checkout adds/changes quantity variable declarations compared with applied source"
+    },
+    {
+      "file": "20261103044704_validate_checkout_idempotency_payload.sql",
+      "gitBlobSha": "b02680b25339b79d7b2ca9bee1ff6e823ee8b092",
+      "appliedSqlMd5": "1597af00bcc84472622617f210c7ac58",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103044919_minimize_checkout_idempotency_snapshot.sql",
+      "gitBlobSha": "b25c00daf6e2bb5cbde1fcc8a45fe71e920286fe",
+      "appliedSqlMd5": "1346e846c301fe9b1f11df5a90acac8f",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103120657_geostore_order_security_hardening.sql",
+      "gitBlobSha": "ccaee1d5cf043df9022e6a1abca71a8ddc338819",
+      "appliedSqlMd5": "133d8b79a6b487e8ebdd954828c4a236",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103120854_optimize_admin_product_insert_policy.sql",
+      "gitBlobSha": "8a5cc74b6bc002454f82f5bc4e3ad8c0e2ea43de",
+      "appliedSqlMd5": "00b20c958a55bfc07705e1a6a29ea661",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103121325_persist_admin_coupons_and_delivery_fees.sql",
+      "gitBlobSha": "26dcea6a239d561086865ac7a41eaf829f6fd8c8",
+      "appliedSqlMd5": "539afef137119abdce1a08247f78f50d",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103121548_remove_duplicate_coupon_delivery_select_policies.sql",
+      "gitBlobSha": "79dbcca05ef98d6b90cd181ee0c0572c3a5c100d",
+      "appliedSqlMd5": "87d744e10e50df5a982f489ec20e34b7",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103122121_prevent_stock_restore_after_dispatch.sql",
+      "gitBlobSha": "d848151012cd4c8e2b5c8ae4baa3511aa28c8688",
+      "appliedSqlMd5": "6a012447a763c81e4d4dd20de3000c55",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103122611_lock_down_rpc_search_paths.sql",
+      "gitBlobSha": "ef7758adc46e85e361cffdb8eea2e231d2e4f33b",
+      "appliedSqlMd5": "634af65437fb4f11f32f6b1690a1f3eb",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103151704_use_amr_for_admin_order_reactivation.sql",
+      "gitBlobSha": "efe983cdae7e32ac82d54a036c3f10c3364df030",
+      "appliedSqlMd5": "5926396ee94d3ce606003e66865a19cc",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "AUTHORIZATION",
+      "why": "Historical admin identity literal differs between local and applied code; do not infer correct account from repository spelling"
+    },
+    {
+      "file": "20261103155226_track_order_status_change_time.sql",
+      "gitBlobSha": "2a7da069b6c31d0bb97d8847e010cac2653cbe99",
+      "appliedSqlMd5": "9706c43b8bdf0891149d2d7d65fa962a",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103160155_restrict_product_cost_to_primary_admin.sql",
+      "gitBlobSha": "f68f9d34164c8bfd0d0a3c3587fa8e075735de7e",
+      "appliedSqlMd5": "83d9bbd8dfa9dd5b3eb3c93b32c7e729",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103162615_secure_admin_product_crud.sql",
+      "gitBlobSha": "7669393d2d0fdd659d70f8bb9b713585091898d4",
+      "appliedSqlMd5": "b1232b78b18de87394ae06189aa69d22",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261103194444_secure_admin_save_order_note.sql",
+      "gitBlobSha": "193707611c4056c3d5e946af838f6f61e1599c51",
+      "appliedSqlMd5": "1052f52d01c2288673f1258302e3ae02",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "SQL_SYNTAX",
+      "why": "Local historical admin-note function contains one extra statement terminator"
+    },
+    {
+      "file": "20261106085242_minimize_public_order_tracking_payload.sql",
+      "gitBlobSha": "9f57a6248cca91bf8bc67a71c26b55704ad9b9d3",
+      "appliedSqlMd5": "58327ba776b6bd70cb12fcea5fe56fbf",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261106085622_revoke_anon_direct_order_reads.sql",
+      "gitBlobSha": "5dd453fdfd3c1e1e00ac5b15bca4c72640dcdb3a",
+      "appliedSqlMd5": "620b4b31dbe638d516c774789c63b39e",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261106090007_optimize_storefront_rls_auth_initplans.sql",
+      "gitBlobSha": "bf1f8222073b777acf217c0ef84944f87cf3d1c2",
+      "appliedSqlMd5": "159155c8dccd9d84b51ba2166f78ec0c",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261106103325_preserve_order_item_variants.sql",
+      "gitBlobSha": "ae536311f85e453286ad57021e9376f5a02d5401",
+      "appliedSqlMd5": "fd2419634c2b78d237af96ee47cdc374",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "COMMERCE",
+      "why": "Product selection and preserved size/color variant fields differ in historical order persistence"
+    },
+    {
+      "file": "20261106110051_fix_flash_sale_stale_original_price.sql",
+      "gitBlobSha": "2d75b5d4353685d8d7e9aefd99f6ca776245eba9",
+      "appliedSqlMd5": "cb80b1c3a373335d34ca203b815d609a",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107083528_atomic_storefront_publish_and_append_only_versions.sql",
+      "gitBlobSha": "a993e94b2675dd5dde5f767615e89d88a39c5aec",
+      "appliedSqlMd5": "6ac444a472e2134e85cdd7ed486af479",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107083600_validate_storefront_publish_snapshot_shape.sql",
+      "gitBlobSha": "f6d8629828cf539d2a7a07625a8dd91ed9724a9d",
+      "appliedSqlMd5": "a1c9f07cab25895f065eda6a9c84122c",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107084940_harden_order_status_stock_transitions.sql",
+      "gitBlobSha": "db6f7f0741684836c7914a093dcc18d68ecb389e",
+      "appliedSqlMd5": "2cc8e8b1db86581cd2847be19a0b4496",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107085444_secure_support_intake_and_persist_admin_activity.sql",
+      "gitBlobSha": "66934ee76dbd1471c02957dbb61b1b7fdf44b287",
+      "appliedSqlMd5": "d664ef7af4207ce6428ad25bc687dfb6",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107085535_return_http_429_for_support_rate_limits.sql",
+      "gitBlobSha": "6437f644faef497bf2a9db36746265b41c279cc4",
+      "appliedSqlMd5": "64da264069961174ae4ec8147bb9e225",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107093727_admin_product_create_no_upsert.sql",
+      "gitBlobSha": "ee1575a1e2420327800d5198c39cb848e2b5808c",
+      "appliedSqlMd5": "00d5f0e2fb10cae4b2e8f796d00df4e3",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107094358_bound_public_guest_checkout_input.sql",
+      "gitBlobSha": "a274a8d1f87453b3c25d6034344139062f2a7e69",
+      "appliedSqlMd5": "6b950e80a92bdca14a54c733ce463e8d",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107100015_secure_authenticated_order_history.sql",
+      "gitBlobSha": "76345e6be794bde63f140ab5542bfcb7533f2cf0",
+      "appliedSqlMd5": "48d7396161c5158b26e0a150e47e7639",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107110746_enforce_nonnegative_product_stock.sql",
+      "gitBlobSha": "329f23862210f3ffb1909b038130ec52efaa2333",
+      "appliedSqlMd5": "083457003d3c69aaf8a29f21d8000df3",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107115218_persist_checkout_addons_server_pricing.sql",
+      "gitBlobSha": "f7ed53b2e90c16c4de7be8d0b45c3a1da655e603",
+      "appliedSqlMd5": "b1d3ca3509df21e13a9c53d4daa95061",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "COMMERCE",
+      "why": "Checkout input size bound differs: local 400 versus applied 300"
+    },
+    {
+      "file": "20261107130302_add_order_status_notifications.sql",
+      "gitBlobSha": "76002b509fc8aedbe8be7d83cab8fb00db053886",
+      "appliedSqlMd5": "e54482e97e69d244f771649cbf82e0f9",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "SECURITY_DEFINER",
+      "why": "Historic public order notification wrapper differs in SECURITY INVOKER versus SECURITY DEFINER"
+    },
+    {
+      "file": "20261107130319_harden_order_notification_rpc_wrappers.sql",
+      "gitBlobSha": "21c7269b568a710ffe0696d94c7315de7fffb96a",
+      "appliedSqlMd5": "300512211c9126e871cc9435baf7b246",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107130422_restrict_support_ticket_insert_columns.sql",
+      "gitBlobSha": "6d7106b4134098bf927d7de941e7c93ef0fbf6dc",
+      "appliedSqlMd5": "f84b68463eab39efd98623e8df27baf7",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107130453_harden_flash_sale_rounding.sql",
+      "gitBlobSha": "352528cae487c5065e0e169daaa3cabbd3c9286d",
+      "appliedSqlMd5": "b40ebc35e01d4fc2d0e968a15795b205",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107130536_add_product_data_integrity_constraints.sql",
+      "gitBlobSha": "98f83c45d6d9e05fa7aea3750c2b804c1e43e9b6",
+      "appliedSqlMd5": "819077653615764a7e7749a75fee4a24",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107130549_validate_product_data_integrity_constraints.sql",
+      "gitBlobSha": "f39fa49ae0679ff68d0a36051ff89ae43036cdb7",
+      "appliedSqlMd5": "9d3c227f6c73b78073bec74187e6f904",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107150014_require_valid_guest_checkout_email.sql",
+      "gitBlobSha": "695fb0b6d8a22396d2e1ef5ab2961dc014bf18f9",
+      "appliedSqlMd5": "e67b98057b72cf85423eb5f9f863b642",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261107160152_minimize_customer_order_history_payload.sql",
+      "gitBlobSha": "a0e0fccfd72bef658c094a7f41472e6648244c14",
+      "appliedSqlMd5": "7f9b3b7f509cdcca500d0628c4e14796",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261108225558_size_color_inventory_stock.sql",
+      "gitBlobSha": "41509c4abdc9eaacd4f001f37b5f04e830bda91c",
+      "appliedSqlMd5": "d407113588ed9ed6732aea30e8a1bc16",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109102126_support_ticket_threading_and_secure_access.sql",
+      "gitBlobSha": "60ed3ca87c745ade19c2fcefce5d54e55efa80c3",
+      "appliedSqlMd5": "8b0fe2d8ffc2f9180ceb30ad3560f928",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "SUPPORT_AUTH",
+      "why": "Support threading schema/routines differ, including additional conditional DDL in applied source"
+    },
+    {
+      "file": "20261109102221_fix_support_ticket_message_lookup.sql",
+      "gitBlobSha": "340ea89a51c13e532ac414fc0efe87796788556e",
+      "appliedSqlMd5": "e332f39115a5ce0e1d457dd9fa132ab8",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "SUPPORT_AUTH",
+      "why": "Support message lookup historical function schema differs: local private versus applied public"
+    },
+    {
+      "file": "20261109102338_harden_support_ticket_rpc_wrappers.sql",
+      "gitBlobSha": "b31f16f69ff59fca523379906377ed53823bbfb8",
+      "appliedSqlMd5": "02304f838a45373f9ccdc947a50c16fc",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "SUPPORT_AUTH",
+      "why": "Support RPC helper/wrapper function definitions differ materially from applied source"
+    },
+    {
+      "file": "20261109151649_restrict_public_product_purchase_cost.sql",
+      "gitBlobSha": "446b6be17bec97ea5fd4699860a010bac4cfac03",
+      "appliedSqlMd5": "3effce3b72021b6c073cf8e9c86ca070",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109151806_restrict_public_storefront_config_to_published_fields.sql",
+      "gitBlobSha": "e0b190c54d1fb2c072aadd140aa6b5be33737db7",
+      "appliedSqlMd5": "d4263dbd44c83f56fce87e005e06b841",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109151847_move_variant_stock_security_definer_to_private.sql",
+      "gitBlobSha": "a3ca8471579201853e113f951bb8f2830ee80c61",
+      "appliedSqlMd5": "95540516cbe2bcacd89cbff6bb0b27f7",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109152039_sanitize_customer_order_history_item_fields.sql",
+      "gitBlobSha": "543d201f9197f814f7ed7b3b0b23ebee576e6e2c",
+      "appliedSqlMd5": "48d47b93808eccf2b5db503610e7061c",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109152543_restrict_authenticated_product_cost_select.sql",
+      "gitBlobSha": "a0c320a7dbed522a0614650d2b5708a31609cc6e",
+      "appliedSqlMd5": "3e819ad901dae1ed5e761ef4786aa181",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109154122_preserve_customer_order_owner.sql",
+      "gitBlobSha": "ad6253a12e10e7b28b28fcf160438e524b67c852",
+      "appliedSqlMd5": "e9cda5174ff01e801652a277a3f93bac",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109160629_allow_partial_size_color_stock_updates.sql",
+      "gitBlobSha": "0a65b8b457e8fabc87c8f9ff9400752292d54cb5",
+      "appliedSqlMd5": "e7bbfe7940e4df95c965f82bbd695f69",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "MESSAGE_TEXT",
+      "why": "Localized stock validation exception wording differs"
+    },
+    {
+      "file": "20261109211019_enable_customer_order_notification_realtime.sql",
+      "gitBlobSha": "cd9194813cf434670b8e9330ee8d96bb5f054c93",
+      "appliedSqlMd5": "0317323aaaf7786f1b7e254e1a94d152",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261109211210_enable_admin_legacy_message_realtime.sql",
+      "gitBlobSha": "bbb982a296f7df4a0c1eab339c331ba306b8dd1d",
+      "appliedSqlMd5": "941001d3212de315313db5b3b50f4738",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261110043433_admin_atomic_variant_stock_batches.sql",
+      "gitBlobSha": "991874a853c497ad13536790876d1e0b5946fadc",
+      "appliedSqlMd5": "bf2acb8300f4495643dadf9238439896",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261110054145_add_idempotent_support_ticket_replies.sql",
+      "gitBlobSha": "c0d628e6b8f68f72156585df54544607fafc5726",
+      "appliedSqlMd5": "1f43f0ac84b1d88d6db3898cfe6de733",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261116121952_restrict_direct_product_deletes_to_guarded_rpc.sql",
+      "gitBlobSha": "6480bf0755fddeb8953e3be709606cc5e7a8efa1",
+      "appliedSqlMd5": "7b1f52afaa0ebbcbe82ce3f8b9750727",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261116124315_revoke_authenticated_product_purchase_cost_select.sql",
+      "gitBlobSha": "fd00694f268c51d9c83dd5466690a9bf81347a17",
+      "appliedSqlMd5": "e9de676f15c5d7d2a3effc62a6f1131d",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261116124349_restore_authenticated_product_column_allowlist.sql",
+      "gitBlobSha": "32275a3a7222c866e2ab22c55042a5e90e1162a5",
+      "appliedSqlMd5": "ce06db949c824b9e2fedfe2042ec35a7",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261116124647_protect_support_tickets_from_direct_deletion.sql",
+      "gitBlobSha": "4777b2b9d923a2ca587ea9079c820883408fe930",
+      "appliedSqlMd5": "e69cd512d3cf915ff8010776bbc9582c",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261117084403_private_inventory_movement_ledger_stage92.sql",
+      "gitBlobSha": "6dcbbf78cf1785ef6735c73d4a6440d1d34392af",
+      "appliedSqlMd5": "2bbc5ae600f8180894f4ce6e56bc2deb",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261117084443_customer_support_ticket_history_pagination.sql",
+      "gitBlobSha": "28b85cf8ce23d694bcc47eaa45e35f75ec033e4e",
+      "appliedSqlMd5": "5767d4fa0889f4b27ca60489ed3f7dd3",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261117084528_inventory_replenishment_settings.sql",
+      "gitBlobSha": "ca192e9bf4394cd1cacc068dbbfe67416aa06fb1",
+      "appliedSqlMd5": "35aa7da6d5c23ba2709d10c2a464518f",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    },
+    {
+      "file": "20261120122908_replenishment_optimistic_concurrency.sql",
+      "gitBlobSha": "276199f8f34d174a1fdbdf08289f4f11df0247b6",
+      "appliedSqlMd5": "479595aa17b006df5f295eede41fac6b",
+      "classification": "EXECUTABLE_TOKEN_DIFFERENCE",
+      "risk": "TRANSACTION_SCOPE",
+      "why": "Local source includes trailing COMMIT not present in applied SQL source"
+    },
+    {
+      "file": "20261120124250_storefront_publish_concurrency_safe_compat.sql",
+      "gitBlobSha": "7ea468f0d7490dafa907b2add4997673f2d30d2b",
+      "appliedSqlMd5": "a236cdca2ea77aed513a690c18845ca9",
+      "classification": "EXECUTABLE_TOKENS_SAME_EXCEPT_COMMENTS_WHITESPACE"
+    }
+  ]
+}

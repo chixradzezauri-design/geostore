@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261119190000_restore_storefront_version_to_draft.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261119181911_restore_storefront_version_to_draft.sql', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
-const staffPermissions = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
+const staffPermissions = await readFile(new URL('../supabase/migrations/20261117231538_staff_settings_permission.sql', import.meta.url), 'utf8');
 const publishMigration = await readFile(new URL('../supabase/migrations/20261107083528_atomic_storefront_publish_and_append_only_versions.sql', import.meta.url), 'utf8');
 
 test('storefront version restore is permission-checked and uses optimistic concurrency', () => {

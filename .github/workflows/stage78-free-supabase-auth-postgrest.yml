@@ -1,0 +1,147 @@
+name: Stage78 free local Supabase Auth and PostgREST
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/stage78-free-supabase-auth-postgrest.yml'
+      - 'tests/stage78-supabase/**'
+      - 'scripts/stage78AuthPostgrest.mjs'
+      - 'tests/stage78FreeSupabaseAuthPostgrest.test.js'
+      - 'supabase/migrations/20261117231455_admin_staff_auth_foundation.sql'
+      - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
+      - 'docs/stage78-free-auth-postgrest-ci.md'
+      - 'docs/stage79-free-phase-cutover.md'
+      - 'scripts/stage79SignedCutover.mjs'
+      - 'tests/stage79FreePhaseCutover.test.js'
+      - 'supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql'
+      - 'supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql'
+      - 'supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql'
+      - 'supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql'
+      - 'supabase/migrations/20261117231459_staff_orders_permission.sql'
+      - 'supabase/migrations/20261117084403_private_inventory_movement_ledger_stage92.sql'
+      - 'scripts/stage60InventoryLedgerFixture.mjs'
+      - 'scripts/stage83ExtractTriggers.mjs'
+      - 'scripts/stage83ProductTriggerContract.mjs'
+      - 'scripts/stage84ExtractOrderTriggers.mjs'
+      - 'scripts/stage85ExtractOrderLifecycle.mjs'
+      - 'supabase/migrations/20261117231534_staff_crm_support_permissions.sql'
+      - 'scripts/stage88ExtractStaffSupportPolicies.mjs'
+      - 'scripts/stage88SignedSupportStaffHttp.mjs'
+      - 'scripts/stage89SupportRpcHttp.mjs'
+      - 'scripts/stage90ReleaseSequence.mjs'
+      - 'scripts/stage90ProjectionReady.mjs'
+      - 'tests/stage90ReleaseSequence.test.js'
+      - 'docs/stage90-release-sequence.md'
+      - 'release/stage89-support-rpc-fingerprints.json'
+      - 'tests/stage89SupportRpc.test.js'
+      - 'docs/stage89-release-closure.md'
+      - 'scripts/stage88SupportStaffLiveReleaseGate.mjs'
+      - 'tests/stage88SupportStaffLiveReleaseGate.test.js'
+      - 'docs/stage88-support-staff-phase-cutover.md'
+      - 'release/stage88-live-support-staff-surface.json'
+      - 'release/stage88-read-only-support-staff-surface.sql'
+      - 'scripts/stage85OrderLifecycleHttp.mjs'
+      - 'tests/stage85OrderLifecycle.test.js'
+      - 'docs/stage85-eight-order-triggers-ci.md'
+      - 'supabase/migrations/20261107084940_harden_order_status_stock_transitions.sql'
+      - 'supabase/migrations/20261117231504_reopen_completed_orders.sql'
+      - 'supabase/migrations/20261103122121_prevent_stock_restore_after_dispatch.sql'
+      - 'supabase/migrations/20261103122611_lock_down_rpc_search_paths.sql'
+      - 'supabase/migrations/20261108215548_bind_order_ownership_to_auth_user_uuid.sql'
+      - 'supabase/migrations/20261107130302_add_order_status_notifications.sql'
+      - 'scripts/stage84OrderTriggerHttp.mjs'
+      - 'tests/stage84OrderTrigger.test.js'
+      - 'docs/stage84-order-ownership-email-status-ci.md'
+      - 'supabase/migrations/20261108215548_bind_order_ownership_to_auth_user_uuid.sql'
+      - 'supabase/migrations/20261107150014_require_valid_guest_checkout_email.sql'
+      - 'supabase/migrations/20261103155226_track_order_status_change_time.sql'
+      - 'tests/stage83ProductTriggerContract.test.js'
+      - 'docs/stage83-product-trigger-compatibility.md'
+      - 'supabase/migrations/20261107170000_integrate_custom_product_variants.sql'
+      - 'supabase/migrations/20261108225558_size_color_inventory_stock.sql'
+      - 'supabase/migrations/20261109203329_admin_manage_custom_variant_stock.sql'
+      - 'scripts/stage80RealCheckoutHttp.mjs'
+      - 'tests/stage80RealCheckoutHttp.test.js'
+      - 'docs/stage80-real-checkout-ci.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authenticated-http-contract:
+    name: Auth-signed JWT / PostgREST / real GEOSTORE Phase A SQL (disposable)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+      - name: Start disposable local Auth, PostgREST and PostgreSQL
+        working-directory: tests/stage78-supabase
+        run: |
+          set -euo pipefail
+          supabase --version
+          supabase start --exclude studio,storage-api,imgproxy,realtime,postgres-meta,edge-runtime,logflare,vector,supavisor
+      - name: Exercise real HTTP authorization using exact staged staff and order RPC migrations
+        working-directory: tests/stage78-supabase
+        run: |
+          set -euo pipefail
+          supabase status -o env > "$RUNNER_TEMP/stage78-local-credentials.env"
+          chmod 600 "$RUNNER_TEMP/stage78-local-credentials.env"
+          set -a
+          source "$RUNNER_TEMP/stage78-local-credentials.env"
+          set +a
+          test -n "$API_URL"
+          test -n "$ANON_KEY"
+          test -n "$SERVICE_ROLE_KEY"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f prepare.sql
+          node "$GITHUB_WORKSPACE/scripts/stage78AuthPostgrest.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage79-phase-a.sql
+          node "$GITHUB_WORKSPACE/scripts/stage79SignedCutover.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage60InventoryLedgerFixture.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage80-real-stock.sql
+          node "$GITHUB_WORKSPACE/scripts/stage83ExtractTriggers.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage83-product-triggers.sql
+          node "$GITHUB_WORKSPACE/scripts/stage84ExtractOrderTriggers.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage84-install-order-triggers.sql
+          node "$GITHUB_WORKSPACE/scripts/stage85ExtractOrderLifecycle.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage85-order-lifecycle.sql
+          node "$GITHUB_WORKSPACE/scripts/stage80RealCheckoutHttp.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage84OrderTriggerHttp.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage83ProductTriggerContract.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage85OrderLifecycleHttp.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage88ExtractStaffSupportPolicies.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage88-support-staff-rls.sql
+          node "$GITHUB_WORKSPACE/scripts/stage88SignedSupportStaffHttp.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage89-support-rpc-fixture.sql
+          node "$GITHUB_WORKSPACE/scripts/stage89SupportRpcHttp.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage90-pre-a-fixture.sql
+          node "$GITHUB_WORKSPACE/scripts/stage90ReleaseSequence.mjs"
+      - name: Print only local diagnostic container state on failure
+        if: failure()
+        working-directory: tests/stage78-supabase
+        run: docker ps --format 'table {{.Names}}\t{{.Status}}' || true
+      - name: Tear down disposable local Supabase
+        if: always()
+        working-directory: tests/stage78-supabase
+        run: supabase stop --no-backup || true

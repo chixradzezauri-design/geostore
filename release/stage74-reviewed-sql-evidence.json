@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "reviewDate": "2026-11-22",
+  "historyMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "method": "one-time read-only applied SQL content comparison; remote SQL bodies excluded from repo",
+  "items": [
+    {
+      "file": "20261107001000_add_product_data_integrity_constraints.sql",
+      "version": "20261107130536",
+      "localBlobSha": "08afd160d533565dc63b52384ab7bdd1a5c3b110",
+      "remoteMd5": "819077653615764a7e7749a75fee4a24",
+      "localTokenCount": 506,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261107002000_harden_flash_sale_rounding.sql",
+      "version": "20261107130453",
+      "localBlobSha": "74d21151e778b631b72d15d489ebbb0eeb864d00",
+      "remoteMd5": "b40ebc35e01d4fc2d0e968a15795b205",
+      "localTokenCount": 245,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261107020000_add_order_status_notifications.sql",
+      "version": "20261107130302",
+      "localBlobSha": "13615e65db69d336ebe67720966b6b2ec1fc3f30",
+      "remoteMd5": "e54482e97e69d244f771649cbf82e0f9",
+      "localTokenCount": 901,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261107181500_skip_custom_variant_products_in_flash_sales.sql",
+      "version": "20261107135028",
+      "localBlobSha": "50007298301b57e11f0f93228ac86e8a1965bd97",
+      "remoteMd5": "e86399b5fb0b9f1be16a0b0b829a2407",
+      "localTokenCount": 258,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261112133000_guard_legacy_order_product_references.sql",
+      "version": "20261112234156",
+      "localBlobSha": "d81f2240efd8d83655faa96e7aa43de91e4aa518",
+      "remoteMd5": "16ec00f1aeef11079cfe06bb90b03bb3",
+      "localTokenCount": 215,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261116071600_harden_support_ticket_authorization_and_admin_reply_status.sql",
+      "version": "20261116120900",
+      "localBlobSha": "6865db4d07c2b5a501edb2eb3a1c1f2de95e40ed",
+      "remoteMd5": "2a5073e8eea84f06803510443469431a",
+      "localTokenCount": 1353,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261118180000_move_all_support_ticket_history_rpcs_to_private.sql",
+      "version": "20261119071946",
+      "localBlobSha": "ce772dcafb92b499dafe8fa6b0eee4aad6174336",
+      "remoteMd5": "e43eb2fe844c1d574c04e8b9713bde36",
+      "localTokenCount": 1872,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261119090000_revoke_anon_completed_order_reactivation.sql",
+      "version": "20261119094446",
+      "localBlobSha": "a700f0b679f3a62ecdba52f484d7da14a12955cb",
+      "remoteMd5": "8743205612d05c46ad6f7008e5929856",
+      "localTokenCount": 34,
+      "classification": "ACL_DELTA_SERVICE_ROLE_AND_TRANSACTION"
+    },
+    {
+      "file": "20261119110000_add_storefront_hero_storage_scope.sql",
+      "version": "20261119160821",
+      "localBlobSha": "9895cf06576a404817311c5d680782ef79f55d83",
+      "remoteMd5": "e40ecb5ea6f4fe584c889985903ff699",
+      "localTokenCount": 244,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261119150000_admin_panel_visual_design_sync.sql",
+      "version": "20261119140237",
+      "localBlobSha": "a8fc812fe8f06f73eb467868d2ff2f5bf77c8d20",
+      "remoteMd5": "7fbeb33ee15bb7d95dd566f681e384f3",
+      "localTokenCount": 521,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    },
+    {
+      "file": "20261119152000_admin_panel_visual_design_concurrency.sql",
+      "version": "20261119160433",
+      "localBlobSha": "2f49ff3c04b8405552c7cdb47559a4d970078bf9",
+      "remoteMd5": "f7b288d0e078ae8fddd9f997eb03bba9",
+      "localTokenCount": 584,
+      "classification": "TOKENS_EQUAL_IGNORING_COMMENTS_AND_SPACES"
+    }
+  ]
+}

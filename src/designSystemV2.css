@@ -1366,3 +1366,393 @@
     padding: 12px !important;
   }
 }
+
+/* Stage 37 — support, CRM and product forms: phone ergonomics / accessible fields.
+ * No reply transport, status changes, product mutations or account permissions altered. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 84px !important;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-input:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel :is(input, button):focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters :is(input, select):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-contact-line {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel :is(input, button) {
+  min-width: 0;
+  min-height: 44px !important;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters :is(input, select) {
+  min-width: 0;
+  min-height: 44px !important;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    width: 100%;
+    min-width: 0;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+    gap: 5px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button {
+    min-width: 0;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button:last-child {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls > button {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > textarea {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > button {
+    white-space: normal;
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-search input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters :is(input, select) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+    min-height: 44px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel > div:last-child {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-crm-panel .admin-crm-edit-panel > div:last-child > button {
+    flex: 1 1 120px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-list-filters {
+    width: 100%;
+    min-width: 0;
+    gap: 8px !important;
+  }
+}
+
+/* Stage 38 — checkout/cart visibility and accessible mobile controls.
+ * Coupon validation, cart math, order RPC and owner-controlled theme data are unchanged. */
+.gs-commerce-overlay--checkout .gs-checkout-error:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .gs-commerce-overlay--checkout .gs-checkout-form {
+    scroll-padding-bottom: 116px;
+  }
+  .gs-commerce-overlay--checkout .gs-checkout-submit-area {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    backdrop-filter: blur(14px);
+    padding-top: 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.08);
+  }
+  .geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form input,
+  .geostore-fashion-store .gs-cart-layout .gs-cart-summary select {
+    font-size: max(16px, var(--gs-v2-inputFontSize, 16px)) !important;
+    min-height: 44px;
+  }
+}
+
+/* Stage 39 — search clear, filter reset and mobile catalogue controls.
+ * Visual-editor colors and stored product ordering remain authoritative. */
+.geostore-fashion-store .gs-header-search-row .gs-header-search-clear {
+  display: grid; place-items: center; flex: 0 0 44px;
+  width: 44px; min-width: 44px; min-height: 44px; touch-action: manipulation;
+}
+.geostore-fashion-store .gs-header-search-row .gs-header-search-clear svg { width: 17px; height: 17px; }
+.geostore-fashion-store .gs-filter-panel .gs-filter-reset-all,
+.geostore-fashion-store .gs-empty-products .gs-empty-products-reset {
+  min-height: 44px !important; min-width: 0; white-space: normal !important;
+  overflow-wrap: anywhere; touch-action: manipulation;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-header-search-row .gs-header-search { flex: 1 1 0; min-width: 0; }
+  .geostore-fashion-store .gs-header-search-row .gs-header-search input[type="search"] {
+    min-height: 44px !important; font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter {
+    display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important; width: 100%; position: relative;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > div:first-child,
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > button { grid-column: 1 / -1; }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > span {
+    position: absolute !important; width: 1px !important; height: 1px !important;
+    overflow: hidden !important; clip-path: inset(50%) !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-price-filter > input[type="number"] {
+    width: 100% !important; max-width: none !important; min-width: 0 !important;
+    min-height: 44px !important; font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-sort-control {
+    width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-sort-control select {
+    width: 100% !important; min-width: 0 !important;
+    min-height: 44px !important; font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-filter-panel .gs-sort-control .gs-filter-reset-all {
+    grid-column: 1 / -1; justify-self: stretch; width: 100%;
+  }
+  /* Legacy catalog-specific rules carry stronger selectors than generic filters.
+   * The additional scope is essential on 320px phones; no palette override. */
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls.gs-filter-panel .gs-price-filter input.gs-price-input,
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls.gs-filter-panel .gs-sort-control select.gs-sort-select {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* Stage 40 — touch-sized catalog actions and keyboard category controls.
+ * Do not override merchant-selected product media ratio, font family or palette. */
+.geostore-fashion-store .geostore-storefront .gs-category-card[role="button"]:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-subcategory-chip:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-title-action:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 2px;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-title-action {
+  display: block; width: 100%; min-width: 0; font: inherit;
+  line-height: inherit; text-align: inherit; overflow-wrap: anywhere; cursor: pointer;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-media > button.gs-catalog-media-toggle {
+  width: 44px !important; height: 44px !important;
+  min-width: 44px !important; min-height: 44px !important;
+  padding: 10px !important; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-media > button.gs-catalog-media-toggle svg {
+  width: 18px !important; height: 18px !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-badges {
+  max-width: calc(100% - 64px); min-width: 0;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-badges > span {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.geostore-fashion-store .geostore-storefront .gs-subcategory-chip {
+  min-height: 44px !important; max-width: 100%; overflow-wrap: anywhere; touch-action: manipulation;
+}
+
+/* Stage 41 — keyboard-contained product dialog, gallery navigation and stock feedback.
+ * Do not override owner-selected colors, typography, photo ratio or price rules. */
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-toolbar {
+  width: 100%; min-width: 0; gap: 10px;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-step {
+  display: inline-grid; place-items: center;
+  width: 44px; min-width: 44px !important; min-height: 44px !important;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-step > span {
+  font-size: 24px; line-height: 1;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-step:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 2px;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-gallery-counter,
+.geostore-fashion-store .geostore-storefront .gs-product-purchase-hint {
+  min-width: 0; overflow-wrap: anywhere;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-purchase-hint {
+  max-width: 100%; line-height: 1.35;
+}
+@media (max-width: 480px) {
+  .geostore-fashion-store .geostore-storefront .gs-product-dialog--purchase-unavailable .gs-product-modal-body {
+    padding-bottom: 164px !important;
+  }
+}
+
+/* Stage 42 — compact, keyboard-accessible details and review submission.
+ * Keep the visual editor's type scale, palette and existing product data untouched. */
+.geostore-fashion-store .geostore-storefront .gs-product-description-panel,
+.geostore-fashion-store .geostore-storefront .gs-product-detail-specs,
+.geostore-fashion-store .geostore-storefront .gs-product-reviews,
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry,
+.geostore-fashion-store .geostore-storefront .gs-product-review-card {
+  min-width: 0;
+  max-width: 100%;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-description-copy,
+.geostore-fashion-store .geostore-storefront .gs-product-detail-specs b,
+.geostore-fashion-store .geostore-storefront .gs-product-review-comment-text,
+.geostore-fashion-store .geostore-storefront .gs-product-review-author {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: pre-wrap;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle {
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  list-style: none;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry[open] .gs-product-review-entry-chevron {
+  transform: rotate(180deg);
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-entry .gs-product-review-form {
+  margin-top: 8px;
+  min-width: 0;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-review-upload label:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .geostore-storefront .gs-product-reviews {
+    gap: 10px !important;
+  }
+  /* Legacy modal controls use important font sizes; scope to this exact
+     review form so the 16px iOS floor takes priority over their selectors. */
+  .geostore-fashion-store .geostore-storefront .gs-product-modal-body .gs-product-review-entry .gs-product-review-rating-select,
+  .geostore-fashion-store .geostore-storefront .gs-product-modal-body .gs-product-review-entry .gs-product-review-field {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-product-review-upload label {
+    min-height: 44px !important;
+  }
+}
+
+/* Stage 43 — saved-list / comparison mobile sizing and accessibility.
+ * Preserve storefront's editable design settings. */
+.geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions {
+  grid-template-columns: minmax(0,1fr) auto !important;
+  min-width: 0;
+}
+.geostore-fashion-store .gs-wishlist-main,
+.geostore-fashion-store .gs-wishlist-meta,
+.geostore-fashion-store .gs-wishlist-actions { min-width: 0; max-width: 100%; }
+.geostore-fashion-store .gs-wishlist-main .gs-wishlist-image { flex-shrink: 0; }
+.geostore-fashion-store .gs-wishlist-actions { justify-content: flex-end; }
+.geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions .gs-wishlist-actions > button {
+  min-height: 44px !important;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .gs-wishlist-remove:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-close:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-clear:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-remove:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-scroll:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 2px;
+}
+.gs-product-compare-dialog .gs-product-compare-header { min-width: 0; gap: 10px; flex-wrap: wrap; }
+.gs-product-compare-dialog .gs-product-compare-header > div:first-child { min-width: 0; flex: 1 1 180px; }
+.gs-product-compare-dialog .gs-product-compare-close,
+.gs-product-compare-dialog .gs-product-compare-clear,
+.gs-product-compare-dialog .gs-product-compare-remove {
+  min-width: 44px !important; min-height: 44px !important; touch-action: manipulation;
+}
+.gs-product-compare-dialog .gs-product-compare-scroll {
+  max-width: 100%; min-width: 0; overscroll-behavior-x: contain; scroll-padding-inline: 12px;
+}
+.gs-product-compare-dialog .gs-product-compare-specs,
+.gs-product-compare-dialog .gs-product-compare-description,
+.geostore-fashion-store .gs-wishlist-product-title { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions {
+    grid-template-columns: minmax(0,1fr) !important; gap: 10px !important;
+  }
+  .geostore-fashion-store .gs-wishlist-actions { width: 100%; justify-content: stretch; }
+  .geostore-fashion-store .gs-wishlist-card.gs-wishlist-card--actions .gs-wishlist-add { flex: 1 1 140px; }
+}
+
+/* Stage 44 — direct saved-product detail navigation, with accessible title actions.
+   The visual editor's storefront theme and per-product styles remain authoritative. */
+.geostore-fashion-store .gs-wishlist-detail-link,
+.gs-product-compare-dialog .gs-product-compare-detail-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  width: 100%;
+  max-width: 100%;
+  text-align: start;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.geostore-fashion-store .gs-wishlist-detail-link:focus-visible,
+.gs-product-compare-dialog .gs-product-compare-detail-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.geostore-fashion-store .gs-wishlist-detail-link:disabled,
+.gs-product-compare-dialog .gs-product-compare-detail-link:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+.geostore-fashion-store .gs-wishlist-detail-link:not(:disabled),
+.gs-product-compare-dialog .gs-product-compare-detail-link:not(:disabled) {
+  cursor: pointer;
+}
+.gs-product-compare-dialog .gs-product-compare-heading {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Stage 45 — accessible Flash Sale quick-view and phone-safe variant labels.
+   Layout/accessibility only: keep the visual editor's color and type tokens. */
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-media {
+  min-width: 0; width: 100%; text-align: inherit; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-title-action {
+  width: 100%; min-width: 0; min-height: 44px; text-align: start;
+  overflow-wrap: anywhere; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-media:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-title-action:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-option:focus-visible {
+  outline: 2px solid currentColor; outline-offset: 3px;
+}
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-option {
+  display: grid !important; grid-template-columns: minmax(0, 1fr) max-content;
+  width: 100%; min-width: 0; min-height: 44px !important;
+  align-items: center; touch-action: manipulation;
+}
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-name {
+  min-width: 0; overflow-wrap: anywhere;
+}
+.geostore-fashion-store .geostore-storefront .gs-custom-variant-meta {
+  max-width: 100%; min-width: 0; white-space: normal;
+}
+@media (max-width: 380px) {
+  .geostore-fashion-store .geostore-storefront .gs-custom-variant-option {
+    grid-template-columns: minmax(0, 1fr); justify-items: start;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-custom-variant-meta {
+    text-align: start;
+  }
+}

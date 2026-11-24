@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "reviewDate": "2026-11-22",
+  "remoteHistoryMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "evidence": "Former same-name/different-timestamp 21 SQL files had byte-for-byte equality with Supabase-stored migration SQL; renamed only local Git tree paths, original Git blobs reused",
+  "renames": [
+    {
+      "before": "20261116130000_support_ticket_read_receipts.sql",
+      "after": "20261116120907_support_ticket_read_receipts.sql",
+      "gitBlobSha": "4cb33f7d9a2b3486ae1fae4706c1364ee2cb80fc",
+      "appliedVersion": "20261116120907",
+      "storedSqlMd5": "766538c6f3f69249c4129f61a2b12116"
+    },
+    {
+      "before": "20261116150000_add_owner_checked_support_ticket_status.sql",
+      "after": "20261116120914_add_owner_checked_support_ticket_status.sql",
+      "gitBlobSha": "51bcbd362f484f249f820fd3c536fae5129fefe9",
+      "appliedVersion": "20261116120914",
+      "storedSqlMd5": "77d97de6d64f80cbaf72de7d62250110"
+    },
+    {
+      "before": "20261116160000_restore_single_flash_sale_expiry_job.sql",
+      "after": "20261116135251_restore_single_flash_sale_expiry_job.sql",
+      "gitBlobSha": "5be722fec49e6328ef73e02fca789fe5ba61d380",
+      "appliedVersion": "20261116135251",
+      "storedSqlMd5": "ca184180548020a9d4d2e4a33b484373"
+    },
+    {
+      "before": "20261116170000_customer_support_ticket_history.sql",
+      "after": "20261116121216_customer_support_ticket_history.sql",
+      "gitBlobSha": "d91d988338c015db9416e3c117a378895e4a2521",
+      "appliedVersion": "20261116121216",
+      "storedSqlMd5": "6dc46fab21b404d2fe9f69d6d1f0ff11"
+    },
+    {
+      "before": "20261117100000_admin_staff_auth_foundation.sql",
+      "after": "20261117231455_admin_staff_auth_foundation.sql",
+      "gitBlobSha": "bdf598d51ec28a500b0087ec70ce9873fb0e924c",
+      "appliedVersion": "20261117231455",
+      "storedSqlMd5": "7fc5f95eff880cc9261cede447abc9a8"
+    },
+    {
+      "before": "20261117103000_staff_orders_permission.sql",
+      "after": "20261117231459_staff_orders_permission.sql",
+      "gitBlobSha": "53b9d0e5a8b69442b246c5988fde28618083239c",
+      "appliedVersion": "20261117231459",
+      "storedSqlMd5": "1b1470f1440fe6955cb9a9e8a54d031d"
+    },
+    {
+      "before": "20261117120000_add_secure_admin_customer_crm.sql",
+      "after": "20261119071959_add_secure_admin_customer_crm.sql",
+      "gitBlobSha": "cba5d971a537882b206c494764fa3e231b601459",
+      "appliedVersion": "20261119071959",
+      "storedSqlMd5": "10a626cb9ab6ba46392412969dea8a9b"
+    },
+    {
+      "before": "20261117130000_reopen_completed_orders.sql",
+      "after": "20261117231504_reopen_completed_orders.sql",
+      "gitBlobSha": "acd1dc0c155f0af3e7ae9b1931232541c4578e35",
+      "appliedVersion": "20261117231504",
+      "storedSqlMd5": "9c02503541877264f658a5ef51cf7ff7"
+    },
+    {
+      "before": "20261117140000_staff_products_permission.sql",
+      "after": "20261117231508_staff_products_permission.sql",
+      "gitBlobSha": "0e8c67aacd85e17d78b8b57225b5612e7c924500",
+      "appliedVersion": "20261117231508",
+      "storedSqlMd5": "eb284b697cf110ca872df698ff9cfada"
+    },
+    {
+      "before": "20261117143000_staff_expenses_permission.sql",
+      "after": "20261117231531_staff_expenses_permission.sql",
+      "gitBlobSha": "81634064a2ed20533156dd65fb01e16702bc089f",
+      "appliedVersion": "20261117231531",
+      "storedSqlMd5": "f2928568eb4f1d6bb2a4e87cf7982bbf"
+    },
+    {
+      "before": "20261117144500_staff_crm_support_permissions.sql",
+      "after": "20261117231534_staff_crm_support_permissions.sql",
+      "gitBlobSha": "7084db8b959f6f3d02eb6a8c0c599e137bfc2548",
+      "appliedVersion": "20261117231534",
+      "storedSqlMd5": "386680087cf2d85533e26c5e50698242"
+    },
+    {
+      "before": "20261117150000_staff_settings_permission.sql",
+      "after": "20261117231538_staff_settings_permission.sql",
+      "gitBlobSha": "711b449cc1ccd6a614d4caac789d88b330eca921",
+      "appliedVersion": "20261117231538",
+      "storedSqlMd5": "a1731a40e65edfedc0770e3b025abf74"
+    },
+    {
+      "before": "20261117153000_staff_analytics_summary.sql",
+      "after": "20261117231542_staff_analytics_summary.sql",
+      "gitBlobSha": "bce56e3f68a202dd4e86b292c6a53b7f139345f1",
+      "appliedVersion": "20261117231542",
+      "storedSqlMd5": "cba21396bb1c74fa84bf3b00616ed216"
+    },
+    {
+      "before": "20261117160000_stable_checkout_idempotency_ordering.sql",
+      "after": "20261117231546_stable_checkout_idempotency_ordering.sql",
+      "gitBlobSha": "a20a559f7e44e1bbeb5fb917cf4ddbcaf95efdfa",
+      "appliedVersion": "20261117231546",
+      "storedSqlMd5": "e5bc9c87792464f12425269c60417df2"
+    },
+    {
+      "before": "20261117170000_admin_staff_pending_invites.sql",
+      "after": "20261117231549_admin_staff_pending_invites.sql",
+      "gitBlobSha": "41c9189be4a1503c1061a440d9eb278932cd7aba",
+      "appliedVersion": "20261117231549",
+      "storedSqlMd5": "7886e66bc4d95627d1ed9322079f0540"
+    },
+    {
+      "before": "20261118190000_admin_rpc_invoker_wrappers.sql",
+      "after": "20261119071952_admin_rpc_invoker_wrappers.sql",
+      "gitBlobSha": "19d21ceb551868bb026521823d01bef5ff18fc4a",
+      "appliedVersion": "20261119071952",
+      "storedSqlMd5": "27dfba76c7521e926310bcdb5a391336"
+    },
+    {
+      "before": "20261119100000_revoke_anon_completed_order_reactivation.sql",
+      "after": "20261119094446_revoke_anon_completed_order_reactivation.sql",
+      "gitBlobSha": "f43035cba58a7b76ed0cac03a2e0f9e0c482b308",
+      "appliedVersion": "20261119094446",
+      "storedSqlMd5": "8743205612d05c46ad6f7008e5929856"
+    },
+    {
+      "before": "20261119151000_admin_panel_visual_settings_owner_policy.sql",
+      "after": "20261119140327_admin_panel_visual_settings_owner_policy.sql",
+      "gitBlobSha": "79bba901619648e7e6b8656ebc275fcbd0bb28ea",
+      "appliedVersion": "20261119140327",
+      "storedSqlMd5": "86de3d1d6738417828418f006be12e08"
+    },
+    {
+      "before": "20261119170000_storefront_draft_concurrency.sql",
+      "after": "20261119181855_storefront_draft_concurrency.sql",
+      "gitBlobSha": "1033bd19e682320153854532606a28e67331344b",
+      "appliedVersion": "20261119181855",
+      "storedSqlMd5": "626fd010d3576ec180daf9b4fe494630"
+    },
+    {
+      "before": "20261119190000_restore_storefront_version_to_draft.sql",
+      "after": "20261119181911_restore_storefront_version_to_draft.sql",
+      "gitBlobSha": "5751a86ce931eb731b8466efdf078fc206ef1332",
+      "appliedVersion": "20261119181911",
+      "storedSqlMd5": "82b8245125afaa277412f9977a989cda"
+    },
+    {
+      "before": "20261119200000_legacy_storefront_draft_save_compat.sql",
+      "after": "20261119181955_legacy_storefront_draft_save_compat.sql",
+      "gitBlobSha": "7436658df49c0c519eb59c73ad79e3db60533d5c",
+      "appliedVersion": "20261119181955",
+      "storedSqlMd5": "a6f9e1b0361e82d073d914edf679bf7d"
+    }
+  ]
+}

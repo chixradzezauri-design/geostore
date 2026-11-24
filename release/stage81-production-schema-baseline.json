@@ -1,0 +1,412 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "capturedDate": "2026-11-23",
+  "expectedMigrationHistoryMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "phase": "BEFORE_PHASE_A",
+  "catalog": {
+    "acl": {
+      "anon_order_table_read": false,
+      "anon_private_schema_usage": true,
+      "authenticated_order_items_read": true,
+      "authenticated_order_table_read": true,
+      "authenticated_order_result_read": true,
+      "authenticated_order_status_read": true,
+      "authenticated_order_request_read": true,
+      "authenticated_private_schema_usage": true
+    },
+    "rpcs": [
+      {
+        "exists": true,
+        "return": "jsonb",
+        "signature": "private.admin_update_order_status(text,text)",
+        "anon_execute": false,
+        "definition_md5": "abdafdece9a90593e614992cba91dc12",
+        "security_definer": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "return": "jsonb",
+        "signature": "private.create_order_with_stock(jsonb)",
+        "anon_execute": true,
+        "definition_md5": "cbd5624b31d24281f1e2088b08523b90",
+        "security_definer": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "return": "TABLE(id text, created_at timestamp with time zone, total_gel numeric, status text, items jsonb, status_changed_at timestamp with time zone)",
+        "signature": "private.get_my_orders()",
+        "anon_execute": false,
+        "definition_md5": "657fb245cd52e10607ec273eb8ef0c56",
+        "security_definer": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "return": "boolean",
+        "signature": "private.has_staff_permission(text)",
+        "anon_execute": false,
+        "definition_md5": "b29b4f0dc08a23ded9b87b09b93d56ce",
+        "security_definer": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": false,
+        "return": null,
+        "signature": "public.admin_order_image_refs_page(integer,integer)",
+        "anon_execute": null,
+        "definition_md5": null,
+        "security_definer": null,
+        "authenticated_execute": null
+      },
+      {
+        "exists": false,
+        "return": null,
+        "signature": "public.admin_order_ledger_page(integer,integer)",
+        "anon_execute": null,
+        "definition_md5": null,
+        "security_definer": null,
+        "authenticated_execute": null
+      },
+      {
+        "exists": true,
+        "return": "jsonb",
+        "signature": "public.admin_update_order_status(text,text)",
+        "anon_execute": false,
+        "definition_md5": "5f8aa749298558b2aaac992e69e565ed",
+        "security_definer": false,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "return": "jsonb",
+        "signature": "public.create_order_with_stock(jsonb)",
+        "anon_execute": true,
+        "definition_md5": "eb98f58ecf5c0cbf2b67201d9a77dd1a",
+        "security_definer": false,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "return": "TABLE(id text, created_at timestamp with time zone, total_gel numeric, status text, items jsonb, status_changed_at timestamp with time zone)",
+        "signature": "public.get_my_orders()",
+        "anon_execute": false,
+        "definition_md5": "7d1c08d7bd75a99ff54dce2dd1b8e700",
+        "security_definer": false,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "return": "boolean",
+        "signature": "public.has_staff_permission(text)",
+        "anon_execute": false,
+        "definition_md5": "64e488d7e1efa9c0504b894914585783",
+        "security_definer": false,
+        "authenticated_execute": true
+      }
+    ],
+    "tables": [
+      {
+        "rls": true,
+        "name": "private.inventory_movements",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "name": "private.inventory_replenishment_settings",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "name": "public.admin_staff_members",
+        "force_rls": true
+      },
+      {
+        "rls": true,
+        "name": "public.admin_staff_pending_invites",
+        "force_rls": true
+      },
+      {
+        "rls": true,
+        "name": "public.expenses",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "name": "public.order_notifications",
+        "force_rls": true
+      },
+      {
+        "rls": true,
+        "name": "public.orders",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "name": "public.products",
+        "force_rls": false
+      }
+    ],
+    "order_triggers": [
+      {
+        "name": "orders_bind_auth_user_before_insert",
+        "enabled": "O",
+        "function": "private.bind_order_to_auth_user()"
+      },
+      {
+        "name": "orders_guard_status_transition",
+        "enabled": "O",
+        "function": "private.guard_order_status_transition()"
+      },
+      {
+        "name": "orders_record_notification_after_insert",
+        "enabled": "O",
+        "function": "private.record_order_notification()"
+      },
+      {
+        "name": "orders_record_notification_after_status_update",
+        "enabled": "O",
+        "function": "private.record_order_notification()"
+      },
+      {
+        "name": "orders_require_valid_guest_checkout_email",
+        "enabled": "O",
+        "function": "private.require_valid_guest_checkout_email()"
+      },
+      {
+        "name": "orders_set_status_changed_at",
+        "enabled": "O",
+        "function": "private.set_order_status_changed_at()"
+      },
+      {
+        "name": "prevent_cancellation_after_dispatch",
+        "enabled": "O",
+        "function": "private.prevent_cancellation_after_dispatch()"
+      },
+      {
+        "name": "reject_unpublished_products_in_new_orders",
+        "enabled": "O",
+        "function": "private.reject_unpublished_products_in_new_orders()"
+      }
+    ],
+    "orders_columns": [
+      {
+        "name": "id",
+        "type": "text"
+      },
+      {
+        "name": "customer_name",
+        "type": "text"
+      },
+      {
+        "name": "phone",
+        "type": "text"
+      },
+      {
+        "name": "address",
+        "type": "text"
+      },
+      {
+        "name": "user_email",
+        "type": "text"
+      },
+      {
+        "name": "items",
+        "type": "jsonb"
+      },
+      {
+        "name": "total_gel",
+        "type": "numeric"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "stock_deducted_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "stock_restored_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "checkout_result",
+        "type": "jsonb"
+      },
+      {
+        "name": "checkout_request",
+        "type": "jsonb"
+      },
+      {
+        "name": "customer_email",
+        "type": "text"
+      },
+      {
+        "name": "admin_note",
+        "type": "text"
+      },
+      {
+        "name": "status_changed_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid"
+      }
+    ],
+    "product_triggers": [
+      {
+        "name": "preserve_product_variant_stock",
+        "enabled": "O",
+        "function": "private.preserve_product_variant_stock()"
+      },
+      {
+        "name": "products_inventory_movement_after_change",
+        "enabled": "O",
+        "function": "private.record_product_inventory_movement()"
+      },
+      {
+        "name": "zz_sync_size_color_aggregate_stock",
+        "enabled": "O",
+        "function": "private.sync_size_color_aggregate_stock()"
+      }
+    ],
+    "products_columns": [
+      {
+        "name": "id",
+        "type": "text"
+      },
+      {
+        "name": "sku",
+        "type": "text"
+      },
+      {
+        "name": "name",
+        "type": "text"
+      },
+      {
+        "name": "category",
+        "type": "text"
+      },
+      {
+        "name": "brand",
+        "type": "text"
+      },
+      {
+        "name": "vendor",
+        "type": "text"
+      },
+      {
+        "name": "price_gel",
+        "type": "numeric"
+      },
+      {
+        "name": "old_price_gel",
+        "type": "numeric"
+      },
+      {
+        "name": "stock",
+        "type": "integer"
+      },
+      {
+        "name": "image",
+        "type": "text"
+      },
+      {
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "name": "available_sizes",
+        "type": "jsonb"
+      },
+      {
+        "name": "available_colors",
+        "type": "jsonb"
+      },
+      {
+        "name": "material",
+        "type": "text"
+      },
+      {
+        "name": "durability",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "purchase_cost",
+        "type": "numeric"
+      },
+      {
+        "name": "gallery",
+        "type": "jsonb"
+      },
+      {
+        "name": "variants",
+        "type": "jsonb"
+      },
+      {
+        "name": "tags",
+        "type": "jsonb"
+      },
+      {
+        "name": "model",
+        "type": "text"
+      },
+      {
+        "name": "cpu",
+        "type": "text"
+      },
+      {
+        "name": "ram",
+        "type": "text"
+      },
+      {
+        "name": "storage",
+        "type": "text"
+      },
+      {
+        "name": "gpu",
+        "type": "text"
+      },
+      {
+        "name": "screen_size",
+        "type": "text"
+      },
+      {
+        "name": "os",
+        "type": "text"
+      },
+      {
+        "name": "is_featured",
+        "type": "boolean"
+      },
+      {
+        "name": "is_published",
+        "type": "boolean"
+      },
+      {
+        "name": "flash_sale_started_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "flash_sale_ends_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "flash_sale_percent",
+        "type": "numeric"
+      }
+    ]
+  }
+}

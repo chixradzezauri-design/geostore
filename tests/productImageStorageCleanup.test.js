@@ -13,6 +13,9 @@ test('product image cleanup paginates the complete catalogue before checking ref
 
 test('partial catalogue or order scans fail closed and never authorize storage deletion', () => {
   assert.match(admin, /პროდუქტების სრული სიის შემოწმება ვერ დასრულდა; ფოტოს წაშლა შეჩერდა/);
+  assert.match(admin, /rest\/v1\/rpc\/admin_order_image_refs_page/);
+  assert.match(admin, /body: JSON\.stringify\(\{ p_offset: offset, p_limit: pageSize \}\)/);
+  assert.doesNotMatch(admin, /rest\/v1\/orders\?select=items/);
   assert.match(admin, /შეკვეთების სრული სიის შემოწმება ვერ დასრულდა; ფოტოს წაშლა შეჩერდა/);
   assert.match(admin, /if \(!safePaths\.length\) return true;[\s\S]*?method: 'DELETE'/);
   assert.match(admin, /catch \(error\) \{[\s\S]*?GEOSTORE product image cleanup failed:[\s\S]*?return false;/);

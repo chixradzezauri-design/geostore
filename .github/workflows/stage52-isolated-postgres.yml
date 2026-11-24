@@ -1,0 +1,159 @@
+name: Stage52 isolated PostgreSQL checkout contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20261121170000_strip_private_costs_from_checkout_rpc.sql'
+      - 'tests/sql/stage52_checkout_contract.sql'
+      - 'supabase/migrations/20261121190000_redact_alternate_costs_from_order_history.sql'
+      - 'tests/sql/stage54_order_history_contract.sql'
+      - 'supabase/migrations/20261117231455_admin_staff_auth_foundation.sql'
+      - 'tests/sql/stage56_staff_auth_contract.sql'
+      - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
+      - 'supabase/migrations/20261121213000_revoke_legacy_order_snapshot_reads.sql'
+      - 'tests/sql/stage57_order_ledger_scope_contract.sql'
+      - 'tests/sql/stage77_phase_a_legacy_role_compat.sql'
+      - 'tests/stage77PhaseARoleCompatibility.test.js'
+      - 'supabase/migrations/20261117231459_staff_orders_permission.sql'
+      - 'tests/sql/stage59_order_status_compat_contract.sql'
+      - 'tests/sql/stage60_triggers_inventory_contract.sql'
+      - 'tests/sql/stage61_variant_checkout_contract.sql'
+      - 'tests/sql/stage62_cancelled_order_variant_reactivation.sql'
+      - 'tests/sql/stage65_expenses_order_role_matrix.sql'
+      - 'tests/sql/stage66_legacy_checkout_insert_compat_gate.sql'
+      - 'tests/sql/stage67_legacy_checkout_ownership_replay.sql'
+      - 'tests/sql/stage68_legacy_admin_product_scope_replay.sql'
+      - 'tests/sql/stage69_legacy_variant_history_replay.sql'
+      - 'release/stage72-production-history-baseline.json'
+      - 'scripts/stage72ReconciledReleaseGate.mjs'
+      - 'release/stage73-production-sql-digests.json'
+      - 'scripts/stage73SqlContentParity.mjs'
+      - 'tests/stage73SqlContentParity.test.js'
+      - 'release/stage74-reviewed-sql-evidence.json'
+      - 'scripts/stage74SqlExecutableTokenizer.mjs'
+      - 'scripts/stage74ReviewedMismatchGate.mjs'
+      - 'tests/stage74ReviewedMismatchGate.test.js'
+      - 'release/stage75-reviewed-local-renames.json'
+      - 'scripts/stage75LocalHistoryReconcile.mjs'
+      - 'tests/stage75LocalHistoryReconcile.test.js'
+      - 'release/stage76-existing-version-sql-divergence.json'
+      - 'scripts/stage76ExistingVersionSqlDivergenceGate.mjs'
+      - 'release/stage82-live-effective-schema-surface.json'
+      - 'release/stage82-read-only-surface-query.sql'
+      - 'scripts/stage82LiveEffectiveSchemaGate.mjs'
+      - 'release/stage86-production-only-migration-origin.json'
+      - 'release/stage86-historical-sql-risk-disposition.json'
+      - 'release/stage86-read-only-origin-query.sql'
+      - 'scripts/stage86MissingHistoryProvenanceGate.mjs'
+      - 'release/stage87-phase-a-live-preflight.json'
+      - 'release/stage87-high-risk-live-boundary-matrix.json'
+      - 'release/stage87-read-only-phase-a-preflight.sql'
+      - 'release/stage87-read-only-high-risk-functions.sql'
+      - 'scripts/stage87PhaseAPreflightHighRiskGate.mjs'
+      - 'release/stage88-live-support-staff-surface.json'
+      - 'release/stage88-read-only-support-staff-surface.sql'
+      - 'scripts/stage88ExtractStaffSupportPolicies.mjs'
+      - 'scripts/stage88SupportStaffLiveReleaseGate.mjs'
+      - 'tests/stage88SupportStaffLiveReleaseGate.test.js'
+      - 'docs/stage88-support-staff-phase-cutover.md'
+      - 'supabase/migrations/20261117231534_staff_crm_support_permissions.sql'
+      - 'src/App.jsx'
+      - 'src/components/AdminDashboardPro.jsx'
+      - 'src/utils/adminOrderLedgerSafety.js'
+      - 'tests/stage87PhaseAPreflightHighRiskGate.test.js'
+      - 'docs/stage87-phase-a-preflight-nine-high-risk-contracts.md'
+      - 'tests/stage86MissingHistoryProvenanceGate.test.js'
+      - 'docs/stage86-historical-source-provenance-and-release-blockers.md'
+      - 'tests/stage82LiveEffectiveSchemaGate.test.js'
+      - 'docs/stage82-live-effective-schema-review.md'
+      - 'release/stage81-production-schema-baseline.json'
+      - 'release/stage81-read-only-schema-query.sql'
+      - 'scripts/stage81LiveSchemaGate.mjs'
+      - 'tests/stage81LiveSchemaGate.test.js'
+      - 'docs/stage81-frozen-live-schema-release-gate.md'
+      - 'tests/stage76ExistingVersionSqlDivergenceGate.test.js'
+      - 'tests/stage72ReconciledReleaseGate.test.js'
+      - 'supabase/migrations/20261106120000_validate_order_item_variants.sql'
+      - 'supabase/migrations/20261107172000_stabilize_admin_product_order.sql'
+      - 'supabase/migrations/20261117231508_staff_products_permission.sql'
+      - 'scripts/stage67LegacyCheckoutReplayFixture.mjs'
+      - 'scripts/stage66LegacyCheckoutFixture.mjs'
+      - 'supabase/migrations/20261106210000_validate_checkout_input_on_order_insert.sql'
+      - 'supabase/migrations/20261117231531_staff_expenses_permission.sql'
+      - 'scripts/stage62ReactivationFixture.mjs'
+      - 'supabase/migrations/20261107170000_integrate_custom_product_variants.sql'
+      - 'supabase/migrations/20261117231546_stable_checkout_idempotency_ordering.sql'
+      - 'supabase/migrations/20261109151847_move_variant_stock_security_definer_to_private.sql'
+      - 'scripts/stage60InventoryLedgerFixture.mjs'
+      - 'supabase/migrations/20261117084403_private_inventory_movement_ledger_stage92.sql'
+      - 'supabase/migrations/20261103155226_track_order_status_change_time.sql'
+      - 'supabase/migrations/20261103122121_prevent_stock_restore_after_dispatch.sql'
+      - 'supabase/migrations/20261107130302_add_order_status_notifications.sql'
+      - 'supabase/migrations/20261117231504_reopen_completed_orders.sql'
+      - '.github/workflows/stage52-isolated-postgres.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checkout-rpc-isolation:
+    name: Run checkout public/private RPC contract against disposable PostgreSQL 17
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: stage52-fixture-only
+          POSTGRES_DB: stage52_checkout
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d stage52_checkout"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    steps:
+      - name: Check out Draft PR only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run real Stage51 SQL in isolated PostgreSQL 17
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGDATABASE: stage52_checkout
+          PGUSER: postgres
+          PGPASSWORD: stage52-fixture-only
+        run: |
+          psql --version
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage52_checkout_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage54_order_history_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage56_staff_auth_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage57_order_ledger_scope_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage59_order_status_compat_contract.sql
+          node scripts/stage60InventoryLedgerFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage60_triggers_inventory_contract.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage61_variant_checkout_contract.sql
+          node scripts/stage62ReactivationFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage62_cancelled_order_variant_reactivation.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage65_expenses_order_role_matrix.sql
+          node scripts/stage66LegacyCheckoutFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage66_legacy_checkout_insert_compat_gate.sql
+          node scripts/stage67LegacyCheckoutReplayFixture.mjs
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage67_legacy_checkout_ownership_replay.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage68_legacy_admin_product_scope_replay.sql
+          psql -v ON_ERROR_STOP=1 -f tests/sql/stage69_legacy_variant_history_replay.sql
+          node scripts/stage72ReconciledReleaseGate.mjs --verify-pinned
+          node scripts/stage73SqlContentParity.mjs --verify-frozen-digests
+          node scripts/stage74ReviewedMismatchGate.mjs --verify-frozen
+          node scripts/stage75LocalHistoryReconcile.mjs --verify-local-renames
+          node scripts/stage76ExistingVersionSqlDivergenceGate.mjs --verify-frozen-review
+          node scripts/stage81LiveSchemaGate.mjs --verify-pinned
+          node scripts/stage82LiveEffectiveSchemaGate.mjs --verify-pinned
+          node scripts/stage86MissingHistoryProvenanceGate.mjs --verify-pinned
+          node scripts/stage87PhaseAPreflightHighRiskGate.mjs --verify-pinned
+          node scripts/stage88SupportStaffLiveReleaseGate.mjs --verify-pinned

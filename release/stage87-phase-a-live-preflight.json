@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "capturedDate": "2026-11-23",
+  "phase": "PRE_PHASE_A",
+  "historyMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "preflight": {
+    "authUid": true,
+    "functions": [
+      {
+        "exists": true,
+        "result": "jsonb",
+        "signature": "private.admin_update_order_status(text,text)",
+        "anon_execute": false,
+        "definition_md5": "abdafdece9a90593e614992cba91dc12",
+        "security_definer": true,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "result": "jsonb",
+        "signature": "private.create_order_with_stock(jsonb)",
+        "anon_execute": true,
+        "definition_md5": "cbd5624b31d24281f1e2088b08523b90",
+        "security_definer": true,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "result": "TABLE(id text, created_at timestamp with time zone, total_gel numeric, status text, items jsonb, status_changed_at timestamp with time zone)",
+        "signature": "private.get_my_orders()",
+        "anon_execute": false,
+        "definition_md5": "657fb245cd52e10607ec273eb8ef0c56",
+        "security_definer": true,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "result": "boolean",
+        "signature": "private.has_staff_permission(text)",
+        "anon_execute": false,
+        "definition_md5": "b29b4f0dc08a23ded9b87b09b93d56ce",
+        "security_definer": true,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": false,
+        "result": null,
+        "signature": "public.admin_order_image_refs_page(integer,integer)",
+        "anon_execute": null,
+        "definition_md5": null,
+        "security_definer": null,
+        "search_path_locked": null,
+        "authenticated_execute": null
+      },
+      {
+        "exists": false,
+        "result": null,
+        "signature": "public.admin_order_ledger_page(integer,integer)",
+        "anon_execute": null,
+        "definition_md5": null,
+        "security_definer": null,
+        "search_path_locked": null,
+        "authenticated_execute": null
+      },
+      {
+        "exists": true,
+        "result": "jsonb",
+        "signature": "public.admin_update_order_status(text,text)",
+        "anon_execute": false,
+        "definition_md5": "5f8aa749298558b2aaac992e69e565ed",
+        "security_definer": false,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "result": "jsonb",
+        "signature": "public.create_order_with_stock(jsonb)",
+        "anon_execute": true,
+        "definition_md5": "eb98f58ecf5c0cbf2b67201d9a77dd1a",
+        "security_definer": false,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "result": "TABLE(id text, created_at timestamp with time zone, total_gel numeric, status text, items jsonb, status_changed_at timestamp with time zone)",
+        "signature": "public.get_my_orders()",
+        "anon_execute": false,
+        "definition_md5": "7d1c08d7bd75a99ff54dce2dd1b8e700",
+        "security_definer": false,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      },
+      {
+        "exists": true,
+        "result": "boolean",
+        "signature": "public.has_staff_permission(text)",
+        "anon_execute": false,
+        "definition_md5": "64e488d7e1efa9c0504b894914585783",
+        "security_definer": false,
+        "search_path_locked": true,
+        "authenticated_execute": true
+      }
+    ],
+    "ordersRls": true,
+    "historyMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+    "staffTable": true,
+    "appliedCount": 135,
+    "phasedAppliedCount": 0,
+    "matchedOrdersColumns": 17,
+    "expectedOrdersColumns": 17,
+    "orderColumnMismatches": [],
+    "ordersAnonTableSelect": false,
+    "ordersAuthenticatedTableSelect": true,
+    "ordersAuthenticatedCostSnapshotSelect": {
+      "items": true,
+      "checkout_result": true,
+      "checkout_request": true
+    }
+  },
+  "conclusion": "CATALOG_PRECONDITIONS_MATCHED__PHASE_A_NOT_APPLIED__PRODUCTION_RELEASE_STILL_BLOCKED",
+  "notice": "Read-only catalog point-in-time preflight; neither privilege revocation nor release readiness proof. No live order/identity/stock data accessed."
+}

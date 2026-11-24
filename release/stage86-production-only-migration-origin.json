@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "captureDate": "2026-11-23",
+  "phase": "PRE_PHASE_A",
+  "remoteHistoryMd5": "4f09258df9fbd7b415cc2d3dc5ffbe6f",
+  "expectedAppliedMigrationCount": 135,
+  "origin": {
+    "version": "20261110100653",
+    "name": "hide_test_products_from_storefront",
+    "statementCount": 1,
+    "appliedSqlMd5": "63bf0c1562a9e5f31009bc50e655d642",
+    "appliedSqlLength": 1761,
+    "createsGuard": true,
+    "createsTrigger": true,
+    "createsPublishedColumn": true,
+    "definitionMd5": "83728cba6f42d3c645d7da353a508d0e",
+    "triggerMd5": "36d0286796dc2a750e913c4107028d07",
+    "published": {
+      "data_type": "boolean",
+      "nullable": "NO",
+      "default": "true"
+    }
+  },
+  "missingLocalMigrationPath": "supabase/migrations/20261110100653_hide_test_products_from_storefront.sql",
+  "fixturePath": "tests/stage78-supabase/stage85-live-published-guard.sql",
+  "fixtureGitBlobSha": "11e2c9315fec63a666642bc47905eeeca3123f65",
+  "note": "Applied Production migration provenance found; Git-tracked source missing. No historical SQL auto-replay, no new migration."
+}
