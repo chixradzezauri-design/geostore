@@ -176,4 +176,38 @@ DO $test$ BEGIN
  BEGIN DELETE FROM private.marketing_template_versions; RAISE EXCEPTION 'Template history deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
  IF has_function_privilege('anon','public.admin_read_marketing_templates(uuid)','EXECUTE') OR has_function_privilege('anon','public.admin_save_marketing_template(uuid,uuid,bigint,text,jsonb)','EXECUTE') OR has_table_privilege('authenticated','private.marketing_template_versions','SELECT') THEN RAISE EXCEPTION 'Template privilege leak'; END IF;
 END $test$;
-\echo 'PASS marketing consent, segments, campaign and template contract (isolated)'
+\ir ../../release/staged-marketing-preflight.sql
+SET ROLE authenticated;
+SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE c uuid:=gen_random_uuid(); q uuid:=gen_random_uuid(); r jsonb;
+BEGIN
+ PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),0,'create','Preflight','new','Offer','Text',NULL);
+ r:=public.admin_check_marketing_campaign(c,1,q);
+ IF r->>'status'<>'blocked' OR r->>'delivery_enabled'<>'false' OR r->>'is_send_authorization'<>'false' OR r->>'consent_candidates'<>'1' OR NOT (r->'blockers' ? 'delivery_disabled') THEN RAISE EXCEPTION 'Unsafe preflight: %',r; END IF;
+ IF public.admin_check_marketing_campaign(c,1,q)->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Preflight retry mismatch'; END IF;
+ BEGIN PERFORM public.admin_check_marketing_campaign(c,2,q); RAISE EXCEPTION 'Altered preflight replay'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Preflight','vip','Offer','Text',NULL);
+ BEGIN PERFORM public.admin_check_marketing_campaign(c,1,gen_random_uuid()); RAISE EXCEPTION 'Stale preflight allowed'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ r:=public.admin_read_marketing_preflights(c,q);
+ IF r->>'current_revision'<>'2' OR r->>'total'<>'1' OR r->'checks'->0->>'campaign_revision'<>'1' THEN RAISE EXCEPTION 'Historical revision lost'; END IF;
+ r:=public.admin_check_marketing_campaign(c,2,gen_random_uuid());
+ IF r->>'consent_candidates'<>'0' OR NOT (r->'blockers' ? 'no_consent_candidates') THEN RAISE EXCEPTION 'Empty audience not blocked'; END IF;
+ PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),2,'archive',NULL,NULL,NULL,NULL,NULL);
+ r:=public.admin_check_marketing_campaign(c,3,gen_random_uuid());
+ IF NOT (r->'blockers' ? 'campaign_archived') THEN RAISE EXCEPTION 'Archived campaign not blocked'; END IF;
+ IF public.admin_read_marketing_preflights(c,NULL)->>'total'<>'3' THEN RAISE EXCEPTION 'Preflight history mismatch'; END IF;
+END $test$;
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000003';
+DO $test$ BEGIN
+ BEGIN PERFORM public.admin_check_marketing_campaign(gen_random_uuid(),1,gen_random_uuid()); RAISE EXCEPTION 'Nonowner check'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+ BEGIN PERFORM public.admin_read_marketing_preflights(gen_random_uuid(),NULL); RAISE EXCEPTION 'Nonowner history'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $test$;
+RESET ROLE;
+DO $test$ BEGIN
+ IF (SELECT count(*) FROM private.marketing_campaign_preflights)<>3 THEN RAISE EXCEPTION 'Preflight audit count mismatch'; END IF;
+ BEGIN DELETE FROM private.marketing_campaign_preflights; RAISE EXCEPTION 'Preflight history deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+ IF has_function_privilege('anon','public.admin_check_marketing_campaign(uuid,bigint,uuid)','EXECUTE') OR has_function_privilege('anon','public.admin_read_marketing_preflights(uuid,uuid)','EXECUTE') OR has_table_privilege('authenticated','private.marketing_campaign_preflights','SELECT') THEN RAISE EXCEPTION 'Preflight privilege leak'; END IF;
+END $test$;
+\echo 'PASS marketing consent, segments, campaigns, templates and preflight contract (isolated)'
