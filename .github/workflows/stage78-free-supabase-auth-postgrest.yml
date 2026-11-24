@@ -29,6 +29,9 @@ on:
       - 'scripts/stage88ExtractStaffSupportPolicies.mjs'
       - 'scripts/stage88SignedSupportStaffHttp.mjs'
       - 'scripts/stage89SupportRpcHttp.mjs'
+      - 'scripts/stage90ReleaseSequence.mjs'
+      - 'tests/stage90ReleaseSequence.test.js'
+      - 'docs/stage90-release-sequence.md'
       - 'release/stage89-support-rpc-fingerprints.json'
       - 'tests/stage89SupportRpc.test.js'
       - 'docs/stage89-release-closure.md'
@@ -130,6 +133,9 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -f stage89-support-rpc-fixture.sql
           node "$GITHUB_WORKSPACE/scripts/stage89SupportRpcHttp.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage90-pre-a-fixture.sql
+          node "$GITHUB_WORKSPACE/scripts/stage90ReleaseSequence.mjs"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase

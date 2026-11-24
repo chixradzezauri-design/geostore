@@ -1,0 +1,9 @@
+# Stage90 — final release-sequence rehearsal
+
+Production unchanged. No paid staging, no historical migration replay. Current live Phase A preflight rechecked and matches the frozen Stage87 metadata. The three existing public checkout/private history/public history routine definitions were captured read-only and matched Stage81 hashes.
+
+The disposable local CI restores the exact pre-A wrappers and old table-read ACL on synthetic data only, while keeping the authentic private stock transaction and 11 installed triggers. It executes the four pinned SQL sources one at a time in their real planned order; checks the old order reader after each additive step; exercises the actual frontend's signed ledger loader (orders and finance scope); verifies the product image-reference RPC, then locally performs Phase B and confirms stale legacy reads fail without harming new reads or idempotent checkout. The local pre-A restore is NOT a Production rollback script.
+
+Release remains blocked until a staging-equivalent schema or explicitly reviewed bounded risk is agreed. Required operator rollback: if Phase A validation fails, halt before frontend deployment, preserve existing site, investigate the specific failed transaction; do not replay history or blindly reinstate sensitive cost exposure. If frontend verification fails before Phase B, retain or restore the previous Vercel deployment with compatible Phase A APIs still installed. Once Phase B is applied, avoid rolling back to a frontend requiring raw finance-bearing reads; use a verified compatible build or targeted forward fix. No automatic ACL restoration.
+
+Remaining actions: review exact green head and production metadata, approve bounded release scope, Phase A, verified frontend READY and old-tab transition, Phase B. Do not add unrelated design or feature changes before release. Synthetic test coverage is not a full-schema or zero-risk guarantee.
