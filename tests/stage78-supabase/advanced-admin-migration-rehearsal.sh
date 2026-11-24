@@ -12,26 +12,19 @@ db=(psql -X -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1)
 supabase migration new --help >/dev/null
 supabase migration up --help | grep -F -- '--local' >/dev/null
 supabase migration list --help | grep -F -- '--local' >/dev/null
-supabase migration new advanced_admin_candidate_rehearsal
+supabase migration new advanced_admin_release
 shopt -s nullglob
-files=(supabase/migrations/*_advanced_admin_candidate_rehearsal.sql)
+files=(supabase/migrations/*_advanced_admin_release.sql)
 test "${#files[@]}" -eq 1
 file="${files[0]}"
 version="$(basename "$file" | cut -d_ -f1)"
 [[ "$version" =~ ^[0-9]{14}$ ]]
 trap 'rm -f -- "$file"' EXIT
-# The pinned standalone candidate has one outer transaction. The migration
-# runner must own its transaction, including the history entry.
-node --input-type=module - "$RUNNER_TEMP/advanced-admin-candidate.sql" "$file" <<'NODE'
-import assert from 'node:assert/strict';
-import {readFileSync,writeFileSync} from 'node:fs';
-const source=readFileSync(process.argv[2],'utf8');
-const prefix='-- ISOLATED REVIEW CANDIDATE ONLY. NOT APPROVAL TO DEPLOY.\nBEGIN;\n';
-assert.ok(source.startsWith(prefix)&&source.endsWith('\nCOMMIT;\n'));
-assert.equal(source.match(/^BEGIN;$/gm)?.length,1);
-assert.equal(source.match(/^COMMIT;$/gm)?.length,1);
-writeFileSync(process.argv[3],source.slice(prefix.length,-'COMMIT;\n'.length));
-NODE
+# Exercise the exact staged release body, including in-transaction guards.
+node "$GITHUB_WORKSPACE/scripts/advancedAdminReleaseBundle.mjs" --final-migration > "$file"
+cmp "$file" "$GITHUB_WORKSPACE/release/advanced-admin-final-migration.sql"
+echo "PREPARED MIGRATION: $(basename "$file")"
+sha256sum "$file"
 cp "$file" "$RUNNER_TEMP/advanced-admin-cli-reviewed-body.sql"
 # Prove a late failure rolls back DDL and migration history, not just SQL.
 printf '\nSELECT 1/0;\n' >> "$file"
@@ -44,7 +37,7 @@ test "$("${db[@]}" -Atc "SELECT count(*) FROM supabase_migrations.schema_migrati
 echo 'PASS local CLI failed migration leaves no candidate sentinel objects or migration history entry'
 cp "$RUNNER_TEMP/advanced-admin-cli-reviewed-body.sql" "$file"
 supabase migration up --local
-test "$("${db[@]}" -Atc "SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='$version' AND name='advanced_admin_candidate_rehearsal'")" = 1
+test "$("${db[@]}" -Atc "SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='$version' AND name='advanced_admin_release'")" = 1
 test "$("${db[@]}" -Atc "SELECT (to_regclass('public.admin_suppliers') IS NOT NULL AND to_regclass('private.marketing_campaign_preflights') IS NOT NULL AND to_regprocedure('public.admin_marketing_segments()') IS NOT NULL)::int")" = 1
 supabase migration up --local
 test "$("${db[@]}" -Atc "SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='$version'")" = 1
