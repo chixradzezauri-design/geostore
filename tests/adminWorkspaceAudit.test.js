@@ -56,3 +56,12 @@ test('workspace audit 07 gates detailed financial views and keeps expense and ca
  for(const expression of ['financialOverview.salesTrend','financialOverview.bestSellingProducts','incomeSources','financialOverview.productProfitability','financialOverview.vendorProfitability']) assert.ok(analytics.includes('ისტორია ჯერ არ არის დადასტურებული.</p> : '+expression+'.length === 0'),expression);
  assert.ok(css.includes('Workspace audit 07'));
 });
+
+test('workspace audit 08 verifies staff list, serializes mutations and retains owner and server checks',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css'),api=read('supabase/functions/manage-admin-staff/index.ts');
+ const staff=jsx.slice(jsx.indexOf('function AdminStaffManagement('),jsx.indexOf('export default function AdminDashboardPro('));
+ for(const term of ['staffListReady','staffListRequestRef.current','!Array.isArray(result.staff)','admin-workspace-staff-search','admin-workspace-staff-status','filteredStaff.map','createStaffPermissions(staff.permissions)','callStaffAdminApi({ action: \'revoke\', id: staff.id })','if (!isOwner) return null'])assert.ok(staff.includes(term),term);
+ assert.equal((staff.match(/if \(!isOwner \|\| !staffListReady \|\| staffMutationRef.current\) return;/g)||[]).length,4);
+ assert.equal((staff.match(/staffMutationRef.current = false;/g)||[]).length,4);
+ assert.ok(api.includes('caller.id !== OWNER_ID'));assert.ok(api.includes(".neq('user_id', OWNER_ID)"));assert.ok(css.includes('Workspace audit 08'));
+});

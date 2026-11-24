@@ -22,7 +22,7 @@ test('unverified order ledger cannot produce certified finance metrics or CSV',(
   assert.match(admin,/const ordersVerifiedForReports = hasOrdersPermission && ordersReady && !ordersError/);
   assert.match(admin,/const verifiedFinanceSnapshot = ordersVerifiedForReports && expensesVerifiedForReports/);
   assert.match(admin,/ordersVerifiedForReportsRef\.current/);
-  assert.match(admin,/disabled=\{expenseExportBusy \|\| !ordersVerifiedForReports\}/);
+  assert.match(admin,/disabled=\{expenseExportBusy \|\| !verifiedFinanceSnapshot \|\| expensesLoading \|\| Boolean\(expenseMutationBusy\)\}/);
   assert.match(admin,/admin-finance-orders-warning/);
   assert.match(admin,/!verifiedFinanceSnapshot \|\| financialOverview\.netProfit === null/);
 });

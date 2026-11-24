@@ -541,6 +541,11 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
     }
   });
   const [staffListLoading, setStaffListLoading] = useState(false);
+  const [staffListReady, setStaffListReady] = useState(false);
+  const [staffSearch, setStaffSearch] = useState('');
+  const [staffStatusFilter, setStaffStatusFilter] = useState('all');
+  const staffListRequestRef = useRef(0);
+  const staffMutationRef = useRef(false);
   const [staffActionBusy, setStaffActionBusy] = useState(false);
   const [staffListError, setStaffListError] = useState('');
   const [staffListNotice, setStaffListNotice] = useState('');
@@ -559,44 +564,50 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
   });
 
   const refreshStaffList = async (silent = false) => {
-    if (!isOwner) return;
-    if (!silent) setStaffListLoading(true);
+    if (!isOwner) return false;
+    const requestId = ++staffListRequestRef.current;
+    setStaffListLoading(true);
+    setStaffListReady(false);
     setStaffListError('');
     try {
       const result = await callStaffAdminApi({ action: 'list' });
-      setStaffList(Array.isArray(result.staff) ? result.staff : []);
+      if (!Array.isArray(result.staff) || result.staff.some(member =>
+        !member || typeof member.id !== 'string' || typeof member.email !== 'string' ||
+        typeof member.is_active !== 'boolean' || !member.permissions || typeof member.permissions !== 'object' ||
+        Array.isArray(member.permissions))) {
+        throw new Error('სერვერული სიის ფორმატი ვერ დადასტურდა.');
+      }
+      if (requestId !== staffListRequestRef.current) return false;
+      setStaffList(result.staff);
+      setStaffListReady(true);
+      return true;
     } catch (error) {
-      setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
+      if (requestId === staffListRequestRef.current) {
+        setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
+      }
+      return false;
     } finally {
-      if (!silent) setStaffListLoading(false);
+      if (requestId === staffListRequestRef.current) setStaffListLoading(false);
     }
   };
 
   useEffect(() => {
     if (!isOwner) {
       setStaffList([]);
+      setStaffListReady(false);
+      setStaffListLoading(false);
       return undefined;
     }
-    let active = true;
-    setStaffListLoading(true);
-    callStaffAdminApi({ action: 'list' }).then((result) => {
-      if (active) {
-        setStaffList(Array.isArray(result.staff) ? result.staff : []);
-        setStaffListError('');
-      }
-    }).catch((error) => {
-      if (active) setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
-    }).finally(() => {
-      if (active) setStaffListLoading(false);
-    });
-    return () => { active = false; };
+    void refreshStaffList();
+    return () => { staffListRequestRef.current++; };
   }, [isOwner]);
 
   const inviteStaff = async ({ email, display_name, role, permissions }) => {
+    if (!isOwner || !staffListReady || staffMutationRef.current) return;
     const normalizedEmail = String(email || '').trim().toLowerCase();
     const normalizedName = String(display_name || '').trim();
     const normalizedPermissions = createStaffPermissions(permissions);
-    if (!normalizedEmail || !normalizedName) {
+    if (!normalizedEmail || normalizedName.length < 2 || normalizedName.length > 100) {
       setStaffListError('შეავსეთ თანამშრომლის სახელი და ელფოსტა.');
       return;
     }
@@ -605,6 +616,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
       return;
     }
 
+    staffMutationRef.current = true;
     setStaffActionBusy(true);
     setStaffListError('');
     setStaffListNotice('');
@@ -628,6 +640,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
       setStaffListError(error?.message || 'თანამშრომლის მოწვევა ვერ შესრულდა.');
       return null;
     } finally {
+      staffMutationRef.current = false;
       setStaffActionBusy(false);
     }
   };
@@ -673,10 +686,17 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
   };
 
   const saveStaff = async (staff) => {
+    if (!isOwner || !staffListReady || staffMutationRef.current) return;
+    const cleanName = String(editForm.display_name || '').trim();
+    if (cleanName.length < 2 || cleanName.length > 100) {
+      setStaffListError('სახელი უნდა შეიცავდეს 2-100 სიმბოლოს.');
+      return;
+    }
     if (!Object.values(editForm.permissions).some(Boolean) && staff.is_active) {
       setStaffListError('აქტიურ თანამშრომელს მინიმუმ ერთი მოდულის უფლება უნდა ჰქონდეს.');
       return;
     }
+    staffMutationRef.current = true;
     setStaffActionBusy(true);
     setStaffListError('');
     setStaffListNotice('');
@@ -684,7 +704,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
       await callStaffAdminApi({
         action: 'update',
         id: staff.id,
-        display_name: editForm.display_name,
+        display_name: cleanName,
         role: editForm.role,
         permissions: editForm.permissions,
         is_active: staff.is_active
@@ -698,12 +718,15 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
     } catch (error) {
       setStaffListError(error?.message || 'თანამშრომლის უფლებების განახლება ვერ მოხერხდა.');
     } finally {
+      staffMutationRef.current = false;
       setStaffActionBusy(false);
     }
   };
 
   const revokeStaff = async (staff) => {
+    if (!isOwner || !staffListReady || staffMutationRef.current) return;
     if (!window.confirm(`გაუქმდეს ${staff.display_name || staff.email}-ის სისტემაში წვდომა? Auth ანგარიში არ წაიშლება.`)) return;
+    staffMutationRef.current = true;
     setStaffActionBusy(true);
     setStaffListError('');
     setStaffListNotice('');
@@ -717,15 +740,18 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
     } catch (error) {
       setStaffListError(error?.message || 'წვდომის გაუქმება ვერ მოხერხდა.');
     } finally {
+      staffMutationRef.current = false;
       setStaffActionBusy(false);
     }
   };
 
   const reactivateStaff = async (staff) => {
-    if (!Object.values(staff.permissions || {}).some(Boolean)) {
+    if (!isOwner || !staffListReady || staffMutationRef.current) return;
+    if (!Object.values(createStaffPermissions(staff.permissions)).some(Boolean)) {
       setStaffListError('რეაქტივაციამდე მიანიჭეთ მინიმუმ ერთი მოდულის უფლება.');
       return;
     }
+    staffMutationRef.current = true;
     setStaffActionBusy(true);
     setStaffListError('');
     setStaffListNotice('');
@@ -746,14 +772,25 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
     } catch (error) {
       setStaffListError(error?.message || 'წვდომის აღდგენა ვერ მოხერხდა.');
     } finally {
+      staffMutationRef.current = false;
       setStaffActionBusy(false);
     }
   };
 
   if (!isOwner) return null;
+  const staffSearchTerm = staffSearch.trim().toLocaleLowerCase();
+  const filteredStaff = staffList.filter(staff => {
+    const matchesSearch = !staffSearchTerm || [staff.display_name, staff.email, STAFF_ROLE_LABELS[staff.role] || staff.role]
+      .some(value => String(value || '').toLocaleLowerCase().includes(staffSearchTerm));
+    const matchesStatus = staffStatusFilter === 'all' ||
+      (staffStatusFilter === 'active' && staff.is_active) ||
+      (staffStatusFilter === 'inactive' && !staff.is_active) ||
+      (staffStatusFilter === 'auth' && (staff.auth_account_missing || !staff.auth_confirmed));
+    return staff.id === editingStaffId || (matchesSearch && matchesStatus);
+  });
 
   return (
-    <div className="admin-staff space-y-6">
+    <div className="admin-staff space-y-4">
       <div role="note" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
         <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
         მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
@@ -762,33 +799,34 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
       {staffListError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{staffListError}</div>}
       {staffListNotice && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">{staffListNotice}</div>}
 
-      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
         <form onSubmit={handleAddExistingUser} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-          <select value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
+          <select aria-label="არსებული მომხმარებლის არჩევა" value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
             <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
             {(usersList || []).filter((user) => user.email).map((user) => (
               <option key={user.id || user.email} value={user.email}>{user.name || user.email} — {user.email}</option>
             ))}
           </select>
-          <button type="submit" disabled={staffActionBusy || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
+          <button type="submit" disabled={staffActionBusy || !staffListReady || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
             {staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}
           </button>
         </form>
       </section>
 
-      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> {visualContent.staffInviteTitle || 'ახალი თანამშრომლის მოწვევა'}</h3>
         <form onSubmit={handleInviteStaff} className="admin-staff-create-form space-y-4 text-xs">
           <div className="admin-staff-create-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
-            <input type="email" required maxLength={254} value={staffForm.email} onChange={(event) => setStaffForm((current) => ({ ...current, email: event.target.value }))} placeholder="ელფოსტა" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
-            <select value={staffForm.role} onChange={(event) => setStaffForm((current) => ({ ...current, role: event.target.value }))} className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
+            <input aria-label="თანამშრომლის სახელი" type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
+            <input aria-label="თანამშრომლის ელფოსტა" type="email" required maxLength={254} value={staffForm.email} onChange={(event) => setStaffForm((current) => ({ ...current, email: event.target.value }))} placeholder="ელფოსტა" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
+            <select aria-label="თანამშრომლის როლი" value={staffForm.role} onChange={(event) => setStaffForm((current) => ({ ...current, role: event.target.value }))} className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
               {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
             </select>
           </div>
           <div className="rounded-2xl border border-emerald-500/15 bg-slate-950 p-4 space-y-3">
-            <p className="font-bold text-slate-300">მიანიჭეთ მხოლოდ საჭირო მოდულები:</p>
+            <p className="font-bold text-slate-300">მიანიჭეთ მხოლოდ საჭირო მოდულები: {Object.values(staffForm.permissions).filter(Boolean).length} / {STAFF_PERMISSION_OPTIONS.length}</p>
+            <p className="text-xs text-slate-400">როლის არჩევა მოდულების უფლებებს ავტომატურად არ ცვლის.</p>
             <div className="admin-staff-permission-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {STAFF_PERMISSION_OPTIONS.map((permission) => (
                 <label key={permission.key} className="flex items-center gap-2 text-slate-300 cursor-pointer">
@@ -801,7 +839,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
               ))}
             </div>
           </div>
-          <button type="submit" disabled={staffActionBusy} className="admin-staff-create-submit rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
+          <button type="submit" disabled={staffActionBusy || !staffListReady} className="admin-staff-create-submit rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
             {staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}
           </button>
         </form>
@@ -830,17 +868,25 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
         </section>
       )}
 
-      <section className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+      <section className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-black text-white text-base">{visualContent.staffListTitle || 'სერვერზე დაკავშირებული თანამშრომლები'} ({staffList.length})</h3>
+          <h3 className="font-black text-white text-base">{visualContent.staffListTitle || 'სერვერზე დაკავშირებული თანამშრომლები'} ({staffListReady ? staffList.length : '—'})</h3>
           <button type="button" onClick={() => refreshStaffList()} disabled={staffListLoading || staffActionBusy} className="rounded-xl border border-emerald-500/25 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">
             {staffListLoading ? 'იტვირთება…' : 'სიის განახლება'}
           </button>
         </div>
         {staffListLoading && <p role="status" className="text-xs text-slate-400">სერვერული სია იტვირთება…</p>}
-        {!staffListLoading && staffList.length === 0 && <p className="text-xs text-slate-500">სერვერზე თანამშრომლები ჯერ არ არის დამატებული.</p>}
+        {!staffListLoading && !staffListReady && <p role="status" className="text-xs text-amber-200">სია დაუდასტურებელია. წვდომის შეცვლამდე ხელახლა განაახლეთ.</p>}
+        {staffListReady && <p className="text-xs text-slate-300">აქტიური: {staffList.filter(staff => staff.is_active).length} · გაუქმებული: {staffList.filter(staff => !staff.is_active).length}</p>}
+        <div className="admin-workspace-staff-filters grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end">
+          <div className="min-w-0"><label htmlFor="admin-workspace-staff-search" className="block text-xs text-slate-300 mb-1">თანამშრომლის ძიება</label><input id="admin-workspace-staff-search" type="search" value={staffSearch} onChange={e => setStaffSearch(e.target.value)} placeholder="სახელი, ელფოსტა ან როლი" className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>
+          <div className="min-w-0"><label htmlFor="admin-workspace-staff-status" className="block text-xs text-slate-300 mb-1">წვდომის სტატუსი</label><select id="admin-workspace-staff-status" value={staffStatusFilter} onChange={e => setStaffStatusFilter(e.target.value)} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs"><option value="all">ყველა</option><option value="active">აქტიური</option><option value="inactive">წვდომა გაუქმებულია</option><option value="auth">Auth დასადასტურებელია</option></select></div>
+          {(staffSearch || staffStatusFilter !== 'all') && <button type="button" onClick={() => { setStaffSearch(''); setStaffStatusFilter('all'); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200 font-bold">გასუფთავება</button>}
+        </div>
+        {staffListReady && <p role="status" className="text-xs text-slate-400">ნაჩვენებია {filteredStaff.length} / {staffList.length} თანამშრომელი</p>}
+        {staffListReady && filteredStaff.length === 0 && <p className="text-xs text-slate-400">{staffList.length === 0 ? 'სერვერზე თანამშრომლები ჯერ არ არის დამატებული.' : 'თანამშრომელი ვერ მოიძებნა.'}</p>}
         <div className="space-y-3">
-          {staffList.map((staff) => {
+          {filteredStaff.map((staff) => {
             const editing = editingStaffId === staff.id;
             return (
               <article key={staff.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
@@ -851,17 +897,17 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                       <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
                       <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ მოიძებნა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
+                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ დადასტურდა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
                     {staff.last_sign_in_at && <p className="mt-1 text-[10px] text-slate-500">ბოლო შესვლა: {new Date(staff.last_sign_in_at).toLocaleString('ka-GE')}</p>}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" disabled={staffActionBusy} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
+                    <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
                       {editing ? 'დახურვა' : 'როლის/უფლებების შეცვლა'}
                     </button>
                     {staff.is_active ? (
-                      <button type="button" disabled={staffActionBusy} onClick={() => revokeStaff(staff)} className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-200 disabled:opacity-50">წვდომის გაუქმება</button>
+                      <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => revokeStaff(staff)} className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-200 disabled:opacity-50">წვდომის გაუქმება</button>
                     ) : (
-                      <button type="button" disabled={staffActionBusy} onClick={() => reactivateStaff(staff)} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">წვდომის აღდგენა</button>
+                      <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => reactivateStaff(staff)} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">წვდომის აღდგენა</button>
                     )}
                   </div>
                 </div>
@@ -880,11 +926,12 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                   <div className="rounded-xl border border-amber-500/20 bg-slate-900 p-4 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input value={editForm.display_name} onChange={(event) => setEditForm((current) => ({ ...current, display_name: event.target.value }))} minLength={2} maxLength={100} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white" aria-label="თანამშრომლის სახელი" />
-                      <select value={editForm.role} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value }))} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white">
+                      <select aria-label="თანამშრომლის როლის შეცვლა" value={editForm.role} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value }))} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white">
                         {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
                       </select>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                    <p className="text-xs text-slate-300">არჩეული უფლებები: {Object.values(editForm.permissions).filter(Boolean).length} / {STAFF_PERMISSION_OPTIONS.length}</p>
+                    <div className="admin-staff-permission-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                       {STAFF_PERMISSION_OPTIONS.map((permission) => (
                         <label key={permission.key} className="flex items-center gap-2 text-xs text-slate-300">
                           <input type="checkbox" checked={editForm.permissions[permission.key]} onChange={(event) => setEditForm((current) => ({
@@ -897,7 +944,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                     </div>
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => setEditingStaffId(null)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-300">გაუქმება</button>
-                      <button type="button" disabled={staffActionBusy} onClick={() => saveStaff(staff)} className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">სერვერზე შენახვა</button>
+                      <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => saveStaff(staff)} className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">სერვერზე შენახვა</button>
                     </div>
                   </div>
                 )}

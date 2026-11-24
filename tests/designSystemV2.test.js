@@ -287,7 +287,7 @@ test('stage 10 analytics controls and chart remain accessible without changing r
   assert.match(admin, /financialOverview\.grossProfit === null/);
   assert.match(admin, /financialOverview\.netProfit === null/);
   assert.match(admin, /financialOverview\.deliveredOrdersMissingStatusDate > 0/);
-  assert.equal((admin.match(/className="admin-analytics-value text-2xl/g) || []).length, 8);
+  assert.equal((admin.match(/className="admin-analytics-value text-(?:xl|2xl)\b/g) || []).length, 8);
   assert.equal((admin.match(/className="admin-analytics-note text-/g) || []).length, 8);
   assert.match(design, /Stage 10 — analytics and finance dashboard/);
   assert.match(design, /\.admin-analytics-trend-scroll:focus-visible/);
