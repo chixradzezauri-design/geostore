@@ -4031,14 +4031,14 @@ export default function App() {
                 {t.profile}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
+              <div className="gs-video-profile-identity grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
                     {currentLang === 'en' ? 'Name' : currentLang === 'ru' ? 'Имя' : 'სახელი'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
-                    {currentUser.name}
+                    {currentUser.name || "—"}
                   </b>
                 </div>
 
@@ -4047,8 +4047,8 @@ export default function App() {
                     {currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელ-ფოსტა'}
                   </span>
 
-                  <b className="text-white text-sm mt-1 block truncate">
-                    {currentUser.email}
+                  <b className="gs-video-profile-email text-white text-sm mt-1 block">
+                    {currentUser.email || "—"}
                   </b>
                 </div>
 
@@ -4058,12 +4058,12 @@ export default function App() {
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
-                    {currentUser.phone}
+                    {currentUser.phone || "—"}
                   </b>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-800/80 space-y-3">
+              <div className="gs-video-profile-security pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" />
                   {t.security}
@@ -4079,8 +4079,9 @@ export default function App() {
               </div>
 
               <button
+                type="button"
                 onClick={handleLogout}
-                className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
+                className="gs-video-profile-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
               >
                 {t.logout}
               </button>
@@ -4092,7 +4093,8 @@ export default function App() {
                 {t.orderHistory}
               </h3>
 
-              <div className="space-y-3">
+              <div className="gs-video-profile-order-list space-y-3" aria-busy={myOrdersLoading}>
+                {myOrdersError && myOrders.length > 0 && <p role="status" className="gs-video-profile-history-warning">{myOrdersError}</p>}
                 {myOrdersLoading && myOrders.length === 0 ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
                     {currentLang === 'en' ? 'Loading orders…' : currentLang === 'ru' ? 'Загрузка заказов…' : 'შეკვეთები იტვირთება…'}
@@ -4111,7 +4113,7 @@ export default function App() {
                         key={order.id}
                         className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
                       >
-                        <div className="space-y-1">
+                        <div className="gs-video-profile-order-info space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="gs-profile-order-code font-black text-emerald-400">#{order.id}</span>
 
@@ -4130,12 +4132,12 @@ export default function App() {
                           )}
                         </div>
 
-                        <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
+                        <div className="gs-video-profile-order-summary text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
                           <span className="font-black text-white text-sm">
                             {formatPrice(order.totalGEL)}
                           </span>
 
-                          <span className={`${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
+                          <span className={`gs-video-profile-status ${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
                             {localizeOrderStatus(order.status || 'New', currentLang)}
                           </span>
                         </div>

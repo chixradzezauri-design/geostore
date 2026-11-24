@@ -52,3 +52,10 @@ test('video 06 cart and checkout preserve existing purchase contract and empty-s
  for(const term of ["onSubmit={handlePlaceOrder}","disabled={isSubmittingOrder}","readOnly={Boolean(currentUser?.email)}","aria-invalid={checkoutErrorField","style={storefrontThemeStyle}","navigator.clipboard.writeText(code)"])assert.ok(modals.includes(term),term);
  for(const term of ["gs-video-continue-shopping","gs-video-applied-coupon","grid-template-columns: 72px minmax(0,1fr)","gs-checkout-submit-area { position: static !important","font-size: 16px !important"])assert.ok(css.includes(term),term);
 });
+
+test('video 07 profile and account dialogs retain identity and security handlers',()=>{
+ const app=read('src/App.jsx');
+ for(const term of ['gs-video-profile-identity','gs-video-profile-email','gs-video-profile-order-list','myOrdersError && myOrders.length > 0','myOrders.map((order)','getOrderStatusClasses(order.status','localizeOrderStatus(order.status','formatPrice(order.totalGEL)','onClick={handleLogout}','currentUser.email || "—"'])assert.ok(app.includes(term),term);
+ for(const term of ['gs-video-notifications-title','gs-video-notification-card','onClick={markAllNotificationsAsRead}','onSubmit={handleAuthSubmit}',"setAuthMode('reset-request')",'minLength={authMode'])assert.ok(modals.includes(term),term);
+ for(const term of ['gs-video-profile-status[class*="text-emerald-"]','grid-template-columns: minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr)','gs-video-profile-email','--gs-surface','gs-commerce-dialog--account form input'])assert.ok(css.includes(term),term);
+});
