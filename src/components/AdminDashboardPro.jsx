@@ -989,6 +989,8 @@ export default function AdminDashboardPro({
     const normalized = normalizeAdminPanelVisualDesign(value);
     adminVisualSaveVersionRef.current += 1;
     adminVisualHasLocalChangesRef.current = true;
+    // Never display a successful cloud save during the debounce window.
+    setAdminVisualSyncStatus('saving');
     adminVisualDesignRef.current = normalized;
     setAdminVisualDesign(normalized);
   };
@@ -1096,7 +1098,7 @@ export default function AdminDashboardPro({
   // Keep already-open owner sessions in sync with changes saved from another device.
   // A local unsaved draft always wins over a background refresh.
   useEffect(() => {
-    if (!adminLoggedIn || !isOwner || visibleAdminTab !== 'admin_visual_editor' || !adminVisualDesignReady || adminVisualSyncStatus !== 'saved') return;
+    if (!adminLoggedIn || !isOwner || !adminVisualDesignReady || adminVisualSyncStatus !== 'saved') return;
     let active = true;
     let inFlight = false;
 
@@ -1152,7 +1154,7 @@ export default function AdminDashboardPro({
       window.removeEventListener('focus', refreshSharedDesign);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [adminLoggedIn, isOwner, visibleAdminTab, adminVisualDesignReady, adminVisualSyncStatus]);
+  }, [adminLoggedIn, isOwner, adminVisualDesignReady, adminVisualSyncStatus]);
 
   useEffect(() => {
     if (!adminLoggedIn) return;

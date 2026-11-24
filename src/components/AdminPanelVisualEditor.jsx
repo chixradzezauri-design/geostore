@@ -1491,7 +1491,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   };
 
   return (
-    <section className="admin-visual-editor-panel space-y-5 rounded-3xl border border-emerald-400/25 bg-slate-900/90 p-4 sm:p-6" aria-labelledby="admin-visual-editor-title">
+    <section className="admin-visual-editor-panel min-w-0 max-w-full space-y-5 rounded-3xl border border-emerald-400/25 bg-slate-900/90 p-4 sm:p-6" aria-labelledby="admin-visual-editor-title">
       <style>{`
         .admin-dashboard-shell .admin-visual-element-selected {
           outline: 2px solid #34d399 !important;
@@ -1560,7 +1560,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </section>
 
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
+      <div className="admin-visual-viewport-picker grid grid-cols-3 gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
         {VIEWPORTS.map(item => (
           <button
             key={item.id}

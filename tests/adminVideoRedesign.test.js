@@ -61,3 +61,24 @@ test('batch 06 communication CRM vendor and settings keep actions and safety not
  for(const term of ["handleUpdateTicketStatus(t.id","handleSendTicketReply(t.id)","fetchSupportTicketThread(t.id)","fetchLegacyMessages","setActivityLogsPage","handleSendBroadcast","handleAddVendor","handleDeleteVendor(v.id)","handleToggleVipUser","handleToggleBlockUser","handleSaveUserCrm","handleSaveDeliveryFees","handleSaveSettings","admin-legacy-message-card","admin-audit-log-row","aria-label={`მომწოდებლის წაშლა: ${v.name}`}","htmlFor=\"admin-broadcast-title\"","htmlFor=\"admin-broadcast-message\"","მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის."]) assert.ok(jsx.includes(term),term);
  for(const term of ["Video redesign 06",".admin-crm-user-actions > button",".admin-support-status-actions > button",".admin-vendor-card > div:last-child > button","grid-template-columns: repeat(3,minmax(0,1fr))","white-space: pre-wrap"]) assert.ok(css.includes(term),term);
 });
+
+test('batch 07 shared design refresh covers all open owner modules and marks pending changes immediately',()=>{
+ const refresh=jsx.slice(jsx.indexOf('// Keep already-open owner sessions in sync'),jsx.indexOf('// Keep already-open owner sessions in sync')+3500);
+ assert.ok(refresh.includes("!adminLoggedIn || !isOwner || !adminVisualDesignReady"));
+ assert.ok(!refresh.includes("visibleAdminTab !== 'admin_visual_editor'"));
+ for(const term of ['adminVisualHasLocalChangesRef.current','requestVersion !== adminVisualSaveVersionRef.current','adminVisualSyncStatusRef.current','window.setInterval(refreshSharedDesign, 30000)']) assert.ok(refresh.includes(term),term);
+ assert.match(jsx,/adminVisualHasLocalChangesRef.current = true;[\s\S]{0,180}setAdminVisualSyncStatus\('saving'\)/);
+ assert.ok(jsx.includes("error?.code === '40001' ? 'conflict' : 'error'"));
+});
+test('batch 07 explicit responsive studio layout choices override compact defaults without persisting new fields',async()=>{
+ const {buildAdminPanelVisualStyle}=await import('../src/utils/adminPanelVisualDesign.js');
+ const base=buildAdminPanelVisualStyle({});
+ assert.equal(base['--admin-vd-video-mobile-headerPadding'],undefined);
+ const styled=buildAdminPanelVisualStyle({responsive:{tablet:{layout:{headerRadius:36}},mobile:{layout:{headerPadding:30,titleFontSize:26}}}});
+ assert.equal(styled['--admin-vd-video-mobile-headerPadding'],'30px');
+ assert.equal(styled['--admin-vd-video-mobile-headerRadius'],'36px');
+ assert.equal(styled['--admin-vd-video-mobile-titleFontSize'],'26px');
+ for(const key of ['sectionGap','cardPadding','cardRadius','headerPadding','headerRadius','titleFontSize']) assert.ok(css.includes('var(--admin-vd-video-mobile-'+key+', clamp('),key);
+ const studio=read('src/components/AdminPanelVisualEditor.jsx');
+ for(const term of ['admin-visual-viewport-picker','onRetrySave','onReloadRemote','undoChange','redoChange','directSelectionMode']) assert.ok(studio.includes(term),term);
+});
