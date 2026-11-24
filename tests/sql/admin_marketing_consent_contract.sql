@@ -107,4 +107,40 @@ RESET ROLE;
 DO $test$ BEGIN
  IF has_function_privilege('anon','public.admin_marketing_segments()','EXECUTE') THEN RAISE EXCEPTION 'Anonymous segment access'; END IF;
 END $test$;
-\echo 'PASS marketing consent and segment contract (isolated)'
+\ir ../../release/staged-marketing-campaigns.sql
+SET ROLE authenticated;
+SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE c uuid:='80000000-0000-4000-8000-000000000001'; q uuid:='81000000-0000-4000-8000-000000000001'; e uuid:=gen_random_uuid(); a uuid:=gen_random_uuid(); dt timestamptz:=statement_timestamp()+interval '2 days'; r jsonb;
+BEGIN
+ r:=public.admin_save_marketing_campaign(c,q,0,'create','Test offer','vip','Offer','Plain text',dt);
+ IF r->>'revision'<>'1' OR r->>'delivery_enabled'<>'false' OR r->>'idempotent_replay'<>'false' THEN RAISE EXCEPTION 'Campaign create failed: %',r; END IF;
+ r:=public.admin_save_marketing_campaign(c,q,0,'create','Test offer','vip','Offer','Plain text',dt);
+ IF r->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Campaign retry failed'; END IF;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,q,0,'create','Other','vip','Offer','Plain text',dt); RAISE EXCEPTION 'Changed replay accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Test','unknown','Offer','Text',NULL); RAISE EXCEPTION 'Unknown segment'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Test','all',E'Injected\nsubject','Text',NULL); RAISE EXCEPTION 'Invalid subject'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Test','all','Offer','Text',statement_timestamp()-interval '1 day'); RAISE EXCEPTION 'Past plan'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ r:=public.admin_save_marketing_campaign(c,e,1,'edit','Updated','repeat','Offer 2',E'Line one\nLine two',NULL);
+ IF r->>'revision'<>'2' OR r->>'segment'<>'repeat' THEN RAISE EXCEPTION 'Edit mismatch'; END IF;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Stale','all','Offer','Text',NULL); RAISE EXCEPTION 'Stale edit allowed'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ r:=public.admin_save_marketing_campaign(c,a,2,'archive',NULL,NULL,NULL,NULL,NULL);
+ IF r->>'archived'<>'true' OR r->>'revision'<>'3' OR r->>'delivery_enabled'<>'false' THEN RAISE EXCEPTION 'Archive mismatch'; END IF;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),3,'edit','Archived','all','Offer','Text',NULL); RAISE EXCEPTION 'Archived edit allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ r:=public.admin_read_marketing_campaigns(c);
+ IF r->>'total'<>'1' OR r->'campaigns'->0->>'revision'<>'3' OR r->>'delivery_enabled'<>'false' THEN RAISE EXCEPTION 'Readback mismatch'; END IF;
+ BEGIN PERFORM 1 FROM private.marketing_campaign_revisions; RAISE EXCEPTION 'Raw audit read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $test$;
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000003';
+DO $test$ BEGIN
+ BEGIN PERFORM public.admin_read_marketing_campaigns(NULL); RAISE EXCEPTION 'Nonowner read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_campaign(gen_random_uuid(),gen_random_uuid(),0,'create','Test','all','Offer','Text',NULL); RAISE EXCEPTION 'Nonowner write'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $test$;
+RESET ROLE;
+DO $test$ BEGIN
+ IF (SELECT count(*) FROM private.marketing_campaign_revisions)<>3 THEN RAISE EXCEPTION 'Revision audit mismatch'; END IF;
+ BEGIN DELETE FROM private.marketing_campaign_revisions; RAISE EXCEPTION 'Audit deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+ IF has_function_privilege('anon','public.admin_read_marketing_campaigns(uuid)','EXECUTE') OR has_function_privilege('anon','public.admin_save_marketing_campaign(uuid,uuid,bigint,text,text,text,text,text,timestamptz)','EXECUTE') OR has_table_privilege('authenticated','private.marketing_campaigns','SELECT') THEN RAISE EXCEPTION 'Campaign privilege leak'; END IF;
+END $test$;
+\echo 'PASS marketing consent, segments and campaign draft contract (isolated)'
