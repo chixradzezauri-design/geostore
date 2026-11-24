@@ -36,6 +36,7 @@ import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
+import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -1237,6 +1238,7 @@ export default function AdminDashboardPro({
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
   const [businessComparisonDays, setBusinessComparisonDays] = useState(30);
   const [businessForecastHorizon, setBusinessForecastHorizon] = useState(7);
+  const [businessCustomerDays, setBusinessCustomerDays] = useState(30);
   const [inventoryMovementRows, setInventoryMovementRows] = useState([]);
   const [inventoryMovementLoading, setInventoryMovementLoading] = useState(false);
   const [inventoryMovementError, setInventoryMovementError] = useState('');
@@ -2865,6 +2867,7 @@ export default function AdminDashboardPro({
   const businessReportingDay = georgianBusinessDay(new Date(flashSaleStatusClock).toISOString());
   const businessComparison = useMemo(() => compareBusinessPeriods({ orders, verified: isOwner && ordersVerifiedForReports, days: businessComparisonDays, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessComparisonDays, businessReportingDay]);
   const businessForecast = useMemo(() => forecastBusinessSales({ orders, verified: isOwner && ordersVerifiedForReports, horizon: businessForecastHorizon, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessForecastHorizon, businessReportingDay]);
+  const businessCustomers = useMemo(() => analyzeBusinessCustomers({ orders, verified: isOwner && ordersVerifiedForReports, days: businessCustomerDays, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessCustomerDays, businessReportingDay]);
   aiFinanceSnapshotRef.current = { financialOverview, ordersVerifiedForReports, expensesVerifiedForReports, analyticsPeriod };
   const ordersVerifiedForReportsRef = useRef(ordersVerifiedForReports);
   ordersVerifiedForReportsRef.current = ordersVerifiedForReports;
@@ -5891,6 +5894,27 @@ export default function AdminDashboardPro({
                 {businessForecast.status==='data-quality' && <p>უცნობი თარიღები: {businessForecast.missingDates} · არასრული თანხები: {businessForecast.missingTotals} · ჩაბარების თარიღის გარეშე: {businessForecast.legacyDates}</p>}
               </div>}
               <p className="text-xs text-slate-400">ეს არის ისტორიული საშუალოს გაგრძელება და არა გარანტირებული გაყიდვა ან მოგება. დაბალი და მაღალი სცენარები ეფუძნება ისტორიულ კვირებს და არ წარმოადგენს სტატისტიკურ სანდოობის ინტერვალს. დღეს მიმდინარე გაყიდვები არ შედის სასწავლო მონაცემებში; აქციები, სეზონურობა და სამომავლო ცვლილებები არ არის მოდელირებული.</p>
+            </section>
+            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-customer-title">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0"><h3 id="admin-business-customer-title" className="text-white text-sm font-black">მომხმარებლებისა და კატეგორიების ანალიტიკა</h3><p className="text-xs text-slate-400">ჩაბარებული შეკვეთები · სრული დღეები · თბილისის დრო</p></div>
+                <select aria-label="მომხმარებლების ანალიტიკის პერიოდი" value={businessCustomerDays} onChange={e=>setBusinessCustomerDays(Number(e.target.value))} className="min-h-11 rounded-xl bg-slate-950 border border-emerald-500/30 px-3 text-white text-sm"><option value={30}>30 დღე</option><option value={90}>90 დღე</option><option value={365}>365 დღე</option></select>
+              </div>
+              {!businessCustomers ? <p role="status" className="text-xs text-amber-200">საჭიროა შეკვეთების დადასტურებული სრული ისტორია.</p> : businessCustomers.status!=='ready' ? <p role="status" className="text-xs text-amber-200">ანგარიში შეჩერებულია: {businessCustomers.missingDates} ჩაბარებული შეკვეთის თარიღი ვერ დადასტურდა.</p> : <>
+                <p className="text-xs text-slate-400">{businessCustomers.from} — {businessCustomers.to} · ჩაბარებული: {businessCustomers.deliveredOrders} · ანგარიშთან დაუკავშირებელი შეკვეთები: {businessCustomers.unlinkedOrders}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                  {[['აქტიური ანგარიშები',businessCustomers.activeAccounts],['პირველად დაფიქსირებული ანგარიშები',businessCustomers.firstObservedAccounts],['ადრე შემძენი ანგარიშები',businessCustomers.returningAccounts],['განმეორებით შემძენი პერიოდში',businessCustomers.repeatInPeriod]].map(([label,value])=><div key={label} className="min-w-0 rounded-xl border border-slate-700 p-3"><p className="text-xs text-slate-400">{label}</p><strong className="text-lg font-black text-white tabular-nums">{value}</strong></div>)}
+                </div>
+                <p className="text-xs text-slate-300">ადრე შემძენი ანგარიშების წილი: {businessCustomers.returningRate===null?'—':businessCustomers.returningRate.toFixed(1)+'%'} · პერიოდში განმეორებითი შესყიდვა: {businessCustomers.repeatRate===null?'—':businessCustomers.repeatRate.toFixed(1)+'%'}</p>
+                <p className="text-xs text-slate-400">დათვლილია მხოლოდ ანგარიშის სერვერული ID-ით დაკავშირებული შეკვეთები. სტუმრები და ძველი დაუკავშირებელი ჩანაწერები არ განიხილება უნიკალურ მომხმარებლებად. პირველად დაფიქსირება ნიშნავს პირველ ჩაბარებულ შეკვეთას ხელმისაწვდომ ისტორიაში.</p>
+                {businessCustomers.legacyDates>0&&<p className="text-xs text-amber-200">{businessCustomers.legacyDates} ძველ შეკვეთაზე გამოყენებულია შექმნის თარიღი.</p>}
+                <div className="rounded-xl border border-slate-700 p-3 space-y-2">
+                  <h4 className="text-white text-xs font-black">პოპულარული კატეგორიები — შეკვეთის ისტორიული ჩანაწერებიდან</h4>
+                  {businessCustomers.categories.length===0?<p className="text-xs text-slate-400">დადასტურებული კატეგორიის ჩანაწერები არ არის.</p>:businessCustomers.categories.slice(0,10).map(entry=><div key={entry.category} className="flex flex-wrap justify-between gap-2 border-b border-slate-700 pb-2 text-xs"><span className="min-w-0 break-words text-white">{entry.category}</span><span className="text-slate-300 tabular-nums">{entry.units} ერთეული · {entry.orders} შეკვეთა</span></div>)}
+                  <p className="text-xs text-slate-400">ნაჩვენებია მაქსიმუმ 10 / {businessCustomers.categories.length} კატეგორია · ცნობილი კატეგორიების ერთეულები: {businessCustomers.knownUnits}</p>
+                  {(businessCustomers.unknownCategoryUnits>0||businessCustomers.missingLines>0||businessCustomers.invalidQuantityLines>0)&&<p className="text-xs text-amber-200">არასრული ისტორია: კატეგორიის გარეშე {businessCustomers.unknownCategoryUnits} ერთეული · დეტალების გარეშე {businessCustomers.missingLines} შეკვეთა · არასწორი რაოდენობის {businessCustomers.invalidQuantityLines} ჩანაწერი. რეიტინგი მოიცავს მხოლოდ ცნობილ მონაცემებს.</p>}
+                </div>
+              </>}
             </section>
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">

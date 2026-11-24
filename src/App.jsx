@@ -1972,6 +1972,8 @@ export default function App() {
           // Preserve the persisted amount for finance integrity checks; display
           // normalization can otherwise hide malformed historical values as 0.
           rawTotalGEL: o.total_gel,
+          // Verified admin ledger supplies the account ID; never merge buyers by phone/email.
+          user_id: o.user_id ?? null,
           checkoutBreakdown,
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
