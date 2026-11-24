@@ -7,6 +7,10 @@ on:
       - '.github/workflows/stage78-free-supabase-auth-postgrest.yml'
       - 'tests/stage78-supabase/**'
       - 'scripts/stage78AuthPostgrest.mjs'
+      - 'scripts/advancedAdminRealAuth.mjs'
+      - 'scripts/advancedAdminReleaseBundle.mjs'
+      - 'release/advanced-admin-release-candidate.json'
+      - 'release/staged-*.sql'
       - 'tests/stage78FreeSupabaseAuthPostgrest.test.js'
       - 'supabase/migrations/20261117231455_admin_staff_auth_foundation.sql'
       - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
@@ -137,6 +141,15 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -f stage90-pre-a-fixture.sql
           node "$GITHUB_WORKSPACE/scripts/stage90ReleaseSequence.mjs"
+          # Extend the same disposable stack; no hosted database or keys.
+          node "$GITHUB_WORKSPACE/scripts/advancedAdminReleaseBundle.mjs" > "$RUNNER_TEMP/advanced-admin-candidate.sql"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f advanced-admin-auth-fixture.sql
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f "$RUNNER_TEMP/advanced-admin-candidate.sql"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
+          node "$GITHUB_WORKSPACE/scripts/advancedAdminRealAuth.mjs"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase
