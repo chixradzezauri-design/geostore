@@ -17,7 +17,7 @@ export default function CustomerMarketingConsent({userId,lang,loadSession,supaba
   const api=createMarketingApi({expectedUserId:userId,loadSession,supabaseUrl,apiKey,isCurrent:current});
   setPhase('loading');setSnapshot(null);
   try{
-   if(optedIn!==null){if(!globalThis.crypto?.randomUUID)throw Error('Secure ID unavailable');await api.setConsent(crypto.randomUUID(),optedIn);}
+   if(optedIn!==null){if(!globalThis.crypto?.randomUUID)throw Error('Secure ID unavailable');await api.setConsent(crypto.randomUUID(),optedIn,optedIn?snapshot?.event_id:null);}
    const result=await api.readConsent();
    if(current()){setSnapshot(result);setPhase('ready');setChecked(false);}
   }catch{if(current()){setPhase('error');setChecked(false);}}

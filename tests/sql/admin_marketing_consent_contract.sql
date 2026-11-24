@@ -19,24 +19,26 @@ DO $test$
 DECLARE e uuid:='20000000-0000-4000-8000-000000000001'; w uuid:='20000000-0000-4000-8000-000000000002'; r jsonb;
 BEGIN
  IF public.my_marketing_email_consent()->>'status'<>'not_set' THEN RAISE EXCEPTION 'Default consent not safe'; END IF;
- r:=public.set_my_marketing_email_consent(e,true,'email-marketing-v1');
+ r:=public.set_my_marketing_email_consent(e,true,'email-marketing-v1',NULL);
  IF r->>'status'<>'opted_in' OR r->>'acknowledged_event_id'<>e::text THEN RAISE EXCEPTION 'Opt-in missing: %',r; END IF;
- r:=public.set_my_marketing_email_consent(w,false,'email-marketing-v1');
+ r:=public.set_my_marketing_email_consent(w,false,'email-marketing-v1',NULL);
  IF r->>'status'<>'withdrawn' THEN RAISE EXCEPTION 'Withdrawal missing'; END IF;
- r:=public.set_my_marketing_email_consent(e,true,'email-marketing-v1');
+ r:=public.set_my_marketing_email_consent(e,true,'email-marketing-v1',NULL);
  IF r->>'status'<>'withdrawn' OR r->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Old retry re-enabled consent'; END IF;
- BEGIN PERFORM public.set_my_marketing_email_consent(e,false,'email-marketing-v1'); RAISE EXCEPTION 'Altered replay accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
- BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'unknown'); RAISE EXCEPTION 'Unknown version accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.set_my_marketing_email_consent(e,false,'email-marketing-v1',NULL); RAISE EXCEPTION 'Altered replay accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'unknown',NULL); RAISE EXCEPTION 'Unknown version accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN PERFORM public.admin_marketing_consent_summary(); RAISE EXCEPTION 'Customer aggregate access'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM 1 FROM private.marketing_email_consent_events; RAISE EXCEPTION 'Raw ledger read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
- PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+ BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL); RAISE EXCEPTION 'Stale initial opt-in accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',e); RAISE EXCEPTION 'Stale opt-in after withdrawal accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',w);
 END $test$;
 SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000002';
 DO $test$ BEGIN
  IF public.my_marketing_email_consent()->>'status'<>'not_set' THEN RAISE EXCEPTION 'Cross-user state'; END IF;
- BEGIN PERFORM public.set_my_marketing_email_consent('20000000-0000-4000-8000-000000000001',true,'email-marketing-v1'); RAISE EXCEPTION 'Cross-user replay allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
- BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1'); RAISE EXCEPTION 'Unverified opt-in allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
- IF public.set_my_marketing_email_consent(gen_random_uuid(),false,'email-marketing-v1')->>'status'<>'withdrawn' THEN RAISE EXCEPTION 'Unverified withdrawal denied'; END IF;
+ BEGIN PERFORM public.set_my_marketing_email_consent('20000000-0000-4000-8000-000000000001',true,'email-marketing-v1',NULL); RAISE EXCEPTION 'Cross-user replay allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL); RAISE EXCEPTION 'Unverified opt-in allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ IF public.set_my_marketing_email_consent(gen_random_uuid(),false,'email-marketing-v1',NULL)->>'status'<>'withdrawn' THEN RAISE EXCEPTION 'Unverified withdrawal denied'; END IF;
 END $test$;
 RESET ROLE;
 UPDATE auth.users SET email='changed@example.invalid' WHERE id='10000000-0000-4000-8000-000000000001';
@@ -57,7 +59,7 @@ RESET ROLE;
 DELETE FROM auth.users WHERE id='10000000-0000-4000-8000-000000000001';
 DO $test$ BEGIN
  IF EXISTS(SELECT 1 FROM private.marketing_email_consent_events WHERE user_id='10000000-0000-4000-8000-000000000001') THEN RAISE EXCEPTION 'Account deletion cleanup failed'; END IF;
- IF has_table_privilege('authenticated','private.marketing_email_consent_events','SELECT') OR has_function_privilege('anon','public.set_my_marketing_email_consent(uuid,boolean,text)','EXECUTE') OR has_function_privilege('anon','public.admin_marketing_consent_summary()','EXECUTE') THEN RAISE EXCEPTION 'Consent privilege leak'; END IF;
+ IF has_table_privilege('authenticated','private.marketing_email_consent_events','SELECT') OR has_function_privilege('anon','public.set_my_marketing_email_consent(uuid,boolean,text,uuid)','EXECUTE') OR has_function_privilege('anon','public.admin_marketing_consent_summary()','EXECUTE') THEN RAISE EXCEPTION 'Consent privilege leak'; END IF;
 END $test$;
 -- Segment fixture uses real account/CRM/staff/order column contracts, no live rows.
 ALTER TABLE auth.users ADD COLUMN created_at timestamptz DEFAULT now(), ADD COLUMN banned_until timestamptz, ADD COLUMN raw_app_meta_data jsonb DEFAULT '{}', ADD COLUMN is_anonymous boolean DEFAULT false, ADD COLUMN deleted_at timestamptz;
@@ -83,11 +85,11 @@ INSERT INTO public.orders VALUES
 SET ROLE authenticated;
 SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000003';
 SET request.jwt.claim.jwt='{}';
-SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL);
 SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000004';
-SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL);
 SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000005';
-SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL);
 DO $test$ BEGIN
  BEGIN PERFORM public.admin_marketing_segments(); RAISE EXCEPTION 'Customer segment read allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $test$;

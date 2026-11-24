@@ -29,9 +29,9 @@ export function createMarketingApi({expectedUserId,loadSession,supabaseUrl,apiKe
  }
  return {
   async readConsent(){return verifyConsent(await request('my_marketing_email_consent',{}));},
-  async setConsent(id,optedIn){
-   if(!uuid(id)||typeof optedIn!=='boolean')throw Error('Invalid consent request');
-   const r=verifyConsent(await request('set_my_marketing_email_consent',{p_event:id,p_opted_in:optedIn,p_policy_version:MARKETING_POLICY}));
+  async setConsent(id,optedIn,expectedEvent){
+   if(!uuid(id)||typeof optedIn!=='boolean'||(optedIn?(expectedEvent!==null&&!uuid(expectedEvent)):(expectedEvent!==null)))throw Error('Invalid consent request');
+   const r=verifyConsent(await request('set_my_marketing_email_consent',{p_event:id,p_opted_in:optedIn,p_policy_version:MARKETING_POLICY,p_expected_event:expectedEvent}));
    if(r.acknowledged_event_id!==id||typeof r.idempotent_replay!=='boolean')throw Error('Consent acknowledgement mismatch');
    return r;
   },
