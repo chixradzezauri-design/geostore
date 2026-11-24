@@ -62,15 +62,16 @@ BEGIN
    RAISE EXCEPTION 'Candidate routine search_path not empty %.%',f.schema_name,f.routine_name;
   END IF;
  END LOOP;
+ -- Payment/correction tables are RPC-only even though they reside in public.
  FOREACH t IN ARRAY ARRAY['public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts','public.admin_purchase_payments','public.admin_purchase_payment_corrections','private.marketing_email_consent_events','private.marketing_campaigns','private.marketing_campaign_revisions','private.marketing_template_versions','private.marketing_campaign_preflights'] LOOP
   IF NOT EXISTS(SELECT 1 FROM pg_class WHERE oid=to_regclass(t) AND relrowsecurity) THEN RAISE EXCEPTION 'Missing RLS %',t; END IF;
   FOREACH privilege IN ARRAY ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'] LOOP
-   expected:=t LIKE 'public.%' AND privilege='SELECT';
+   expected:=t IN ('public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts') AND privilege='SELECT';
    IF has_table_privilege('anon',t,privilege) OR has_table_privilege('authenticated',t,privilege) IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Unexpected table ACL % %',t,privilege; END IF;
   END LOOP;
   FOR col IN SELECT attname FROM pg_attribute WHERE attrelid=to_regclass(t) AND attnum>0 AND NOT attisdropped LOOP
    FOREACH privilege IN ARRAY ARRAY['SELECT','INSERT','UPDATE','REFERENCES'] LOOP
-    expected:=(t LIKE 'public.%' AND privilege='SELECT') OR (t='public.admin_suppliers' AND ((privilege='INSERT' AND col.attname IN ('name','commission','is_active')) OR (privilege='UPDATE' AND col.attname IN ('commission','is_active'))));
+    expected:=(t IN ('public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts') AND privilege='SELECT') OR (t='public.admin_suppliers' AND ((privilege='INSERT' AND col.attname IN ('name','commission','is_active')) OR (privilege='UPDATE' AND col.attname IN ('commission','is_active'))));
     actual:=has_column_privilege('authenticated',t,col.attname,privilege);
     IF has_column_privilege('anon',t,col.attname,privilege) OR actual IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Unexpected column ACL %.% %',t,col.attname,privilege; END IF;
    END LOOP;
