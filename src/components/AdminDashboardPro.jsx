@@ -2057,6 +2057,14 @@ export default function AdminDashboardPro({
   }, []);
 
   const [supportTickets, setSupportTickets] = useState([]);
+  const [supportTicketsReady, setSupportTicketsReady] = useState(false);
+  const [supportTicketsLoading, setSupportTicketsLoading] = useState(false);
+  const [supportSearch, setSupportSearch] = useState('');
+  const [supportStatusFilter, setSupportStatusFilter] = useState('all');
+  const [supportStatusBusy, setSupportStatusBusy] = useState({});
+  const supportStatusInFlight = useRef(new Set());
+  const [legacyMessageSearch, setLegacyMessageSearch] = useState('');
+  const [legacyMessagesReady, setLegacyMessagesReady] = useState(false);
   const [supportTicketsError, setSupportTicketsError] = useState('');
   const [selectedSupportTicketId, setSelectedSupportTicketId] = useState(null);
   const [supportTicketThreads, setSupportTicketThreads] = useState({});
@@ -2086,6 +2094,7 @@ export default function AdminDashboardPro({
   const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
     if (!hasSupportPermission || sessionId !== supportThreadSessionRef.current) return;
     const requestId = ++supportTicketListRequestRef.current;
+    setSupportTicketsLoading(true);
     const isCurrentRequest = () => (
       sessionId === supportThreadSessionRef.current
       && requestId === supportTicketListRequestRef.current
@@ -2134,15 +2143,19 @@ export default function AdminDashboardPro({
         message: t.message,
         status: t.status || 'ღია',
         reply: t.reply || '',
-        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'თარიღი უცნობია',
       createdAt: t.created_at || null
       })));
+      setSupportTicketsReady(true);
       setSupportTicketsError('');
     } catch (error) {
       console.error('GEOSTORE support tickets fetch failed:', error);
       if (isCurrentRequest()) {
+        setSupportTicketsReady(false);
         setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
       }
+    } finally {
+      if (isCurrentRequest()) setSupportTicketsLoading(false);
     }
   };
 
@@ -2222,8 +2235,12 @@ export default function AdminDashboardPro({
     // Release UI locks from the previous login, but retain idempotency keys:
     // an uncertain network result must be safely retryable in the next session.
     supportReplyInFlight.current.clear();
+    supportStatusInFlight.current.clear();
+    setSupportStatusBusy({});
+    setSupportTicketsReady(false);
+    setSupportTicketsLoading(false);
     setReplySending({});
-  }, [hasSupportPermission]);
+  }, [hasSupportPermission, adminUserId]);
 
   useEffect(() => {
     if (!hasSupportPermission) {
@@ -2307,10 +2324,12 @@ export default function AdminDashboardPro({
         legacyMessagesCursorRef.current = nextCursor;
         setLegacyMessagesHasMore(Boolean(nextCursor));
       }
+      setLegacyMessagesReady(true);
       setLegacyMessagesError('');
     } catch (error) {
       if (sessionId === legacyMessagesSessionRef.current) {
         console.error('GEOSTORE legacy messages fetch failed:', error);
+        setLegacyMessagesReady(false);
         setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
       }
     } finally {
@@ -2328,6 +2347,7 @@ export default function AdminDashboardPro({
   useEffect(() => {
     legacyMessagesSessionRef.current += 1;
     const sessionId = legacyMessagesSessionRef.current;
+    setLegacyMessagesReady(false);
     if (!hasCrmPermission) {
       setLegacyMessages([]);
       setLegacyMessagesError('');
@@ -2460,6 +2480,10 @@ export default function AdminDashboardPro({
     setCrmLoading(false);
     setCrmError('');
     setSupportTickets([]);
+    setSupportTicketsReady(false);
+    setSupportTicketsLoading(false);
+    setSupportStatusBusy({});
+    supportStatusInFlight.current.clear();
     setSupportTicketsError('');
     setSelectedSupportTicketId(null);
     setSupportTicketThreads({});
@@ -4114,20 +4138,37 @@ export default function AdminDashboardPro({
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
     const requestSessionVersion = adminSessionVersion.current;
-    if (!isCurrentAdminSession(requestSessionVersion) || !hasSupportPermission) return;
+    if (!isCurrentAdminSession(requestSessionVersion) || !hasSupportPermission || !supportTicketsReady || supportTicketsError) return;
+    const key = String(ticketId);
+    if (!['ღია', 'მუშავდება', 'მოგვარებული'].includes(newStatus) ||
+        supportStatusInFlight.current.has(key) || supportReplyInFlight.current.has(key)) return;
+    supportStatusInFlight.current.add(key);
+    setSupportStatusBusy(prev => ({ ...prev, [key]: true }));
     try {
       const headers = await getSupabaseHeaders();
       if (!isCurrentAdminSession(requestSessionVersion)) return;
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${encodeURIComponent(key)}&select=id,status`, {
         method: 'PATCH', headers,
         body: JSON.stringify({ status: newStatus })
       });
       if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) throw new Error('ტიკეტის სტატუსის განახლება ვერ მოხერხდა.');
-      fetchTickets();
-      logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
+      const rows = await response.json();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
+      if (!Array.isArray(rows) || rows.length !== 1 || String(rows[0].id) !== key || rows[0].status !== newStatus) {
+        throw new Error('სტატუსის ცვლილება სერვერმა ვერ დაადასტურა. განაახლეთ სია.');
+      }
+      setSupportTickets(previous => previous.map(ticket => String(ticket.id) === key ? { ...ticket, status: newStatus } : ticket));
+      await fetchTickets();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
+      logActivity(`ტიკეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
     } catch (error) {
       if (isCurrentAdminSession(requestSessionVersion)) alert(error?.message || 'შეცდომა სტატუსის განახლებისას');
+    } finally {
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        supportStatusInFlight.current.delete(key);
+        setSupportStatusBusy(prev => ({ ...prev, [key]: false }));
+      }
     }
   };
 
@@ -4136,7 +4177,7 @@ export default function AdminDashboardPro({
     if (!isCurrentAdminSession(requestSessionVersion) || !hasSupportPermission) return;
     const normalizedTicketId = String(ticketId);
     const replyText = String(replyInputs[ticketId] || '').trim();
-    if (!replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId)) return;
+    if (!supportTicketsReady || supportTicketsError || !replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId) || supportStatusInFlight.current.has(normalizedTicketId)) return;
 
     const replySessionId = supportThreadSessionRef.current;
     supportReplyInFlight.current.add(normalizedTicketId);
@@ -4179,7 +4220,7 @@ export default function AdminDashboardPro({
       }
       if (replySessionId !== supportThreadSessionRef.current) return;
 
-      setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
+      setReplyInputs(prev => String(prev[ticketId] || '').trim() === replyText ? { ...prev, [ticketId]: '' } : prev);
       setSelectedSupportTicketId(normalizedTicketId);
       await Promise.allSettled([
         fetchTickets(replySessionId),
@@ -5086,6 +5127,18 @@ export default function AdminDashboardPro({
       return rightTime - leftTime || String(right?.id ?? '').localeCompare(String(left?.id ?? ''));
     });
   const commandCenterNewOrders = commandCenterPendingOrders.filter(order => getOrderStatusFilterKey(order?.status) === 'ახალი');
+  const supportSearchTerm = supportSearch.trim().toLocaleLowerCase();
+  const filteredSupportTickets = supportTickets.filter(ticket =>
+    (supportStatusFilter === 'all' || ticket.status === supportStatusFilter) &&
+    [ticket.id, ticket.subject, ticket.customerName, ticket.email, ticket.message].some(value =>
+      String(value ?? '').toLocaleLowerCase().includes(supportSearchTerm))
+  );
+  const visibleSupportTickets = supportTickets.filter(ticket =>
+    String(ticket.id) === String(selectedSupportTicketId) || filteredSupportTickets.includes(ticket));
+  const legacyMessageSearchTerm = legacyMessageSearch.trim().toLocaleLowerCase();
+  const filteredLegacyMessages = legacyMessages.filter(message =>
+    [message.id, message.client_name, message.sender, message.text].some(value =>
+      String(value ?? '').toLocaleLowerCase().includes(legacyMessageSearchTerm)));
   const commandCenterOpenTickets = (Array.isArray(supportTickets) ? supportTickets : [])
     .filter(ticket => ['ღია', 'მუშავდება', 'open', 'in progress', 'pending', 'new'].includes(normalizeOrderStatus(ticket?.status)));
   const commandCenterOverdueTickets = commandCenterOpenTickets.filter(ticket => {
@@ -6478,22 +6531,29 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'support' || adminContentTab === 'support') && (
-          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-              <HelpCircle className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.supportTitle} ({supportTickets?.length || 0})
+              <HelpCircle className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.supportTitle} ({supportTicketsReady ? supportTickets.length : "—"})
             </h3>
             {supportTicketsError && (
               <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
                 მხარდაჭერის შეტყობინებების ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული მონაცემები შენარჩუნებულია. დეტალი: {supportTicketsError}
-                <button type="button" onClick={fetchTickets} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
+                <button type="button" onClick={() => void fetchTickets()} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
               </div>
             )}
-            <div className="admin-support-list space-y-4">
-              {(!supportTickets || supportTickets.length === 0) ? (
-                <p className="text-slate-500 text-xs py-8 text-center">{adminVisualDesign.content.supportEmptyLabel}</p>
+            <div className="admin-workspace-support-filters grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end">
+              <div className="min-w-0"><label htmlFor="admin-workspace-support-search" className="block text-xs text-slate-300 mb-1">მოთხოვნის ძიება</label><input id="admin-workspace-support-search" type="search" value={supportSearch} onChange={e => { setSupportSearch(e.target.value); setSelectedSupportTicketId(null); }} placeholder="სახელი, ელფოსტა, თემა ან ID" className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>
+              <div className="min-w-0"><label htmlFor="admin-workspace-support-status" className="block text-xs text-slate-300 mb-1">სტატუსი</label><select id="admin-workspace-support-status" value={supportStatusFilter} onChange={e => { setSupportStatusFilter(e.target.value); setSelectedSupportTicketId(null); }} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs"><option value="all">ყველა</option><option value="ღია">ღია</option><option value="მუშავდება">მუშავდება</option><option value="მოგვარებული">მოგვარებული</option></select></div>
+              <button type="button" disabled={supportTicketsLoading} onClick={() => void fetchTickets()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
+            </div>
+            {(supportSearch || supportStatusFilter !== 'all') && <button type="button" onClick={() => { setSupportSearch(''); setSupportStatusFilter('all'); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">ფილტრების გასუფთავება</button>}
+            <p role="status" className="text-xs text-slate-300">{supportTicketsReady ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
+            <div className="admin-support-list space-y-3">
+              {visibleSupportTickets.length === 0 ? (
+                <p className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
               ) : (
-                supportTickets.map(t => (
-                  <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-5 sm:p-6 rounded-3xl border border-emerald-500/20 space-y-4 text-xs shadow-inner">
+                visibleSupportTickets.map(t => (
+                  <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-3 sm:p-4 rounded-2xl border border-slate-700 space-y-3 text-xs shadow-inner">
                     <div className="admin-support-ticket-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                       <div className="admin-support-ticket-meta flex items-center gap-3 flex-wrap">
                         <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
@@ -6503,9 +6563,9 @@ export default function AdminDashboardPro({
                       
                       <div className="admin-support-ticket-controls flex items-center gap-2.5 flex-wrap">
                         <div className="admin-support-status-actions flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20" role="group" aria-label={`ტიკეტი #${t.id} — სტატუსი`}>
-                          <button type="button" aria-pressed={t.status === 'ღია'} onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
-                          <button type="button" aria-pressed={t.status === 'მუშავდება'} onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button type="button" aria-pressed={t.status === 'მოგვარებული'} onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
+                          <button type="button" aria-pressed={t.status === 'ღია'} disabled={!supportTicketsReady || !!supportTicketsError || !!supportStatusBusy[String(t.id)] || !!replySending[String(t.id)] || t.status === 'ღია'} onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
+                          <button type="button" aria-pressed={t.status === 'მუშავდება'} disabled={!supportTicketsReady || !!supportTicketsError || !!supportStatusBusy[String(t.id)] || !!replySending[String(t.id)] || t.status === 'მუშავდება'} onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                          <button type="button" aria-pressed={t.status === 'მოგვარებული'} disabled={!supportTicketsReady || !!supportTicketsError || !!supportStatusBusy[String(t.id)] || !!replySending[String(t.id)] || t.status === 'მოგვარებული'} onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
                         </div>
                         <button type="button" onClick={() => {
                           const ticketId = String(t.id);
@@ -6567,20 +6627,21 @@ export default function AdminDashboardPro({
                         aria-label={`ტიკეტი #${t.id} — პასუხის ტექსტი`}
                         maxLength={4000}
                         value={replyInputs[t.id] !== undefined ? replyInputs[t.id] : ''}
-                        onChange={e => setReplyInputs({...replyInputs, [t.id]: e.target.value})}
+                        onChange={e => setReplyInputs(prev => ({ ...prev, [t.id]: e.target.value }))}
                         className="admin-support-reply-input min-w-0 flex-1 resize-y bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
                       />
                       <button 
                         type="button"
                         onClick={() => handleSendTicketReply(t.id)}
                         aria-label={`ტიკეტი #${t.id} — პასუხის გაგზავნა`}
-                        disabled={!!replySending[String(t.id)] || !String(replyInputs[t.id] || '').trim()}
+                        disabled={!supportTicketsReady || !!supportTicketsError || !!supportStatusBusy[String(t.id)] || !!replySending[String(t.id)] || !String(replyInputs[t.id] || '').trim()}
                         aria-busy={!!replySending[String(t.id)]}
                         className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Send className="w-4 h-4" /> {replySending[String(t.id)] ? 'იგზავნება…' : 'გაგზავნა'}
                       </button>
                     </div>
+                    <p className="text-xs text-slate-400 break-words">{String(replyInputs[t.id] || '').length} / 4000 · პასუხი ინახება მხარდაჭერის მიმოწერაში; ელფოსტით არ იგზავნება.</p>
                   </div>
                 ))
               )}
@@ -7032,7 +7093,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'messages' || adminContentTab === 'messages') && (
-          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -7040,18 +7101,24 @@ export default function AdminDashboardPro({
                 </h3>
                 <p className="text-slate-400 text-xs mt-1">ახალი შეტყობინებები ახლდება ავტომატურად ყოველ 15 წამში; ძველი ისტორია იტვირთება 100-100 ჩანაწერად.</p>
               </div>
-              <button type="button" onClick={fetchLegacyMessages} className="rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/10">განახლება</button>
+              <button type="button" onClick={() => void fetchLegacyMessages()} className="rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/10">განახლება</button>
             </div>
             {legacyMessagesError && (
               <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
                 მიმოწერების ჩატვირთვა ვერ მოხერხდა. არსებული ეკრანის მონაცემები არ შეცვლილა. დეტალი: {legacyMessagesError}
               </div>
             )}
+            <div className="admin-workspace-support-filters flex flex-wrap items-end gap-2">
+              <div className="min-w-0 flex-1"><label htmlFor="admin-workspace-legacy-search" className="block text-xs text-slate-300 mb-1">ძიება ჩატვირთულ მიმოწერებში</label><input id="admin-workspace-legacy-search" type="search" value={legacyMessageSearch} onChange={e => setLegacyMessageSearch(e.target.value)} placeholder="მომხმარებელი ან ტექსტი" className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>
+              {legacyMessageSearch && <button type="button" onClick={() => setLegacyMessageSearch('')} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}
+            </div>
+            <p role="status" className="text-xs text-slate-300">ნაპოვნია {filteredLegacyMessages.length} / {legacyMessages.length} ჩატვირთული ჩანაწერი{legacyMessagesHasMore ? ' · ძველი გვერდები ჯერ ჩასატვირთია' : ''}.</p>
             {legacyMessages.length === 0 ? (
-              <p className="text-slate-400 text-xs py-8 text-center">შენახული მიმოწერები არ მოიძებნა. ახალი მხარდაჭერის მოთხოვნები იხილეთ „მხარდაჭერა“ განყოფილებაში.</p>
+              <p className="text-slate-400 text-xs py-8 text-center">{legacyMessagesReady ? 'შენახული მიმოწერები არ მოიძებნა. ახალი მხარდაჭერის მოთხოვნები იხილეთ „მხარდაჭერა“ განყოფილებაში.' : 'მიმოწერების სია ჯერ არ არის დადასტურებული.'}</p>
             ) : (
               <div className="space-y-3">
-                {legacyMessages.map((message) => (
+                {filteredLegacyMessages.length === 0 && <p className="text-xs text-slate-400">ჩატვირთულ ჩანაწერებში შედეგი ვერ მოიძებნა.</p>}
+                {filteredLegacyMessages.map((message) => (
                   <article key={message.id} className="admin-legacy-message-card rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 sm:p-5 space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>

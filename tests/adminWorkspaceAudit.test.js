@@ -71,3 +71,9 @@ test('workspace audit 09 distinguishes CRM sources, caps and confirmed writes',(
  for(const term of ['crmDirectoryCapped = serverCustomers.length >= 500','!crmDirectoryCapped && customer.isLocalCrmRecord','crmFetchRef.current === requestVersion','crmWriteRef.current === requestVersion','String(saved.user_id) !== String(customer.id)','admin-workspace-crm-filter','setCrmStatusFilter(\'all\'); setCrmPage(1)','u.isServerCustomer && <p','maxLength={1000}','min="0" max="100" step="0.01"','handleToggleVipUser(u.id || u.email)','handleToggleBlockUser(u.id || u.email)']) assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 09'));
 });
+
+test('workspace audit 10 confirms ticket status updates and preserves reply drafts and legacy paging',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['admin-workspace-support-search','admin-workspace-support-status','visibleSupportTickets.map','supportTicketsReady','supportStatusInFlight.current.has(key)','rows.length !== 1 || String(rows[0].id) !== key','rows[0].status !== newStatus','String(prev[ticketId] || \'\').trim() === replyText','add_support_ticket_message_idempotent','admin-workspace-legacy-search','filteredLegacyMessages.map','fetchLegacyMessages({ loadMore: true })','mark_support_ticket_messages_read']) assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 10'));
+});
