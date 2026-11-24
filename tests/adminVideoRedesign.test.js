@@ -76,7 +76,11 @@ test('batch 07 explicit responsive studio layout choices override compact defaul
  assert.equal(base['--admin-vd-video-mobile-headerPadding'],undefined);
  const styled=buildAdminPanelVisualStyle({responsive:{tablet:{layout:{headerRadius:36}},mobile:{layout:{headerPadding:30,titleFontSize:26}}}});
  assert.equal(styled['--admin-vd-video-mobile-headerPadding'],'30px');
- assert.equal(styled['--admin-vd-video-mobile-headerRadius'],'36px');
+ assert.equal(styled['--admin-vd-tablet-headerRadius'],'36px');
+ assert.equal(styled['--admin-vd-mobile-headerRadius'],'32px');
+ assert.equal(styled['--admin-vd-video-mobile-headerRadius'],undefined);
+ const mobileOverride=buildAdminPanelVisualStyle({responsive:{tablet:{layout:{headerRadius:36}},mobile:{layout:{headerRadius:28}}}});
+ assert.equal(mobileOverride['--admin-vd-video-mobile-headerRadius'],'28px');
  assert.equal(styled['--admin-vd-video-mobile-titleFontSize'],'26px');
  for(const key of ['sectionGap','cardPadding','cardRadius','headerPadding','headerRadius','titleFontSize']) assert.ok(css.includes('var(--admin-vd-video-mobile-'+key+', clamp('),key);
  const studio=read('src/components/AdminPanelVisualEditor.jsx');
