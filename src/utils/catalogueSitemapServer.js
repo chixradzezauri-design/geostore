@@ -10,14 +10,14 @@ export const safeConfig=({url,key}={})=>{
  if(claims.role!=='anon'||claims.ref!=='xmtnszxtnfxnrojionoa')throw Error('Invalid public catalogue configuration');
  return {url,key};
 };
-export async function fetchPublishedCatalogue(config,fetchImpl=fetch){
+export async function fetchPublishedCatalogue(config,fetchImpl=fetch,{includeNames=false}={}){
  const {url,key}=safeConfig(config);
  const rows=[],seen=new Set();
  const signal=AbortSignal.timeout(12000);
  let total=null;
  do{
   const endpoint=new URL(url+'/rest/v1/products');
-  endpoint.searchParams.set('select','id,category');
+  endpoint.searchParams.set('select',includeNames?'id,category,name':'id,category');
   endpoint.searchParams.set('order','id.asc');
   endpoint.searchParams.set('limit',String(PAGE_SIZE));
   endpoint.searchParams.set('offset',String(rows.length));
@@ -37,7 +37,8 @@ export async function fetchPublishedCatalogue(config,fetchImpl=fetch){
    if(!row||typeof row.id!=='string'||!productPath(row.id)||seen.has(row.id)||row.is_published===false||row.isPublished===false)throw Error('Invalid published catalogue row');
    if(row.category!=null&&typeof row.category!=='string')throw Error('Invalid catalogue category');
    seen.add(row.id);
-   rows.push({id:row.id,category:row.category});
+   if(includeNames&&(typeof row.name!=='string'||!row.name.trim()))throw Error('Invalid public product name');
+   rows.push({id:row.id,category:row.category,...(includeNames?{name:row.name}:{})});
   }
  }while(rows.length<total);
  return rows;

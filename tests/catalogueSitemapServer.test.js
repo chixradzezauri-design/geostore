@@ -48,7 +48,7 @@ test('HTTP XML, HEAD and error responses never echo credentials or host',async()
 test('Vercel sitemap route precedes SPA fallback and has no static shadow',()=>{
  const cfg=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
  assert.deepEqual(cfg.rewrites[0],{source:'/sitemap.xml',destination:'/api/sitemap'});
- assert.equal(cfg.rewrites[1].destination,'/index.html');
+ assert.equal(cfg.rewrites.at(-1).destination,'/index.html');
  assert.ok(!existsSync(new URL('../public/sitemap.xml',import.meta.url)));
  assert.equal(cfg.functions['api/sitemap.js'].includeFiles,'src/supabaseClient.js');
  assert.ok(readFileSync(new URL('../public/robots.txt',import.meta.url),'utf8').includes('Sitemap: '+CATALOGUE_ORIGIN+'/sitemap.xml'));

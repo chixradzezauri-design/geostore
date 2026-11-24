@@ -3575,11 +3575,21 @@ export default function App() {
   // Client metadata supplements crawlable HTML; server-side metadata/status and
   // the verified canonical domain are a separate SEO release gate.
   useEffect(()=>{
-    const meta=catalogueMetadata(catalogueRoute,products,catalogueVerifiedEpoch===productsAccessEpoch.current,categories);
+    const ready=catalogueVerifiedEpoch===productsAccessEpoch.current;
+    const existingCanonical=document.head.querySelector('link[data-gs-canonical]');
+    const routePath=catalogueRoute?.kind==='home'?'/':catalogueRoute?window.location.pathname:null;
+    // Do not transiently noindex a valid server-rendered page while data loads.
+    if(activeTab==='store'&&catalogueRoute?.kind!=='home'&&catalogueRoute&&!ready&&existingCanonical?.getAttribute('href')==='https://geostore.vercel.app'+routePath)return;
+    const meta=catalogueMetadata(catalogueRoute,products,ready,categories);
     document.title=meta.title;
     document.querySelector('meta[name="description"]')?.setAttribute('content',meta.description);
     let robots=document.head.querySelector('meta[data-gs-route-robots]');
-    const noIndex=activeTab!=='store'||!catalogueRoute||!meta.indexable;
+    const noIndex=activeTab!=='store'||!catalogueRoute||(ready&&!meta.indexable);
+    if(activeTab==='store'&&routePath&&meta.indexable){
+      let canonical=existingCanonical;
+      if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';canonical.dataset.gsCanonical='true';document.head.appendChild(canonical);}
+      canonical.href='https://geostore.vercel.app'+routePath;
+    }else existingCanonical?.remove();
     if(noIndex){
       if(!robots){robots=document.createElement('meta');robots.name='robots';robots.dataset.gsRouteRobots='true';document.head.appendChild(robots);}
       robots.content='noindex, follow';

@@ -5,6 +5,14 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/product/:id",
+      "destination": "/api/catalogue-page?kind=product&value=:id"
+    },
+    {
+      "source": "/category/:name",
+      "destination": "/api/catalogue-page?kind=category&value=:name"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
@@ -70,6 +78,9 @@
   "functions": {
     "api/sitemap.js": {
       "includeFiles": "src/supabaseClient.js"
+    },
+    "api/catalogue-page.js": {
+      "includeFiles": "{dist/index.html,src/supabaseClient.js}"
     }
   }
 }

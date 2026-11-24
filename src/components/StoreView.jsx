@@ -230,7 +230,10 @@ export default function StoreView({
   useEffect(()=>{
     if(!catalogueNavigation||catalogueRoute?.kind!=='product')return;
     const product=findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,catalogueReady);
-    if(product&&String(selectedProduct?.id)!==String(product.id))handleOpenProduct(product,null,true);
+    if(product&&String(selectedProduct?.id)!==String(product.id)){
+      const trigger=Array.from(document.querySelectorAll('.gs-catalog-product-title-action[href]')).find(node=>node.getAttribute('href')===productPath(product.id));
+      handleOpenProduct(product,trigger||null,true);
+    }
     else if(!product&&selectedProduct&&catalogueReady)closeProductDetails(true);
   },[catalogueNavigation,catalogueRoute,catalogueReady,catalogueProducts]);
   // Product refreshes must not reopen a manually collapsed category panel.
