@@ -49,3 +49,19 @@ export function verifyPaymentAcknowledgement(data,operation){
 export function paymentOperationConfirmed(snapshot,operation){
  return !!snapshot&&snapshot.purchase_id===operation.orderId&&snapshot.payments.some(p=>paymentMatches(p,operation));
 }
+
+export function validCorrectionReason(reason){
+ return typeof reason==='string'&&reason===reason.trim()&&reason.length>=5&&reason.length<=300&&!/[\u0000-\u001f\u007f-\u009f]/.test(reason);
+}
+export function verifyCorrectionAcknowledgement(data,op){
+ if(!uuid(data?.id)||data.id!==op.correctionId||data.purchase_id!==op.orderId||data.payment_id!==op.paymentId||data.amount_tetri!==op.amountTetri||data.reason!==op.reason||data.recorded_revision!==String(op.order.revision+1)||!Number.isFinite(Date.parse(data.recorded_at))||typeof data.idempotent_replay!=='boolean')throw Error('კორექტირების პასუხი ვერ დადასტურდა.');
+ return data;
+}
+export function correctionOperationConfirmed(snapshot,op){
+ return snapshot?.purchase_id===op.orderId&&snapshot.payments.some(p=>p.id===op.paymentId&&p.amount_tetri===op.amountTetri&&p.correction?.id===op.correctionId&&p.correction.reason===op.reason&&p.correction.recorded_revision===String(op.order.revision+1));
+}
+const aggregateDecimal=v=>typeof v==='string'&&/^(0|[1-9]\d{0,127})$/.test(v);
+export function verifySupplierBalance(data,supplierId){
+ if(!data||(supplierId!==null&&!uuid(supplierId))||data.supplier_id!==supplierId||!['purchase_count','received_tetri','paid_tetri','balance_tetri'].every(k=>aggregateDecimal(data[k]))||BigInt(data.paid_tetri)+BigInt(data.balance_tetri)!==BigInt(data.received_tetri)||(data.purchase_count==='0'&&data.received_tetri!=='0'))throw Error('მომწოდებლის საერთო ბალანსი ვერ დადასტურდა.');
+ return data;
+}
