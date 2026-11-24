@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
-import {fetchPublishedCatalogue,createSitemapHandler,CATALOGUE_ORIGIN} from '../src/utils/catalogueSitemapServer.js';
+import {fetchPublishedCatalogue,fetchPublishedCategories,createSitemapHandler,CATALOGUE_ORIGIN} from '../src/utils/catalogueSitemapServer.js';
 const url='https://xmtnszxtnfxnrojionoa.supabase.co';
 const jwt=role=>'dummy.'+Buffer.from(JSON.stringify({role,ref:'xmtnszxtnfxnrojionoa'})).toString('base64url')+'.dummy';
 const config={url,key:jwt('anon')};
@@ -52,4 +52,13 @@ test('Vercel sitemap route precedes SPA fallback and has no static shadow',()=>{
  assert.ok(!existsSync(new URL('../public/sitemap.xml',import.meta.url)));
  assert.equal(cfg.functions['api/sitemap.js'].includeFiles,'src/supabaseClient.js');
  assert.ok(readFileSync(new URL('../public/robots.txt',import.meta.url),'utf8').includes('Sitemap: '+CATALOGUE_ORIGIN+'/sitemap.xml'));
+});
+
+test('published parent category projection never requests draft config',async()=>{
+ const categories=await fetchPublishedCategories(config,async(input,options)=>{
+  const u=new URL(input);assert.equal(u.pathname,'/rest/v1/storefront_config');assert.equal(u.searchParams.get('select'),'categories:published_config->categories');assert.equal(options.headers.Authorization,'Bearer '+config.key);
+  return response([{categories:[{id:'p',name:'Shoes',image:'discard'},{id:'s',name:'Boots',parentId:'p'},{id:'e',name:'Empty'}]}],'0-0/1');
+ });
+ const res=capture();await createSitemapHandler(async()=>({products:[{id:'a',category:'Boots'}],categories}))({method:'GET'},res);
+ assert.equal(res.statusCode,200);assert.ok(res.body.includes('/category/Shoes'));assert.ok(res.body.includes('/category/Boots'));assert.ok(!res.body.includes('/category/Empty'));assert.ok(!res.body.includes('discard'));
 });

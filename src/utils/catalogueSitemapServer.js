@@ -4,7 +4,7 @@ import { buildCatalogueSitemap, productPath, categoryPath } from './catalogueSeo
 export const CATALOGUE_ORIGIN='https://geostore.vercel.app';
 const PAGE_SIZE=500;
 const MAX_ROWS=49999;
-const safeConfig=({url,key}={})=>{
+export const safeConfig=({url,key}={})=>{
  if(url!=='https://xmtnszxtnfxnrojionoa.supabase.co'||typeof key!=='string'||key.split('.').length!==3)throw Error('Invalid public catalogue configuration');
  let claims;try{claims=JSON.parse(Buffer.from(key.split('.')[1],'base64url').toString('utf8'));}catch{throw Error('Invalid public catalogue configuration');}
  if(claims.role!=='anon'||claims.ref!=='xmtnszxtnfxnrojionoa')throw Error('Invalid public catalogue configuration');
@@ -49,7 +49,8 @@ export function createSitemapHandler(loadRows){
    res.setHeader('Allow','GET, HEAD');res.setHeader('Cache-Control','no-store');res.statusCode=405;return res.end('Method not allowed');
   }
   try{
-   const xml=buildCatalogueSitemap(CATALOGUE_ORIGIN,await loadRows());
+   const snapshot=await loadRows();
+   const xml=Array.isArray(snapshot)?buildCatalogueSitemap(CATALOGUE_ORIGIN,snapshot):buildCatalogueSitemap(CATALOGUE_ORIGIN,snapshot.products,snapshot.categories);
    res.statusCode=200;res.setHeader('Content-Type','application/xml; charset=utf-8');
    res.setHeader('Cache-Control','public, max-age=0, s-maxage=300');
    res.setHeader('X-Content-Type-Options','nosniff');
@@ -60,4 +61,21 @@ export function createSitemapHandler(loadRows){
    return res.end(method==='HEAD'?undefined:'Sitemap temporarily unavailable');
   }
  };
+}
+
+export async function fetchPublishedCategories(config,fetchImpl=fetch){
+ const {url,key}=safeConfig(config);
+ const endpoint=new URL(url+'/rest/v1/storefront_config');
+ endpoint.searchParams.set('config_key','eq.storefront');
+ endpoint.searchParams.set('select','categories:published_config->categories');
+ endpoint.searchParams.set('limit','2');
+ const r=await fetchImpl(endpoint.href,{method:'GET',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(8000),headers:{apikey:key,Authorization:'Bearer '+key,'Accept-Profile':'public',Accept:'application/json'}});
+ if(!r.ok)throw Error('Published category configuration unavailable');
+ const rows=await r.json();
+ if(!Array.isArray(rows)||rows.length>1)throw Error('Invalid category configuration');
+ if(rows.length===0)return [];
+ const categories=rows[0]?.categories;
+ if(!Array.isArray(categories)||categories.length>5000)throw Error('Invalid published categories');
+ // Only category identifiers, parent relation and names are needed.
+ return categories.map(c=>typeof c==='string'?c:{id:c?.id,name:c?.name,parentId:c?.parentId}).filter(c=>typeof c==='string'||typeof c.name==='string');
 }

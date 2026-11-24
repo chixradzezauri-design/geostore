@@ -22,7 +22,7 @@ export function parseCataloguePath(path){
 }
 // The caller MUST supply a successful, complete anonymous published catalogue
 // snapshot. Never feed admin products, cached products, or account collections.
-export function cataloguePaths(publicProducts){
+export function cataloguePaths(publicProducts,categories=[]){
  if(!Array.isArray(publicProducts))throw Error('Published catalogue required');
  const paths=new Set(['/']);
  for(const p of publicProducts){
@@ -31,13 +31,14 @@ export function cataloguePaths(publicProducts){
   if(product)paths.add(product);
   if(category)paths.add(category);
  }
+ for(const name of publishedCategoryNames(publicProducts,categories))paths.add(categoryPath(name));
  return [...paths].sort();
 }
 const xmlEscape=s=>s.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]));
-export function buildCatalogueSitemap(origin,publicProducts){
+export function buildCatalogueSitemap(origin,publicProducts,categories=[]){
  let u;try{u=new URL(origin)}catch{throw Error('Invalid canonical origin')}
  if(u.protocol!=='https:'||u.origin!==origin||u.username||u.password)throw Error('Invalid canonical origin');
- const paths=cataloguePaths(publicProducts);
+ const paths=cataloguePaths(publicProducts,categories);
  // Use sitemap indexes rather than silently truncating a larger catalogue.
  if(paths.length>50000)throw Error('Sitemap URL limit exceeded');
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+paths.map(p=>'  <url><loc>'+xmlEscape(origin+p)+'</loc></url>').join('\n')+'\n</urlset>\n';
@@ -86,4 +87,21 @@ export function catalogueMetadata(route,products,ready,categories=[]){
   return exists?{title:name+' | GEOSTORE',description:name+' — აღმოაჩინე კოლექცია GEOSTORE-ზე.',indexable:true}:{...home,indexable:false};
  }
  return {...home,indexable:false};
+}
+
+// Include only configured parents which actually contain published products.
+// Treat ambiguous category names/IDs conservatively and never traverse cycles.
+export function publishedCategoryNames(publicProducts,categories=[]){
+ const names=new Set(publicProducts.filter(p=>p&&p.isPublished!==false&&p.is_published!==false&&categoryPath(p.category)).map(p=>p.category));
+ const items=(Array.isArray(categories)?categories:[]).map(c=>typeof c==='string'?{id:c,name:c}:c).filter(c=>c&&categoryPath(c.name));
+ const unique=(arr)=>arr.length===1?arr[0]:null;
+ const direct=[...names];
+ for(const name of direct){
+  const child=unique(items.filter(c=>c.name===name));
+  if(child?.parentId==null)continue;
+  const parent=unique(items.filter(c=>String(c.id||c.name)===String(child.parentId)));
+  // StoreView supports one parent/child level; don't invent deeper routes.
+  if(parent&&parent!==child&&parent.parentId==null&&unique(items.filter(c=>c.name===parent.name)))names.add(parent.name);
+ }
+ return [...names].sort();
 }
