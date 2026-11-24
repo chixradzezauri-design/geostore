@@ -602,3 +602,153 @@
     grid-template-columns: minmax(0,1fr) !important;
   }
 }
+
+/* Video redesign 05 — catalog, inventory and promotion content flow. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-products-panel,.admin-product-form,.admin-product-attributes,.admin-product-variants-editor,.admin-product-gallery,.admin-product-list-filters,.admin-product-identity,.admin-custom-variant-row,.admin-replenishment-product,.admin-replenishment-save,.admin-inventory-history-toolbar,.admin-inventory-table-scroll,.admin-banner-card,.admin-coupon-card,.admin-category-tree,.admin-category-card,.admin-subcategory-card,.admin-flash-sale-fields,.gs-admin-flash-sale-active) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-identity,.admin-custom-variant-identity,.admin-replenishment-product,.admin-replenishment-save,.admin-banner-card,.admin-coupon-card) :is(h4,p,span,b,strong) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.45;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-identity > div:last-child:not(:first-child),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card > div:first-child,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card > div:first-child > div,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card > div:first-child {
+  min-inline-size: 0;
+  flex: 1 1 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-form,.admin-flash-sale-form,.admin-product-list-filters,.admin-replenishment-metric,.admin-inventory-history-toolbar) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="hidden"]),select,textarea) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-form,.admin-flash-sale-form,.admin-replenishment-metric) label {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  line-height: 1.45;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-custom-variant-stock {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-custom-variant-stock input {
+  max-inline-size: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-gallery-thumbnail {
+  isolation: isolate;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-gallery-remove {
+  top: 0 !important;
+  right: 0 !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  border: 1px solid #fecdd3 !important;
+  background: #9f1239 !important;
+  color: #fff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-gallery,.admin-category-form,.admin-category-card,.admin-subcategory-card) input[type="file"] {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  color: var(--av-muted) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-gallery,.admin-category-form,.admin-category-card,.admin-subcategory-card) input[type="file"]::file-selector-button {
+  min-height: 44px;
+  max-inline-size: 100%;
+  margin-inline-end: 8px;
+  padding-inline: 10px;
+  color: var(--av-nav-active-text);
+  background: var(--av-nav-active-bg);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-card,.admin-coupon-card) > button {
+  flex: 0 0 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 8px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #351c2a !important;
+  border: 1px solid #704052 !important;
+  color: #ffd4df !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card img {
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-inventory-table-scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric :is(input,strong) {
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric strong {
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-form button[type="submit"],.admin-product-variants-editor button,.admin-inventory-history-toolbar button,.admin-replenishment-save > button,.admin-banner-form button[type="submit"],.admin-category-form button[type="submit"],.admin-coupon-form button[type="submit"],.admin-flash-sale-submit) {
+  min-height: 44px !important;
+  min-inline-size: 0 !important;
+  max-inline-size: 100%;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-products-panel,.admin-inventory-panel,.admin-banners,.admin-category-manager,.admin-coupons-panel,.admin-discounts-panel) :is(button,input,textarea,select,.admin-inventory-table-scroll):focus-visible {
+  outline: max(2px, var(--admin-vd-inputFocusRingWidth-active, 2px)) solid var(--av-focus) !important;
+  outline-offset: 2px !important;
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls {
+    width: 100% !important;
+    justify-content: start !important;
+  }
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-form,.admin-product-list-filters,.admin-flash-sale-form,.admin-replenishment-metric,.admin-inventory-history-toolbar) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]):not([type="file"]),select,textarea) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+    min-height: 44px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-custom-variant-row {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 8px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-custom-variant-identity {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-subcategory-list {
+    padding-inline-start: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-flash-sale-submit,.admin-banner-form button[type="submit"],.admin-category-form button[type="submit"],.admin-coupon-form button[type="submit"]) {
+    width: 100% !important;
+    justify-content: center;
+  }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-custom-variant-row {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > * {
+    grid-column: 1 / -1 !important;
+  }
+}
