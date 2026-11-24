@@ -37,8 +37,8 @@ export default function AdminMarketingCampaigns({adminUserId,loadSession,supabas
     markPending(null);clear();setNotice('კამპანია და მიმდინარე ვერსია სერვერზე დადასტურებულია.');
    }
    setPhase('ready');
-  }catch{
-   if(current()){setPhase('error');setRows([]);setNotice('მოთხოვნა ან მისი მიმდინარე ვერსია ვერ დადასტურდა. განაახლეთ მონაცემები.');}
+  }catch(err){
+   if(current()){setPhase('error');setRows([]);setNotice(err?.code==='PT409'?'კამპანიის ვერსია შეიცვალა. გადაამოწმეთ შედეგი და განახლებული ვერსია; ძველი მოთხოვნა ავტომატურად არ განმეორდება.':'მოთხოვნა ან მისი მიმდინარე ვერსია ვერ დადასტურდა. განაახლეთ მონაცემები.');}
   }finally{if(lock.current===token)lock.current=null;}
  }
  useEffect(()=>{live.current=true;generation.current++;void run();return()=>{live.current=false;generation.current++;lock.current=null;};},[adminUserId,supabaseUrl,apiKey]);

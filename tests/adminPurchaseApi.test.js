@@ -31,3 +31,6 @@ test('variant history and create confirmation verify exact variant identity',()=
  assert.equal(purchaseOperationConfirmed(op,vorder),true);
  assert.equal(purchaseOperationConfirmed({...op,lines:[{...op.lines[0],variant_id:'blue'}]},vorder),false);
 });
+
+
+test('only explicit PT409 is classified as revision conflict; no automatic retry',async()=>{for(const [status,body,conflict] of [[409,{code:'PT409'},true],[409,{code:'23505'},false],[500,{code:'PT409'},false],[409,null,false]]){let calls=0;const api=fixture(async()=>{calls++;return {ok:false,status,json:async()=>body};});await assert.rejects(api.transition({...order,status:'draft'},'approve'),err=>(err.code==='PT409')===conflict);assert.equal(calls,1);}});

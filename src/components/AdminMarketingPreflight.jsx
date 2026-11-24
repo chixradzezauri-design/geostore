@@ -24,7 +24,7 @@ export default function AdminMarketingPreflight({campaign,adminUserId,loadSessio
    setHistory(list);
    if(op){mark(null);setNotice('შემოწმება ისტორიაში დადასტურებულია. გაგზავნა კვლავ გამორთულია.');}
    setPhase('ready');
-  }catch{if(current()){setHistory(null);setPhase('error');setNotice('შემოწმების შედეგი ან ისტორია ვერ დადასტურდა.');}}
+  }catch(err){if(current()){setHistory(null);setPhase('error');setNotice(err?.code==='PT409'?'კამპანიის ვერსია შეიცვალა. გადაამოწმეთ ისტორია და განაახლეთ კამპანია ახალი შემოწმების დაწყებამდე.':'შემოწმების შედეგი ან ისტორია ვერ დადასტურდა.');}}
   finally{if(lock.current===token)lock.current=null;}
  }
  useEffect(()=>{live.current=true;generation.current++;void run();return()=>{live.current=false;generation.current++;lock.current=null;};},[campaign.id,campaign.revision,adminUserId,supabaseUrl,apiKey]);

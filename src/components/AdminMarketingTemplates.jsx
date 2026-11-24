@@ -24,7 +24,7 @@ export default function AdminMarketingTemplates({adminUserId,loadSession,supabas
    if(!current())return;
    if(op&&!templateConfirmed(exact,op))throw Error('Template revision mismatch');
    setRows(listing.templates);setTotal(listing.total);if(op){mark(null);clear();setNotice('შაბლონი სერვერზე დადასტურებულია.');}setPhase('ready');
-  }catch{if(current()){setRows([]);setPhase('error');setNotice('შაბლონები ან მოთხოვნა ვერ დადასტურდა.');}}
+  }catch(err){if(current()){setRows([]);setPhase('error');setNotice(err?.code==='PT409'?'შაბლონის ვერსია შეიცვალა. გადაამოწმეთ შედეგი და განახლებული ვერსია; ძველი მოთხოვნა ავტომატურად არ განმეორდება.':'შაბლონები ან მოთხოვნა ვერ დადასტურდა.');}}
   finally{if(lock.current===token)lock.current=null;}
  }
  useEffect(()=>{live.current=true;generation.current++;void run();return()=>{live.current=false;generation.current++;lock.current=null;};},[adminUserId,supabaseUrl,apiKey]);

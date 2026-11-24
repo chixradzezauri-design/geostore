@@ -17,3 +17,6 @@ test('customer withdrawal binds authenticated identity and exact event; owner ag
 });
 
 test('new opt-in requires explicit last observed event; withdrawal needs no version',async()=>{let calls=0;const api=createMarketingApi(cfg(id,async(url,opts)=>{calls++;const body=JSON.parse(opts.body);assert.equal(body.p_expected_event,event);assert.equal(body.p_opted_in,true);return {ok:true,json:async()=>({...withdrawn,status:'opted_in',acknowledged_event_id:event,idempotent_replay:false})};}));await assert.rejects(api.setConsent(event,true));await assert.rejects(api.setConsent(event,false,event));assert.equal((await api.setConsent(event,true,event)).status,'opted_in');assert.equal(calls,1);});
+
+
+test('consent revision conflict requires exact HTTP and SQL code and never retries',async()=>{for(const [status,body,conflict] of [[409,{code:'PT409'},true],[409,{code:'23505'},false],[500,{code:'PT409'},false],[409,null,false]]){let calls=0;const api=createMarketingApi(cfg(id,async()=>{calls++;return {ok:false,status,json:async()=>body};}));await assert.rejects(api.setConsent(event,true,null),err=>(err.code==='PT409')===conflict);assert.equal(calls,1);}});

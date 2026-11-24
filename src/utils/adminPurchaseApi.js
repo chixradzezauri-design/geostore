@@ -1,3 +1,4 @@
+import {isRevisionConflict,revisionConflictError} from './revisionConflict.js';
 import {createAdminSupplierApi} from './adminSupplierApi.js';
 import {normalizePayment,verifyPaymentSnapshot,verifyPaymentAcknowledgement,validCorrectionReason,verifyCorrectionAcknowledgement,verifySupplierBalance} from './adminPurchasePayments.js';
 const OWNER='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
@@ -62,7 +63,8 @@ export function createAdminPurchaseApi({loadSession,expectedUserId,supabaseUrl,a
   const {data,error}=await loadSession(),s=data?.session;
   if(error||!isCurrent()||s?.user?.id!==OWNER||s.user.app_metadata?.role!=='admin'||typeof s.access_token!=='string'||!s.access_token.trim())throw Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
   const response=await fetchImpl(supabaseUrl.replace(/\/$/,'')+'/rest/v1/'+path,{method,headers:{apikey:apiKey,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
-  if(!isCurrent()||!response.ok)throw Error('შესყიდვის მოთხოვნა ვერ დადასტურდა (HTTP '+response.status+').');
+  if(!isCurrent())throw Error('სესია შეიცვალა.');
+  if(!response.ok){const conflict=await isRevisionConflict(response);if(!isCurrent())throw Error('სესია შეიცვალა.');if(conflict)throw revisionConflictError('ჩანაწერის ვერსია შეიცვალა. გადაამოწმეთ ისტორია, განაახლეთ მონაცემები და მხოლოდ შემდეგ დაიწყეთ ახალი მოქმედება.');throw Error('შესყიდვის მოთხოვნა ვერ დადასტურდა (HTTP '+response.status+').');}
   const result=await response.json();
   if(!isCurrent())throw Error('სესია შეიცვალა.');
   return result;

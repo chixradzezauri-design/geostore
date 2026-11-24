@@ -1,3 +1,4 @@
+import {isRevisionConflict,revisionConflictError} from './revisionConflict.js';
 import {verifyCampaignList,campaignRequest,verifyCampaignAck} from './marketingCampaigns.js';
 import {verifyTemplateList,templateRequest,verifyTemplateAck} from './marketingTemplates.js';
 import {preflightRequest,verifyPreflightAck,verifyPreflightHistory} from './marketingPreflight.js';
@@ -24,7 +25,8 @@ export function createMarketingApi({expectedUserId,loadSession,supabaseUrl,apiKe
   const {data,error}=await loadSession(),s=data?.session;
   if(error||!isCurrent()||s?.user?.id!==expectedUserId||typeof s.access_token!=='string'||!s.access_token.trim()||(owner&&s.user.app_metadata?.role!=='admin'))throw Error('Session unavailable');
   const response=await fetchImpl(supabaseUrl.replace(/\/$/,'')+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:apiKey,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
-  if(!isCurrent()||!response.ok)throw Error('Request unavailable');
+  if(!isCurrent())throw Error('Session changed');
+  if(!response.ok){const conflict=await isRevisionConflict(response);if(!isCurrent())throw Error('Session changed');if(conflict)throw revisionConflictError('Revision conflict');throw Error('Request unavailable');}
   const result=await response.json();if(!isCurrent())throw Error('Session changed');return result;
  }
  return {
