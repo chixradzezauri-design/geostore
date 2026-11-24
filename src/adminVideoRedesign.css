@@ -788,7 +788,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendor-card > div:last-child > button {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendor-card > div:last-child > button:not(.admin-workspace-secondary-action) {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
@@ -910,4 +910,270 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-viewport-picker {
     grid-template-columns: minmax(0,1fr);
   }
+}
+
+/* Workspace audit 01 — grouped navigation and context-aware header.
+   Existing layout tokens and permission-filtered module list stay authoritative. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
+  display:none; color:var(--av-muted)!important; font-size:11px!important;
+  font-weight:600!important; line-height:1.5!important; letter-spacing:normal!important;
+  white-space:normal; overflow-wrap:break-word; padding:10px 6px 3px; margin:0!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] { text-align:start!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-nav-item="true"] > div > span { overflow-wrap:anywhere!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:first-child h2 { overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:last-child > div { gap:6px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:last-child > div > span:first-child { flex-shrink:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:last-child > div > span:last-child { min-width:0;overflow-wrap:anywhere; }
+@media(min-width:1024px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group { display:block!important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group:first-child { padding-top:3px; }
+}
+@media(min-width:768px) and (max-width:1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group { display:none!important; }
+}
+
+/* Workspace audit 02 — readable operational overview, preserving editor colors and card geometry. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div { align-items:center; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero h3 { line-height:1.35!important;overflow-wrap:break-word; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi { display:flex!important;flex-direction:column;align-items:stretch;min-width:0;transform:none!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child { min-height:2.8em;line-height:1.4!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > span { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong { line-height:1.25!important;font-variant-numeric:tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:last-child { margin-top:auto!important;padding-top:6px;line-height:1.5!important;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child { flex-wrap:wrap;align-items:center; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > div { flex:1 1 140px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > button { min-height:44px!important;max-width:100%;white-space:normal!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel button { min-height:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-workspace-command-row-title { white-space:normal!important;overflow-wrap:anywhere;line-height:1.45; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) > span:first-child { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-workspace-command-notice { line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center :is(button,[role="button"]):focus-visible { outline:2px solid var(--av-focus)!important;outline-offset:2px!important; }
+@media(max-width:640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div { align-items:stretch; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child { min-height:3.9em; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) { flex-wrap:wrap;gap:6px!important; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) > span:first-child { flex:1 1 135px; }
+}
+
+/* Workspace audit 03 — orders: reliable data states and compact operational controls.
+   Owner-defined module/element geometry and colors remain authoritative. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-search { min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-search:has(.admin-workspace-order-clear) input { padding-inline-end:48px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-order-clear { position:absolute;inset-inline-end:3px;top:50%;transform:translateY(-50%);display:grid;place-items:center;min-width:44px;min-height:44px;color:var(--av-muted);background:transparent;border:0;cursor:pointer; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-result { color:var(--av-muted)!important;line-height:1.5;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-notice { line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-empty { display:grid;justify-items:center;gap:12px;min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-reset { min-height:44px;padding:8px 14px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,10px);color:var(--av-text);background:var(--av-inset);white-space:normal; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header > button:disabled { opacity:.55!important;cursor:not-allowed!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-heading > div { min-width:0;max-width:100%;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-heading > div:last-child { font-variant-numeric:tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-customer > p { min-width:0;line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[aria-pressed="true"] { outline:1px solid currentColor;outline-offset:-1px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-pagination button { min-height:44px!important;min-width:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > div { min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > div > div:last-child { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > button { min-width:44px!important;min-height:44px!important;flex-shrink:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal :is(.admin-order-customer,.admin-order-item-info,.admin-order-financials,.admin-order-note-editor) { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-financials .flex > :first-child { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-financials .flex > :last-child { font-variant-numeric:tabular-nums;max-width:50%;text-align:end;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-note-controls input { min-width:0;min-height:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-order-note-controls,.admin-order-detail-footer) > button { min-height:44px!important;white-space:normal!important; }
+@media(max-width:640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item { gap:10px!important; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info { width:100%; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price { flex-wrap:wrap;gap:6px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-note-controls input { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
+}
+
+/* Workspace audit 04 — complete product content editor and visible gallery priority. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-content { min-width:0;background:var(--av-inset);border:1px solid var(--av-border);border-radius:var(--admin-vd-cardRadius-active,14px);padding:clamp(12px,2vw,20px); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field { display:grid;gap:6px;min-width:0;color:var(--av-text);line-height:1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field :is(input,textarea) { width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--av-border);border-radius:var(--admin-vd-inputRadius-active,10px);background:var(--av-surface);color:var(--admin-vd-inputText-active,var(--av-text)); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field textarea { resize:vertical;min-height:100px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field small { color:var(--av-muted);overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-featured { min-height:44px;line-height:1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-help { line-height:1.5;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,116px),1fr));gap:12px;min-width:0;padding-top:6px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-card { display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-card .admin-product-gallery-thumbnail { width:100%!important;height:auto!important;aspect-ratio:1; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-card .admin-product-gallery-remove { top:3px!important;right:3px!important;min-width:44px!important;min-height:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-primary,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-select { display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,8px);text-align:center;line-height:1.4;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-primary { color:var(--av-nav-active-text);background:var(--av-nav-active-bg); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-select,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-reset { background:var(--av-inset);color:var(--av-text);cursor:pointer; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-reset { min-height:44px;margin-top:10px;padding:8px 12px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,8px); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-pagination button { min-height:44px!important;min-width:44px!important; }
+@media(max-width:767px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field :is(input,textarea) { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
+}
+
+/* Workspace audit 05 — inventory history and replenishment discovery. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-filter-state,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters { display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;padding:10px;border:1px solid var(--av-border);border-radius:var(--admin-vd-cardRadius-active,12px);background:var(--av-inset); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-filter-state > span,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > span { min-width:0;flex:1 1 160px;overflow-wrap:anywhere;color:var(--av-muted);line-height:1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > label { color:var(--av-text);line-height:1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > select { flex:1 1 160px;min-width:0;min-height:44px;padding:8px 12px;border:1px solid var(--av-border);border-radius:var(--admin-vd-inputRadius-active,10px);color:var(--admin-vd-inputText-active,var(--av-text));background:var(--av-surface); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-filter-state > button,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > button { min-height:44px;padding:8px 12px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,10px);color:var(--av-text);background:var(--av-surface);white-space:normal;cursor:pointer; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-hint { color:var(--av-muted);line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-name { white-space:normal!important;overflow-wrap:anywhere;line-height:1.45; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-inventory-movement-row td { vertical-align:top; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-inventory-movement-row td:nth-child(2) > span { overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-product > span { max-width:100%;white-space:normal!important;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-save button { min-height:44px!important;white-space:normal!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-inventory-panel nav button { min-width:44px!important;min-height:44px!important; }
+@media(max-width:767px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > :is(label,select,span) { flex-basis:100%; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > select { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-filter-state > button,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > button { width:100%; }
+}
+
+/* Workspace audit 06 — category management */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select,button:not(.admin-video-category-actions > button)) { min-width: 0; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select,.admin-category-card button:not(.admin-video-category-actions > button)) { min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(h4,h5,p) { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-subcategory-list { padding-left: 8px; }
+}
+
+/* Workspace audit 07 — finance and calculator */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-analytics,.admin-expenses,.admin-profit-calculator) { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-analytics-note,.admin-finance-breakdown-row,.admin-finance-recent-row,.admin-profitability-row) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-note { display: inline-block; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-calculator-results > div,.admin-finance-breakdown-row,.admin-finance-recent-row,.admin-profitability-heading,.admin-profitability-results) { flex-wrap: wrap; gap: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results b { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-calculator-fields,.admin-expense-form) :is(input,select) { min-width: 0; min-height: 44px; }
+@media (max-width: 480px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-field-grid { grid-template-columns: minmax(0,1fr); }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-calculator-fields,.admin-expense-form) :is(input,select) { font-size: 16px; }
+}
+
+/* Workspace audit 08 — staff management */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(input:not([type="checkbox"]),select,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(p,strong,span,h3) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label { min-width: 0; min-height: 44px; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(input:not([type="checkbox"]),select) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-list-panel > div:first-child { flex-wrap: wrap; }
+}
+
+/* Workspace audit 09 — CRM */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel :is(input,select,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-card :is(p,h4,h5) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel :is(input,select) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-crm-filters > div { flex-basis: 100%; }
+}
+
+/* Workspace audit 10 — support and message history */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(input,select,textarea,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(p,h3,.admin-support-ticket-meta span) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel button:disabled { opacity: .6; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(input,select,textarea) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-support-filters > div { flex-basis: 100%; }
+}
+
+/* Workspace audit 11 — promotions, banners and coupons */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) :is(input,select,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-card,.admin-coupon-card) :is(h4,p) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) :is(input,select) { font-size: 16px; }
+}
+
+/* Workspace audit 12 — vendors, activity and broadcasts */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendors-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) :is(input,textarea,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendor-card,.admin-audit-log-row,.admin-broadcasts-panel) :is(h4,p,span) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendors-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) :is(input,textarea) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-log-tools > div { flex-basis: 100%; }
+}
+
+/* Workspace audit 13 — financial assistant and settings */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) :is(input,textarea,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-bubble { overflow-wrap: anywhere; white-space: pre-wrap; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) :is(input,textarea) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-composer { flex-direction: column; }
+}
+
+/* Workspace audit 14 — visual studios, only editor chrome */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-storefront-visual-editor,.admin-visual-editor-panel) { min-width: 0; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-visual-editor-controls,.admin-studio-group) { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-visual-editor-controls,.admin-studio-group) :is(input:not([type="checkbox"]):not([type="range"]):not([type="color"]):not([type="file"]),select,textarea) { min-width: 0; max-width: 100%; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-visual-editor-controls,.admin-studio-group) :is(input:not([type="checkbox"]):not([type="range"]):not([type="color"]):not([type="file"]),select,textarea) { font-size: 16px; }
+}
+
+/* Workspace audit 15 — shared polish for new workspace controls.
+   Scope to actual workspace, not customer storefront or editor preview styles.
+   Do not change persisted design tokens or business operations. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > :not([hidden]) ~ :not([hidden]) {
+  margin-block-start: var(--admin-vd-sectionGap-active, 16px);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(input,select,textarea)[id^="admin-workspace-"] {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-height: 44px;
+  border-radius: var(--admin-vd-inputRadius-active, 12px);
+  color: var(--admin-vd-inputText-active, var(--av-text));
+  background: var(--av-inset);
+  border-color: var(--av-border);
+  font-size: var(--admin-vd-inputFontSize-active, 13px);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(input,textarea)[id^="admin-workspace-"]::placeholder { color: var(--av-muted); opacity: 1; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(input,select,textarea)[id^="admin-workspace-"]:focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-workspace-secondary-action,.admin-workspace-danger-action):focus-visible {
+  outline: max(2px, var(--admin-vd-inputFocusRingWidth-active, 2px)) solid var(--av-focus) !important;
+  outline-offset: 2px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendor-card,.admin-banner-card) .admin-workspace-secondary-action {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 auto !important;
+  width: auto !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--av-border) !important;
+  border-radius: var(--admin-vd-buttonRadius-active, 10px);
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: max(12px, var(--admin-vd-buttonFontSize-active, 13px));
+  white-space: normal !important;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendor-card,.admin-banner-card) .admin-workspace-danger-action {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px !important;
+  min-height: 44px !important;
+  width: 44px !important;
+  background: #351c2a !important;
+  border: 1px solid #704052 !important;
+  color: #ffd4df !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendor-card,.admin-banner-card) > div:last-child { min-inline-size: 0; flex-wrap: wrap; justify-content: flex-start; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-workspace-secondary-action,.admin-workspace-danger-action) > svg { flex-shrink: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-workspace-secondary-action,.admin-workspace-danger-action):disabled { opacity: .5 !important; cursor: not-allowed !important; }
+@media (max-width: 767px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > :not([hidden]) ~ :not([hidden]) { margin-block-start: var(--admin-vd-video-mobile-sectionGap, clamp(8px, var(--admin-vd-sectionGap-active, 12px), 16px)); }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(input,select,textarea)[id^="admin-workspace-"] { font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-delivery-settings button { min-height: 44px; max-width: 100%; white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-visual-nav-item="true"],.admin-workspace-secondary-action,.admin-workspace-danger-action) { transition: none !important; }
 }

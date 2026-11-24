@@ -20,8 +20,8 @@ test('storefront checkout subtotal includes the same paid add-ons charged by the
 
 test('admin delivery fee persistence uses strict two-decimal validation', () => {
   assert.match(admin, /import \{ parseDeliveryFeeDrafts \} from '\.\.\/utils\/deliveryFeeSafety\.js';/);
-  assert.match(admin, /rows = parseDeliveryFeeDrafts\(deliveryFees\)/);
-  assert.match(admin, /min="0" step="0\.01" onChange=\{e => \{ if \(typeof setDeliveryFees === 'function'\) setDeliveryFees\(\{\.\.\.deliveryFees, tbilisi: e\.target\.value\}\); \}\}/);
-  assert.match(admin, /bigCities: e\.target\.value/);
-  assert.match(admin, /other: e\.target\.value/);
+  assert.match(admin, /rows = parseDeliveryFeeDrafts\(deliveryFeeDraft\)/);
+  assert.match(admin, /min="0" step="0\.01" onChange=\{e => \{ const value = e\.target\.value; setDeliveryFeeDraft\(previous => \(\{ \.\.\.\(previous \|\| deliveryFees\), tbilisi: value \}\)\); \}\}/);
+  assert.match(admin, /bigCities: value/);
+  assert.match(admin, /other: value/);
 });

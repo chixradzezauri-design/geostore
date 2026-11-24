@@ -13,7 +13,7 @@ test('Stage 37: support replies accept multiline input while retaining guarded s
   assert.match(section, /admin-support-reply-input/);
   assert.match(section, /onChange=\{e => setReplyInputs/);
   assert.match(section, /handleSendTicketReply\(t\.id\)/);
-  assert.match(section, /disabled=\{!!replySending\[String\(t\.id\)\] \|\| !String\(replyInputs\[t\.id\] \|\| ''\)\.trim\(\)\}/);
+  assert.match(section, /disabled=\{!supportTicketsReady \|\| !!supportTicketsError \|\| !!supportStatusBusy\[String\(t\.id\)\] \|\| !!replySending\[String\(t\.id\)\] \|\| !String\(replyInputs\[t\.id\] \|\| ''\)\.trim\(\)\}/);
   for (const state of ['ღია', 'მუშავდება', 'მოგვარებული'])
     assert.ok(jsx.includes("handleUpdateTicketStatus(t.id, '" + state + "')"), state);
 });

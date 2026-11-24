@@ -533,10 +533,16 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
 
   // Select mapped elements from the real admin module without triggering its actions.
   useEffect(() => {
+    // Only actual sidebar navigation is exempt, and only outside direct
+    // selection mode. Header publish controls and preview actions stay blocked.
+    const isWorkspaceNavigation = target => !directSelectionMode &&
+      target instanceof Element && Boolean(target.closest(
+        '[data-admin-sidebar="true"] [data-admin-visual-nav-item="true"], [data-admin-sidebar="true"] #geostore-admin-mobile-section'
+      ));
     const handlePreviewClick = event => {
       const target = event.target;
       if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
-      if (!target.closest('.admin-dashboard-shell')) return;
+      if (!target.closest('.admin-dashboard-shell') || isWorkspaceNavigation(target)) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
@@ -557,6 +563,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       }
     };
     const handlePreviewKeydown = event => {
+      if (isWorkspaceNavigation(event.target) || event.key === 'Tab') return;
       if (event.target instanceof Element && event.target.closest('.admin-dashboard-shell') && !event.target.closest('.admin-visual-editor-panel')) {
         event.preventDefault();
         event.stopPropagation();
@@ -1435,6 +1442,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   };
 
   const resetViewport = () => {
+    if (!window.confirm('მიმდინარე მოწყობილობის ხედის ვიზუალური პარამეტრები საწყის მნიშვნელობებზე დაბრუნდეს?')) return;
     commitChange(resetAdminPanelVisualViewport(normalized, viewport));
   };
 
@@ -1505,7 +1513,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <h2 id="admin-visual-editor-title" className="mt-1 text-lg font-black text-white">ადმინ პანელის დიზაინის რედაქტორი</h2>
           <p className="mt-1 text-xs leading-5 text-slate-400">ცვლილებები მყისიერად აისახება პანელზე და ინახება საერთო საცავში, რათა იმავე ადმინ-ანგარიშით ყველა მოწყობილობაზე გამოჩნდეს. მაღაზიის მომხმარებლის მხარეს არ ცვლის.</p>
           <p role="status" aria-live="polite" className={`mt-2 text-[11px] font-semibold ${syncStatus === 'error' || syncStatus === 'conflict' ? 'text-rose-300' : syncStatus === 'saving' || syncStatus === 'loading' ? 'text-amber-200' : 'text-emerald-300'}`}>
-            {syncStatus === 'loading' ? 'საერთო დიზაინი იტვირთება…' : syncStatus === 'saving' ? 'ცვლილებები ყველა მოწყობილობისთვის ინახება…' : syncStatus === 'error' ? 'საერთო შენახვა ვერ მოხერხდა — ცვლილებები ჯერ სხვა მოწყობილობაზე არ გამოჩნდება.' : syncStatus === 'conflict' ? 'კონფლიქტი: სხვა მოწყობილობის უფრო ახალი ვერსია არსებობს.' : 'შენახულია საერთო საცავში — ხელმისაწვდომია ყველა მოწყობილობიდან.'}
+            {syncStatus === 'loading' ? 'საერთო დიზაინი იტვირთება…' : syncStatus === 'saving' ? 'ცვლილებები ყველა მოწყობილობისთვის ინახება…' : syncStatus === 'error' ? 'საერთო შენახვა ვერ მოხერხდა — ცვლილებები ჯერ სხვა მოწყობილობაზე არ გამოჩნდება.' : syncStatus === 'conflict' ? 'კონფლიქტი: სხვა მოწყობილობის უფრო ახალი ვერსია არსებობს.' : syncStatus === 'saved' ? 'შენახულია საერთო საცავში — ხელმისაწვდომია ყველა მოწყობილობიდან.' : 'საერთო შენახვის მდგომარეობა ჯერ არ დადასტურებულა.'}
           </p>
           {syncStatus === 'error' && (
             <button type="button" onClick={onRetrySave} className="mt-2 rounded-lg border border-rose-400/40 px-3 py-1.5 text-[10px] font-bold text-rose-200 transition hover:bg-rose-400/10">
@@ -1515,7 +1523,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           {syncStatus === 'conflict' && (
             <div role="alert" className="mt-2 max-w-xl rounded-xl border border-amber-400/30 bg-amber-400/5 p-3">
               <p className="text-[11px] leading-5 text-amber-100">სხვა მოწყობილობაზე დიზაინი უკვე შეიცვალა. თქვენი მიმდინარე ცვლილებები დაცულია და ავტომატურად არ გადაიწერება.</p>
-              <button type="button" onClick={onReloadRemote} className="mt-2 rounded-lg border border-amber-300/40 px-3 py-1.5 text-[10px] font-bold text-amber-100 transition hover:bg-amber-300/10">
+              <button type="button" onClick={() => { if (window.confirm('ჩაიტვირთოს საერთო ვერსია და გაუქმდეს ამ მოწყობილობის შეუნახავი ცვლილებები?')) onReloadRemote?.(); }} className="mt-2 rounded-lg border border-amber-300/40 px-3 py-1.5 text-[10px] font-bold text-amber-100 transition hover:bg-amber-300/10">
                 საერთო ვერსიის ჩატვირთვა (ჩემი მიმდინარე ცვლილებების გაუქმებით)
               </button>
             </div>

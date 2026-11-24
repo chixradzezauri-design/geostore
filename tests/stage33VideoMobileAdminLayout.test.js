@@ -12,8 +12,11 @@ test('mobile selector and desktop sidebar share one permission-filtered admin mo
   const nav=admin.slice(i,j);
   assert.equal((nav.match(/\{ id: '/g)||[]).length,23);
   assert.match(nav,/\.filter\(tab => canAccessAdminTab\(tab\.id\)\)/);
-  assert.match(admin,/visibleAdminNavigationItems\.map\(tab => \{/);
-  assert.match(admin,/visibleAdminNavigationItems\.map\(tab => \(/);
+  assert.match(nav,/groupAdminWorkspaceNavigation\(visibleAdminNavigationItems\)/);
+  assert.match(nav,/orderedAdminNavigationItems = adminNavigationGroups\.flatMap/);
+  assert.match(admin,/orderedAdminNavigationItems\.map\(tab => \{/);
+  assert.match(admin,/adminNavigationGroups\.map\(group => \(/);
+  assert.match(admin,/group\.items\.map\(tab => <option/);
   assert.match(admin,/value=\{visibleAdminTab\}/);
   assert.match(admin,/onChange=\{\(event\) => setAdminTab\(event\.target\.value\)\}/);
   assert.match(admin,/htmlFor="geostore-admin-mobile-section"/);

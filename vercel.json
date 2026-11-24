@@ -57,7 +57,8 @@
   "git": {
     "deploymentEnabled": {
       "internal-admin-video-redesign-2026-11-24": false,
-      "internal-storefront-video-redesign-2026-11-24": false
+      "internal-storefront-video-redesign-2026-11-24": false,
+      "internal-admin-workspace-audit-2026-11-24": false
     }
   }
 }
