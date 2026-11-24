@@ -62,3 +62,54 @@ export function compareBusinessPeriods({ orders, verified = false, days = 30, no
   return {days,current:a,previous:b,missingDates,
     change:{revenue:delta(a.revenue,b.revenue),orders:delta(a.orders,b.orders),averageOrder:delta(a.averageOrder,b.averageOrder)}};
 }
+
+// Transparent baseline, not a trained model or a statistical confidence interval.
+// Four consecutive complete 7-day windows; include zero-sale days/weeks.
+export function forecastBusinessSales({ orders, verified = false, horizon = 7, now = new Date() } = {}) {
+  if (!verified || !Array.isArray(orders)) return {status:'unverified'};
+  if (![7,30].includes(horizon) || !(now instanceof Date)) return {status:'invalid'};
+  const end=dayOfInstant(now);
+  if (end===null) return {status:'invalid'};
+  const start=end-28*DAY;
+  const weeks=Array.from({length:4},()=>({orders:0,revenueCents:0}));
+  let earliest=null, missingDates=0, missingTotals=0, legacyDates=0;
+  for (const order of orders) {
+    if (!delivered(order)) continue;
+    const day=georgianBusinessDay(getFinancialOrderEventDate(order,true));
+    if (day===null) { missingDates++; continue; }
+    if (day>=end) continue;
+    earliest=earliest===null?day:Math.min(earliest,day);
+    if (day<start) continue;
+    const week=weeks[Math.floor((day-start)/(7*DAY))];
+    week.orders++;
+    if (!(order.status_changed_at || order.statusChangedAt)) legacyDates++;
+    const raw=Object.prototype.hasOwnProperty.call(order,'rawTotalGEL')?order.rawTotalGEL:order.totalGEL??order.total_gel;
+    const value=cents(raw);
+    if (value===null || !Number.isSafeInteger(week.revenueCents+value)) missingTotals++;
+    else week.revenueCents+=value;
+  }
+  const observedOrders=weeks.reduce((sum,week)=>sum+week.orders,0);
+  const activeWeeks=weeks.filter(week=>week.orders>0).length;
+  const detail={observedOrders,activeWeeks,missingDates,missingTotals,legacyDates};
+  if (missingDates || missingTotals || legacyDates) return {status:'data-quality',...detail};
+  // Require evidence of history spanning the training window, and avoid
+  // forecasting from a handful of orders concentrated in one or two weeks.
+  if (earliest===null || earliest>start || observedOrders<12 || activeWeeks<3) return {status:'insufficient',...detail};
+  const totalCents=weeks.reduce((sum,week)=>sum+week.revenueCents,0);
+  if (!Number.isSafeInteger(totalCents)) return {status:'data-quality',...detail,missingTotals:missingTotals+1};
+  const factor=horizon/7;
+  const project=values=>({
+    low:Math.min(...values)*factor,
+    baseline:values.reduce((sum,value)=>sum+value,0)/4*factor,
+    high:Math.max(...values)*factor
+  });
+  const revenue=project(weeks.map(week=>week.revenueCents/100));
+  const projectedOrders=project(weeks.map(week=>week.orders));
+  if (!Object.values(revenue).every(value=>Number.isFinite(value)&&value<=Number.MAX_SAFE_INTEGER/100)) return {status:'data-quality',...detail,missingTotals:missingTotals+1};
+  return {status:'ready',...detail,horizon,
+    historyFrom:new Date(start).toISOString().slice(0,10),
+    historyTo:new Date(end-DAY).toISOString().slice(0,10),
+    forecastFrom:new Date(end).toISOString().slice(0,10),
+    forecastTo:new Date(end+(horizon-1)*DAY).toISOString().slice(0,10),
+    revenue,orders:projectedOrders};
+}

@@ -35,7 +35,7 @@ import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
-import { compareBusinessPeriods } from '../utils/businessPeriodComparison.js';
+import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -1236,6 +1236,7 @@ export default function AdminDashboardPro({
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
   const [businessComparisonDays, setBusinessComparisonDays] = useState(30);
+  const [businessForecastHorizon, setBusinessForecastHorizon] = useState(7);
   const [inventoryMovementRows, setInventoryMovementRows] = useState([]);
   const [inventoryMovementLoading, setInventoryMovementLoading] = useState(false);
   const [inventoryMovementError, setInventoryMovementError] = useState('');
@@ -2859,7 +2860,11 @@ export default function AdminDashboardPro({
   const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError;
   const ordersVerifiedForReports = hasOrdersPermission && ordersReady && !ordersError;
   const verifiedFinanceSnapshot = ordersVerifiedForReports && expensesVerifiedForReports;
-  const businessComparison = useMemo(() => compareBusinessPeriods({ orders, verified: isOwner && ordersVerifiedForReports, days: businessComparisonDays }), [orders, isOwner, ordersVerifiedForReports, businessComparisonDays]);
+  // Existing clock refreshes the reporting date across Tbilisi midnight without
+  // recomputing the ledger every 30 seconds during the same calendar day.
+  const businessReportingDay = georgianBusinessDay(new Date(flashSaleStatusClock).toISOString());
+  const businessComparison = useMemo(() => compareBusinessPeriods({ orders, verified: isOwner && ordersVerifiedForReports, days: businessComparisonDays, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessComparisonDays, businessReportingDay]);
+  const businessForecast = useMemo(() => forecastBusinessSales({ orders, verified: isOwner && ordersVerifiedForReports, horizon: businessForecastHorizon, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessForecastHorizon, businessReportingDay]);
   aiFinanceSnapshotRef.current = { financialOverview, ordersVerifiedForReports, expensesVerifiedForReports, analyticsPeriod };
   const ordersVerifiedForReportsRef = useRef(ordersVerifiedForReports);
   ordersVerifiedForReportsRef.current = ordersVerifiedForReports;
@@ -5857,6 +5862,35 @@ export default function AdminDashboardPro({
                 {businessComparison.current.legacyDates+businessComparison.previous.legacyDates>0 && <p className="text-xs text-amber-200">ძველი შეკვეთების ნაწილზე გამოყენებულია შექმნის თარიღი, რადგან ჩაბარების თარიღი არ არის შენახული.</p>}
               </>}
               <p className="text-xs text-slate-400">ბრუნვა არ არის წმინდა მოგება. ეს შედარება დამოუკიდებელია ზემოთ არჩეული ფინანსური ანგარიშის პერიოდისგან.</p>
+            </section>
+            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-forecast-title">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 id="admin-business-forecast-title" className="text-white text-sm font-black">გაყიდვების საორიენტაციო პროგნოზი</h3>
+                  <p className="text-xs text-slate-400">ბოლო ოთხი სრული 7-დღიანი პერიოდის საშუალო · თბილისის დრო</p>
+                </div>
+                <select aria-label="პროგნოზის პერიოდი" value={businessForecastHorizon} onChange={e => setBusinessForecastHorizon(Number(e.target.value))} className="min-h-11 rounded-xl bg-slate-950 border border-emerald-500/30 px-3 text-white text-sm">
+                  <option value={7}>7 დღე</option><option value={30}>30 დღე</option>
+                </select>
+              </div>
+              {businessForecast.status==='ready' ? <>
+                <p className="text-xs text-slate-400">ისტორია: {businessForecast.historyFrom} — {businessForecast.historyTo} · შეფასება: {businessForecast.forecastFrom} — {businessForecast.forecastTo} · {businessForecast.observedOrders} ჩაბარებული შეკვეთა</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[{key:'revenue',label:'სავარაუდო ბრუნვა',format:v=>v.toFixed(2)+' ₾'},{key:'orders',label:'სავარაუდო ჩაბარებული შეკვეთები',format:v=>v.toFixed(1)}].map(metric=>{
+                    const values=businessForecast[metric.key];
+                    return <div key={metric.key} className="min-w-0 rounded-xl border border-slate-700 p-3 space-y-1">
+                      <p className="text-xs text-slate-400">{metric.label}</p>
+                      <strong className="block text-lg font-black text-white tabular-nums break-words">{metric.format(values.baseline)}</strong>
+                      <p className="text-xs text-slate-300 break-words">ისტორიული დაბალი / მაღალი სცენარი: {metric.format(values.low)} — {metric.format(values.high)}</p>
+                    </div>;
+                  })}
+                </div>
+              </> : <div role="status" className="text-xs text-amber-200 space-y-1">
+                <p>{businessForecast.status==='unverified'?'შეკვეთების სრული ისტორია არ არის დადასტურებული.':businessForecast.status==='data-quality'?'პროგნოზი შეჩერებულია: ისტორიული თანხები ან თარიღები არასრულია.':businessForecast.status==='insufficient'?'პროგნოზისთვის ისტორია ჯერ არასაკმარისია. საჭიროა მინიმუმ 28 დღის ისტორია, 12 ჩაბარებული შეკვეთა და მინიმუმ სამი აქტიური კვირა.':'პროგნოზის პერიოდი ვერ დადასტურდა.'}</p>
+                {businessForecast.status==='insufficient' && <p>ბოლო 28 დღეში: {businessForecast.observedOrders} შეკვეთა · {businessForecast.activeWeeks}/4 აქტიური კვირა.</p>}
+                {businessForecast.status==='data-quality' && <p>უცნობი თარიღები: {businessForecast.missingDates} · არასრული თანხები: {businessForecast.missingTotals} · ჩაბარების თარიღის გარეშე: {businessForecast.legacyDates}</p>}
+              </div>}
+              <p className="text-xs text-slate-400">ეს არის ისტორიული საშუალოს გაგრძელება და არა გარანტირებული გაყიდვა ან მოგება. დაბალი და მაღალი სცენარები ეფუძნება ისტორიულ კვირებს და არ წარმოადგენს სტატისტიკურ სანდოობის ინტერვალს. დღეს მიმდინარე გაყიდვები არ შედის სასწავლო მონაცემებში; აქციები, სეზონურობა და სამომავლო ცვლილებები არ არის მოდელირებული.</p>
             </section>
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
