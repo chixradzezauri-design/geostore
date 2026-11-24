@@ -2014,6 +2014,9 @@ export default function AdminDashboardPro({
   };
 
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
+  const [couponSearch, setCouponSearch] = useState('');
+  const [couponBusy, setCouponBusy] = useState(false);
+  const couponMutationRef = useRef(null);
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
   
   const [newCatName, setNewCatName] = useState('');
@@ -2024,9 +2027,11 @@ export default function AdminDashboardPro({
   const [selectedParentId, setSelectedParentId] = useState('');
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
+  const [editingBannerId, setEditingBannerId] = useState(null);
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა', durationHours: '12' });
   const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
+  const flashSaleMutationRef = useRef(null);
 
   const [flashSaleStatusClock, setFlashSaleStatusClock] = useState(() => Date.now());
   const flashSaleAdminSummary = useMemo(() => {
@@ -2046,6 +2051,7 @@ export default function AdminDashboardPro({
     const endTimes = activeProducts.map(product => Date.parse(product.flashSaleEndsAt));
     return {
       count: activeProducts.length,
+      activeProducts: [...activeProducts].sort((a,b) => Date.parse(a.flashSaleEndsAt) - Date.parse(b.flashSaleEndsAt)),
       nextEndsAt: endTimes.length ? Math.min(...endTimes) : null,
       expiringCount: endTimes.filter(endTime => endTime - now <= 24 * 60 * 60 * 1000).length
     };
@@ -3898,7 +3904,10 @@ export default function AdminDashboardPro({
       return;
     }
 
-    if (isApplyingFlashSale) return;
+    const sessionVersion = adminSessionVersion.current;
+    if (!isOwner || !isCurrentAdminSession(sessionVersion) || isApplyingFlashSale || flashSaleMutationRef.current === sessionVersion) return;
+    if (!window.confirm(`გააქტიურდეს ${percent}% ფასდაკლება კატეგორიაზე „${category}“ ${durationHours} საათით?`)) return;
+    flashSaleMutationRef.current = sessionVersion;
     setIsApplyingFlashSale(true);
 
     try {
@@ -3912,12 +3921,15 @@ export default function AdminDashboardPro({
         })
       });
 
+      if (!isCurrentAdminSession(sessionVersion)) return;
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         throw new Error(errorText || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
       }
 
-      const updatedCount = Number(await response.json());
+      const rawCount = await response.json();
+      if (!isCurrentAdminSession(sessionVersion)) return;
+      const updatedCount = rawCount === null || rawCount === '' || typeof rawCount === 'boolean' ? NaN : Number(rawCount);
       if (!Number.isInteger(updatedCount) || updatedCount < 0) {
         throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
       }
@@ -3944,6 +3956,7 @@ export default function AdminDashboardPro({
         console.warn('Flash sale saved, but product refresh failed:', refreshError);
       }
 
+      if (!isCurrentAdminSession(sessionVersion)) return;
       if (refreshedRows) {
         const savedById = new Map(refreshedRows.map(row => [String(row.id), row]));
         setProducts(prev => (prev || []).map(product => {
@@ -3970,9 +3983,10 @@ export default function AdminDashboardPro({
       setFlashSaleForm({ discountPercent: '', category: 'ყველა', durationHours: '12' });
     } catch (error) {
       console.error('Flash sale update failed:', error);
-      alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error?.message || 'ქსელის შეცდომა'));
+      if (isCurrentAdminSession(sessionVersion)) alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error?.message || 'ქსელის შეცდომა'));
     } finally {
-      setIsApplyingFlashSale(false);
+      if (flashSaleMutationRef.current === sessionVersion) flashSaleMutationRef.current = null;
+      if (isCurrentAdminSession(sessionVersion)) setIsApplyingFlashSale(false);
     }
   };
 
@@ -4245,6 +4259,8 @@ export default function AdminDashboardPro({
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
+    const sessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(sessionVersion) || !hasSettingsPermission || couponMutationRef.current === sessionVersion) return;
     const code = String(couponForm.code || '').trim().toUpperCase().replace(/\s+/g, '');
     const discountText = String(couponForm.discountPercent ?? '').trim();
     const minOrderText = String(couponForm.minOrderGEL ?? '').trim();
@@ -4283,6 +4299,8 @@ export default function AdminDashboardPro({
       status: 'აქტიური'
     };
 
+    couponMutationRef.current = sessionVersion;
+    setCouponBusy(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/store_coupons`, {
         method: 'POST',
@@ -4300,6 +4318,13 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'კუპონის ბაზაში შენახვა ვერ მოხერხდა.');
       }
 
+      const savedRows = await response.json();
+      if (!isCurrentAdminSession(sessionVersion)) return;
+      if (!Array.isArray(savedRows) || savedRows.length !== 1 || String(savedRows[0].id) !== String(newC.id) ||
+          savedRows[0].code !== newC.code || Number(savedRows[0].discount_percent) !== newC.discountPercent ||
+          Number(savedRows[0].min_order_gel) !== newC.minOrderGEL || savedRows[0].active !== true) {
+        throw new Error('კუპონის შენახვის პასუხი ვერ დადასტურდა. განაახლეთ გვერდი.');
+      }
       if (typeof setCoupons === 'function') {
         setCoupons(prev => [newC, ...(prev || []).filter(c => String(c.code || '').trim().toUpperCase() !== newC.code)]);
       }
@@ -4308,12 +4333,19 @@ export default function AdminDashboardPro({
       alert('კუპონი წარმატებით შეინახა ბაზაში.');
     } catch (error) {
       console.error('Coupon creation error:', error);
-      alert(error.message || 'კუპონის შექმნა ვერ მოხერხდა.');
+      if (isCurrentAdminSession(sessionVersion)) alert(error.message || 'კუპონის შექმნა ვერ მოხერხდა.');
+    } finally {
+      if (couponMutationRef.current === sessionVersion) couponMutationRef.current = null;
+      if (isCurrentAdminSession(sessionVersion)) setCouponBusy(false);
     }
   };
 
   const handleDeleteCoupon = async (id) => {
+    const sessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(sessionVersion) || !hasSettingsPermission || couponMutationRef.current === sessionVersion) return;
     if (!window.confirm('ნამდვილად გსურთ ამ კუპონის წაშლა?')) return;
+    couponMutationRef.current = sessionVersion;
+    setCouponBusy(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/store_coupons?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
@@ -4327,7 +4359,8 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'კუპონის წაშლა ვერ მოხერხდა.');
       }
       const deletedRows = await response.json();
-      if (!Array.isArray(deletedRows) || deletedRows.length === 0) {
+      if (!isCurrentAdminSession(sessionVersion)) return;
+      if (!Array.isArray(deletedRows) || deletedRows.length !== 1 || String(deletedRows[0].id) !== String(id)) {
         throw new Error('კუპონი ბაზაში ვერ მოიძებნა ან წაშლის უფლება არ გაქვთ.');
       }
       if (typeof setCoupons === 'function') {
@@ -4336,7 +4369,10 @@ export default function AdminDashboardPro({
       logActivity(`წაიშალა კუპონი (ID: ${id})`);
     } catch (error) {
       console.error('Coupon deletion error:', error);
-      alert(error.message || 'კუპონის წაშლა ვერ მოხერხდა.');
+      if (isCurrentAdminSession(sessionVersion)) alert(error.message || 'კუპონის წაშლა ვერ მოხერხდა.');
+    } finally {
+      if (couponMutationRef.current === sessionVersion) couponMutationRef.current = null;
+      if (isCurrentAdminSession(sessionVersion)) setCouponBusy(false);
     }
   };
 
@@ -4416,6 +4452,7 @@ export default function AdminDashboardPro({
 
   const handleAddBanner = (e) => {
     e.preventDefault();
+    if (!hasSettingsPermission || typeof setBannersList !== 'function') return;
     const title = String(bannerForm.title || '').trim();
     const subtitle = String(bannerForm.subtitle || '').trim();
     const image = String(bannerForm.image || '').trim();
@@ -4432,13 +4469,16 @@ export default function AdminDashboardPro({
         return;
       }
     }
-    if ((Array.isArray(bannersList) ? bannersList.length : 0) >= 20) {
+    const existingBanner = editingBannerId === null ? null : (bannersList || []).find(b => b.id === editingBannerId);
+    if (editingBannerId !== null && !existingBanner) return alert('ბანერი აღარ მოიძებნა. განაახლეთ სია.');
+    if (!existingBanner && (Array.isArray(bannersList) ? bannersList.length : 0) >= 20) {
       alert('ერთდროულად მაქსიმუმ 20 აქტიური ბანერის შენახვა შეიძლება.');
       return;
     }
-    const bannerId = createAdminId('b');
+    const bannerId = existingBanner?.id || createAdminId('b');
     if (!bannerId) return alert(secureIdError);
     const newB = {
+      ...existingBanner,
       id: bannerId,
       title,
       subtitle,
@@ -4446,18 +4486,33 @@ export default function AdminDashboardPro({
       link: String(bannerForm.link || '').trim()
     };
     if (typeof setBannersList === 'function') {
-      setBannersList(prev => [...(prev || []), newB]);
+      setBannersList(prev => existingBanner ? (prev || []).map(b => b.id === bannerId ? newB : b) : [...(prev || []), newB]);
     }
+    setEditingBannerId(null);
     setBannerForm({ title: '', subtitle: '', image: '', link: '' });
-    logActivity(`დაემატა ბანერის მონახაზი: ${newB.title}`);
+    logActivity(`${existingBanner ? 'განახლდა' : 'დაემატა'} ბანერის მონახაზი: ${newB.title}`);
     alert('ბანერის მონახაზი შეინახა. საიტზე გამოსაჩენად დააჭირეთ „ცვლილებების გამოქვეყნება“.');
   };
 
+  const moveBanner = (id, direction) => {
+    if (!hasSettingsPermission || typeof setBannersList !== 'function') return;
+    setBannersList(previous => {
+      const rows = [...(previous || [])];
+      const index = rows.findIndex(b => b.id === id);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= rows.length) return previous;
+      [rows[index], rows[target]] = [rows[target], rows[index]];
+      return rows;
+    });
+  };
+
   const handleDeleteBanner = (id) => {
+    if (!hasSettingsPermission) return;
     if (window.confirm('ნამდვილად გსურთ ამ ბანერის წაშლა?')) {
       if (typeof setBannersList === 'function') {
         setBannersList(prev => (prev || []).filter(b => b.id !== id));
       }
+      if (editingBannerId === id) { setEditingBannerId(null); setBannerForm({ title: '', subtitle: '', image: '', link: '' }); }
       logActivity(`წაიშალა ბანერი (ID: ${id})`);
     }
   };
@@ -7143,7 +7198,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'discounts' || adminContentTab === 'discounts') && (
-          <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
             </h3>
@@ -7156,17 +7211,24 @@ export default function AdminDashboardPro({
                 {flashSaleAdminSummary.nextEndsAt !== null && (
                   <p>უახლოესი დასრულება: {new Date(flashSaleAdminSummary.nextEndsAt).toLocaleString('ka-GE')}</p>
                 )}
+                <p>24 საათში სრულდება: {flashSaleAdminSummary.expiringCount}</p>
+                <details className="text-xs"><summary className="cursor-pointer py-2 font-bold">აქტიური პროდუქტების ნახვა</summary>
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {flashSaleAdminSummary.activeProducts.map(product => <div key={product.id} className="flex flex-wrap justify-between gap-2 border-t border-slate-700 pt-2"><span className="min-w-0 break-words">{product.name || product.title || product.id}</span><span>{Number(product.oldPriceGEL).toFixed(2)} ₾ → {Number(product.priceGEL).toFixed(2)} ₾ · {new Date(product.flashSaleEndsAt).toLocaleString('ka-GE')}</span></div>)}
+                  </div>
+                </details>
               </div>
             )}
+            <p className="text-xs text-slate-300">სტატისტიკა ასახავს ჩატვირთულ პროდუქტებს. მოქმედება ცვლის ფასებს სერვერზე; საბოლოო რაოდენობას სერვერი ადასტურებს.</p>
             <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
               <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">ფასდაკლება პროცენტულად (%)</label>
-                  <input type="number" placeholder="მაგ: 20" required min="0.01" max="99.99" step="0.01" inputMode="decimal" value={flashSaleForm.discountPercent} onChange={e => setFlashSaleForm({...flashSaleForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <label htmlFor="admin-workspace-flash-percent" className="text-slate-300 font-bold">ფასდაკლება პროცენტულად (%)</label>
+                  <input id="admin-workspace-flash-percent" disabled={isApplyingFlashSale} type="number" placeholder="მაგ: 20" required min="0.01" max="99.99" step="0.01" inputMode="decimal" value={flashSaleForm.discountPercent} onChange={e => setFlashSaleForm({...flashSaleForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">კატეგორია</label>
-                  <select value={flashSaleForm.category} onChange={e => setFlashSaleForm({...flashSaleForm, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                  <label htmlFor="admin-workspace-flash-category" className="text-slate-300 font-bold">კატეგორია</label>
+                  <select id="admin-workspace-flash-category" disabled={isApplyingFlashSale} value={flashSaleForm.category} onChange={e => setFlashSaleForm({...flashSaleForm, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
                     <option value="ყველა">ყველა კატეგორია</option>
                     {safeCategories.map(cat => (
                       <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -7174,8 +7236,8 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">აქციის ხანგრძლივობა</label>
-                  <select value={flashSaleForm.durationHours} onChange={e => setFlashSaleForm({...flashSaleForm, durationHours: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                  <label htmlFor="admin-workspace-flash-duration" className="text-slate-300 font-bold">აქციის ხანგრძლივობა</label>
+                  <select id="admin-workspace-flash-duration" disabled={isApplyingFlashSale} value={flashSaleForm.durationHours} onChange={e => setFlashSaleForm({...flashSaleForm, durationHours: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
                     <option value="1">1 საათი</option>
                     <option value="3">3 საათი</option>
                     <option value="6">6 საათი</option>
@@ -7313,33 +7375,44 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'banners' || adminContentTab === 'banners') && (
-          <div className="admin-banners space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-banners space-y-4">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Megaphone className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.bannersCreateTitle}
+                <Megaphone className="w-5 h-5 text-emerald-400" /> {editingBannerId !== null ? "ბანერის რედაქტირება" : adminVisualDesign.content.bannersCreateTitle}
               </h3>
               <form onSubmit={handleAddBanner} className="admin-banner-form space-y-4 text-xs">
                 <div className="admin-banner-fields grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <input type="text" placeholder="სათაური" required maxLength={120} value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="text" placeholder="ქვესათაური / აღწერა" maxLength={240} value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" aria-label="ბანერის სათაური" placeholder="სათაური" required maxLength={120} value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" aria-label="ბანერის აღწერა" placeholder="ქვესათაური / აღწერა" maxLength={240} value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                <input type="text" placeholder="ბანერის ფოტოს URL (HTTP/HTTPS)" maxLength={2048} value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{adminVisualDesign.content.bannersSubmitLabel}</button>
+                <input type="text" aria-label="ბანერის ფოტოს ბმული" placeholder="ბანერის ფოტოს URL (HTTP/HTTPS)" maxLength={2048} value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <p className="text-xs text-slate-300">მაქსიმუმ 20 ბანერი. ფოტო: HTTP/HTTPS ბმული. ცვლილებები ჯერ მონახაზშია.</p>
+                <div className="flex flex-wrap gap-2">
+                {editingBannerId !== null && <button type="button" onClick={() => { setEditingBannerId(null); setBannerForm({ title: '', subtitle: '', image: '', link: '' }); }} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">გაუქმება</button>}
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{editingBannerId !== null ? "მონახაზის განახლება" : adminVisualDesign.content.bannersSubmitLabel}</button>
+                </div>
               </form>
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.bannersListTitle} ({bannersList?.length || 0})</h3>
+              <p className="text-xs text-slate-300">თანმიმდევრობა და რედაქტირება შეინახეთ საერთო მონახაზით, შემდეგ გამოაქვეყნეთ.</p>
+              {!(bannersList || []).length && <p className="text-xs text-slate-400">ბანერები ჯერ არ არის.</p>}
               <div className="admin-banner-list grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {(bannersList || []).map(b => (
-                  <div key={b.id} className="admin-banner-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs gap-3 shadow-inner">
+                {(bannersList || []).map((b, index) => (
+                  <div key={b.id} className="admin-banner-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col items-stretch text-xs gap-3">
                     <div className="flex items-center gap-3.5">
                       <img src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
-                        <h4 className="font-black text-white text-sm">{b.title}</h4>
+                        <h4 className="font-black text-white text-sm break-words">{index + 1}. {b.title}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
                       </div>
                     </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" disabled={index === 0} aria-label={`ბანერის ზემოთ აწევა: ${b.title}`} onClick={() => moveBanner(b.id, -1)} className="rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronUp className="w-4 h-4" /></button>
+                      <button type="button" disabled={index === (bannersList || []).length - 1} aria-label={`ბანერის ქვემოთ ჩამოწევა: ${b.title}`} onClick={() => moveBanner(b.id, 1)} className="rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronDown className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => { setEditingBannerId(b.id); setBannerForm({ title: b.title || "", subtitle: b.subtitle || "", image: b.image || "", link: b.link || "" }); }} className="rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
                     <button type="button" aria-label={`ბანერის წაშლა: ${b.title}`} onClick={() => handleDeleteBanner(b.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -7582,28 +7655,32 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'coupons' || adminContentTab === 'coupons') && (
-          <div className="admin-coupons-panel space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-coupons-panel space-y-4">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Tag className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.couponsCreateTitle}
               </h3>
               <form onSubmit={handleCreateCoupon} className="admin-coupon-form grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
-                <input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
-                <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="0.01" max="100" step="0.01" inputMode="decimal" value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" max="1000000000" step="0.01" inputMode="decimal" value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{adminVisualDesign.content.couponsSubmitLabel}</button>
+                <input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} disabled={couponBusy} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
+                <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="0.01" max="100" step="0.01" inputMode="decimal" disabled={couponBusy} value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" max="1000000000" step="0.01" inputMode="decimal" disabled={couponBusy} value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <button type="submit" disabled={couponBusy} aria-busy={couponBusy} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{couponBusy ? "მუშავდება…" : adminVisualDesign.content.couponsSubmitLabel}</button>
               </form>
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.couponsListTitle} ({coupons?.length || 0})</h3>
+              <p className="text-xs text-slate-300">ნაჩვენებია ჩატვირთული აქტიური კუპონები. მინიმუმი ეხება პროდუქციის ჯამს.</p>
+              <div className="flex flex-wrap gap-2 items-end"><div className="min-w-0 flex-1"><label htmlFor="admin-workspace-coupon-search" className="block text-xs text-slate-300 mb-1">კუპონის კოდი</label><input id="admin-workspace-coupon-search" type="search" value={couponSearch} onChange={e => setCouponSearch(e.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" placeholder="კოდის ძიება" /></div>{couponSearch && <button type="button" onClick={() => setCouponSearch('')} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}</div>
+              {!(coupons || []).some(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())) && <p className="text-xs text-slate-400">კუპონი ვერ მოიძებნა.</p>}
               <div className="admin-coupon-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {(coupons || []).map(c => (
+                {(coupons || []).filter(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())).map(c => (
                   <div key={c.id} className="admin-coupon-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
                     <div>
                       <h4 className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
                       <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: {c.discountPercent}%</p>
+                      <p className="text-xs text-slate-300 mt-1">მინიმუმი: {Number(c.minOrderGEL || 0).toFixed(2)} ₾</p>
                     </div>
-                    <button type="button" aria-label={`კუპონის წაშლა: ${c.code}`} onClick={() => handleDeleteCoupon(c.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                    <button type="button" disabled={couponBusy} aria-label={`კუპონის წაშლა: ${c.code}`} onClick={() => handleDeleteCoupon(c.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
               </div>

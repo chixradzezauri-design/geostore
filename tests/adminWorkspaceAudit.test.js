@@ -77,3 +77,9 @@ test('workspace audit 10 confirms ticket status updates and preserves reply draf
  for(const term of ['admin-workspace-support-search','admin-workspace-support-status','visibleSupportTickets.map','supportTicketsReady','supportStatusInFlight.current.has(key)','rows.length !== 1 || String(rows[0].id) !== key','rows[0].status !== newStatus','String(prev[ticketId] || \'\').trim() === replyText','add_support_ticket_message_idempotent','admin-workspace-legacy-search','filteredLegacyMessages.map','fetchLegacyMessages({ loadMore: true })','mark_support_ticket_messages_read']) assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 10'));
 });
+
+test('workspace audit 11 verifies coupon writes and keeps banner changes in draft',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['couponMutationRef.current === sessionVersion','savedRows[0].code !== newC.code','String(deletedRows[0].id) !== String(id)','admin-workspace-coupon-search','flashSaleAdminSummary.activeProducts.map','flashSaleMutationRef.current === sessionVersion','editingBannerId','moveBanner(b.id, -1)','moveBanner(b.id, 1)','setBannersList(prev => existingBanner','onSubmit={handleAddBanner}','onSubmit={handleCreateCoupon}','admin_apply_flash_sale']) assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 11'));
+});

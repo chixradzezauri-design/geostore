@@ -1073,3 +1073,11 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(input,select,textarea) { font-size: 16px; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-support-filters > div { flex-basis: 100%; }
 }
+
+/* Workspace audit 11 — promotions, banners and coupons */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) :is(input,select,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-card,.admin-coupon-card) :is(h4,p) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) :is(input,select) { font-size: 16px; }
+}
