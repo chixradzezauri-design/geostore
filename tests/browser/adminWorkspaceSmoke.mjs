@@ -44,6 +44,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           return req.headers().authorization === 'Bearer ' + accessToken ? respond(owner) : respond({ message: 'Unauthenticated fixture' }, 401);
         }
         if (path === '/auth/v1/logout' && method === 'POST') return route.fulfill({ status: 204 });
+        if (path === '/rest/v1/admin_suppliers' && method === 'GET') return respond([{id:'00000000-0000-4000-8000-000000000001',name:'Fixture supplier',commission:5,is_active:true,revision:1,updated_at:'2026-11-24T12:00:00Z'}]);
         if (path === '/rest/v1/products' && method === 'GET') return respond(stage49FixtureProductRows);
         if (path === '/rest/v1/rpc/admin_list_products' && method === 'POST') return respond(stage49FixtureProductRows);
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
@@ -96,6 +97,19 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await fee.fill('12.50');
           await shell.getByRole('button', { name: 'მონახაზის გაუქმება', exact: true }).click();
           assert.equal(await fee.inputValue(), before, 'Delivery draft cancellation restores the original value');
+        }
+        if (tab === 'vendors') {
+          const supplier = shell.locator('.admin-supplier-workspace');
+          await supplier.locator('[data-supplier-state="ready"]').waitFor({state:'visible'});
+          await supplier.getByRole('button',{name:'სერვერული საკომისიოს შეცვლა: Fixture supplier',exact:true}).click();
+          const commission=supplier.getByRole('spinbutton',{name:'სერვერული საკომისიო'});
+          await commission.fill('12.50');
+          await supplier.getByRole('button',{name:'სერვერული რედაქტირების გაუქმება',exact:true}).click();
+          assert.equal(await commission.inputValue(),'','Cancelling the server supplier draft must not write');
+          await supplier.getByRole('combobox',{name:'სერვერული მომწოდებლის სტატუსი'}).selectOption('archived');
+          assert.equal(await supplier.locator('.admin-supplier-card').count(),0);
+          await supplier.getByRole('combobox',{name:'სერვერული მომწოდებლის სტატუსი'}).selectOption('all');
+          assert.equal(await supplier.locator('.admin-supplier-card').count(),1);
         }
         if (tab === 'users') await page.locator('#admin-workspace-crm-filter').selectOption('vip');
         if (tab === 'support') await page.locator('#admin-workspace-support-status').selectOption('ღია');

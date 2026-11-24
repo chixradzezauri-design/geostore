@@ -37,3 +37,20 @@ test('staged SQL has explicit owner RLS, immutable names and no delete grant',()
  assert.match(sql,/ENABLE ROW LEVEL SECURITY/);assert.match(sql,/REVOKE ALL ON TABLE public.admin_suppliers FROM PUBLIC, anon, authenticated/);
  assert.match(sql,/GRANT UPDATE \(commission, is_active\)/);assert.match(sql,/WITH CHECK/);assert.match(sql,/app_metadata/);assert.doesNotMatch(sql,/GRANT DELETE|FOR DELETE/);
 });
+
+test('supplier API rejects a response parsed after session invalidation',async()=>{
+ let current=true;
+ const api=fixture(async()=>({ok:true,json:async()=>{current=false;return [row];}}),{isCurrent:()=>current});
+ await assert.rejects(api.list(),/სესია შეიცვალა/);
+});
+test('server workspace remains separate from local storage and requires explicit import',()=>{
+ const component=readFileSync(new URL('../src/components/AdminSupplierWorkspace.jsx',import.meta.url),'utf8');
+ const dashboard=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',import.meta.url),'utf8');
+ assert.ok(dashboard.includes("isOwner && visibleAdminTab === 'vendors' && <AdminSupplierWorkspace"));
+ assert.ok(component.includes('planLegacySupplierImport(localRows,rows)'));
+ assert.ok(component.includes('window.confirm('));
+ assert.ok(component.includes("void run('saving',api=>api.create(candidate))"));
+ assert.ok(component.includes('operation.current||'));
+ assert.ok(component.includes('row.revision===editing.revision'));
+ assert.doesNotMatch(component,/localStorage|setVendorsList/);
+});

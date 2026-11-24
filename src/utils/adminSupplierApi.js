@@ -1,4 +1,4 @@
-// Staged supplier API. No calls until wired to an authorized owner workspace.
+// Owner-bound supplier API. The database RLS is the authorization boundary.
 const OWNER='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const commissionValue=value=>{
@@ -53,7 +53,9 @@ export function createAdminSupplierApi({loadSession,expectedUserId,supabaseUrl,a
     const response=await fetchImpl(supabaseUrl.replace(/\/$/,'')+'/rest/v1/admin_suppliers?'+query.toString(),{method,headers:{apikey:apiKey,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
     if(!isCurrent())throw Error('ადმინისტრატორის სესია შეიცვალა.');
     if(!response.ok)throw Error('მომწოდებლის მოთხოვნა ვერ შესრულდა (HTTP '+response.status+').');
-    return verifySupplierRows(await response.json());
+    const payload=await response.json();
+    if(!isCurrent())throw Error('ადმინისტრატორის სესია შეიცვალა.');
+    return verifySupplierRows(payload);
   }
   return {
     async list(){
