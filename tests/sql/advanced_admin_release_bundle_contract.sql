@@ -5,7 +5,75 @@ CREATE SCHEMA auth;
 GRANT USAGE ON SCHEMA private,auth,public TO authenticated,anon;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid; $$;
 CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.jwt',true),''),'{}')::jsonb; $$;
-CREATE TABLE public.products(id text PRIMARY KEY,name text NOT NULL,price_gel numeric NOT NULL,category text,vendor text,stock integer CHECK(stock BETWEEN 0 AND 1000000),variants jsonb DEFAULT '[]',purchase_cost numeric);
+-- Exact live products column types, nullability, defaults and named constraints
+-- captured from pg_catalog (metadata only, never production rows).
+CREATE TABLE public.products (
+ id text NOT NULL,
+ sku text,
+ name text NOT NULL,
+ category text,
+ brand text,
+ vendor text,
+ price_gel numeric NOT NULL,
+ old_price_gel numeric,
+ stock integer DEFAULT 1,
+ image text,
+ description text,
+ available_sizes jsonb DEFAULT '[]'::jsonb,
+ available_colors jsonb DEFAULT '[]'::jsonb,
+ material text,
+ durability text,
+ created_at timestamp with time zone DEFAULT now(),
+ purchase_cost numeric(12,2),
+ gallery jsonb NOT NULL DEFAULT '[]'::jsonb,
+ variants jsonb NOT NULL DEFAULT '[]'::jsonb,
+ tags jsonb NOT NULL DEFAULT '[]'::jsonb,
+ model text,
+ cpu text,
+ ram text,
+ storage text,
+ gpu text,
+ screen_size text,
+ os text,
+ is_featured boolean NOT NULL DEFAULT false,
+ is_published boolean NOT NULL DEFAULT true,
+ flash_sale_started_at timestamp with time zone,
+ flash_sale_ends_at timestamp with time zone,
+ flash_sale_percent numeric(5,2),
+ CONSTRAINT products_available_colors_array_check CHECK (((available_colors IS NULL) OR
+CASE
+    WHEN (jsonb_typeof(available_colors) = 'array'::text) THEN (jsonb_array_length(available_colors) <= 30)
+    ELSE false
+END)),
+ CONSTRAINT products_available_sizes_array_check CHECK (((available_sizes IS NULL) OR
+CASE
+    WHEN (jsonb_typeof(available_sizes) = 'array'::text) THEN (jsonb_array_length(available_sizes) <= 30)
+    ELSE false
+END)),
+ CONSTRAINT products_flash_sale_metadata_valid_check CHECK ((((flash_sale_started_at IS NULL) AND (flash_sale_ends_at IS NULL) AND (flash_sale_percent IS NULL)) OR ((flash_sale_started_at IS NOT NULL) AND (flash_sale_ends_at IS NOT NULL) AND (flash_sale_ends_at > flash_sale_started_at) AND (flash_sale_percent > (0)::numeric) AND (flash_sale_percent < (100)::numeric)))),
+ CONSTRAINT products_gallery_array_check CHECK (
+CASE
+    WHEN (jsonb_typeof(gallery) = 'array'::text) THEN (jsonb_array_length(gallery) <= 10)
+    ELSE false
+END),
+ CONSTRAINT products_old_price_gel_valid_check CHECK (((old_price_gel IS NULL) OR ((old_price_gel > price_gel) AND (old_price_gel <= (1000000000)::numeric) AND (old_price_gel = round(old_price_gel, 2))))),
+ CONSTRAINT products_pkey PRIMARY KEY (id),
+ CONSTRAINT products_price_gel_valid_check CHECK (((price_gel >= (0)::numeric) AND (price_gel <= (1000000000)::numeric) AND (price_gel = round(price_gel, 2)))),
+ CONSTRAINT products_purchase_cost_check CHECK (((purchase_cost IS NULL) OR (purchase_cost >= (0)::numeric))),
+ CONSTRAINT products_purchase_cost_valid_check CHECK (((purchase_cost IS NULL) OR ((purchase_cost >= (0)::numeric) AND (purchase_cost <= (1000000000)::numeric) AND (purchase_cost = round(purchase_cost, 2))))),
+ CONSTRAINT products_stock_nonnegative_check CHECK (((stock IS NULL) OR (stock >= 0))),
+ CONSTRAINT products_stock_valid_check CHECK (((stock IS NULL) OR ((stock >= 0) AND (stock <= 1000000)))),
+ CONSTRAINT products_tags_array_check CHECK (
+CASE
+    WHEN (jsonb_typeof(tags) = 'array'::text) THEN (jsonb_array_length(tags) <= 30)
+    ELSE false
+END),
+ CONSTRAINT products_variants_array_check CHECK (
+CASE
+    WHEN (jsonb_typeof(variants) = 'array'::text) THEN (jsonb_array_length(variants) <= 50)
+    ELSE false
+END)
+);
 REVOKE ALL ON public.products FROM PUBLIC,anon,authenticated;
 CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz,created_at timestamptz DEFAULT now(),banned_until timestamptz,raw_app_meta_data jsonb DEFAULT '{}',is_anonymous boolean DEFAULT false,deleted_at timestamptz);
 REVOKE ALL ON auth.users FROM PUBLIC,anon,authenticated;
@@ -133,3 +201,46 @@ BEGIN
 END $test$;
 RESET ROLE;
 \echo 'PASS exact eight-source atomic candidate in one disposable PostgreSQL database'
+
+-- Roll back isolated synthetic edge cases; do not pollute subsequent HTTP fixtures.
+BEGIN;
+INSERT INTO public.products(id,name,price_gel,vendor,stock,variants,purchase_cost) VALUES
+ ('parity-null-stock','Null stock fixture',20,'Parity fixture supplier',NULL,'[]',3),
+ ('parity-aggregate','Aggregate boundary fixture',25,'Parity fixture supplier',0,
+ '[{"id":"v","name":"Red S","variantType":"size_color","stock":999999,"priceGEL":25},{"id":"w","name":"Blue M","variantType":"size_color","stock":1,"priceGEL":30}]',9);
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET LOCAL request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE supplier uuid; purchase uuid:=gen_random_uuid(); line_id uuid; receipt uuid:=gen_random_uuid();
+BEGIN
+ INSERT INTO public.admin_suppliers(name) VALUES('Parity fixture supplier') RETURNING id INTO supplier;
+ BEGIN
+  PERFORM public.admin_create_purchase(gen_random_uuid(),supplier,'[{"product_id":"parity-null-stock","quantity":1,"unit_cost":"3"}]');
+  RAISE EXCEPTION 'Nullable base stock was accepted';
+ EXCEPTION WHEN invalid_parameter_value THEN
+  IF SQLERRM <> 'Base inventory unavailable' THEN RAISE; END IF;
+ END;
+ PERFORM public.admin_create_purchase(purchase,supplier,'[{"product_id":"parity-aggregate","variant_id":"v","quantity":1,"unit_cost":"9"}]');
+ SELECT id INTO STRICT line_id FROM public.admin_purchase_lines WHERE purchase_id=purchase;
+ PERFORM public.admin_transition_purchase(purchase,1,'approve');
+ BEGIN
+  PERFORM public.admin_receive_purchase(purchase,line_id,receipt,2,1);
+  RAISE EXCEPTION 'Aggregate stock overflow accepted';
+ EXCEPTION WHEN check_violation THEN
+  IF SQLERRM NOT LIKE '%products_stock_valid_check%' THEN RAISE; END IF;
+ END;
+ IF NOT EXISTS(SELECT 1 FROM public.admin_purchase_orders WHERE id=purchase AND revision=2 AND status='approved')
+ OR NOT EXISTS(SELECT 1 FROM public.admin_purchase_lines WHERE id=line_id AND received_quantity=0)
+ OR EXISTS(SELECT 1 FROM public.admin_purchase_receipts WHERE id=receipt)
+ THEN RAISE EXCEPTION 'Failed receipt mutated purchase or ledger'; END IF;
+END $test$;
+RESET ROLE;
+DO $test$
+BEGIN
+ IF NOT EXISTS(SELECT 1 FROM public.products WHERE id='parity-aggregate' AND stock=1000000
+ AND variants->0->>'stock'='999999' AND variants->1->>'stock'='1' AND purchase_cost=9)
+ THEN RAISE EXCEPTION 'Failed receipt changed inventory'; END IF;
+END $test$;
+ROLLBACK;
+\echo 'PASS exact live product column/constraint fixture, null stock denial and atomic aggregate overflow rejection'
