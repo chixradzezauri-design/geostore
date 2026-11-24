@@ -2,6 +2,7 @@ import React,{useEffect,useRef,useState} from 'react';
 import {createMarketingApi} from '../utils/marketingConsentApi.js';
 import {campaignSegments,campaignTemplates,tbilisiPlanToIso,isoToTbilisiPlan,normalizeCampaignFields,campaignConfirmed} from '../utils/marketingCampaigns.js';
 import AdminMarketingTemplates from './AdminMarketingTemplates.jsx';
+import AdminMarketingPreflight from './AdminMarketingPreflight.jsx';
 const blank=()=>({name:'',segment:'all',subject:'',body:'',plan:''});
 const input='min-h-11 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white disabled:opacity-50';
 const button='min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50';
@@ -9,6 +10,7 @@ const fromRow=row=>({name:row.name,segment:row.segment,subject:row.subject,body:
 export default function AdminMarketingCampaigns({adminUserId,loadSession,supabaseUrl,apiKey,segmentSnapshot}){
  const [rows,setRows]=useState([]),[total,setTotal]=useState('0'),[phase,setPhase]=useState('loading'),[notice,setNotice]=useState('');
  const [form,setForm]=useState(blank),[editing,setEditing]=useState(null),[pending,setPending]=useState(null),[filter,setFilter]=useState('active'),[search,setSearch]=useState('');
+ const [auditId,setAuditId]=useState('');
  const live=useRef(false),generation=useRef(0),lock=useRef(null),pendingRef=useRef(null);
  const busy=phase==='loading'||phase==='saving',ready=phase==='ready'&&!pending;
  const fields=normalizeCampaignFields({...form,planned_at:tbilisiPlanToIso(form.plan)});
@@ -53,6 +55,7 @@ export default function AdminMarketingCampaigns({adminUserId,loadSession,supabas
   markPending(null);clear();await run();
  }
  const visible=rows.filter(row=>(filter==='all'||(filter==='archived'?row.archived:!row.archived))&&[row.name,row.subject].some(v=>v.toLowerCase().includes(search.trim().toLowerCase())));
+ const audited=rows.find(row=>row.id===auditId);
  const candidate=segmentSnapshot?.segments?.[form.segment]?.consent_candidates;
  return <section className="admin-marketing-campaigns min-w-0 rounded-xl border border-slate-700 p-3 space-y-3" aria-label="სარეკლამო კამპანიები">
   <div className="flex flex-wrap justify-between gap-2"><h4 className="text-sm font-bold text-white">სარეკლამო კამპანიები</h4><button type="button" className={button} disabled={busy} onClick={()=>void run(pendingRef.current,true)}>კამპანიების განახლება</button></div>
@@ -76,7 +79,8 @@ export default function AdminMarketingCampaigns({adminUserId,loadSession,supabas
   {phase==='ready'&&<div className="space-y-2"><h5 className="text-xs font-bold text-white">შენახული კამპანიები · {rows.length} / {total}</h5>{BigInt(total)>BigInt(rows.length)&&<p className="text-xs text-slate-400">ნაჩვენებია ბოლო 100 ჩანაწერი.</p>}
    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><input type="search" className={input} aria-label="კამპანიის ძებნა" value={search} onChange={e=>setSearch(e.target.value)} placeholder="სახელი ან სათაური"/><select aria-label="კამპანიის სტატუსი" className={input} value={filter} onChange={e=>setFilter(e.target.value)}><option value="active">მონახაზები</option><option value="archived">არქივი</option><option value="all">ყველა</option></select></div>
    {!visible.length&&<p className="text-xs text-slate-400">ჩანაწერი არ მოიძებნა.</p>}
-   {visible.map(row=><div key={row.id} className="min-w-0 rounded-lg border border-slate-700 p-2 space-y-2"><p className="text-sm font-bold text-white break-words">{row.name}</p><p className="text-xs text-slate-400 break-words">{campaignSegments[row.segment]} · {row.archived?'არქივი':'მონახაზი'} · {row.planned_at?new Date(row.planned_at).toLocaleString('ka-GE',{timeZone:'Asia/Tbilisi'}):'თარიღის გარეშე'}</p><div className="flex flex-wrap gap-2">{!row.archived&&<><button type="button" className={button} disabled={!ready} onClick={()=>{setEditing(row);setForm(fromRow(row));}}>რედაქტირება</button><button type="button" className={button} disabled={!ready} onClick={()=>archive(row)}>არქივირება</button></>}<button type="button" className={button} disabled={!ready} onClick={()=>{setEditing(null);setForm({...fromRow(row),name:('ასლი · '+row.name).slice(0,120),plan:''});}}>ასლის შექმნა</button></div></div>)}
+   {visible.map(row=><div key={row.id} className="min-w-0 rounded-lg border border-slate-700 p-2 space-y-2"><p className="text-sm font-bold text-white break-words">{row.name}</p><p className="text-xs text-slate-400 break-words">{campaignSegments[row.segment]} · {row.archived?'არქივი':'მონახაზი'} · {row.planned_at?new Date(row.planned_at).toLocaleString('ka-GE',{timeZone:'Asia/Tbilisi'}):'თარიღის გარეშე'}</p><div className="flex flex-wrap gap-2">{!row.archived&&<><button type="button" className={button} disabled={!ready} onClick={()=>{setEditing(row);setForm(fromRow(row));}}>რედაქტირება</button><button type="button" className={button} disabled={!ready} onClick={()=>archive(row)}>არქივირება</button></>}<button type="button" className={button} disabled={!ready} onClick={()=>{setEditing(null);setForm({...fromRow(row),name:('ასლი · '+row.name).slice(0,120),plan:''});}}>ასლის შექმნა</button><button type="button" className={button} disabled={!ready} onClick={()=>setAuditId(old=>old===row.id?'':row.id)}>{auditId===row.id?'აუდიტის დახურვა':'უსაფრთხოების აუდიტი'}</button></div></div>)}
+   {audited&&<AdminMarketingPreflight key={audited.id+':'+audited.revision} campaign={audited} adminUserId={adminUserId} loadSession={loadSession} supabaseUrl={supabaseUrl} apiKey={apiKey} canCheck={ready}/>} 
   </div>}
  </section>;
 }

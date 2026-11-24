@@ -1,5 +1,6 @@
 import {verifyCampaignList,campaignRequest,verifyCampaignAck} from './marketingCampaigns.js';
 import {verifyTemplateList,templateRequest,verifyTemplateAck} from './marketingTemplates.js';
+import {preflightRequest,verifyPreflightAck,verifyPreflightHistory} from './marketingPreflight.js';
 const OWNER='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 export const MARKETING_POLICY='email-marketing-v1';
 export const segmentKeys=['all','vip','new','no_purchase','one_purchase','repeat','inactive'];
@@ -38,6 +39,8 @@ export function createMarketingApi({expectedUserId,loadSession,supabaseUrl,apiKe
   async campaigns(id=null){if(id!==null&&!uuid(id))throw Error('Invalid campaign ID');return verifyCampaignList(await request('admin_read_marketing_campaigns',{p_id:id},true),id);},
   async saveCampaign(op){return verifyCampaignAck(await request('admin_save_marketing_campaign',campaignRequest(op),true),op);},
   async templates(id=null){if(id!==null&&!uuid(id))throw Error('Invalid template ID');return verifyTemplateList(await request('admin_read_marketing_templates',{p_id:id},true),id);},
-  async saveTemplate(op){return verifyTemplateAck(await request('admin_save_marketing_template',templateRequest(op),true),op);}
+  async saveTemplate(op){return verifyTemplateAck(await request('admin_save_marketing_template',templateRequest(op),true),op);},
+  async preflights(id,requestId=null){if(!uuid(id)||(requestId!==null&&!uuid(requestId)))throw Error('Invalid preflight scope');return verifyPreflightHistory(await request('admin_read_marketing_preflights',{p_id:id,p_request:requestId},true),id,requestId);},
+  async checkCampaign(op){return verifyPreflightAck(await request('admin_check_marketing_campaign',preflightRequest(op),true),op);}
  };
 }
