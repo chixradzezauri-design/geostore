@@ -1,0 +1,596 @@
+{
+  "schema": 1,
+  "projectId": "xmtnszxtnfxnrojionoa",
+  "capturedDate": "2026-11-24",
+  "sourceCommit": "991b5ce6eea06dc0d5a187a4a2339665dd59ab6d",
+  "deliveryEnabled": false,
+  "releaseApproved": false,
+  "appliedMigrations": [
+    {
+      "version": "20261102180130",
+      "name": "order_stock_automation"
+    },
+    {
+      "version": "20261102181854",
+      "name": "add_product_purchase_cost"
+    },
+    {
+      "version": "20261103042140",
+      "name": "server_checkout_prices_and_store_config"
+    },
+    {
+      "version": "20261103044438",
+      "name": "add_idempotent_checkout_replay"
+    },
+    {
+      "version": "20261103044704",
+      "name": "validate_checkout_idempotency_payload"
+    },
+    {
+      "version": "20261103044919",
+      "name": "minimize_checkout_idempotency_snapshot"
+    },
+    {
+      "version": "20261103083543",
+      "name": "add_optional_customer_email_to_orders"
+    },
+    {
+      "version": "20261103113219",
+      "name": "restrict_unused_public_order_tracking_rpc"
+    },
+    {
+      "version": "20261103114054",
+      "name": "restrict_anon_products_to_public_catalog_columns"
+    },
+    {
+      "version": "20261103114610",
+      "name": "restore_secure_order_tracking_and_admin_notes"
+    },
+    {
+      "version": "20261103114846",
+      "name": "protect_product_cost_from_authenticated_customers"
+    },
+    {
+      "version": "20261103114947",
+      "name": "optimize_admin_rls_policies_without_changing_access"
+    },
+    {
+      "version": "20261103114954",
+      "name": "correct_admin_email_in_message_rls"
+    },
+    {
+      "version": "20261103115012",
+      "name": "restore_exact_admin_email_in_rls_policies"
+    },
+    {
+      "version": "20261103115142",
+      "name": "move_privileged_rpc_implementations_to_private_schema"
+    },
+    {
+      "version": "20261103115237",
+      "name": "keep_current_main_admin_catalog_compatible_until_pr18_merge"
+    },
+    {
+      "version": "20261103120657",
+      "name": "geostore_order_security_hardening"
+    },
+    {
+      "version": "20261103120854",
+      "name": "optimize_admin_product_insert_policy"
+    },
+    {
+      "version": "20261103121325",
+      "name": "persist_admin_coupons_and_delivery_fees"
+    },
+    {
+      "version": "20261103121548",
+      "name": "remove_duplicate_coupon_delivery_select_policies"
+    },
+    {
+      "version": "20261103122121",
+      "name": "prevent_stock_restore_after_dispatch"
+    },
+    {
+      "version": "20261103122611",
+      "name": "lock_down_rpc_search_paths"
+    },
+    {
+      "version": "20261103124219",
+      "name": "grant_admin_product_purchase_cost_write"
+    },
+    {
+      "version": "20261103124349",
+      "name": "align_product_admin_access_with_app_metadata"
+    },
+    {
+      "version": "20261103124427",
+      "name": "optimize_product_admin_role_policy_jwt_calls"
+    },
+    {
+      "version": "20261103151704",
+      "name": "use_amr_for_admin_order_reactivation"
+    },
+    {
+      "version": "20261103153931",
+      "name": "correct_admin_reactivation_email_guard"
+    },
+    {
+      "version": "20261103155226",
+      "name": "track_order_status_change_time"
+    },
+    {
+      "version": "20261103160155",
+      "name": "restrict_product_cost_to_primary_admin"
+    },
+    {
+      "version": "20261103162615",
+      "name": "secure_admin_product_crud"
+    },
+    {
+      "version": "20261103164324",
+      "name": "admin_product_auth_uid"
+    },
+    {
+      "version": "20261103164717",
+      "name": "admin_authorization_use_auth_uid"
+    },
+    {
+      "version": "20261103194444",
+      "name": "secure_admin_save_order_note"
+    },
+    {
+      "version": "20261103205301",
+      "name": "snapshot_order_item_cost_vendor_category"
+    },
+    {
+      "version": "20261103213006",
+      "name": "harden_admin_rpcs_and_minimize_order_tracking_data"
+    },
+    {
+      "version": "20261103225225",
+      "name": "create_storefront_studio_foundation"
+    },
+    {
+      "version": "20261103225301",
+      "name": "tighten_storefront_studio_rls_and_indexes"
+    },
+    {
+      "version": "20261103230610",
+      "name": "create_storefront_media_bucket_and_admin_policies"
+    },
+    {
+      "version": "20261106085242",
+      "name": "minimize_public_order_tracking_payload"
+    },
+    {
+      "version": "20261106085349",
+      "name": "persist_admin_flash_sale_updates"
+    },
+    {
+      "version": "20261106085602",
+      "name": "restrict_customer_order_reads_to_admin"
+    },
+    {
+      "version": "20261106085622",
+      "name": "revoke_anon_direct_order_reads"
+    },
+    {
+      "version": "20261106090007",
+      "name": "optimize_storefront_rls_auth_initplans"
+    },
+    {
+      "version": "20261106103315",
+      "name": "align_product_admin_authorization_with_auth_uid"
+    },
+    {
+      "version": "20261106103320",
+      "name": "harden_public_support_submission_permissions"
+    },
+    {
+      "version": "20261106103325",
+      "name": "preserve_order_item_variants"
+    },
+    {
+      "version": "20261106110051",
+      "name": "fix_flash_sale_stale_original_price"
+    },
+    {
+      "version": "20261107083528",
+      "name": "atomic_storefront_publish_and_append_only_versions"
+    },
+    {
+      "version": "20261107083600",
+      "name": "validate_storefront_publish_snapshot_shape"
+    },
+    {
+      "version": "20261107084940",
+      "name": "harden_order_status_stock_transitions"
+    },
+    {
+      "version": "20261107085444",
+      "name": "secure_support_intake_and_persist_admin_activity"
+    },
+    {
+      "version": "20261107085535",
+      "name": "return_http_429_for_support_rate_limits"
+    },
+    {
+      "version": "20261107093727",
+      "name": "admin_product_create_no_upsert"
+    },
+    {
+      "version": "20261107094312",
+      "name": "rate_limit_public_order_tracking"
+    },
+    {
+      "version": "20261107094358",
+      "name": "bound_public_guest_checkout_input"
+    },
+    {
+      "version": "20261107100015",
+      "name": "secure_authenticated_order_history"
+    },
+    {
+      "version": "20261107110746",
+      "name": "enforce_nonnegative_product_stock"
+    },
+    {
+      "version": "20261107115218",
+      "name": "persist_checkout_addons_server_pricing"
+    },
+    {
+      "version": "20261107130302",
+      "name": "add_order_status_notifications"
+    },
+    {
+      "version": "20261107130319",
+      "name": "harden_order_notification_rpc_wrappers"
+    },
+    {
+      "version": "20261107130422",
+      "name": "restrict_support_ticket_insert_columns"
+    },
+    {
+      "version": "20261107130453",
+      "name": "harden_flash_sale_rounding"
+    },
+    {
+      "version": "20261107130536",
+      "name": "add_product_data_integrity_constraints"
+    },
+    {
+      "version": "20261107130549",
+      "name": "validate_product_data_integrity_constraints"
+    },
+    {
+      "version": "20261107135028",
+      "name": "skip_custom_variant_products_in_flash_sales"
+    },
+    {
+      "version": "20261107150014",
+      "name": "require_valid_guest_checkout_email"
+    },
+    {
+      "version": "20261107160152",
+      "name": "minimize_customer_order_history_payload"
+    },
+    {
+      "version": "20261107221605",
+      "name": "revoke_direct_order_note_column_update"
+    },
+    {
+      "version": "20261108215548",
+      "name": "bind_order_ownership_to_auth_user_uuid"
+    },
+    {
+      "version": "20261108225558",
+      "name": "size_color_inventory_stock"
+    },
+    {
+      "version": "20261108231918",
+      "name": "order_item_image_snapshot"
+    },
+    {
+      "version": "20261109092744",
+      "name": "set_created_at_for_new_products"
+    },
+    {
+      "version": "20261109102126",
+      "name": "support_ticket_threading_and_secure_access"
+    },
+    {
+      "version": "20261109102221",
+      "name": "fix_support_ticket_message_lookup"
+    },
+    {
+      "version": "20261109102338",
+      "name": "harden_support_ticket_rpc_wrappers"
+    },
+    {
+      "version": "20261109151649",
+      "name": "restrict_public_product_purchase_cost"
+    },
+    {
+      "version": "20261109151806",
+      "name": "restrict_public_storefront_config_to_published_fields"
+    },
+    {
+      "version": "20261109151847",
+      "name": "move_variant_stock_security_definer_to_private"
+    },
+    {
+      "version": "20261109152039",
+      "name": "sanitize_customer_order_history_item_fields"
+    },
+    {
+      "version": "20261109152543",
+      "name": "restrict_authenticated_product_cost_select"
+    },
+    {
+      "version": "20261109154122",
+      "name": "20261109160000_preserve_customer_order_owner"
+    },
+    {
+      "version": "20261109160629",
+      "name": "allow_partial_size_color_stock_updates"
+    },
+    {
+      "version": "20261109203329",
+      "name": "admin_manage_custom_variant_stock"
+    },
+    {
+      "version": "20261109211019",
+      "name": "enable_customer_order_notification_realtime"
+    },
+    {
+      "version": "20261109211210",
+      "name": "enable_admin_legacy_message_realtime"
+    },
+    {
+      "version": "20261109212150",
+      "name": "prevent_deleting_products_used_in_orders"
+    },
+    {
+      "version": "20261110043433",
+      "name": "admin_atomic_variant_stock_batches"
+    },
+    {
+      "version": "20261110054145",
+      "name": "add_idempotent_support_ticket_replies"
+    },
+    {
+      "version": "20261110054535",
+      "name": "add_idempotent_support_ticket_creation"
+    },
+    {
+      "version": "20261110075809",
+      "name": "grant_public_product_catalog_read"
+    },
+    {
+      "version": "20261110075829",
+      "name": "restrict_public_product_catalog_columns"
+    },
+    {
+      "version": "20261110100653",
+      "name": "hide_test_products_from_storefront"
+    },
+    {
+      "version": "20261110133651",
+      "name": "admin_update_product_with_stock"
+    },
+    {
+      "version": "20261112234156",
+      "name": "guard_legacy_order_product_references"
+    },
+    {
+      "version": "20261116120900",
+      "name": "harden_support_ticket_authorization_and_admin_reply_status"
+    },
+    {
+      "version": "20261116120907",
+      "name": "support_ticket_read_receipts"
+    },
+    {
+      "version": "20261116120914",
+      "name": "add_owner_checked_support_ticket_status"
+    },
+    {
+      "version": "20261116121216",
+      "name": "customer_support_ticket_history"
+    },
+    {
+      "version": "20261116121952",
+      "name": "restrict_direct_product_deletes_to_guarded_rpc"
+    },
+    {
+      "version": "20261116124315",
+      "name": "revoke_authenticated_product_purchase_cost_select"
+    },
+    {
+      "version": "20261116124349",
+      "name": "restore_authenticated_product_column_allowlist"
+    },
+    {
+      "version": "20261116124647",
+      "name": "protect_support_tickets_from_direct_deletion"
+    },
+    {
+      "version": "20261116132211",
+      "name": "persist_flash_sale_expiry_and_auto_restore"
+    },
+    {
+      "version": "20261116132313",
+      "name": "align_legacy_flash_sale_rpc"
+    },
+    {
+      "version": "20261116132703",
+      "name": "persistent_flash_sale_campaigns"
+    },
+    {
+      "version": "20261116133134",
+      "name": "flash_sale_expiry_compatibility"
+    },
+    {
+      "version": "20261116134150",
+      "name": "correct_flash_sale_expiry_and_scheduler"
+    },
+    {
+      "version": "20261116134800",
+      "name": "flash_sale_price_snapshot_safety"
+    },
+    {
+      "version": "20261116135251",
+      "name": "restore_single_flash_sale_expiry_job"
+    },
+    {
+      "version": "20261117084403",
+      "name": "private_inventory_movement_ledger_stage92"
+    },
+    {
+      "version": "20261117084443",
+      "name": "customer_support_ticket_history_pagination"
+    },
+    {
+      "version": "20261117084528",
+      "name": "inventory_replenishment_settings"
+    },
+    {
+      "version": "20261117231455",
+      "name": "20261117100000_admin_staff_auth_foundation"
+    },
+    {
+      "version": "20261117231459",
+      "name": "20261117103000_staff_orders_permission"
+    },
+    {
+      "version": "20261117231504",
+      "name": "20261117130000_reopen_completed_orders"
+    },
+    {
+      "version": "20261117231508",
+      "name": "20261117140000_staff_products_permission"
+    },
+    {
+      "version": "20261117231531",
+      "name": "20261117143000_staff_expenses_permission"
+    },
+    {
+      "version": "20261117231534",
+      "name": "20261117144500_staff_crm_support_permissions"
+    },
+    {
+      "version": "20261117231538",
+      "name": "20261117150000_staff_settings_permission"
+    },
+    {
+      "version": "20261117231542",
+      "name": "20261117153000_staff_analytics_summary"
+    },
+    {
+      "version": "20261117231546",
+      "name": "20261117160000_stable_checkout_idempotency_ordering"
+    },
+    {
+      "version": "20261117231549",
+      "name": "20261117170000_admin_staff_pending_invites"
+    },
+    {
+      "version": "20261119071946",
+      "name": "move_all_support_ticket_history_rpcs_to_private"
+    },
+    {
+      "version": "20261119071952",
+      "name": "admin_rpc_invoker_wrappers"
+    },
+    {
+      "version": "20261119071959",
+      "name": "add_secure_admin_customer_crm"
+    },
+    {
+      "version": "20261119094446",
+      "name": "revoke_anon_completed_order_reactivation"
+    },
+    {
+      "version": "20261119140237",
+      "name": "admin_panel_visual_design_sync"
+    },
+    {
+      "version": "20261119140327",
+      "name": "admin_panel_visual_settings_owner_policy"
+    },
+    {
+      "version": "20261119160433",
+      "name": "admin_panel_visual_design_concurrency"
+    },
+    {
+      "version": "20261119160821",
+      "name": "add_storefront_hero_storage_scope"
+    },
+    {
+      "version": "20261119181855",
+      "name": "storefront_draft_concurrency"
+    },
+    {
+      "version": "20261119181911",
+      "name": "restore_storefront_version_to_draft"
+    },
+    {
+      "version": "20261119181955",
+      "name": "legacy_storefront_draft_save_compat"
+    },
+    {
+      "version": "20261120122908",
+      "name": "replenishment_optimistic_concurrency"
+    },
+    {
+      "version": "20261120124250",
+      "name": "storefront_publish_concurrency_safe_compat"
+    },
+    {
+      "version": "20261124064537",
+      "name": "strip_private_costs_from_checkout_rpc"
+    },
+    {
+      "version": "20261124064607",
+      "name": "redact_alternate_costs_from_order_history"
+    },
+    {
+      "version": "20261124064625",
+      "name": "scope_admin_order_ledger_permissions"
+    }
+  ],
+  "sources": [
+    {
+      "path": "release/staged-admin-suppliers.sql",
+      "sha": "bb3104c61d84ddd74e42a7245c0475783ac8295d"
+    },
+    {
+      "path": "release/staged-admin-purchases.sql",
+      "sha": "c1fbd64301a8d21a3b9d750cf9de39e5ee418761"
+    },
+    {
+      "path": "release/staged-admin-supplier-payments.sql",
+      "sha": "29aa4a621b741561c73604b86dc391da60bd9fe2"
+    },
+    {
+      "path": "release/staged-marketing-consent.sql",
+      "sha": "32bd00e0a2a63b44d48e67f8e922ae7ffbe2cb0c"
+    },
+    {
+      "path": "release/staged-marketing-segments.sql",
+      "sha": "6f93d520aa50f39489beaf441eaa254648bf221e"
+    },
+    {
+      "path": "release/staged-marketing-campaigns.sql",
+      "sha": "32fc2e7cbec88c12a9126dc1da0b93a1ec647516"
+    },
+    {
+      "path": "release/staged-marketing-templates.sql",
+      "sha": "2b2db66daf9a355dec726101cebbd32ff2a5a3bf"
+    },
+    {
+      "path": "release/staged-marketing-preflight.sql",
+      "sha": "87480c15d4094a254ff9394e0ad8b4978b59263e"
+    }
+  ]
+}

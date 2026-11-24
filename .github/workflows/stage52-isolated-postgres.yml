@@ -91,6 +91,10 @@ on:
       - 'supabase/migrations/20261103122121_prevent_stock_restore_after_dispatch.sql'
       - 'supabase/migrations/20261107130302_add_order_status_notifications.sql'
       - 'supabase/migrations/20261117231504_reopen_completed_orders.sql'
+      - 'release/advanced-admin-release-candidate.json'
+      - 'scripts/advancedAdminReleaseBundle.mjs'
+      - 'tests/advancedAdminReleaseBundle.test.js'
+      - 'tests/sql/advanced_admin_release_bundle_contract.sql'
       - 'release/staged-admin-suppliers.sql'
       - 'release/staged-admin-purchases.sql'
       - 'release/staged-admin-supplier-payments.sql'
@@ -173,3 +177,8 @@ jobs:
 
           createdb admin_marketing_consent
           PGDATABASE=admin_marketing_consent psql -v ON_ERROR_STOP=1 -f tests/sql/admin_marketing_consent_contract.sql
+
+          node --test tests/advancedAdminReleaseBundle.test.js
+          node scripts/advancedAdminReleaseBundle.mjs > /tmp/geostore-advanced-admin-candidate.sql
+          createdb advanced_admin_release_bundle
+          PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_release_bundle_contract.sql
