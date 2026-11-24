@@ -1,3 +1,4 @@
+import {verifyCampaignList,campaignRequest,verifyCampaignAck} from './marketingCampaigns.js';
 const OWNER='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 export const MARKETING_POLICY='email-marketing-v1';
 export const segmentKeys=['all','vip','new','no_purchase','one_purchase','repeat','inactive'];
@@ -32,6 +33,8 @@ export function createMarketingApi({expectedUserId,loadSession,supabaseUrl,apiKe
    if(r.acknowledged_event_id!==id||typeof r.idempotent_replay!=='boolean')throw Error('Consent acknowledgement mismatch');
    return r;
   },
-  async segments(){return verifySegments(await request('admin_marketing_segments',{},true));}
+  async segments(){return verifySegments(await request('admin_marketing_segments',{},true));},
+  async campaigns(id=null){if(id!==null&&!uuid(id))throw Error('Invalid campaign ID');return verifyCampaignList(await request('admin_read_marketing_campaigns',{p_id:id},true),id);},
+  async saveCampaign(op){return verifyCampaignAck(await request('admin_save_marketing_campaign',campaignRequest(op),true),op);}
  };
 }

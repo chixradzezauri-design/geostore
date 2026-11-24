@@ -1,5 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {createMarketingApi,segmentKeys} from '../utils/marketingConsentApi.js';
+import AdminMarketingCampaigns from './AdminMarketingCampaigns.jsx';
 const labels={all:'ყველა მომხმარებელი',vip:'VIP',new:'ახალი · 30 დღე',no_purchase:'დასრულებული შესყიდვის გარეშე',one_purchase:'ერთჯერადი მყიდველი',repeat:'განმეორებითი მყიდველი',inactive:'არააქტიური · 90 დღე'};
 export default function AdminMarketingSegments({adminUserId,loadSession,supabaseUrl,apiKey}){
  const [snapshot,setSnapshot]=useState(null),[phase,setPhase]=useState('loading'),[filter,setFilter]=useState('all'),[retry,setRetry]=useState(0);
@@ -19,5 +20,6 @@ export default function AdminMarketingSegments({adminUserId,loadSession,supabase
    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">{keys.map(k=><div key={k} className="min-w-0 rounded-lg bg-slate-950/50 border border-slate-700 p-3"><p className="text-xs text-slate-400 break-words">{labels[k]}</p><p className="text-base font-bold text-white tabular-nums break-all">{snapshot.segments[k].accounts}</p><p className="text-xs text-emerald-300 break-all">თანხმობის კანდიდატები: {snapshot.segments[k].consent_candidates}</p></div>)}</div>
    <p className="text-xs text-slate-400">განახლდა: {new Date(snapshot.as_of).toLocaleString('ka-GE',{timeZone:'Asia/Tbilisi'})} · გაგზავნა გამორთულია.</p>
   </>}
+  <AdminMarketingCampaigns key={adminUserId} adminUserId={adminUserId} loadSession={loadSession} supabaseUrl={supabaseUrl} apiKey={apiKey} segmentSnapshot={phase==='ready'?snapshot:null}/>
  </section>;
 }
