@@ -93,6 +93,7 @@ on:
       - 'supabase/migrations/20261117231504_reopen_completed_orders.sql'
       - 'release/staged-admin-suppliers.sql'
       - 'release/staged-admin-purchases.sql'
+      - 'release/staged-admin-supplier-payments.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:

@@ -11,6 +11,7 @@ INSERT INTO public.products VALUES ('base','Fixture base','fixture','Supplier',1
 \i /tmp/stage60_original_inventory_trigger_prefix.sql
 \ir ../../release/staged-admin-suppliers.sql
 \ir ../../release/staged-admin-purchases.sql
+\ir ../../release/staged-admin-supplier-payments.sql
 SET ROLE authenticated;
 SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
@@ -60,6 +61,31 @@ BEGIN
  result:=public.admin_receive_purchase(po,line,receipt,2,3);
  IF result->>'idempotent_replay'<>'true' OR (SELECT status FROM public.admin_purchase_orders WHERE id=po)<>'received' THEN RAISE EXCEPTION 'Completed variant replay failed'; END IF;
 END $variant_test$;
+-- Payment ledger: received value, not approved commitment, is the balance.
+DO $payment_test$
+DECLARE po uuid:='10000000-0000-4000-8000-000000000001'; p uuid:='40000000-0000-4000-8000-000000000001'; result jsonb; rev bigint;
+BEGIN
+ SELECT revision INTO rev FROM public.admin_purchase_orders WHERE id=po;
+ result:=public.admin_read_purchase_payments(po);
+ IF result->>'received_tetri'<>'3725' OR result->>'paid_tetri'<>'0' OR result->>'balance_tetri'<>'3725' THEN RAISE EXCEPTION 'Initial balance mismatch: %',result; END IF;
+ result:=public.admin_record_purchase_payment(po,p,rev,'1000','bank_transfer','test-001');
+ IF result->>'amount_tetri'<>'1000' OR result->>'idempotent_replay'<>'false' THEN RAISE EXCEPTION 'Payment snapshot mismatch'; END IF;
+ result:=public.admin_record_purchase_payment(po,p,rev,'1000','bank_transfer','test-001');
+ IF result->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Payment replay failed'; END IF;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,p,rev,'1001','bank_transfer','test-001'); RAISE EXCEPTION 'Changed replay accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1','cash','stale'); RAISE EXCEPTION 'Stale payment accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ rev:=rev+1;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'2726','cash','over'); RAISE EXCEPTION 'Overpayment accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1','bank_transfer','TEST-001'); RAISE EXCEPTION 'Duplicate reference accepted'; EXCEPTION WHEN unique_violation THEN NULL; END;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'0','cash','zero'); RAISE EXCEPTION 'Zero payment accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1.5','cash','fraction'); RAISE EXCEPTION 'Fractional tetri accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ result:=public.admin_read_purchase_payments(po);
+ IF result->>'paid_tetri'<>'1000' OR result->>'balance_tetri'<>'2725' OR result->>'payment_count'<>'1' OR result->>'revision'<>rev::text THEN RAISE EXCEPTION 'Partial balance mismatch'; END IF;
+ PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'2725','cash','test-002');
+ result:=public.admin_read_purchase_payments(po);
+ IF result->>'paid_tetri'<>'3725' OR result->>'balance_tetri'<>'0' OR result->>'payment_count'<>'2' OR jsonb_array_length(result->'payments')<>2 THEN RAISE EXCEPTION 'Settled balance mismatch'; END IF;
+ BEGIN UPDATE public.admin_purchase_payments SET amount_tetri=1 WHERE id=p; RAISE EXCEPTION 'Direct payment write allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $payment_test$;
 RESET ROLE;
 DO $test$
 BEGIN
@@ -75,6 +101,8 @@ SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
 DO $test$
 BEGIN
  IF EXISTS(SELECT 1 FROM public.admin_suppliers) OR EXISTS(SELECT 1 FROM public.admin_purchase_orders) OR EXISTS(SELECT 1 FROM public.admin_purchase_lines) OR EXISTS(SELECT 1 FROM public.admin_purchase_receipts) THEN RAISE EXCEPTION 'Non-owner read'; END IF;
+ BEGIN PERFORM public.admin_read_purchase_payments('10000000-0000-4000-8000-000000000001'); RAISE EXCEPTION 'Non-owner payment read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+ BEGIN PERFORM public.admin_record_purchase_payment('10000000-0000-4000-8000-000000000001',gen_random_uuid(),1,'1','cash','staff'); RAISE EXCEPTION 'Non-owner payment write'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM public.admin_create_purchase(gen_random_uuid(),gen_random_uuid(),'[]'); RAISE EXCEPTION 'Non-owner RPC allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN INSERT INTO public.admin_suppliers(name,commission,is_active) VALUES('Bad',1,true); RAISE EXCEPTION 'Non-owner supplier write allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $test$;
@@ -82,4 +110,10 @@ RESET ROLE;
 DO $test$ BEGIN
  IF has_function_privilege('anon','public.admin_receive_purchase(uuid,uuid,uuid,bigint,integer)','EXECUTE') OR has_table_privilege('anon','public.admin_purchase_receipts','SELECT') THEN RAISE EXCEPTION 'Anonymous privilege'; END IF;
 END $test$;
-\echo 'PASS supplier and base purchase contract (isolated)'
+DO $payment_privileges$
+BEGIN
+ IF has_function_privilege('anon','public.admin_record_purchase_payment(uuid,uuid,bigint,text,text,text)','EXECUTE') OR has_function_privilege('anon','public.admin_read_purchase_payments(uuid)','EXECUTE') OR has_table_privilege('authenticated','public.admin_purchase_payments','SELECT') THEN RAISE EXCEPTION 'Payment privilege leak'; END IF;
+ IF (SELECT count(*) FROM public.admin_purchase_payments)<>2 THEN RAISE EXCEPTION 'Unexpected payment count'; END IF;
+ BEGIN DELETE FROM public.admin_purchase_payments; RAISE EXCEPTION 'Payment audit deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+END $payment_privileges$;
+\echo 'PASS supplier, purchase and payment contract (isolated)'
