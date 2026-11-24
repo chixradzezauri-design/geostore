@@ -8,3 +8,6 @@ $claims$;
 CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $claims$
  SELECT coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,'{}'::jsonb);
 $claims$;
+
+-- Synthetic product belongs to the supplier created by the HTTP test.
+INSERT INTO public.products(id,name,category,vendor,stock,variants,purchase_cost) VALUES ('http-base','HTTP fixture base','fixture','HTTP fixture supplier',10,'[]',3);

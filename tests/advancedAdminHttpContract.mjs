@@ -85,3 +85,53 @@ await denyRpc('admin_read_marketing_preflights',customerToken,{p_id:campaign,p_r
 await denied('/marketing_email_consent_events?select=*',ownerToken);
 await denied('/marketing_campaigns?select=*',ownerToken);
 console.log('PASS local signed JWT / PostgREST boundary: owner/customer/anon, invalid claims and signature, stale consent, blocked campaign, private tables');
+
+// Real HTTP purchase, receipt, payment and correction lifecycle.
+const supplier=(await ok('/admin_suppliers?select=id,name',ownerToken))[0].id;
+const po=randomUUID();
+const create={p_id:po,p_supplier:supplier,p_lines:[{product_id:'http-base',quantity:5,unit_cost:4.25}]};
+for(const t of [null,customerToken,forgedRole,metadataOnly])await denyRpc('admin_create_purchase',t,create);
+const draft=await rpc('admin_create_purchase',ownerToken,create);
+assert.equal(draft.status,'draft');assert.equal(draft.revision,1);
+const lines=await ok('/admin_purchase_lines?select=id&purchase_id=eq.'+po,ownerToken);
+assert.equal(lines.length,1);
+assert.deepEqual(await ok('/admin_purchase_lines?select=id&purchase_id=eq.'+po,customerToken),[]);
+assert.deepEqual(await ok('/admin_purchase_orders?select=id&id=eq.'+po,customerToken),[]);
+const transition={p_id:po,p_revision:1,p_action:'approve'};
+await denyRpc('admin_transition_purchase',customerToken,transition);
+const approved=await rpc('admin_transition_purchase',ownerToken,transition);
+assert.equal(approved.status,'approved');assert.equal(approved.revision,2);
+async function conflict(name,params){
+ const r=await call('/rpc/'+name,ownerToken,params);
+ assert.equal(r.status,409,name+' status');assert.equal(r.data?.code,'PT409',name+' code');
+}
+await conflict('admin_transition_purchase',{...transition,p_action:'cancel'});
+const receipt={p_id:po,p_line:lines[0].id,p_receipt:randomUUID(),p_revision:2,p_quantity:2};
+await denyRpc('admin_receive_purchase',customerToken,receipt);
+const received=await rpc('admin_receive_purchase',ownerToken,receipt);
+assert.equal(received.stock_before,10);assert.equal(received.stock_after,12);
+assert.equal(received.idempotent_replay,false);
+assert.equal((await rpc('admin_receive_purchase',ownerToken,receipt)).idempotent_replay,true);
+await conflict('admin_receive_purchase',{...receipt,p_receipt:randomUUID()});
+const payment={p_id:po,p_payment:randomUUID(),p_revision:3,p_amount_tetri:'300',p_method:'cash',p_reference:'http-payment-001'};
+await denyRpc('admin_record_purchase_payment',forgedRole,payment);
+assert.equal((await rpc('admin_record_purchase_payment',ownerToken,payment)).idempotent_replay,false);
+assert.equal((await rpc('admin_record_purchase_payment',ownerToken,payment)).idempotent_replay,true);
+await conflict('admin_record_purchase_payment',{...payment,p_payment:randomUUID(),p_reference:'http-payment-stale'});
+const read=()=>rpc('admin_read_purchase_payments',ownerToken,{p_id:po});
+const paid=await read();
+assert.equal(paid.received_tetri,'850');assert.equal(paid.paid_tetri,'300');assert.equal(paid.balance_tetri,'550');assert.equal(paid.payment_count,'1');assert.equal(paid.revision,'4');
+await denyRpc('admin_read_purchase_payments',customerToken,{p_id:po});
+const correction={p_id:po,p_payment:payment.p_payment,p_correction:randomUUID(),p_revision:4,p_reason:'Fixture duplicate entry'};
+await denyRpc('admin_correct_purchase_payment',customerToken,correction);
+await conflict('admin_correct_purchase_payment',{...correction,p_revision:3});
+assert.equal((await rpc('admin_correct_purchase_payment',ownerToken,correction)).idempotent_replay,false);
+assert.equal((await rpc('admin_correct_purchase_payment',ownerToken,correction)).idempotent_replay,true);
+const corrected=await read();
+assert.equal(corrected.paid_tetri,'0');assert.equal(corrected.balance_tetri,'850');assert.equal(corrected.payment_count,'1');assert.equal(corrected.correction_count,'1');assert.equal(corrected.revision,'5');
+assert.equal(corrected.payments[0].correction.id,correction.p_correction);
+const finalBalance=await rpc('admin_read_supplier_balance',ownerToken,{p_supplier:supplier});
+assert.equal(finalBalance.purchase_count,'1');assert.equal(finalBalance.balance_tetri,'850');
+assert.equal((await ok('/admin_purchase_receipts?select=id&purchase_id=eq.'+po,ownerToken)).length,1);
+assert.deepEqual(await ok('/admin_purchase_receipts?select=id&purchase_id=eq.'+po,customerToken),[]);
+console.log('PASS signed HTTP purchase lifecycle: access, stale conflicts, receipt/payment/correction replay and exact balance');
