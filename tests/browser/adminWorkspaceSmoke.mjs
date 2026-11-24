@@ -132,6 +132,52 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
           assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
         }
+        if (tab === 'visual_editor') {
+          const editor=shell.locator('.gs-storefront-visual-editor');
+          const frame=editor.locator('.gs-visual-preview-frame');
+          const library=editor.locator('.gs-storefront-design-templates');
+          await library.locator('summary').click();
+          await library.getByRole('textbox',{name:'შაბლონის სახელი',exact:true}).fill('Fixture design');
+          await library.getByRole('button',{name:'მიმდინარე საიტის დიზაინის შენახვა',exact:true}).click();
+          await library.getByText('Fixture design',{exact:true}).waitFor({state:'visible'});
+          await editor.getByRole('button',{name:'გაუქმება',exact:true}).click();
+          await library.getByText('Fixture design',{exact:true}).waitFor({state:'detached'});
+          const sections=editor.locator('details').filter({has:editor.locator('summary').filter({hasText:'სექციების ჩართვა და თანმიმდევრობა'})});
+          await sections.locator(':scope > summary').click();
+          const desktop=editor.getByRole('button',{name:'Desktop',exact:true});
+          const mobile=editor.getByRole('button',{name:'Mobile',exact:true});
+          const readOrder=()=>frame.locator('.geostore-storefront').evaluate(node=>{
+            const category=node.querySelector('#gs-video-collections'),filter=node.querySelector('#gs-video-catalog-anchor');
+            return Boolean(category&&filter&&(category.compareDocumentPosition(filter)&Node.DOCUMENT_POSITION_FOLLOWING));
+          });
+          await desktop.click();
+          assert.equal(await readOrder(),true,'Default desktop categories precede filters');
+          await mobile.click();
+          await sections.getByRole('button',{name:'კატეგორიები ქვემოთ',exact:true}).click();
+          assert.equal(await readOrder(),false,'Mobile order must actually change the DOM');
+          await desktop.click();
+          assert.equal(await readOrder(),true,'Mobile reorder must not alter desktop');
+          await mobile.click();
+          assert.equal(await readOrder(),false,'Mobile override survives switching view');
+          await sections.getByRole('button',{name:'საერთო რიგის აღდგენა',exact:true}).click();
+          assert.equal(await readOrder(),true,'Inheritance restores desktop order');
+          const geometry=editor.locator('.gs-section-geometry');
+          await geometry.locator('summary').click();
+          await geometry.getByRole('combobox',{name:'დაშორების სექცია'}).selectOption('categories');
+          await geometry.getByRole('slider',{name:'მაქსიმალური სიგანე',exact:true}).press('Home');
+          const category=frame.locator('#gs-video-collections');
+          assert.equal(await category.getAttribute('data-gs-section-width'),'true');
+          assert.equal(await category.evaluate(node=>node.style.getPropertyValue('--gs-section-max-width')),'85%');
+          await desktop.click();
+          assert.equal(await category.getAttribute('data-gs-section-width'),null,'Mobile width cannot affect desktop');
+          await mobile.click();
+          assert.equal(await category.getAttribute('data-gs-section-width'),'true');
+          await geometry.getByRole('button',{name:'საერთო მნიშვნელობის აღდგენა',exact:true}).last().click();
+          assert.equal(await category.getAttribute('data-gs-section-width'),null,'Geometry reset removes explicit override');
+          await desktop.click();
+          assert.deepEqual(writes,[],'Local visual editor changes must not save or publish automatically');
+          console.log('PASS isolated storefront editor: template undo, responsive DOM order and width inheritance at '+width+'px');
+        }
         if (tab === 'support') await page.locator('#admin-workspace-support-status').selectOption('ღია');
       }
       assert.deepEqual(writes, [], 'Opening and filtering modules must not mutate live or fixture data');
