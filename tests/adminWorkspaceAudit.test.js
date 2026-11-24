@@ -83,3 +83,9 @@ test('workspace audit 11 verifies coupon writes and keeps banner changes in draf
  for(const term of ['couponMutationRef.current === sessionVersion','savedRows[0].code !== newC.code','String(deletedRows[0].id) !== String(id)','admin-workspace-coupon-search','flashSaleAdminSummary.activeProducts.map','flashSaleMutationRef.current === sessionVersion','editingBannerId','moveBanner(b.id, -1)','moveBanner(b.id, 1)','setBannersList(prev => existingBanner','onSubmit={handleAddBanner}','onSubmit={handleCreateCoupon}','admin_apply_flash_sale']) assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 11'));
 });
+
+test('workspace audit 12 filters loaded logs and clearly scopes local vendor and broadcast operations',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['admin-workspace-log-search','filteredActivityLogs.slice','Math.ceil(filteredActivityLogs.length / ACTIVITY_LOGS_PER_PAGE)','filter(log => String(log.id) !== String(saved.id))].slice(0, 200)','admin-workspace-vendor-search','editingVendorId','readOnly={editingVendorId !== null}','setVendorsList(prev => existingVendor','მომწოდებლების დაგეგმვის სია ინახება მხოლოდ ამ მოწყობილობაზე','id="admin-broadcast-title" type="text" maxLength={120}','id="admin-broadcast-message" rows="4" maxLength={2000}','სატესტო შეტყობინების წინასწარი ნახვა','მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.']) assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 12'));
+});

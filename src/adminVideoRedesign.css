@@ -1081,3 +1081,12 @@
 @media (max-width: 640px) {
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-banners,.admin-coupons-panel) :is(input,select) { font-size: 16px; }
 }
+
+/* Workspace audit 12 — vendors, activity and broadcasts */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendors-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) :is(input,textarea,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendor-card,.admin-audit-log-row,.admin-broadcasts-panel) :is(h4,p,span) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendors-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) :is(input,textarea) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-log-tools > div { flex-basis: 100%; }
+}

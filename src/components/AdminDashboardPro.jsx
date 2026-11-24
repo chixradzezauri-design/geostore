@@ -2018,6 +2018,8 @@ export default function AdminDashboardPro({
   const [couponBusy, setCouponBusy] = useState(false);
   const couponMutationRef = useRef(null);
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
+  const [vendorSearch, setVendorSearch] = useState('');
+  const [editingVendorId, setEditingVendorId] = useState(null);
   
   const [newCatName, setNewCatName] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
@@ -2435,9 +2437,13 @@ export default function AdminDashboardPro({
   const [activityLogsError, setActivityLogsError] = useState('');
   const ACTIVITY_LOGS_PER_PAGE = 20;
   const [activityLogsPage, setActivityLogsPage] = useState(1);
-  const activityLogsTotalPages = Math.max(1, Math.ceil(activityLogs.length / ACTIVITY_LOGS_PER_PAGE));
+  const [activityLogSearch, setActivityLogSearch] = useState('');
+  const activityLogSearchTerm = activityLogSearch.trim().toLocaleLowerCase();
+  const filteredActivityLogs = activityLogs.filter(log => [log.action, log.time, log.id].some(value =>
+    String(value ?? '').toLocaleLowerCase().includes(activityLogSearchTerm)));
+  const activityLogsTotalPages = Math.max(1, Math.ceil(filteredActivityLogs.length / ACTIVITY_LOGS_PER_PAGE));
   const safeActivityLogsPage = Math.min(activityLogsPage, activityLogsTotalPages);
-  const paginatedActivityLogs = activityLogs.slice(
+  const paginatedActivityLogs = filteredActivityLogs.slice(
     (safeActivityLogsPage - 1) * ACTIVITY_LOGS_PER_PAGE,
     safeActivityLogsPage * ACTIVITY_LOGS_PER_PAGE
   );
@@ -2604,7 +2610,7 @@ export default function AdminDashboardPro({
         id: String(saved.id),
         action: saved.action,
         time: saved.created_at ? new Date(saved.created_at).toLocaleString('ka-GE') : ''
-      }, ...(prev || [])].slice(0, 100));
+      }, ...(prev || []).filter(log => String(log.id) !== String(saved.id))].slice(0, 200));
       setActivityLogsError('');
     } catch (error) {
       if (!isCurrentAdminSession(requestSessionVersion)) return;
@@ -4408,6 +4414,7 @@ export default function AdminDashboardPro({
 
   const handleAddVendor = (e) => {
     e.preventDefault();
+    if (!isOwner || typeof setVendorsList !== 'function') return;
     const vendorName = String(vendorForm.name || '').trim();
     const commissionText = String(vendorForm.commission ?? '').trim();
     const commission = Number(commissionText);
@@ -4420,33 +4427,40 @@ export default function AdminDashboardPro({
       alert('კომისია უნდა იყოს 0-დან 100%-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
       return;
     }
-    if ((vendorsList || []).some(v => String(v?.name || '').trim().toLocaleLowerCase() === vendorName.toLocaleLowerCase())) {
+    const existingVendor = editingVendorId === null ? null : (vendorsList || []).find(v => v.id === editingVendorId);
+    if (editingVendorId !== null && !existingVendor) return alert('მომწოდებელი აღარ მოიძებნა.');
+    if (existingVendor && vendorName !== String(existingVendor.name || '').trim()) return alert('არსებული მომწოდებლის სახელი უცვლელი უნდა დარჩეს.');
+    if ((vendorsList || []).some(v => v.id !== editingVendorId && String(v?.name || '').trim().toLocaleLowerCase() === vendorName.toLocaleLowerCase())) {
       alert('ასეთი სახელის ვენდორი უკვე არსებობს.');
       return;
     }
 
-    const vendorId = createAdminId('v');
+    const vendorId = existingVendor?.id || createAdminId('v');
     if (!vendorId) return alert(secureIdError);
     const newV = {
+      ...existingVendor,
       id: vendorId,
       name: vendorName,
       commission,
-      status: 'აქტიური'
+      status: existingVendor?.status || 'აქტიური'
     };
     if (typeof setVendorsList === 'function') {
-      setVendorsList(prev => [...(prev || []), newV]);
+      setVendorsList(prev => existingVendor ? (prev || []).map(v => v.id === vendorId ? newV : v) : [...(prev || []), newV]);
     }
+    setEditingVendorId(null);
     setVendorForm({ name: '', commission: '' });
-    logActivity(`დაემატა ახალი ვენდორი: ${newV.name}`);
-    alert('✅ ვენდორი წარმატებით დაემატა!');
+    logActivity(`${existingVendor ? 'განახლდა' : 'დაემატა'} ლოკალური მომწოდებელი: ${newV.name}`);
+    alert('მომწოდებლის ჩანაწერი ამ მოწყობილობაზე შეინახა.');
   };
 
   const handleDeleteVendor = (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
+    if (!isOwner) return;
+    if (window.confirm('წაიშალოს ლოკალური მომწოდებლის ჩანაწერი? პროდუქტის მონაცემები და შეკვეთები არ შეიცვლება.')) {
       if (typeof setVendorsList === 'function') {
         setVendorsList(prev => (prev || []).filter(v => v.id !== id));
       }
-      logActivity(`წაიშალა ვენდორი (ID: ${id})`);
+      if (editingVendorId === id) { setEditingVendorId(null); setVendorForm({ name: '', commission: '' }); }
+      logActivity(`წაიშალა ლოკალური მომწოდებელი (ID: ${id})`);
     }
   };
 
@@ -4519,6 +4533,7 @@ export default function AdminDashboardPro({
 
   const handleSendBroadcast = (e) => {
     e.preventDefault();
+    if (!isOwner) return;
     const title = String(broadcastForm.title || '').trim();
     const message = String(broadcastForm.message || '').trim();
     if (!title || !message) {
@@ -7258,26 +7273,34 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'logs' || adminContentTab === 'logs') && (
-          <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
             </h3>
+            <p className="text-xs text-slate-300">ძიება მუშაობს სერვერიდან მიღებულ ბოლო 200 ჩანაწერში.</p>
+            <div className="admin-workspace-log-tools flex flex-wrap items-end gap-2">
+              <div className="min-w-0 flex-1"><label htmlFor="admin-workspace-log-search" className="block text-xs text-slate-300 mb-1">აქტივობის ძიება</label><input id="admin-workspace-log-search" type="search" value={activityLogSearch} onChange={e => { setActivityLogSearch(e.target.value); setActivityLogsPage(1); }} placeholder="მოქმედება, თარიღი ან ID" className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>
+              {activityLogSearch && <button type="button" onClick={() => { setActivityLogSearch(''); setActivityLogsPage(1); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}
+              <button type="button" disabled={activityLogsLoading} onClick={() => void fetchActivityLogs()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
+            </div>
+            <p role="status" className="text-xs text-slate-400">ნაპოვნია {filteredActivityLogs.length} / {activityLogs.length} ჩატვირთული ჩანაწერი</p>
             <div className="space-y-3">
               {activityLogsLoading && <p className="text-xs text-slate-400">აქტივობების ისტორია იტვირთება...</p>}
               {activityLogsError && <p role="alert" className="text-xs text-amber-300 break-words">{activityLogsError}</p>}
               {!activityLogsLoading && activityLogs.length === 0 && !activityLogsError && (
                 <p className="text-xs text-slate-400">შენახული აქტივობები ჯერ არ არის.</p>
               )}
+              {!activityLogsLoading && !activityLogsError && activityLogs.length > 0 && filteredActivityLogs.length === 0 && <p className="text-xs text-slate-400">ჩატვირთულ ჟურნალში შედეგი ვერ მოიძებნა.</p>}
               {paginatedActivityLogs.map(log => (
                 <div key={log.id} className="admin-audit-log-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
                   <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
                   <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
               ))}
-              {activityLogs.length > 0 && (
+              {filteredActivityLogs.length > 0 && (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-emerald-500/15 pt-3">
                   <p className="text-[10px] text-slate-500">
-                    ბოლო {activityLogs.length} ჩანაწერი · გვერდი {safeActivityLogsPage}/{activityLogsTotalPages}
+                    ნაპოვნია {filteredActivityLogs.length} ჩანაწერი · გვერდი {safeActivityLogsPage}/{activityLogsTotalPages}
                   </p>
                   {activityLogsTotalPages > 1 && (
                     <nav aria-label="აქტივობების ისტორიის გვერდები" className="flex flex-wrap items-center gap-2">
@@ -7311,7 +7334,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'broadcasts' || adminContentTab === 'broadcasts') && (
-          <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
@@ -7319,13 +7342,19 @@ export default function AdminDashboardPro({
             <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label htmlFor="admin-broadcast-title" className="text-slate-400 font-bold">შეტყობინების სათაური</label>
-                <input id="admin-broadcast-title" type="text" placeholder="მაგ: ახალი კოლექცია უკვე საიტზეა!" required value={broadcastForm.title} onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input id="admin-broadcast-title" type="text" maxLength={120} placeholder="მაგ: ახალი კოლექცია უკვე საიტზეა!" required value={broadcastForm.title} onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="admin-broadcast-message" className="text-slate-400 font-bold">შეტყობინების ტექსტი</label>
-                <textarea id="admin-broadcast-message" rows="4" placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
+                <textarea id="admin-broadcast-message" rows="4" maxLength={2000} placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
               </div>
-              <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+              <p className="text-xs text-slate-400">სათაური: {broadcastForm.title.length} / 120 · ტექსტი: {broadcastForm.message.length} / 2000</p>
+              <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 space-y-2" aria-label="სატესტო შეტყობინების წინასწარი ნახვა">
+                <p className="text-xs font-bold text-slate-400">წინასწარი ნახვა — მხოლოდ ეს მოწყობილობა</p>
+                <p className="text-sm font-bold text-white break-words">{broadcastForm.title.trim() || "შეტყობინების სათაური"}</p>
+                <p className="text-xs text-slate-300 whitespace-pre-wrap break-words">{broadcastForm.message.trim() || "შეტყობინების ტექსტი"}</p>
+              </div>
+              <button type="submit" disabled={!broadcastForm.title.trim() || !broadcastForm.message.trim()} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Send className="w-4 h-4" /> სატესტო შეტყობინების შენახვა
               </button>
             </form>
@@ -7689,30 +7718,35 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'vendors' || adminContentTab === 'vendors') && (
-          <div className="admin-vendors-panel space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-vendors-panel space-y-4">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Store className="w-5 h-5 text-emerald-400" /> ახალი ვენდორის დამატება და კომისია
+                <Store className="w-5 h-5 text-emerald-400" /> {editingVendorId !== null ? "მომწოდებლის საკომისიოს რედაქტირება" : "ახალი მომწოდებელი და საკომისიო"}
               </h3>
+              <p className="text-xs text-amber-200">მომწოდებლების დაგეგმვის სია ინახება მხოლოდ ამ მოწყობილობაზე. საკომისიო არ ცვლის შეკვეთების ფასებსა და ფინანსურ ანგარიშებს.</p>
               <form onSubmit={handleAddVendor} className="admin-vendor-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                <input type="text" placeholder="ვენდორის სახელი *" required maxLength={100} value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <input type="number" min="0" max="100" step="0.01" inputMode="decimal" placeholder="კომისია %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" aria-label="მომწოდებლის სახელი" readOnly={editingVendorId !== null} placeholder="მომწოდებლის სახელი *" required maxLength={100} value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" min="0" max="100" step="0.01" inputMode="decimal" aria-label="საკომისიო პროცენტებში" placeholder="საკომისიო %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center gap-1.5">
-                  <Percent className="w-4 h-4" /> ვენდორის დამატება
+                  <Percent className="w-4 h-4" /> {editingVendorId !== null ? "საკომისიოს შენახვა" : "მომწოდებლის დამატება"}
                 </button>
               </form>
+              {editingVendorId !== null && <button type="button" onClick={() => { setEditingVendorId(null); setVendorForm({ name: '', commission: '' }); }} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">რედაქტირების გაუქმება</button>}
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+              <h3 className="font-black text-white text-base">ლოკალური მომწოდებლები ({vendorsList?.length || 0})</h3>
+              <div className="flex flex-wrap items-end gap-2"><div className="min-w-0 flex-1"><label htmlFor="admin-workspace-vendor-search" className="block text-xs text-slate-300 mb-1">მომწოდებლის ძიება</label><input id="admin-workspace-vendor-search" type="search" value={vendorSearch} onChange={e => setVendorSearch(e.target.value)} placeholder="სახელის ძიება" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>{vendorSearch && <button type="button" onClick={() => setVendorSearch('')} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}</div>
+              {!(vendorsList || []).some(v => String(v.name || '').toLocaleLowerCase().includes(vendorSearch.trim().toLocaleLowerCase())) && <p className="text-xs text-slate-400">მომწოდებელი ვერ მოიძებნა.</p>}
               <div className="admin-vendor-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {(vendorsList || []).map(v => (
-                  <div key={v.id} className="admin-vendor-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
+                {(vendorsList || []).filter(v => String(v.name || '').toLocaleLowerCase().includes(vendorSearch.trim().toLocaleLowerCase())).map(v => (
+                  <div key={v.id} className="admin-vendor-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col gap-2 text-xs shadow-inner">
                     <div>
                       <h4 className="font-bold text-white text-sm">{v.name}</h4>
                       <p className="text-emerald-400 font-bold mt-0.5">კომისია: {v.commission}%</p>
                     </div>
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black">{v.status}</span>
+                      <button type="button" onClick={() => { setEditingVendorId(v.id); setVendorForm({ name: v.name || "", commission: String(v.commission ?? "") }); }} aria-label={`საკომისიოს შეცვლა: ${v.name}`} className="rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
                       <button type="button" aria-label={`მომწოდებლის წაშლა: ${v.name}`} onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
