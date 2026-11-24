@@ -5,13 +5,13 @@ CREATE SCHEMA auth;
 GRANT USAGE ON SCHEMA private,auth,public TO authenticated,anon;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid; $$;
 CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.jwt',true),''),'{}')::jsonb; $$;
-CREATE TABLE public.products(id text PRIMARY KEY,name text NOT NULL,category text,vendor text,stock integer CHECK(stock BETWEEN 0 AND 1000000),variants jsonb DEFAULT '[]',purchase_cost numeric);
+CREATE TABLE public.products(id text PRIMARY KEY,name text NOT NULL,price_gel numeric NOT NULL,category text,vendor text,stock integer CHECK(stock BETWEEN 0 AND 1000000),variants jsonb DEFAULT '[]',purchase_cost numeric);
 REVOKE ALL ON public.products FROM PUBLIC,anon,authenticated;
 CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz,created_at timestamptz DEFAULT now(),banned_until timestamptz,raw_app_meta_data jsonb DEFAULT '{}',is_anonymous boolean DEFAULT false,deleted_at timestamptz);
 REVOKE ALL ON auth.users FROM PUBLIC,anon,authenticated;
 CREATE TABLE private.admin_customer_crm_profiles(user_id uuid PRIMARY KEY,is_vip boolean,is_blocked boolean);
-CREATE TABLE public.admin_staff_members(user_id uuid PRIMARY KEY);
-CREATE TABLE public.orders(id text PRIMARY KEY,user_id uuid,status text,created_at timestamptz);
+CREATE TABLE public.admin_staff_members(user_id uuid PRIMARY KEY,email text NOT NULL,display_name text NOT NULL,role text NOT NULL);
+CREATE TABLE public.orders(id text PRIMARY KEY,user_id uuid,status text,created_at timestamptz,customer_name text NOT NULL,phone text NOT NULL,address text NOT NULL,total_gel numeric NOT NULL);
 INSERT INTO auth.users(id,email,email_confirmed_at) VALUES
  ('1060de3d-d28a-45f8-9a64-5e0368cffc4b','owner@example.invalid',now()),
  ('10000000-0000-4000-8000-000000000001','customer@example.invalid',now());
