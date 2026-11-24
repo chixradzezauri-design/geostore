@@ -56,6 +56,15 @@ BEGIN
  IF r->>'total'<>'3' OR r->>'opted_in'<>'0' OR r->>'withdrawn'<>'1' OR r->>'reconfirmation_required'<>'1' OR r->>'not_set'<>'1' THEN RAISE EXCEPTION 'Aggregate mismatch: %',r; END IF;
 END $test$;
 RESET ROLE;
+-- A re-verified original address must not resurrect the old opt-in.
+UPDATE auth.users SET email='one@example.invalid',email_confirmed_at=email_confirmed_at+interval '1 second' WHERE id='10000000-0000-4000-8000-000000000001';
+SET ROLE authenticated;
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000001';
+SET request.jwt.claim.jwt='{}';
+DO $test$ BEGIN
+ IF public.my_marketing_email_consent()->>'status'<>'reconfirmation_required' THEN RAISE EXCEPTION 'Reverified address resurrected consent'; END IF;
+END $test$;
+RESET ROLE;
 DELETE FROM auth.users WHERE id='10000000-0000-4000-8000-000000000001';
 DO $test$ BEGIN
  IF EXISTS(SELECT 1 FROM private.marketing_email_consent_events WHERE user_id='10000000-0000-4000-8000-000000000001') THEN RAISE EXCEPTION 'Account deletion cleanup failed'; END IF;
@@ -109,6 +118,32 @@ RESET ROLE;
 DO $test$ BEGIN
  IF has_function_privilege('anon','public.admin_marketing_segments()','EXECUTE') THEN RAISE EXCEPTION 'Anonymous segment access'; END IF;
 END $test$;
+-- A matching staff address is excluded even though the staff account is
+-- not in the customer segment universe. Restore the fixture afterwards.
+UPDATE auth.users SET email=' NEW@example.invalid ' WHERE id='10000000-0000-4000-8000-000000000006';
+SET ROLE authenticated;
+SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$ BEGIN
+ IF public.admin_marketing_segments()->'segments'->'all'->>'consent_candidates'<>'0' THEN RAISE EXCEPTION 'Staff address collision not excluded'; END IF;
+ IF public.admin_marketing_segments()->'segments'->'all'->>'accounts'<>'5' THEN RAISE EXCEPTION 'Staff collision changed account scope'; END IF;
+END $test$;
+RESET ROLE;
+UPDATE auth.users SET email='staff@example.invalid' WHERE id='10000000-0000-4000-8000-000000000006';
+UPDATE auth.users SET email_confirmed_at=email_confirmed_at+interval '1 second' WHERE id='10000000-0000-4000-8000-000000000004';
+SET ROLE authenticated;
+SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$ BEGIN
+ IF public.admin_marketing_segments()->'segments'->'all'->>'consent_candidates'<>'0' THEN RAISE EXCEPTION 'Reconfirmed address candidate not excluded'; END IF;
+END $test$;
+RESET ROLE;
+-- Re-consent explicitly against the last observed event for later campaign tests.
+SET ROLE authenticated;
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000004';
+SET request.jwt.claim.jwt='{}';
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',(public.my_marketing_email_consent()->>'event_id')::uuid);
+RESET ROLE;
 \ir ../../release/staged-marketing-campaigns.sql
 SET ROLE authenticated;
 SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';

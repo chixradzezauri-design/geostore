@@ -2,7 +2,7 @@
   "schema": 1,
   "projectId": "xmtnszxtnfxnrojionoa",
   "capturedDate": "2026-11-24",
-  "sourceCommit": "991b5ce6eea06dc0d5a187a4a2339665dd59ab6d",
+  "sourceCommit": "46c0188368928e1bd480e4b138ed50d5ffe8661d",
   "deliveryEnabled": false,
   "releaseApproved": false,
   "appliedMigrations": [
@@ -574,11 +574,11 @@
     },
     {
       "path": "release/staged-marketing-consent.sql",
-      "sha": "32bd00e0a2a63b44d48e67f8e922ae7ffbe2cb0c"
+      "sha": "0b7926bfc8ee7e2c177e618de2d9893a5038b620"
     },
     {
       "path": "release/staged-marketing-segments.sql",
-      "sha": "6f93d520aa50f39489beaf441eaa254648bf221e"
+      "sha": "bffb1ca6d2a136dc18efbe3c9d8cff5fc01d6b5f"
     },
     {
       "path": "release/staged-marketing-campaigns.sql",

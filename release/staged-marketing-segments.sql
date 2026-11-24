@@ -10,7 +10,7 @@ BEGIN
   SELECT u.id,u.created_at,coalesce(c.is_vip,false) AS vip,
    coalesce(c.is_blocked,false) OR coalesce(u.banned_until>statement_timestamp(),false) AS blocked,
    coalesce(lower(btrim(u.email)),'') AS normalized_email,
-   coalesce(e.opted_in AND u.email_confirmed_at IS NOT NULL AND coalesce(btrim(u.email),'')<>'' AND e.email_fingerprint=private.marketing_email_fingerprint(u.email),false) AS consent
+   coalesce(e.opted_in AND u.email_confirmed_at IS NOT NULL AND coalesce(btrim(u.email),'')<>'' AND e.email_fingerprint=private.marketing_email_fingerprint(u.email) AND e.verified_email_confirmed_at=u.email_confirmed_at,false) AS consent
   FROM auth.users u
   LEFT JOIN private.admin_customer_crm_profiles c ON c.user_id=u.id
   LEFT JOIN LATERAL (SELECT * FROM private.marketing_email_consent_events WHERE user_id=u.id ORDER BY sequence_id DESC LIMIT 1) e ON true
@@ -29,9 +29,15 @@ BEGIN
    WHERE ord.user_id=a.id AND lower(btrim(ord.status)) IN ('დასრულებული','ჩაბარებულია','completed','delivered','доставлен','завершён','завершен')
    AND ord.created_at IS NOT NULL AND ord.created_at<=statement_timestamp()
   ) o ON true
+ ), address_counts AS (
+  -- Count the full Auth address universe, including owner, staff and excluded
+  -- accounts. An ambiguous address must never be a candidate.
+  SELECT lower(btrim(email)) AS normalized_email,count(*) AS address_accounts
+  FROM auth.users WHERE coalesce(btrim(email),'')<>''
+  GROUP BY lower(btrim(email))
  ), dedup AS (
-  SELECT a.*,count(*) OVER(PARTITION BY normalized_email) AS address_accounts
-  FROM activity a
+  SELECT a.*,coalesce(d.address_accounts,0) AS address_accounts
+  FROM activity a LEFT JOIN address_counts d USING(normalized_email)
  ), classified AS (
  SELECT d.*,
   (NOT blocked AND consent AND address_accounts=1) AS consent_candidate,

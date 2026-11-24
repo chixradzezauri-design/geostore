@@ -10,8 +10,9 @@ CREATE TABLE private.marketing_email_consent_events (
  opted_in boolean NOT NULL,
  policy_version text NOT NULL CHECK(policy_version='email-marketing-v1'),
  email_fingerprint bytea,
+ verified_email_confirmed_at timestamptz,
  recorded_at timestamptz NOT NULL DEFAULT clock_timestamp(),
- CHECK ((opted_in AND email_fingerprint IS NOT NULL AND octet_length(email_fingerprint)=32) OR (NOT opted_in AND email_fingerprint IS NULL))
+ CHECK ((opted_in AND email_fingerprint IS NOT NULL AND octet_length(email_fingerprint)=32 AND verified_email_confirmed_at IS NOT NULL) OR (NOT opted_in AND email_fingerprint IS NULL AND verified_email_confirmed_at IS NULL))
 );
 CREATE INDEX marketing_email_consent_user_idx ON private.marketing_email_consent_events(user_id,sequence_id DESC);
 ALTER TABLE private.marketing_email_consent_events ENABLE ROW LEVEL SECURITY;
@@ -35,7 +36,7 @@ BEGIN
  SELECT * INTO v_event FROM private.marketing_email_consent_events WHERE user_id=v_user ORDER BY sequence_id DESC LIMIT 1;
  IF NOT FOUND THEN v_status:='not_set';
  ELSIF NOT v_event.opted_in THEN v_status:='withdrawn';
- ELSIF v_confirmed IS NULL OR coalesce(btrim(v_email),'')='' OR v_event.email_fingerprint IS DISTINCT FROM private.marketing_email_fingerprint(v_email) THEN v_status:='reconfirmation_required';
+ ELSIF v_confirmed IS NULL OR coalesce(btrim(v_email),'')='' OR v_event.email_fingerprint IS DISTINCT FROM private.marketing_email_fingerprint(v_email) OR v_event.verified_email_confirmed_at IS DISTINCT FROM v_confirmed THEN v_status:='reconfirmation_required';
  ELSE v_status:='opted_in';
  END IF;
  RETURN jsonb_build_object('status',v_status,'policy_version','email-marketing-v1','event_id',v_event.event_id,'recorded_at',v_event.recorded_at,
@@ -70,8 +71,8 @@ BEGIN
   SELECT event_id INTO v_latest FROM private.marketing_email_consent_events WHERE user_id=v_user ORDER BY sequence_id DESC LIMIT 1;
   IF p_opted_in AND v_latest IS DISTINCT FROM p_expected_event THEN RAISE EXCEPTION 'Consent changed; refresh before opting in' USING ERRCODE='40001'; END IF;
   IF p_opted_in AND (v_confirmed IS NULL OR coalesce(btrim(v_email),'')='') THEN RAISE EXCEPTION 'Verified email required' USING ERRCODE='22023'; END IF;
-  INSERT INTO private.marketing_email_consent_events(event_id,user_id,opted_in,policy_version,email_fingerprint,expected_event_id)
-  VALUES(p_event,v_user,p_opted_in,p_policy_version,CASE WHEN p_opted_in THEN private.marketing_email_fingerprint(v_email) ELSE NULL END,p_expected_event)
+  INSERT INTO private.marketing_email_consent_events(event_id,user_id,opted_in,policy_version,email_fingerprint,expected_event_id,verified_email_confirmed_at)
+  VALUES(p_event,v_user,p_opted_in,p_policy_version,CASE WHEN p_opted_in THEN private.marketing_email_fingerprint(v_email) ELSE NULL END,p_expected_event,CASE WHEN p_opted_in THEN v_confirmed ELSE NULL END)
   RETURNING * INTO v_event;
  END IF;
  -- A retry of an old opt-in cannot override a later withdrawal or a changed email.
@@ -95,7 +96,7 @@ BEGIN
  IF auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid OR coalesce(auth.jwt()->'app_metadata'->>'role','')<>'admin' THEN RAISE EXCEPTION 'Owner required' USING ERRCODE='42501'; END IF;
  WITH states AS (
  SELECT CASE WHEN e.event_id IS NULL THEN 'not_set' WHEN NOT e.opted_in THEN 'withdrawn'
- WHEN u.email_confirmed_at IS NULL OR coalesce(btrim(u.email),'')='' OR e.email_fingerprint IS DISTINCT FROM private.marketing_email_fingerprint(u.email) THEN 'reconfirmation_required'
+ WHEN u.email_confirmed_at IS NULL OR coalesce(btrim(u.email),'')='' OR e.email_fingerprint IS DISTINCT FROM private.marketing_email_fingerprint(u.email) OR e.verified_email_confirmed_at IS DISTINCT FROM u.email_confirmed_at THEN 'reconfirmation_required'
  ELSE 'opted_in' END AS status
  FROM auth.users u LEFT JOIN LATERAL (SELECT * FROM private.marketing_email_consent_events WHERE user_id=u.id ORDER BY sequence_id DESC LIMIT 1) e ON true
  )
