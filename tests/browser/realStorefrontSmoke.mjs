@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { chromium, webkit } from 'playwright';
 import { runStage46ProductPurchaseScenarios } from './stage46PurchaseScenarios.mjs';
 import { runStage49AccountSwitchScenario } from './stage49AccountSwitchScenarios.mjs';
+import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -231,6 +232,7 @@ try {
   // Stage 46: actual built SPA with a fully intercepted, deterministic catalogue.
   await runStage46ProductPurchaseScenarios(browser, host);
   await runStage49AccountSwitchScenario(browser, host);
+  await runAdminWorkspaceSmoke(browser, host);
 
   // Stage 48: exercise Safari's WebKit engine with the exact same fully
   // intercepted catalogue. This is not a native iPhone Safari test.
