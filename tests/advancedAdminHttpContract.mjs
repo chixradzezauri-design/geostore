@@ -181,3 +181,16 @@ assert.equal(independentCampaign.campaigns[0].revision,'2');
 assert.equal(independentCampaign.campaigns[0].subject,'Offer');
 assert.equal(independentCampaign.delivery_enabled,false);
 console.log('PASS signed HTTP template lifecycle: permissions, concurrent edit conflict, immutable archive, replay and campaign independence');
+
+// Signed HTTP variant receipt with the actual product guard and aggregate trigger.
+const variantOrder=randomUUID();
+await rpc('admin_create_purchase',ownerToken,{p_id:variantOrder,p_supplier:supplier,p_lines:[{product_id:'http-variant',variant_id:'v',quantity:3,unit_cost:9}]});
+const variantLines=await ok('/admin_purchase_lines?select=id,variant_id&purchase_id=eq.'+variantOrder,ownerToken);
+assert.equal(variantLines.length,1);assert.equal(variantLines[0].variant_id,'v');
+await rpc('admin_transition_purchase',ownerToken,{p_id:variantOrder,p_revision:1,p_action:'approve'});
+const variantReceipt={p_id:variantOrder,p_line:variantLines[0].id,p_receipt:randomUUID(),p_revision:2,p_quantity:3};
+const variantAck=await rpc('admin_receive_purchase',ownerToken,variantReceipt);
+assert.equal(variantAck.stock_before,2);assert.equal(variantAck.stock_after,5);assert.equal(variantAck.idempotent_replay,false);
+assert.equal((await rpc('admin_receive_purchase',ownerToken,variantReceipt)).idempotent_replay,true);
+assert.equal((await rpc('admin_read_purchase_payments',ownerToken,{p_id:variantOrder})).received_tetri,'2700');
+console.log('PASS signed variant receipt with real guard and aggregate trigger');

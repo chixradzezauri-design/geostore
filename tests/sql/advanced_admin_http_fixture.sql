@@ -11,3 +11,5 @@ $claims$;
 
 -- Synthetic product belongs to the supplier created by the HTTP test.
 INSERT INTO public.products(id,name,price_gel,category,vendor,stock,variants,purchase_cost) VALUES ('http-base','HTTP fixture base',20,'fixture','HTTP fixture supplier',10,'[]',3);
+
+INSERT INTO public.products(id,name,price_gel,category,vendor,stock,variants,purchase_cost) VALUES ('http-variant','HTTP fixture variants',25,'fixture','HTTP fixture supplier',0,'[{"id":"v","name":"Red S","variantType":"size_color","stock":2,"priceGEL":25},{"id":"w","name":"Blue M","variantType":"size_color","stock":4,"priceGEL":30}]',9);
