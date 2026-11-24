@@ -8,6 +8,7 @@ on:
       - 'tests/stage78-supabase/**'
       - 'scripts/stage78AuthPostgrest.mjs'
       - 'scripts/advancedAdminRealAuth.mjs'
+      - 'tests/sql/advanced_admin_acl_verify.sql'
       - 'scripts/advancedAdminReleaseBundle.mjs'
       - 'release/advanced-admin-release-candidate.json'
       - 'release/staged-*.sql'
@@ -150,6 +151,8 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
           node "$GITHUB_WORKSPACE/scripts/advancedAdminRealAuth.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/sql/advanced_admin_acl_verify.sql"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase

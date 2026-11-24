@@ -97,6 +97,7 @@ on:
       - 'tests/sql/advanced_admin_release_bundle_contract.sql'
       - 'tests/sql/advanced_admin_http_fixture.sql'
       - 'tests/sql/advanced_admin_http_inventory_verify.sql'
+      - 'tests/sql/advanced_admin_acl_verify.sql'
       - 'tests/advancedAdminHttpContract.mjs'
       - 'release/staged-admin-suppliers.sql'
       - 'release/staged-admin-purchases.sql'
@@ -196,3 +197,4 @@ jobs:
           trap 'docker rm -f advanced-admin-http-fixture >/dev/null 2>&1 || true' EXIT
           node tests/advancedAdminHttpContract.mjs || { docker logs advanced-admin-http-fixture; exit 1; }
           PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_http_inventory_verify.sql
+          PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_acl_verify.sql
