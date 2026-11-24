@@ -245,6 +245,9 @@ export default function StorefrontVisualEditor({
   const draftSaveInFlightRef = useRef(false);
   const publishInFlightRef = useRef(false);
   const heroImageReadRequestRef = useRef(0);
+  const heroImagePendingRef = useRef(false);
+  const [heroImagePending, setHeroImagePending] = useState(false);
+  useEffect(() => () => { heroImageReadRequestRef.current += 1; heroImagePendingRef.current = false; }, []);
   const [history, setHistory] = useState([initialDesign]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyRef = useRef([initialDesign]);
@@ -310,6 +313,7 @@ export default function StorefrontVisualEditor({
   };
 
   const restoreSelectedStorefrontVersion = async () => {
+    if (heroImagePendingRef.current) return setSaveMessage('ფოტო ჯერ იტვირთება. დაელოდეთ ჩატვირთვის დასრულებას.');
     if (!selectedVersionId || !selectedVersionSnapshot?.snapshot || typeof onRestoreStorefrontVersion !== 'function' || versionRestoreBusy) return;
     const label = selectedVersionSnapshot.version_label || 'არჩეული ვერსია';
     if (!window.confirm('გსურთ „' + label + '“-ის მონახაზში აღდგენა? გამოქვეყნებული საიტი უცვლელი დარჩება.')) return;
@@ -411,20 +415,26 @@ export default function StorefrontVisualEditor({
   }, []);
 
   const updateGroup = (group, key, value) => {
+    const currentDesign = designRef.current;
+    if (group === 'hero' && key === 'imageUrl') {
+      heroImageReadRequestRef.current += 1;
+      heroImagePendingRef.current = false;
+      setHeroImagePending(false);
+    }
     if (previewMode !== 'desktop' && ['layout', 'theme', 'typography'].includes(group)) {
       commitDesign({
-        ...design,
+        ...currentDesign,
         responsive: {
-          ...(design.responsive || {}),
+          ...(currentDesign.responsive || {}),
           [previewMode]: {
-            ...(design.responsive?.[previewMode] || {}),
-            [group]: { ...(design.responsive?.[previewMode]?.[group] || {}), [key]: value }
+            ...(currentDesign.responsive?.[previewMode] || {}),
+            [group]: { ...(currentDesign.responsive?.[previewMode]?.[group] || {}), [key]: value }
           }
         }
       });
       return;
     }
-    commitDesign({ ...design, [group]: { ...design[group], [key]: value } });
+    commitDesign({ ...currentDesign, [group]: { ...currentDesign[group], [key]: value } });
   };
 
   const updateSiteText = (key, value) => {
@@ -615,6 +625,8 @@ export default function StorefrontVisualEditor({
   const handleHeroFileChange = event => {
     const requestId = ++heroImageReadRequestRef.current;
     const file = event.target.files?.[0];
+    heroImagePendingRef.current = false;
+    setHeroImagePending(false);
     if (!file) return;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type) || file.size <= 0 || file.size > 5 * 1024 * 1024) {
@@ -622,9 +634,17 @@ export default function StorefrontVisualEditor({
       event.target.value = '';
       return;
     }
+    const finishRead = () => {
+      if (requestId !== heroImageReadRequestRef.current) return;
+      heroImagePendingRef.current = false;
+      setHeroImagePending(false);
+    };
+    heroImagePendingRef.current = true;
+    setHeroImagePending(true);
     const reader = new FileReader();
     reader.onload = () => {
       if (requestId !== heroImageReadRequestRef.current) return;
+      finishRead();
       if (typeof reader.result === 'string' && reader.result.startsWith(`data:${file.type};base64,`)) {
         updateGroup('hero', 'imageUrl', reader.result);
       } else {
@@ -632,14 +652,17 @@ export default function StorefrontVisualEditor({
       }
     };
     reader.onerror = () => {
+      finishRead();
       if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
     };
     reader.onabort = () => {
+      finishRead();
       if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა შეწყდა. სცადეთ ხელახლა.');
     };
     try {
       reader.readAsDataURL(file);
     } catch (error) {
+      finishRead();
       if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
     } finally {
       event.target.value = '';
@@ -822,6 +845,7 @@ export default function StorefrontVisualEditor({
   };
 
   const saveDraft = async () => {
+    if (heroImagePendingRef.current) return setSaveMessage('ფოტო ჯერ იტვირთება. დაელოდეთ ჩატვირთვის დასრულებას.');
     if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current || publishInFlightRef.current) return;
     draftSaveInFlightRef.current = true;
     const snapshotDesign = designRef.current;
@@ -851,6 +875,7 @@ export default function StorefrontVisualEditor({
   };
 
   const publish = async () => {
+    if (heroImagePendingRef.current) return setSaveMessage('ფოტო ჯერ იტვირთება. დაელოდეთ ჩატვირთვის დასრულებას.');
     if (!isOwner || typeof onPublishStorefront !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current || publishInFlightRef.current) return;
     if (localDesignDirtyRef.current) {
       setSaveMessage('დიზაინში შეუნახავი ცვლილებებია. ჯერ შეინახეთ მონახაზი და შემდეგ გამოაქვეყნეთ.');
@@ -889,6 +914,9 @@ export default function StorefrontVisualEditor({
 
   const resetDesign = () => {
     if (!window.confirm('გსურთ მხოლოდ ვიზუალური პარამეტრების საწყის მნიშვნელობებზე დაბრუნება? ტექსტები, კატეგორიები და პროდუქტები არ შეიცვლება.')) return;
+    heroImageReadRequestRef.current += 1;
+    heroImagePendingRef.current = false;
+    setHeroImagePending(false);
     commitDesign(DEFAULT_STOREFRONT_VISUAL_DESIGN);
   };
 
@@ -907,13 +935,14 @@ export default function StorefrontVisualEditor({
             <button type="button" onClick={resetDesign} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">ვიზუალური Reset</button>
           </div>
         </div>
+        {heroImagePending && <p role="status" className="mt-2 text-xs text-amber-200">ფოტო იტვირთება — შენახვა დროებით შეჩერებულია.</p>}
         {saveMessage && <p role={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'alert' : 'status'} aria-live={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'assertive' : 'polite'} className={`mt-3 rounded-xl border px-3 py-2 text-xs ${/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'border-rose-400/40 bg-rose-950/40 text-rose-200' : 'border-emerald-400/20 bg-slate-950/70 text-emerald-200'}`}>{saveMessage}</p>}
       </header>
 
       {/* Keep save/publish reachable above the long phone preview. Real handlers and server guards are shared. */}
       <div className="gs-visual-editor-mobile-actions sticky top-2 z-30 grid grid-cols-2 gap-2 rounded-xl border border-emerald-400/30 bg-slate-950/95 p-2 shadow-xl backdrop-blur md:hidden" role="group" aria-label="მობილური მონახაზის მოქმედებები">
-        <button type="button" onClick={saveDraft} disabled={storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-400 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" />{storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
-        <button type="button" onClick={publish} disabled={!isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
+        <button type="button" onClick={saveDraft} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-400 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" />{storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
+        <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
       </div>
 
       <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" aria-label="გამოქვეყნებული ვერსიების ისტორია">
@@ -963,7 +992,7 @@ export default function StorefrontVisualEditor({
                         )}
                       </div>
                     )}
-                    <button type="button" onClick={restoreSelectedStorefrontVersion} disabled={versionRestoreBusy || storefrontDraftBusy || storefrontPublishBusy || typeof onRestoreStorefrontVersion !== 'function'} className="w-full rounded-lg bg-sky-300 px-3 py-2.5 text-[10px] font-black text-slate-950 disabled:opacity-50">{versionRestoreBusy ? 'მონახაზში აღდგენა…' : 'ამ ვერსიის მონახაზში აღდგენა'}</button>
+                    <button type="button" onClick={restoreSelectedStorefrontVersion} disabled={heroImagePending || versionRestoreBusy || storefrontDraftBusy || storefrontPublishBusy || typeof onRestoreStorefrontVersion !== 'function'} className="w-full rounded-lg bg-sky-300 px-3 py-2.5 text-[10px] font-black text-slate-950 disabled:opacity-50">{versionRestoreBusy ? 'მონახაზში აღდგენა…' : 'ამ ვერსიის მონახაზში აღდგენა'}</button>
                   </div>
                 )}
               </div>
@@ -978,7 +1007,8 @@ export default function StorefrontVisualEditor({
           <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
             <label htmlFor="gs-visual-editor-control-search" className="block text-xs font-bold text-slate-200">პარამეტრების ჯგუფების ძებნა</label>
             <input id="gs-visual-editor-control-search" type="search" value={controlSearch} onChange={event => setControlSearch(event.target.value)} placeholder="მაგალითად: ფერები, ტექსტი, ფოტო…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-base text-white placeholder:text-slate-500" />
-            <p role="status" aria-live="polite" className="mt-2 text-[11px] text-slate-400">{visibleControlGroupCount} / 7 ჯგუფი · გასაშლელად შეეხეთ სათაურს</p>
+            <div className="mt-2 flex flex-wrap justify-between items-center gap-2"><p role="status" aria-live="polite" className="text-[11px] text-slate-400">{visibleControlGroupCount} / 7 ჯგუფი · გასაშლელად შეეხეთ სათაურს</p>{controlSearch && <button type="button" onClick={() => setControlSearch('')} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200">გასუფთავება</button>}</div>
+            {visibleControlGroupCount === 0 && <p role="status" className="mt-2 text-xs text-amber-200">ჯგუფი ვერ მოიძებნა.</p>}
           </div>
           <section className="rounded-2xl border border-emerald-400/25 bg-slate-900/90 p-4 space-y-3" aria-label="Preview ელემენტის არჩევა">
             <div className="flex items-center justify-between gap-3">
@@ -1336,8 +1366,8 @@ export default function StorefrontVisualEditor({
           </details>
 
           <div className="hidden md:sticky md:bottom-2 md:z-20 md:grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-2xl border border-emerald-400/30 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
-            <button type="button" onClick={saveDraft} disabled={storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" /> {storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
-            <button type="button" onClick={publish} disabled={!isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-300/50 bg-amber-300 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" /> {storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
+            <button type="button" onClick={saveDraft} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" /> {storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
+            <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-300/50 bg-amber-300 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" /> {storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
           </div>
         </aside>
 

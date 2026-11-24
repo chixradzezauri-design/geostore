@@ -431,7 +431,7 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /role=\{expensesError \|\| !hasExpensesPermission \? 'alert' : 'status'\} aria-live="polite" className="admin-finance-data-warning/);
   assert.match(admin, /!verifiedFinanceSnapshot \|\| financialOverview\.netProfit === null \? '—'/);
   assert.match(admin, /expensesVerifiedForReports \? financialOverview\.totalExpenses\.toFixed\(2\)/);
-  assert.match(admin, /else if \(qLower\.includes\('ხარჯი'\)\) answer = expensesVerifiedForReports/);
+  assert.match(admin, /else if \(qLower\.includes\('ხარჯ'\)\) answer = expensesVerifiedForReports/);
   assert.match(admin, /expensesError && <p className="mt-1">ჩატვირთვის შეცდომა:/);
   assert.match(admin, /onClick=\{\(\) => void fetchExpenses\(\)\} aria-busy=\{expensesLoading\} className="admin-finance-retry/);
   assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 && unreconciledDeliveredOrders === 0 \? totalProductRevenue - totalCogs : null/);

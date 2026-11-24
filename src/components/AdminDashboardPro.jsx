@@ -1121,8 +1121,12 @@ export default function AdminDashboardPro({
       setAdminVisualSyncStatus('saving');
       adminVisualSaveQueueRef.current = adminVisualSaveQueueRef.current
         .catch(() => undefined)
-        .then(() => saveAdminPanelVisualDesignToCloud(adminVisualDesign, adminVisualUpdatedAtRef.current))
+        .then(() => {
+          if (!active || saveVersion !== adminVisualSaveVersionRef.current) return null;
+          return saveAdminPanelVisualDesignToCloud(adminVisualDesign, adminVisualUpdatedAtRef.current);
+        })
         .then(savedState => {
+          if (!savedState) return;
           adminVisualUpdatedAtRef.current = savedState.updatedAt;
           if (active && saveVersion === adminVisualSaveVersionRef.current) {
             adminVisualHasLocalChangesRef.current = false;

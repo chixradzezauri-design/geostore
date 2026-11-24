@@ -1099,3 +1099,11 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) :is(input,textarea) { font-size: 16px; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-composer { flex-direction: column; }
 }
+
+/* Workspace audit 14 — visual studios, only editor chrome */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-storefront-visual-editor,.admin-visual-editor-panel) { min-width: 0; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-visual-editor-controls,.admin-studio-group) { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-visual-editor-controls,.admin-studio-group) :is(input:not([type="checkbox"]):not([type="range"]):not([type="color"]):not([type="file"]),select,textarea) { min-width: 0; max-width: 100%; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.gs-visual-editor-controls,.admin-studio-group) :is(input:not([type="checkbox"]):not([type="range"]):not([type="color"]):not([type="file"]),select,textarea) { font-size: 16px; }
+}

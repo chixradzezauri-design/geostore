@@ -95,3 +95,9 @@ test('workspace audit 13 separates delivery drafts and identifies the rule-based
  for(const term of ['parseDeliveryFeeDrafts(deliveryFeeDraft)','deliveryFeeWriteRef.current === sessionVersion','savedRows.length !== rows.length','Number(saved.fee_gel) === row.fee_gel','setDeliveryFeeDraft(null)','admin-workspace-delivery-tbilisi','aiFinanceSnapshotRef.current','responsePeriod !== requestedPeriod','გარე AI მოდელი დაკავშირებული არ არის','admin-workspace-setting-storeName','siteSettings?.storeName ?? \'GEOSTORE\'','onSubmit={handleSaveSettings}']) assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 13'));
 });
+
+test('workspace audit 14 protects pending image reads and shared visual save queues',()=>{
+ const store=read('src/components/StorefrontVisualEditor.jsx'),admin=read('src/components/AdminPanelVisualEditor.jsx'),jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['heroImagePendingRef.current','heroImageReadRequestRef.current += 1','const currentDesign = designRef.current','finishRead();','disabled={heroImagePending || storefrontDraftBusy','disabled={heroImagePending || !isOwner','visibleControlGroupCount === 0']) assert.ok(store.includes(term),term);
+ assert.ok(admin.includes('syncStatus === \'saved\' ?')); assert.ok(admin.includes('onReloadRemote?.()')); assert.ok(jsx.includes('if (!active || saveVersion !== adminVisualSaveVersionRef.current) return null;')); assert.ok(css.includes('Workspace audit 14'));
+});
