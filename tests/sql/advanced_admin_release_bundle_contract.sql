@@ -53,74 +53,8 @@ BEGIN
     IF jsonb_typeof(v_variant) IS DISTINCT FROM 'object'
        OR coalesce(trim(v_variant->>'id'), '') = ''
        OR coalesce(trim(v_variant->>'name'), '') = ''
-       OR coalesce(v_variant->>'priceGEL', '') !~ '^[0-9]+(\.[0-9]{1,2})?
-\i /tmp/geostore-advanced-admin-candidate.sql
-DO $test$
-DECLARE relation text;
-BEGIN
- FOREACH relation IN ARRAY ARRAY['public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts','public.admin_purchase_payments','public.admin_purchase_payment_corrections','private.marketing_email_consent_events','private.marketing_campaigns','private.marketing_campaign_revisions','private.marketing_template_versions','private.marketing_campaign_preflights'] LOOP
-  IF to_regclass(relation) IS NULL OR NOT (SELECT relrowsecurity FROM pg_class WHERE oid=to_regclass(relation)) THEN RAISE EXCEPTION 'Missing RLS relation %',relation; END IF;
-  IF has_table_privilege('anon',relation,'SELECT,INSERT,UPDATE,DELETE') THEN RAISE EXCEPTION 'Anonymous table privilege %',relation; END IF;
- END LOOP;
-END $test$;
-SET ROLE authenticated;
-SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000001';
-SET request.jwt.claim.jwt='{}';
-DO $test$ BEGIN
- IF public.my_marketing_email_consent()->>'status'<>'not_set' THEN RAISE EXCEPTION 'Unexpected consent'; END IF;
- IF public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL)->>'status'<>'opted_in' THEN RAISE EXCEPTION 'Consent integration failed'; END IF;
- BEGIN PERFORM public.admin_marketing_segments(); RAISE EXCEPTION 'Customer crossed owner boundary'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-END $test$;
-SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
-SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
-DO $test$
-DECLARE c uuid:=gen_random_uuid(); r jsonb;
-BEGIN
- IF public.admin_read_supplier_balance(NULL)->>'purchase_count'<>'0' THEN RAISE EXCEPTION 'Supplier balance mismatch'; END IF;
- IF public.admin_marketing_segments()->'segments'->'all'->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Consent/segment integration failed'; END IF;
- PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),0,'create','Fixture','all','Offer','Text',NULL);
- r:=public.admin_check_marketing_campaign(c,1,gen_random_uuid());
- IF r->>'delivery_enabled'<>'false' OR r->>'is_send_authorization'<>'false' OR r->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Unsafe integrated campaign preflight'; END IF;
- PERFORM public.admin_save_marketing_template(gen_random_uuid(),gen_random_uuid(),0,'create','{"name":"Fixture","category":"promotion","segment":"all","subject":"Offer","body":"Text"}');
- IF public.admin_read_marketing_templates(NULL)->>'total'<>'1' THEN RAISE EXCEPTION 'Template integration failed'; END IF;
-END $test$;
-RESET ROLE;
-\echo 'PASS exact eight-source atomic candidate in one disposable PostgreSQL database'
-
-       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}
-\i /tmp/geostore-advanced-admin-candidate.sql
-DO $test$
-DECLARE relation text;
-BEGIN
- FOREACH relation IN ARRAY ARRAY['public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts','public.admin_purchase_payments','public.admin_purchase_payment_corrections','private.marketing_email_consent_events','private.marketing_campaigns','private.marketing_campaign_revisions','private.marketing_template_versions','private.marketing_campaign_preflights'] LOOP
-  IF to_regclass(relation) IS NULL OR NOT (SELECT relrowsecurity FROM pg_class WHERE oid=to_regclass(relation)) THEN RAISE EXCEPTION 'Missing RLS relation %',relation; END IF;
-  IF has_table_privilege('anon',relation,'SELECT,INSERT,UPDATE,DELETE') THEN RAISE EXCEPTION 'Anonymous table privilege %',relation; END IF;
- END LOOP;
-END $test$;
-SET ROLE authenticated;
-SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000001';
-SET request.jwt.claim.jwt='{}';
-DO $test$ BEGIN
- IF public.my_marketing_email_consent()->>'status'<>'not_set' THEN RAISE EXCEPTION 'Unexpected consent'; END IF;
- IF public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL)->>'status'<>'opted_in' THEN RAISE EXCEPTION 'Consent integration failed'; END IF;
- BEGIN PERFORM public.admin_marketing_segments(); RAISE EXCEPTION 'Customer crossed owner boundary'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-END $test$;
-SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
-SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
-DO $test$
-DECLARE c uuid:=gen_random_uuid(); r jsonb;
-BEGIN
- IF public.admin_read_supplier_balance(NULL)->>'purchase_count'<>'0' THEN RAISE EXCEPTION 'Supplier balance mismatch'; END IF;
- IF public.admin_marketing_segments()->'segments'->'all'->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Consent/segment integration failed'; END IF;
- PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),0,'create','Fixture','all','Offer','Text',NULL);
- r:=public.admin_check_marketing_campaign(c,1,gen_random_uuid());
- IF r->>'delivery_enabled'<>'false' OR r->>'is_send_authorization'<>'false' OR r->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Unsafe integrated campaign preflight'; END IF;
- PERFORM public.admin_save_marketing_template(gen_random_uuid(),gen_random_uuid(),0,'create','{"name":"Fixture","category":"promotion","segment":"all","subject":"Offer","body":"Text"}');
- IF public.admin_read_marketing_templates(NULL)->>'total'<>'1' THEN RAISE EXCEPTION 'Template integration failed'; END IF;
-END $test$;
-RESET ROLE;
-\echo 'PASS exact eight-source atomic candidate in one disposable PostgreSQL database'
- THEN
+       OR coalesce(v_variant->>'priceGEL', '') !~ '^[0-9]+(\.[0-9]{1,2})?$'
+       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}$' THEN
       RAISE EXCEPTION 'პროდუქტის ვარიანტის სახელი, ფასი ან მარაგი არასწორია.';
     END IF;
     SELECT value INTO v_existing
@@ -128,40 +62,7 @@ RESET ROLE;
      WHERE value->>'id' = v_variant->>'id'
      LIMIT 1;
     IF v_existing IS NOT NULL THEN
-      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}
-\i /tmp/geostore-advanced-admin-candidate.sql
-DO $test$
-DECLARE relation text;
-BEGIN
- FOREACH relation IN ARRAY ARRAY['public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts','public.admin_purchase_payments','public.admin_purchase_payment_corrections','private.marketing_email_consent_events','private.marketing_campaigns','private.marketing_campaign_revisions','private.marketing_template_versions','private.marketing_campaign_preflights'] LOOP
-  IF to_regclass(relation) IS NULL OR NOT (SELECT relrowsecurity FROM pg_class WHERE oid=to_regclass(relation)) THEN RAISE EXCEPTION 'Missing RLS relation %',relation; END IF;
-  IF has_table_privilege('anon',relation,'SELECT,INSERT,UPDATE,DELETE') THEN RAISE EXCEPTION 'Anonymous table privilege %',relation; END IF;
- END LOOP;
-END $test$;
-SET ROLE authenticated;
-SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000001';
-SET request.jwt.claim.jwt='{}';
-DO $test$ BEGIN
- IF public.my_marketing_email_consent()->>'status'<>'not_set' THEN RAISE EXCEPTION 'Unexpected consent'; END IF;
- IF public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL)->>'status'<>'opted_in' THEN RAISE EXCEPTION 'Consent integration failed'; END IF;
- BEGIN PERFORM public.admin_marketing_segments(); RAISE EXCEPTION 'Customer crossed owner boundary'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-END $test$;
-SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
-SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
-DO $test$
-DECLARE c uuid:=gen_random_uuid(); r jsonb;
-BEGIN
- IF public.admin_read_supplier_balance(NULL)->>'purchase_count'<>'0' THEN RAISE EXCEPTION 'Supplier balance mismatch'; END IF;
- IF public.admin_marketing_segments()->'segments'->'all'->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Consent/segment integration failed'; END IF;
- PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),0,'create','Fixture','all','Offer','Text',NULL);
- r:=public.admin_check_marketing_campaign(c,1,gen_random_uuid());
- IF r->>'delivery_enabled'<>'false' OR r->>'is_send_authorization'<>'false' OR r->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Unsafe integrated campaign preflight'; END IF;
- PERFORM public.admin_save_marketing_template(gen_random_uuid(),gen_random_uuid(),0,'create','{"name":"Fixture","category":"promotion","segment":"all","subject":"Offer","body":"Text"}');
- IF public.admin_read_marketing_templates(NULL)->>'total'<>'1' THEN RAISE EXCEPTION 'Template integration failed'; END IF;
-END $test$;
-RESET ROLE;
-\echo 'PASS exact eight-source atomic candidate in one disposable PostgreSQL database'
- THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}$' THEN
         RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
       END IF;
       v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
