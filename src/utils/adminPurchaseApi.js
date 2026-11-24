@@ -1,4 +1,5 @@
 import {createAdminSupplierApi} from './adminSupplierApi.js';
+import {normalizePayment,verifyPaymentSnapshot,verifyPaymentAcknowledgement} from './adminPurchasePayments.js';
 const OWNER='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 const integer=(v,min,max)=>{if(typeof v==='string'&&/^\d+$/.test(v))v=Number(v);return Number.isSafeInteger(v)&&v>=min&&v<=max?v:null;};
@@ -68,6 +69,10 @@ export function createAdminPurchaseApi({loadSession,expectedUserId,supabaseUrl,a
  }
  return {
   suppliers:()=>createAdminSupplierApi(config).list(),
+  async payments(order){if(!uuid(order?.id))throw Error('შესყიდვის ID არასწორია.');return verifyPaymentSnapshot(await request('rpc/admin_read_purchase_payments','POST',{p_id:order.id}),order);},
+  async recordPayment(op){const order=op?.order,payment=normalizePayment(op?.payment);if(!uuid(order?.id)||op.orderId!==order.id||!uuid(op.paymentId)||!Number.isSafeInteger(order.revision)||!['partial','received'].includes(order.status)||!payment)throw Error('გადახდის მონაცემები არასწორია.');
+   return verifyPaymentAcknowledgement(await request('rpc/admin_record_purchase_payment','POST',{p_id:order.id,p_payment:op.paymentId,p_revision:order.revision,p_amount_tetri:payment.amount_tetri,p_method:payment.method,p_reference:payment.reference}),op);
+  },
   async list(){const data=verifyPurchaseRows(await request('admin_purchase_orders?'+new URLSearchParams({select:projection,order:'created_at.desc,id.desc',limit:'101'})));return {orders:data.slice(0,100),hasMore:data.length>100};},
   async get(id){if(!uuid(id))throw Error('შესყიდვის ID არასწორია.');const rows=verifyPurchaseRows(await request('admin_purchase_orders?'+new URLSearchParams({select:projection,id:'eq.'+id})));if(rows.length>1||rows.some(r=>r.id!==id))throw Error('შესყიდვის პასუხი არასწორია.');return rows[0]??null;},
   async create(id,supplier,lines){const clean=normalizePurchaseLines(lines);if(!uuid(id)||!uuid(supplier)||!clean)throw Error('შესყიდვის მონახაზი არასწორია.');const r=await request('rpc/admin_create_purchase','POST',{p_id:id,p_supplier:supplier,p_lines:clean});if(r?.id!==id||r.supplier_id!==supplier||r.status!=='draft'||r.revision!==1)throw Error('მონახაზი ვერ დადასტურდა.');return r;},

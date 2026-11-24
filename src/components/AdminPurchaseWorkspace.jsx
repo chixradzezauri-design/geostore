@@ -1,6 +1,8 @@
 import React,{useState,useEffect,useRef} from 'react';
 import {createAdminPurchaseApi,normalizePurchaseLines,purchaseOperationConfirmed,purchaseCatalogOptions,purchaseLineKey} from '../utils/adminPurchaseApi.js';
 import {formatPurchaseTetri,purchaseDraftTetri,summarizePurchaseFinance} from '../utils/adminPurchaseFinance.js';
+import AdminPurchasePayments from './AdminPurchasePayments.jsx';
+import {paymentOperationConfirmed} from '../utils/adminPurchasePayments.js';
 const initial=()=>[{product_id:'',variant_id:null,quantity:'',unit_cost:''}];
 const control='min-h-11 min-w-0 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white text-sm disabled:opacity-50';
 const button='min-h-11 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-white disabled:opacity-50';
@@ -38,6 +40,7 @@ export default function AdminPurchaseWorkspace({adminUserId,loadSession,supabase
    if(op&&!checkOnly){
     if(op.type==='create')await api.create(op.orderId,op.supplierId,op.lines);
     else if(op.type==='transition')await api.transition(op.order,op.action);
+    else if(op.type==='payment')await api.recordPayment(op);
     else await api.receive(op.order,op.line,op.receiptId,op.quantity);
     ack=true;
    }
@@ -48,12 +51,14 @@ export default function AdminPurchaseWorkspace({adminUserId,loadSession,supabase
    if(!current())return;
    setSuppliers(nextSuppliers);setOrders(listing.orders);setHasMore(listing.hasMore);
    if(op){
-    if(!purchaseOperationConfirmed(op,exact))throw Error('მოქმედება ისტორიაში ჯერ ვერ დადასტურდა. გადაამოწმეთ ან გაიმეორეთ იგივე მოთხოვნა.');
+    const confirmed=op.type==='payment'?(exact&&paymentOperationConfirmed(await api.payments(exact),op)):purchaseOperationConfirmed(op,exact);
+    if(!current())return;
+    if(!confirmed)throw Error('მოქმედება ისტორიაში ჯერ ვერ დადასტურდა. გადაამოწმეთ ან გაიმეორეთ იგივე მოთხოვნა.');
     setOperation(null);setSelected(exact.id);
     if(op.type==='create'){setLines(initial());setSupplierId('');}
     if(op.type==='receive'){setReceiveQty({});if(refreshProducts)void Promise.resolve().then(refreshProducts).catch(()=>{});}
     setNotice('მოქმედება და ისტორია სერვერზე დადასტურებულია.');
-    if(!listing.orders.some(o=>o.id===exact.id))setOrders([exact,...listing.orders].slice(0,101));
+    setOrders(listing.orders.some(o=>o.id===exact.id)?listing.orders.map(o=>o.id===exact.id?exact:o):[exact,...listing.orders].slice(0,101));
    }
    setPhase('ready');
   }catch(err){
@@ -74,6 +79,11 @@ export default function AdminPurchaseWorkspace({adminUserId,loadSession,supabase
   if(!ready||!window.confirm(action==='approve'?'დამტკიცდეს შესყიდვა? მარაგი ჯერ არ შეიცვლება.':'გაუქმდეს შესყიდვა?'))return;
   start({type:'transition',orderId:order.id,order,action});
  }
+ function recordPayment(order,payment){
+  if(!ready||!window.confirm('დაფიქსირდეს უკვე განხორციელებული გადახდა: '+formatPurchaseTetri(BigInt(payment.amount_tetri))+'? თანხა ავტომატურად არ გადაირიცხება.'))return;
+  if(!globalThis.crypto?.randomUUID){setError('უსაფრთხო ID ვერ შეიქმნა.');return;}
+  start({type:'payment',orderId:order.id,order,paymentId:crypto.randomUUID(),payment});
+ }
  function receive(order,line){
   const qty=Number(receiveQty[line.id]);
   if(!ready||!Number.isSafeInteger(qty)||qty<1||qty>line.quantity-line.received_quantity)return;
@@ -85,7 +95,7 @@ export default function AdminPurchaseWorkspace({adminUserId,loadSession,supabase
   <div className="flex flex-wrap justify-between gap-2"><div className="min-w-0"><h3 id="admin-purchase-title" className="text-sm font-black text-white">მომწოდებლების შესყიდვები</h3><p className="text-xs text-slate-400">მონახაზი, დამტკიცება და ნაწილობრივი მიღება · საბაზისო და ვარიანტების მარაგი</p></div><button type="button" className={button} disabled={busy} onClick={()=>void run(pendingRef.current,true)}>შესყიდვების განახლება</button></div>
   <p role="status" data-purchase-state={phase} className="text-xs text-slate-300">{phase==='ready'?'სერვერული ისტორია დადასტურებულია':phase==='loading'?'იტვირთება…':phase==='saving'?'მოქმედება მოწმდება…':'ისტორია ვერ დადასტურდა'}</p>
   {error&&<p role="alert" className="text-xs text-amber-200 break-words">{error}</p>}{notice&&<p role="status" className="text-xs text-emerald-300">{notice}</p>}
-  {pending&&<div className="rounded-xl border border-amber-500/30 p-3 space-y-2"><p className="text-xs text-amber-200 break-all">მოსამოწმებელი მოთხოვნა: {pending.receiptId||pending.orderId}. სხვა მოქმედებები დაბლოკილია. ისტორია გადაამოწმეთ ხელახლა მიღებამდე.</p><button type="button" className={button} disabled={busy} onClick={()=>void run(pending,true)}>შედეგის გადამოწმება</button> <button type="button" className={button} disabled={busy} onClick={()=>void run(pending)}>იგივე მოთხოვნის გამეორება</button></div>}
+  {pending&&<div className="rounded-xl border border-amber-500/30 p-3 space-y-2"><p className="text-xs text-amber-200 break-all">მოსამოწმებელი მოთხოვნა: {pending.paymentId||pending.receiptId||pending.orderId}. სხვა მოქმედებები დაბლოკილია. ისტორია გადაამოწმეთ მოქმედების გამეორებამდე.</p><button type="button" className={button} disabled={busy} onClick={()=>void run(pending,true)}>შედეგის გადამოწმება</button> <button type="button" className={button} disabled={busy} onClick={()=>void run(pending)}>იგივე მოთხოვნის გამეორება</button></div>}
   <form onSubmit={create} className="space-y-2">
    <label className="block text-xs text-slate-300">მომწოდებელი<select aria-label="შესყიდვის მომწოდებელი" className={control} disabled={!ready} value={supplierId} onChange={e=>{setSupplierId(e.target.value);setLines(initial());}}><option value="">აირჩიეთ</option>{suppliers.filter(s=>s.is_active).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
    {lines.map((line,i)=><div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 rounded-xl border border-slate-700 p-2"><label className="text-xs text-slate-300">პროდუქტი<select aria-label={'შესყიდვის პროდუქტი '+(i+1)} className={control} disabled={!ready} value={line.product_id?purchaseLineKey(line.product_id,line.variant_id):''} onChange={e=>{const choice=eligible.find(p=>purchaseLineKey(p.product_id,p.variant_id)===e.target.value);setLines(old=>old.map((r,j)=>j===i?{...r,product_id:choice?.product_id||'',variant_id:choice?.variant_id??null}:r));}}><option value="">აირჩიეთ პროდუქტი / ვარიანტი</option>{eligible.map(p=><option key={purchaseLineKey(p.product_id,p.variant_id)} value={purchaseLineKey(p.product_id,p.variant_id)}>{p.label} · {p.stock}</option>)}</select></label>
@@ -109,6 +119,7 @@ export default function AdminPurchaseWorkspace({adminUserId,loadSession,supabase
     {selectedFinance&&<p className="text-xs text-slate-300 break-words">ღირებულება: {formatPurchaseTetri(selectedFinance.committed+selectedFinance.draft+selectedFinance.cancelled)} · მიღებული: {formatPurchaseTetri(selectedFinance.received)} · მიუღებელი (დამტკიცებული): {formatPurchaseTetri(selectedFinance.outstanding)}</p>}
     {currentOrder.admin_purchase_lines.map(l=><div key={l.id} className="rounded-lg border border-slate-700 p-2 space-y-2"><p className="text-xs text-white break-words">{lineLabel(l)} · {money(l.unit_cost)} / ერთეული</p><p className="text-xs text-slate-300">შეკვეთილი {l.quantity} · მიღებული {l.received_quantity} · დარჩენილი {l.quantity-l.received_quantity}</p>{['approved','partial'].includes(currentOrder.status)&&l.received_quantity<l.quantity&&<div className="flex flex-wrap gap-2"><input type="number" min="1" max={l.quantity-l.received_quantity} step="1" aria-label={'მისაღები რაოდენობა: '+lineLabel(l)} className={control+' flex-1'} value={receiveQty[l.id]||''} onChange={e=>setReceiveQty(old=>({...old,[l.id]:e.target.value}))}/><button type="button" className={button} disabled={!ready||!Number.isSafeInteger(Number(receiveQty[l.id]))||Number(receiveQty[l.id])<1||Number(receiveQty[l.id])>l.quantity-l.received_quantity} onClick={()=>receive(currentOrder,l)}>მიღების დადასტურება</button></div>}</div>)}
     <div className="flex flex-wrap gap-2">{currentOrder.status==='draft'&&<button type="button" className={button} disabled={!ready} onClick={()=>transition(currentOrder,'approve')}>დამტკიცება</button>}{['draft','approved'].includes(currentOrder.status)&&<button type="button" className={button} disabled={!ready} onClick={()=>transition(currentOrder,'cancel')}>გაუქმება</button>}</div>
+    <AdminPurchasePayments key={currentOrder.id+':'+currentOrder.revision} order={currentOrder} adminUserId={adminUserId} loadSession={loadSession} supabaseUrl={supabaseUrl} apiKey={apiKey} ready={ready} onRecord={payment=>recordPayment(currentOrder,payment)}/>
     <h5 className="text-xs font-bold text-white">მიღების ისტორია</h5>{currentOrder.admin_purchase_receipts.map(r=><p key={r.id} className="text-xs text-slate-300 break-words">{lineLabel(currentOrder.admin_purchase_lines.find(l=>l.id===r.line_id))} · {r.quantity} ერთეული · მარაგი {r.stock_before} → {r.stock_after} · {r.received_at.slice(0,10)}</p>)}
    </div>}
   </>}
