@@ -1090,3 +1090,12 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-vendors-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) :is(input,textarea) { font-size: 16px; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-log-tools > div { flex-basis: 100%; }
 }
+
+/* Workspace audit 13 — financial assistant and settings */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) :is(input,textarea,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-bubble { overflow-wrap: anywhere; white-space: pre-wrap; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-settings-panel) :is(input,textarea) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-composer { flex-direction: column; }
+}

@@ -89,3 +89,9 @@ test('workspace audit 12 filters loaded logs and clearly scopes local vendor and
  for(const term of ['admin-workspace-log-search','filteredActivityLogs.slice','Math.ceil(filteredActivityLogs.length / ACTIVITY_LOGS_PER_PAGE)','filter(log => String(log.id) !== String(saved.id))].slice(0, 200)','admin-workspace-vendor-search','editingVendorId','readOnly={editingVendorId !== null}','setVendorsList(prev => existingVendor','მომწოდებლების დაგეგმვის სია ინახება მხოლოდ ამ მოწყობილობაზე','id="admin-broadcast-title" type="text" maxLength={120}','id="admin-broadcast-message" rows="4" maxLength={2000}','სატესტო შეტყობინების წინასწარი ნახვა','მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.']) assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 12'));
 });
+
+test('workspace audit 13 separates delivery drafts and identifies the rule-based financial assistant',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['parseDeliveryFeeDrafts(deliveryFeeDraft)','deliveryFeeWriteRef.current === sessionVersion','savedRows.length !== rows.length','Number(saved.fee_gel) === row.fee_gel','setDeliveryFeeDraft(null)','admin-workspace-delivery-tbilisi','aiFinanceSnapshotRef.current','responsePeriod !== requestedPeriod','გარე AI მოდელი დაკავშირებული არ არის','admin-workspace-setting-storeName','siteSettings?.storeName ?? \'GEOSTORE\'','onSubmit={handleSaveSettings}']) assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 13'));
+});
