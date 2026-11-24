@@ -52,6 +52,7 @@ export function resolveServerCataloguePath(req){
  // Vercel may expose the original URL or the rewritten function URL.
  // The only accepted input is an exact catalogue path or one pair of
  // rewrite parameters. Never accept an arbitrary URL or forward a host.
+ if(typeof req.url!=='string'||!req.url.startsWith('/')||req.url.startsWith('//'))return null;
  let url;try{url=new URL(req.url,'https://local.invalid');}catch{return null;}
  if(parseCataloguePath(url.pathname)?.kind==='product'||parseCataloguePath(url.pathname)?.kind==='category')return url.pathname;
  if(url.pathname!=='/api/catalogue-page'&&url.pathname!=='/api/catalogue-page.js')return null;

@@ -3584,7 +3584,12 @@ export default function App() {
     document.title=meta.title;
     document.querySelector('meta[name="description"]')?.setAttribute('content',meta.description);
     let robots=document.head.querySelector('meta[data-gs-route-robots]');
-    const noIndex=activeTab!=='store'||!catalogueRoute||(ready&&!meta.indexable);
+    const noIndex=activeTab!=='store'||!catalogueRoute||!meta.indexable;
+    for(const [property,content] of [['og:title',meta.title],['og:description',meta.description]]){
+      let node=document.head.querySelector('meta[property="'+property+'"]');
+      if(!node){node=document.createElement('meta');node.setAttribute('property',property);document.head.appendChild(node);}
+      node.setAttribute('content',content);
+    }
     if(activeTab==='store'&&routePath&&meta.indexable){
       let canonical=existingCanonical;
       if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';canonical.dataset.gsCanonical='true';document.head.appendChild(canonical);}
