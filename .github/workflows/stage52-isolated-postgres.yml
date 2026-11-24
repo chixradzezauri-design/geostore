@@ -95,6 +95,8 @@ on:
       - 'scripts/advancedAdminReleaseBundle.mjs'
       - 'tests/advancedAdminReleaseBundle.test.js'
       - 'tests/sql/advanced_admin_release_bundle_contract.sql'
+      - 'tests/sql/advanced_admin_http_fixture.sql'
+      - 'tests/advancedAdminHttpContract.mjs'
       - 'release/staged-admin-suppliers.sql'
       - 'release/staged-admin-purchases.sql'
       - 'release/staged-admin-supplier-payments.sql'
@@ -182,3 +184,13 @@ jobs:
           node scripts/advancedAdminReleaseBundle.mjs > /tmp/geostore-advanced-admin-candidate.sql
           createdb advanced_admin_release_bundle
           PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_release_bundle_contract.sql
+
+          PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_http_fixture.sql
+          export ADVANCED_HTTP_JWT_SECRET="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(48).toString("hex"))')"
+          docker run --detach --name advanced-admin-http-fixture --network host \
+            -e PGRST_DB_URI=postgres://advanced_http_authenticator:advanced-http-fixture-only@127.0.0.1:5432/advanced_admin_release_bundle \
+            -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \
+            -e PGRST_SERVER_HOST=127.0.0.1 -e PGRST_SERVER_PORT=3300 \
+            -e PGRST_JWT_SECRET="$ADVANCED_HTTP_JWT_SECRET" postgrest/postgrest:v12.2.3
+          trap 'docker rm -f advanced-admin-http-fixture >/dev/null 2>&1 || true' EXIT
+          node tests/advancedAdminHttpContract.mjs || { docker logs advanced-admin-http-fixture; exit 1; }
