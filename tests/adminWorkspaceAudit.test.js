@@ -65,3 +65,9 @@ test('workspace audit 08 verifies staff list, serializes mutations and retains o
  assert.equal((staff.match(/staffMutationRef.current = false;/g)||[]).length,4);
  assert.ok(api.includes('caller.id !== OWNER_ID'));assert.ok(api.includes(".neq('user_id', OWNER_ID)"));assert.ok(css.includes('Workspace audit 08'));
 });
+
+test('workspace audit 09 distinguishes CRM sources, caps and confirmed writes',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['crmDirectoryCapped = serverCustomers.length >= 500','!crmDirectoryCapped && customer.isLocalCrmRecord','crmFetchRef.current === requestVersion','crmWriteRef.current === requestVersion','String(saved.user_id) !== String(customer.id)','admin-workspace-crm-filter','setCrmStatusFilter(\'all\'); setCrmPage(1)','u.isServerCustomer && <p','maxLength={1000}','min="0" max="100" step="0.01"','handleToggleVipUser(u.id || u.email)','handleToggleBlockUser(u.id || u.email)']) assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 09'));
+});

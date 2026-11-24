@@ -1055,3 +1055,12 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(input:not([type="checkbox"]),select) { font-size: 16px; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-list-panel > div:first-child { flex-wrap: wrap; }
 }
+
+/* Workspace audit 09 — CRM */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel :is(input,select,button) { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-card :is(p,h4,h5) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel :is(input,select) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-crm-filters > div { flex-basis: 100%; }
+}

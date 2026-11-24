@@ -1209,6 +1209,11 @@ export default function AdminDashboardPro({
     if (!canAccessAdminTab(adminTab)) setAdminTab(getDefaultAdminTab());
   }, [adminLoggedIn, adminAccess, adminTab]); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [crmStatusFilter, setCrmStatusFilter] = useState('all');
+  const [crmReady, setCrmReady] = useState(false);
+  const [crmSaving, setCrmSaving] = useState(false);
+  const crmFetchRef = useRef(null);
+  const crmWriteRef = useRef(null);
   const [crmPage, setCrmPage] = useState(1);
   const [serverCustomers, setServerCustomers] = useState([]);
   const [crmLoading, setCrmLoading] = useState(false);
@@ -1644,21 +1649,27 @@ export default function AdminDashboardPro({
 
   const fetchAdminCustomers = async (sessionVersion = crmSessionVersion.current) => {
     if (sessionVersion !== crmSessionVersion.current || !adminLoggedIn || !hasCrmPermission) return false;
+    if (crmFetchRef.current === sessionVersion || crmWriteRef.current === sessionVersion) return false;
+    crmFetchRef.current = sessionVersion;
     if (!crmHasLoadedRef.current) setCrmLoading(true);
     try {
-      const headers = await getSupabaseHeaders();
+      const { headers } = await getExpenseSessionHeaders(adminUserId);
       if (sessionVersion !== crmSessionVersion.current) return false;
       const rows = await fetchAdminCustomerDirectory({ supabaseUrl: SUPABASE_URL, headers });
       if (sessionVersion !== crmSessionVersion.current) return false;
       setServerCustomers(rows);
+      setCrmReady(true);
       setCrmError('');
       return true;
     } catch (error) {
       if (sessionVersion !== crmSessionVersion.current) return false;
       console.error('GEOSTORE persistent CRM fetch failed:', error);
+      setCrmReady(false);
+      setServerCustomers([]);
       setCrmError(error?.message || 'CRM მომხმარებლების ჩატვირთვა ვერ მოხერხდა.');
       return false;
     } finally {
+      if (crmFetchRef.current === sessionVersion) crmFetchRef.current = null;
       if (sessionVersion === crmSessionVersion.current) {
         crmHasLoadedRef.current = true;
         setCrmLoading(false);
@@ -1670,6 +1681,12 @@ export default function AdminDashboardPro({
     crmSessionVersion.current += 1;
     const sessionVersion = crmSessionVersion.current;
     crmHasLoadedRef.current = false;
+    setServerCustomers([]);
+    setCrmReady(false);
+    setCrmSaving(false);
+    setEditingUserId(null);
+    setEditUserNotes('');
+    setEditUserDiscount('');
     if (!adminLoggedIn || !hasCrmPermission) {
       setServerCustomers([]);
       crmHasLoadedRef.current = true;
@@ -1683,7 +1700,7 @@ export default function AdminDashboardPro({
       crmSessionVersion.current += 1;
       clearInterval(interval);
     };
-  }, [adminLoggedIn, hasCrmPermission]);
+  }, [adminLoggedIn, hasCrmPermission, adminUserId]);
 
   // A denied server request overrides any earlier successful ledger snapshot.
   // Cached finance data must not stay on screen after a 401/403 response.
@@ -4719,7 +4736,7 @@ export default function AdminDashboardPro({
 
   const persistServerCustomerProfile = async (customer, changes = {}) => {
     const requestVersion = crmSessionVersion.current;
-    if (!adminLoggedIn || !hasCrmPermission) return false;
+    if (!adminLoggedIn || !hasCrmPermission || !crmReady || crmFetchRef.current === requestVersion || crmWriteRef.current === requestVersion) return false;
     const profile = {
       id: customer.id,
       isVip: Boolean(changes.isVip ?? customer.isVip),
@@ -4727,10 +4744,18 @@ export default function AdminDashboardPro({
       discountPercent: Number(changes.discountPercent ?? customer.discountPercent) || 0,
       adminNotes: String(changes.adminNotes ?? customer.adminNotes ?? '')
     };
-    const headers = await getSupabaseHeaders();
+    crmWriteRef.current = requestVersion;
+    setCrmSaving(true);
+    try {
+    const { headers } = await getExpenseSessionHeaders(adminUserId);
     if (requestVersion !== crmSessionVersion.current) return false;
     const saved = await saveAdminCustomerCrmProfile({ supabaseUrl: SUPABASE_URL, headers, profile });
     if (requestVersion !== crmSessionVersion.current) return false;
+    if (!saved || String(saved.user_id) !== String(customer.id) ||
+        typeof saved.is_vip !== 'boolean' || typeof saved.is_blocked !== 'boolean' ||
+        !Number.isFinite(Number(saved.discount_percent)) || typeof saved.admin_notes !== 'string') {
+      throw new Error('CRM შენახვის პასუხი ვერ დადასტურდა. განაახლეთ სია.');
+    }
     setServerCustomers(previous => previous.map(row => String(row.id) === String(customer.id)
       ? {
           ...row,
@@ -4742,10 +4767,15 @@ export default function AdminDashboardPro({
       : row
     ));
     return true;
+    } finally {
+      if (crmWriteRef.current === requestVersion) crmWriteRef.current = null;
+      if (requestVersion === crmSessionVersion.current) setCrmSaving(false);
+    }
   };
 
   const handleToggleVipUser = async (userId) => {
     const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (!canEditCrmCustomer(customer) || crmWriteRef.current === crmSessionVersion.current || crmFetchRef.current === crmSessionVersion.current) return;
     if (customer?.isServerCustomer) {
       const requestVersion = crmSessionVersion.current;
       try {
@@ -4767,6 +4797,7 @@ export default function AdminDashboardPro({
 
   const handleToggleBlockUser = async (userId) => {
     const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (!canEditCrmCustomer(customer) || crmWriteRef.current === crmSessionVersion.current || crmFetchRef.current === crmSessionVersion.current) return;
     if (customer?.isServerCustomer) {
       const requestVersion = crmSessionVersion.current;
       try {
@@ -4788,6 +4819,7 @@ export default function AdminDashboardPro({
 
   const handleDeleteUser = (userId, userName) => {
     const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (!canEditCrmCustomer(customer) || crmWriteRef.current === crmSessionVersion.current || crmFetchRef.current === crmSessionVersion.current) return;
     if (customer?.isServerCustomer) {
       alert('რეალური Supabase Auth მომხმარებლის ანგარიშის წაშლა CRM-იდან დაუშვებელია.');
       return;
@@ -4801,7 +4833,13 @@ export default function AdminDashboardPro({
   };
 
   const handleSaveUserCrm = async (userId) => {
+    const discount = Number(editUserDiscount);
+    if (!Number.isFinite(discount) || discount < 0 || discount > 100 || String(editUserNotes).length > 1000) {
+      alert('ფასდაკლება უნდა იყოს 0–100%-ის ფარგლებში, შენიშვნა კი მაქსიმუმ 1000 სიმბოლო.');
+      return;
+    }
     const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (!canEditCrmCustomer(customer) || crmWriteRef.current === crmSessionVersion.current || crmFetchRef.current === crmSessionVersion.current) return;
     if (customer?.isServerCustomer) {
       const requestVersion = crmSessionVersion.current;
       try {
@@ -4891,11 +4929,22 @@ export default function AdminDashboardPro({
     );
     return server ? { ...customer, ...server, isServerCustomer: true } : customer;
   });
-  const filteredUsers = crmUsers.filter(u =>
-    String(u.name || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    String(u.email || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    String(u.phone || '').toLowerCase().includes(userSearchQuery.toLowerCase())
-  );
+  // The current directory RPC returns at most 500 rows. Never treat a capped or
+  // unavailable directory as proof that a customer is local-only.
+  const crmDirectoryCapped = serverCustomers.length >= 500;
+  const canEditCrmCustomer = customer => Boolean(adminLoggedIn && hasCrmPermission && crmReady &&
+    customer && (customer.isServerCustomer || (!crmDirectoryCapped && customer.isLocalCrmRecord &&
+      (usersList || []).some(user => user.id === customer.id || (customer.email && user.email === customer.email)))));
+  const crmSearchTerm = userSearchQuery.trim().toLocaleLowerCase();
+  const filteredUsers = crmUsers.filter(u => {
+    const matchesSearch = [u.name, u.email, u.phone].some(value => String(value || '').toLocaleLowerCase().includes(crmSearchTerm));
+    const matchesStatus = crmStatusFilter === 'all' ||
+      (crmStatusFilter === 'vip' && u.isVip) ||
+      (crmStatusFilter === 'restricted' && u.isBlocked) ||
+      (crmStatusFilter === 'server' && u.isServerCustomer) ||
+      (crmStatusFilter === 'local' && !u.isServerCustomer);
+    return matchesSearch && matchesStatus;
+  });
 
   // Derived after the early login view, so no conditional React hook is introduced.
   // Pagination affects only the rendered CRM rows, never server/customer permissions.
@@ -7530,10 +7579,10 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'users' || adminContentTab === 'users') && (
-          <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
+                <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — {crmReady ? "სინქრონიზებული სია" : "სია დასადასტურებელია"} ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
                 <input type="search" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ელფოსტით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -7546,25 +7595,35 @@ export default function AdminDashboardPro({
             {crmLoading && <p role="status" aria-live="polite" className="text-emerald-300 text-xs">CRM მონაცემები იტვირთება...</p>}
             {crmError && <p role="alert" className="text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">Supabase CRM: {crmError} ძველი ლოკალური ჩანაწერები არ შეცვლილა.</p>}
 
-            <div className="admin-crm-list space-y-4">
+            {crmDirectoryCapped && <p role="status" className="text-xs text-amber-200">სერვერული სია შეზღუდულია 500 ანგარიშით; ლოკალური ცვლილებები დროებით დაბლოკილია.</p>}
+            <div className="admin-workspace-crm-filters flex flex-wrap items-end gap-2">
+              <div className="min-w-0 flex-1"><label htmlFor="admin-workspace-crm-filter" className="block text-xs text-slate-300 mb-1">მომხმარებლის სტატუსი</label><select id="admin-workspace-crm-filter" value={crmStatusFilter} onChange={e => { setCrmStatusFilter(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 text-white border border-slate-700 rounded-xl px-3 text-xs"><option value="all">ყველა</option><option value="vip">VIP</option><option value="restricted">CRM შეზღუდვა</option><option value="server">სერვერული პროფილი</option><option value="local">არასერვერული ჩანაწერი</option></select></div>
+              {(userSearchQuery || crmStatusFilter !== 'all') && <button type="button" onClick={() => { setUserSearchQuery(''); setCrmStatusFilter('all'); setCrmPage(1); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}
+              <button type="button" disabled={crmLoading || crmSaving} onClick={() => void fetchAdminCustomers()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
+            </div>
+            <p role="status" className="text-xs text-slate-300">ნაპოვნია {filteredUsers.length} / {crmUsers.length} · სერვერული პროფილები: {crmReady ? serverCustomers.length : "—"}</p>
+            <div className="admin-crm-list space-y-3">
               {(!filteredUsers || filteredUsers.length === 0) ? (
-                <p className="text-slate-500 text-xs py-8 text-center">მომხმარებლები ვერ მოიძებნა.</p>
+                <p className="text-slate-500 text-xs py-8 text-center">{crmLoading ? "მომხმარებლები იტვირთება…" : !crmReady ? "სერვერული სია ჯერ არ არის დადასტურებული." : "მომხმარებლები ვერ მოიძებნა."}</p>
               ) : (
                 paginatedCrmUsers.map((u, i) => {
                   const uId = u.id || u.email || (safeCrmPage - 1) * CRM_PER_PAGE + i;
                   const isEditing = editingUserId === uId;
+                  const canEdit = canEditCrmCustomer(u) && !crmSaving;
 
                   return (
-                    <div key={uId} className={`admin-crm-user-card bg-slate-950/60 p-5 rounded-3xl border transition space-y-3 shadow-inner ${u.isBlocked ? 'border-rose-500/40 bg-rose-950/10' : 'border-emerald-500/20'}`}>
+                    <div key={uId} className={`admin-crm-user-card bg-slate-950/60 p-3 sm:p-4 rounded-2xl border transition space-y-3 shadow-inner ${u.isBlocked ? 'border-rose-500/40 bg-rose-950/10' : 'border-emerald-500/20'}`}>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
                           <div className="flex items-center gap-2.5 flex-wrap">
-                            <h4 className="font-black text-white text-sm">{u.name}</h4>
+                            <h4 className="font-black text-white text-sm break-words">{u.name || "მომხმარებელი"}</h4>
                             {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
                             {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
                             {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
-                          <p className="admin-crm-contact-line text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
+                          <p className="admin-crm-contact-line text-slate-400 text-[11px] mt-1">{u.email || "ელფოსტა არ არის მითითებული"} · {u.phone || "ტელეფონი არ არის მითითებული"}</p>
+                          <p className="text-xs text-slate-300 mt-1">{u.isServerCustomer ? "სერვერული პროფილი" : u.isLocalCrmRecord ? "ლოკალური ჩანაწერი" : "შეკვეთიდან მიღებული ჩანაწერი"}</p>
+                          {u.isServerCustomer && <p className="text-xs text-slate-300">შეკვეთები (სერვერული რაოდენობა): {crmReady ? u.orderCount : "—"}</p>}
                           {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
                         </div>
 
@@ -7572,7 +7631,7 @@ export default function AdminDashboardPro({
                           <button 
                             type="button"
                             aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isVip ? "VIP მოხსნა" : "VIP მინიჭება"}`}
-                            onClick={() => handleToggleVipUser(u.id || u.email)} 
+                            disabled={!canEdit} onClick={() => handleToggleVipUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isVip ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-emerald-500/20 hover:text-white'}`}
                             title="VIP სტატუსი"
                           >
@@ -7582,9 +7641,9 @@ export default function AdminDashboardPro({
                           <button 
                             type="button"
                             aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isBlocked ? "CRM შეზღუდვის ნიშნის მოხსნა" : "CRM-ში შეზღუდულად მონიშვნა"}`}
-                            onClick={() => handleToggleBlockUser(u.id || u.email)} 
+                            disabled={!canEdit} onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
-                            title="მხოლოდ ლოკალური CRM ჩანაწერის ნიშანი; Auth ანგარიშს არ ბლოკავს"
+                            title="CRM შეზღუდვის ნიშანი; Auth ანგარიშს არ ბლოკავს"
                           >
                             {u.isBlocked ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
                             {u.isBlocked ? 'ნიშნის მოხსნა' : 'CRM-ში შეზღუდულად მონიშვნა'}
@@ -7593,7 +7652,7 @@ export default function AdminDashboardPro({
                           <button 
                             type="button"
                             aria-label={`${u.name || u.email || "მომხმარებელი"} — პერსონალური CRM პარამეტრების რედაქტირება`}
-                            aria-expanded={isEditing}
+                            disabled={!canEdit} aria-expanded={isEditing}
                             onClick={() => {
                               if (isEditing) {
                                 setEditingUserId(null);
@@ -7609,7 +7668,7 @@ export default function AdminDashboardPro({
                             <Edit3 className="w-4 h-4" /> <span>რედაქტირება</span>
                           </button>
 
-                          {!u.isServerCustomer && (<button type="button" aria-label={`${u.name || u.email || "მომხმარებელი"} — ლოკალური CRM ჩანაწერის წაშლა`} onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
+                          {!u.isServerCustomer && u.isLocalCrmRecord && (<button disabled={!canEdit} type="button" aria-label={`${u.name || u.email || "მომხმარებელი"} — ლოკალური CRM ჩანაწერის წაშლა`} onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
@@ -7626,7 +7685,7 @@ export default function AdminDashboardPro({
                               <label htmlFor={`crm-discount-${uId}`} className="text-slate-400 text-[10px] block mb-1">პერსონალური ფასდაკლება (%)</label>
                               <input 
                                 id={`crm-discount-${uId}`}
-                                type="number" 
+                                type="number" min="0" max="100" step="0.01" inputMode="decimal"
                                 placeholder="მაგ: 10" 
                                 value={editUserDiscount} 
                                 onChange={e => setEditUserDiscount(e.target.value)} 
@@ -7637,8 +7696,8 @@ export default function AdminDashboardPro({
                               <label htmlFor={`crm-note-${uId}`} className="text-slate-400 text-[10px] block mb-1">ადმინისტრატორის შენიშვნა</label>
                               <input 
                                 id={`crm-note-${uId}`}
-                                type="text" 
-                                placeholder="მაგ: VIP კლიენტი, ჰყავს ფასდაკლება" 
+                                type="text" maxLength={1000}
+                                placeholder="მაგ: VIP კლიენტი" 
                                 value={editUserNotes} 
                                 onChange={e => setEditUserNotes(e.target.value)} 
                                 className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
@@ -7647,7 +7706,7 @@ export default function AdminDashboardPro({
                           </div>
                           <div className="flex justify-end gap-2 pt-1">
                             <button onClick={() => setEditingUserId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
-                            <button onClick={() => handleSaveUserCrm(u.id || u.email)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
+                            <button type="button" disabled={!canEdit} onClick={() => handleSaveUserCrm(u.id || u.email)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">{crmSaving ? "ინახება…" : u.isServerCustomer ? "სერვერზე შენახვა" : "ლოკალურად შენახვა"}</button>
                           </div>
                         </div>
                       )}
