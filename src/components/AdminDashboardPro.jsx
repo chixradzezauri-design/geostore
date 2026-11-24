@@ -35,6 +35,7 @@ import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
+import { compareBusinessPeriods } from '../utils/businessPeriodComparison.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -1234,6 +1235,7 @@ export default function AdminDashboardPro({
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
+  const [businessComparisonDays, setBusinessComparisonDays] = useState(30);
   const [inventoryMovementRows, setInventoryMovementRows] = useState([]);
   const [inventoryMovementLoading, setInventoryMovementLoading] = useState(false);
   const [inventoryMovementError, setInventoryMovementError] = useState('');
@@ -2857,6 +2859,7 @@ export default function AdminDashboardPro({
   const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError;
   const ordersVerifiedForReports = hasOrdersPermission && ordersReady && !ordersError;
   const verifiedFinanceSnapshot = ordersVerifiedForReports && expensesVerifiedForReports;
+  const businessComparison = useMemo(() => compareBusinessPeriods({ orders, verified: isOwner && ordersVerifiedForReports, days: businessComparisonDays }), [orders, isOwner, ordersVerifiedForReports, businessComparisonDays]);
   aiFinanceSnapshotRef.current = { financialOverview, ordersVerifiedForReports, expensesVerifiedForReports, analyticsPeriod };
   const ordersVerifiedForReportsRef = useRef(ordersVerifiedForReports);
   ordersVerifiedForReportsRef.current = ordersVerifiedForReports;
@@ -5825,6 +5828,36 @@ export default function AdminDashboardPro({
                 )}
               </div>
             )}
+            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-comparison-title">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 id="admin-business-comparison-title" className="text-white text-sm font-black">ბიზნესის დინამიკა</h3>
+                  <p className="text-xs text-slate-400">თანაბარი სრული პერიოდები · თბილისის დრო · მიმდინარე დღე გამორიცხულია</p>
+                </div>
+                <select aria-label="შედარების პერიოდი" value={businessComparisonDays} onChange={e => setBusinessComparisonDays(Number(e.target.value))} className="min-h-11 rounded-xl bg-slate-950 border border-emerald-500/30 px-3 text-white text-sm">
+                  <option value={7}>7 დღე</option><option value={30}>30 დღე</option><option value={90}>90 დღე</option>
+                </select>
+              </div>
+              {!businessComparison ? <p role="status" className="text-xs text-amber-200">შედარებისთვის საჭიროა შეკვეთების დადასტურებული სრული ისტორია.</p> : <>
+                <p className="text-xs text-slate-400">ახლანდელი: {businessComparison.current.from} — {businessComparison.current.to} · წინა: {businessComparison.previous.from} — {businessComparison.previous.to}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[{key:'revenue',label:'ჩაბარებული შეკვეთების ბრუნვა',money:true},{key:'orders',label:'ჩაბარებული შეკვეთები',money:false},{key:'averageOrder',label:'საშუალო შეკვეთა',money:true}].map(metric => {
+                    const current=businessComparison.current[metric.key], previous=businessComparison.previous[metric.key], change=businessComparison.change[metric.key];
+                    const display=value=>value===null?'—':metric.money?value.toFixed(2)+' ₾':String(value);
+                    return <div key={metric.key} className="min-w-0 rounded-xl border border-slate-700 p-3 space-y-1">
+                      <p className="text-xs text-slate-400">{metric.label}</p>
+                      <strong className="block text-lg font-black tabular-nums text-white break-words">{display(current)}</strong>
+                      <p className="text-xs text-slate-300 break-words">წინა: {display(previous)}</p>
+                      <p className={'text-xs font-bold break-words '+(change===null?'text-slate-400':change>0?'text-emerald-300':change<0?'text-rose-300':'text-slate-300')}>{change===null?'ცვლილება ვერ განისაზღვრა':(change>0?'+':'')+change.toFixed(1)+'%'}</p>
+                    </div>;
+                  })}
+                </div>
+                {businessComparison.missingDates>0 && <p role="status" className="text-xs text-amber-200">შედარება შეჩერებულია: {businessComparison.missingDates} ჩაბარებული შეკვეთის თარიღი ვერ დადასტურდა.</p>}
+                {businessComparison.current.missingTotals+businessComparison.previous.missingTotals>0 && <p role="status" className="text-xs text-amber-200">თანხა არასრულია; შესაბამისი პერიოდის ბრუნვა და საშუალო შეკვეთა დამალულია.</p>}
+                {businessComparison.current.legacyDates+businessComparison.previous.legacyDates>0 && <p className="text-xs text-amber-200">ძველი შეკვეთების ნაწილზე გამოყენებულია შექმნის თარიღი, რადგან ჩაბარების თარიღი არ არის შენახული.</p>}
+              </>}
+              <p className="text-xs text-slate-400">ბრუნვა არ არის წმინდა მოგება. ეს შედარება დამოუკიდებელია ზემოთ არჩეული ფინანსური ანგარიშის პერიოდისგან.</p>
+            </section>
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
