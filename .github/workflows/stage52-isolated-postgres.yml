@@ -97,6 +97,7 @@ on:
       - 'release/staged-marketing-consent.sql'
       - 'release/staged-marketing-segments.sql'
       - 'release/staged-marketing-campaigns.sql'
+      - 'release/staged-marketing-templates.sql'
       - 'tests/sql/admin_marketing_consent_contract.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'

@@ -1,6 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {createMarketingApi} from '../utils/marketingConsentApi.js';
 import {campaignSegments,campaignTemplates,tbilisiPlanToIso,isoToTbilisiPlan,normalizeCampaignFields,campaignConfirmed} from '../utils/marketingCampaigns.js';
+import AdminMarketingTemplates from './AdminMarketingTemplates.jsx';
 const blank=()=>({name:'',segment:'all',subject:'',body:'',plan:''});
 const input='min-h-11 w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white disabled:opacity-50';
 const button='min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50';
@@ -59,6 +60,7 @@ export default function AdminMarketingCampaigns({adminUserId,loadSession,supabas
   {busy&&<p role="status" className="text-xs text-slate-300">მონაცემები მოწმდება…</p>}
   {notice&&<p role={phase==='error'?'alert':'status'} className="text-xs text-slate-300 break-words">{notice}</p>}
   {pending&&<div className="rounded-lg border border-amber-500/30 p-2 space-y-2"><p className="text-xs text-amber-200 break-all">მოსამოწმებელი კამპანია: {pending.id}. არ შექმნათ ახალი ასლი შედეგის შემოწმებამდე.</p><div className="flex flex-wrap gap-2"><button type="button" className={button} disabled={busy} onClick={()=>void run(pending,true)}>შედეგის გადამოწმება</button><button type="button" className={button} disabled={busy} onClick={()=>void run(pending)}>იგივე მოთხოვნის გამეორება</button><button type="button" className={button} disabled={busy} onClick={()=>void abandon()}>გამეორების შეწყვეტა</button></div></div>}
+  <AdminMarketingTemplates key={adminUserId} adminUserId={adminUserId} loadSession={loadSession} supabaseUrl={supabaseUrl} apiKey={apiKey} campaignForm={form} canApply={ready} onApply={row=>{if(!ready)return;if((form.subject||form.body)&&!window.confirm('ჩანაცვლდეს კამპანიის ტექსტი შაბლონით?'))return;setForm(old=>({...old,segment:row.segment,subject:row.subject,body:row.body}));}}/>
   <form onSubmit={submit} className="space-y-2">
    <h5 className="text-xs font-bold text-white">{editing?'კამპანიის რედაქტირება':'ახალი კამპანიის მონახაზი'}</h5>
    <div className="flex flex-wrap gap-2">{campaignTemplates.map(t=><button type="button" key={t.id} className={button} disabled={!ready} onClick={()=>{if((form.subject||form.body)&&!window.confirm('შეიცვალოს მონახაზის სათაური და ტექსტი შაბლონით?'))return;setForm(old=>({...old,segment:t.segment,subject:t.subject,body:t.body}));}}>{t.label}</button>)}</div>

@@ -143,4 +143,37 @@ DO $test$ BEGIN
  BEGIN DELETE FROM private.marketing_campaign_revisions; RAISE EXCEPTION 'Audit deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
  IF has_function_privilege('anon','public.admin_read_marketing_campaigns(uuid)','EXECUTE') OR has_function_privilege('anon','public.admin_save_marketing_campaign(uuid,uuid,bigint,text,text,text,text,text,timestamptz)','EXECUTE') OR has_table_privilege('authenticated','private.marketing_campaigns','SELECT') THEN RAISE EXCEPTION 'Campaign privilege leak'; END IF;
 END $test$;
-\echo 'PASS marketing consent, segments and campaign draft contract (isolated)'
+\ir ../../release/staged-marketing-templates.sql
+SET ROLE authenticated;
+SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE t uuid:=gen_random_uuid(); q uuid:=gen_random_uuid(); a uuid:=gen_random_uuid(); f jsonb:='{"name":"Example","category":"welcome","segment":"new","subject":"Welcome","body":"Hello"}'; r jsonb;
+BEGIN
+ r:=public.admin_save_marketing_template(t,q,0,'create',f);
+ IF r->>'revision'<>'1' OR r->>'idempotent_replay'<>'false' THEN RAISE EXCEPTION 'Template create mismatch'; END IF;
+ IF public.admin_save_marketing_template(t,q,0,'create',f)->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Template retry mismatch'; END IF;
+ BEGIN PERFORM public.admin_save_marketing_template(t,q,0,'create',f||'{"name":"Changed"}'); RAISE EXCEPTION 'Changed replay'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f||'{"category":"invalid"}'); RAISE EXCEPTION 'Bad category'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f||'{"extra":"invalid"}'); RAISE EXCEPTION 'Extra field'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ r:=public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f||'{"subject":"Updated"}');
+ IF r->>'revision'<>'2' OR r->>'subject'<>'Updated' THEN RAISE EXCEPTION 'Template edit mismatch'; END IF;
+ BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f); RAISE EXCEPTION 'Stale edit'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ IF public.admin_save_marketing_template(t,a,2,'archive','{}')->>'archived'<>'true' THEN RAISE EXCEPTION 'Archive failed'; END IF;
+ IF public.admin_save_marketing_template(t,a,2,'archive','{}')->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Archive retry failed'; END IF;
+ r:=public.admin_read_marketing_templates(t);
+ IF r->>'total'<>'1' OR r->'templates'->0->>'revision'<>'3' THEN RAISE EXCEPTION 'Template list mismatch'; END IF;
+ BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),3,'edit',f); RAISE EXCEPTION 'Archived edit allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+END $test$;
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000003';
+DO $test$ BEGIN
+ BEGIN PERFORM public.admin_read_marketing_templates(NULL); RAISE EXCEPTION 'Nonowner read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_template(gen_random_uuid(),gen_random_uuid(),0,'create','{}'); RAISE EXCEPTION 'Nonowner write'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $test$;
+RESET ROLE;
+DO $test$ BEGIN
+ IF (SELECT count(*) FROM private.marketing_template_versions)<>3 THEN RAISE EXCEPTION 'Template audit mismatch'; END IF;
+ BEGIN DELETE FROM private.marketing_template_versions; RAISE EXCEPTION 'Template history deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
+ IF has_function_privilege('anon','public.admin_read_marketing_templates(uuid)','EXECUTE') OR has_function_privilege('anon','public.admin_save_marketing_template(uuid,uuid,bigint,text,jsonb)','EXECUTE') OR has_table_privilege('authenticated','private.marketing_template_versions','SELECT') THEN RAISE EXCEPTION 'Template privilege leak'; END IF;
+END $test$;
+\echo 'PASS marketing consent, segments, campaign and template contract (isolated)'
