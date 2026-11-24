@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
-import {productPath,categoryPath,findPublishedRouteProduct,resolveCatalogueCategory} from '../utils/catalogueSeo.js';
+import {productPath,categoryPath,findPublishedRouteProduct,resolveCatalogueCategory,shouldHandleCatalogueClick} from '../utils/catalogueSeo.js';
 import { buildStorefrontElementStyle, withStorefrontVideoTokens, normalizeStorefrontCustomSections, getStorefrontSectionOrder, storefrontViewportForWidth, buildStorefrontSectionGeometryProps } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
@@ -703,7 +703,7 @@ export default function StoreView({
                     <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </button>
                   <div className="gs-video-flash-copy py-3 space-y-1.5">
-                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300"><button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button></h4>
+                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300">{catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-flash-sale-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}</h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
                       {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
@@ -803,9 +803,11 @@ export default function StoreView({
             const isSelected = selectedCategory === catName;
             const isOpen = openParentCatId === catId;
             const pCount = getCategoryProductCount(catName, false);
+            const CategoryControl=catalogueNavigation&&categoryPath(catName)?'a':'div';
 
             return (
-              <div
+              <CategoryControl
+                href={CategoryControl==='a'?categoryPath(catName):undefined}
                 key={catId}
                 data-visual-editor-target="category.card"
                 style={videoElementStyle('category.card')}
@@ -815,8 +817,9 @@ export default function StoreView({
                 aria-pressed={isSelected}
                 aria-expanded={subCats.length > 0 ? isOpen : undefined}
                 aria-controls={subCats.length > 0 && isOpen ? 'gs-subcategory-panel' : undefined}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCatalogueCategory(catName,null,isOpen ? null : catId); } }}
-                onClick={() => { 
+                onKeyDown={(e) => { if (e.key === ' ' || (e.key === 'Enter'&&CategoryControl==='div')) { e.preventDefault(); selectCatalogueCategory(catName,null,isOpen ? null : catId); } }}
+                onClick={(event) => {
+                  if(CategoryControl==='a'){if(!shouldHandleCatalogueClick(event))return;event.preventDefault();}
                   selectCatalogueCategory(catName,null,isOpen ? null : catId);
                 }}
                 className={`gs-category-card gs-editorial-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
@@ -839,7 +842,7 @@ export default function StoreView({
                   <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
                   <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                 </div>
-              </div>
+              </CategoryControl>
             );
           })}
         </div>
@@ -865,17 +868,21 @@ export default function StoreView({
               {getSubCategories(openParentCatId).map(sub => {
                 const subCount = getCategoryProductCount(sub.name, true);
                 const isSubSel = selectedSubCategory === sub.name;
+                const SubcategoryControl=catalogueNavigation&&categoryPath(sub.name)?'a':'button';
                 return (
-                  <button
+                  <SubcategoryControl
                     key={sub.id || sub.name}
-                    type="button"
+                    href={SubcategoryControl==='a'?categoryPath(sub.name):undefined}
+                    type={SubcategoryControl==='button'?'button':undefined}
+                    role={SubcategoryControl==='a'?'button':undefined}
                     aria-pressed={isSubSel}
-                    onClick={() => selectCatalogueCategory(selectedCategory,sub.name,openParentCatId)}
+                    onKeyDown={event=>{if(SubcategoryControl==='a'&&event.key===' '){event.preventDefault();selectCatalogueCategory(selectedCategory,sub.name,openParentCatId);}}}
+                    onClick={event=>{if(SubcategoryControl==='a'){if(!shouldHandleCatalogueClick(event))return;event.preventDefault();}selectCatalogueCategory(selectedCategory,sub.name,openParentCatId);}}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
                     <span>{sub.name}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
-                  </button>
+                  </SubcategoryControl>
                 );
               })}
             </div>
@@ -1048,7 +1055,7 @@ export default function StoreView({
                     </div>
                   </div>
                   <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
-                    <button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>
+                    {catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-catalog-product-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}
                   </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>

@@ -37,7 +37,7 @@ test('video 03 hero and offers preserve configured editor hooks and business ope
 });
 
 test('video 04 catalog preserves filters, category state and product actions',()=>{
- for(const term of ["videoElementStyle('category.card')","videoElementStyle('filters.input')","videoElementStyle('product.title')","setSelectedCategory(catName)","setSelectedSubCategory(sub.name)","setMinPrice(e.target.value","setMaxPrice(e.target.value","setSortBy(e.target.value)","resetCatalogFilters","toggleWishlist(prod)","toggleComparison(prod)","handleProductReorder(event.dataTransfer","getProductStartingPrice(prod)","handleProductPageChange(page)"])assert.ok(store.includes(term),term);
+ for(const term of ["videoElementStyle('category.card')","videoElementStyle('filters.input')","videoElementStyle('product.title')","selectCatalogueCategory(catName,null,isOpen ? null : catId)","selectCatalogueCategory(selectedCategory,sub.name,openParentCatId)","setSelectedCategory(name);setSelectedSubCategory(subcategory);setOpenParentCatId(parentId)","setMinPrice(e.target.value","setMaxPrice(e.target.value","setSortBy(e.target.value)","resetCatalogFilters","toggleWishlist(prod)","toggleComparison(prod)","handleProductReorder(event.dataTransfer","getProductStartingPrice(prod)","handleProductPageChange(page)"])assert.ok(store.includes(term),term);
  for(const term of ['--gs-video-category-title-fontSize','--gs-video-filters-input-color','--gs-video-product-button-color','grid-template-columns: minmax(0,1fr) 12px minmax(0,1fr)','font-variant-numeric: tabular-nums','gs-catalog-comparison-toggle','min-height: 44px !important'])assert.ok(css.includes(term),term);
 });
 

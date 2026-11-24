@@ -64,3 +64,26 @@ export function resolveCatalogueCategory(categories,name){
  const parent=item.parentId==null?null:items.find(c=>String(c.id||c.name)===String(item.parentId));
  return parent?{category:parent.name,subcategory:item.name,parentId:parent.id||parent.name}:{category:item.name,subcategory:null,parentId:item.id||item.name};
 }
+
+export function shouldHandleCatalogueClick(event){
+ return !!event&&!event.defaultPrevented&&event.button===0&&!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&!event.altKey;
+}
+const cleanMeta=(value,max)=>String(value??'').replace(/\s+/gu,' ').trim().slice(0,max);
+export function catalogueMetadata(route,products,ready,categories=[]){
+ const home={title:'GEOSTORE — Fashion, Shoes & Accessories',description:'აღმოაჩინე GEOSTORE — ტანსაცმელი, ფეხსაცმელი და აქსესუარები ქალებისა და მამაკაცებისთვის.',indexable:true};
+ if(!route||route.kind==='home')return home;
+ if(route.kind==='product'){
+  const product=findPublishedRouteProduct(products,route.value,ready);
+  if(!product)return {...home,title:'GEOSTORE — '+(ready?'პროდუქტი მიუწვდომელია':'იტვირთება'),indexable:false};
+  const name=cleanMeta(product.name,100);
+  return {title:name+' | GEOSTORE',description:cleanMeta(product.description,155)||name+' — GEOSTORE',indexable:true};
+ }
+ if(route.kind==='category'){
+  const target=resolveCatalogueCategory(categories,route.value);
+  const childNames=categories.filter(c=>c&&typeof c==='object'&&target.parentId!=null&&String(c.parentId)===String(target.parentId)).map(c=>c.name);
+  const exists=ready&&products.some(p=>p&&p.isPublished!==false&&p.is_published!==false&&(p.category===route.value||(!target.subcategory&&childNames.includes(p.category))));
+  const name=cleanMeta(route.value,100);
+  return exists?{title:name+' | GEOSTORE',description:name+' — აღმოაჩინე კოლექცია GEOSTORE-ზე.',indexable:true}:{...home,indexable:false};
+ }
+ return {...home,indexable:false};
+}

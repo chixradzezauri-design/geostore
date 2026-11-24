@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {productPath,categoryPath,parseCataloguePath,cataloguePaths,buildCatalogueSitemap,catalogueRouteFromLocation,catalogueNavigationTarget,findPublishedRouteProduct,resolveCatalogueCategory} from '../src/utils/catalogueSeo.js';
+import {productPath,categoryPath,parseCataloguePath,cataloguePaths,buildCatalogueSitemap,catalogueRouteFromLocation,catalogueNavigationTarget,findPublishedRouteProduct,resolveCatalogueCategory,shouldHandleCatalogueClick,catalogueMetadata} from '../src/utils/catalogueSeo.js';
 test('product and Georgian category paths round-trip exactly',()=>{
  for(const [kind,value,path] of [['product','sku-123',productPath('sku-123')],['category','ქალის ფეხსაცმელი',categoryPath('ქალის ფეხსაცმელი')],['product','item?x#y & 1',productPath('item?x#y & 1')]]){
   assert.deepEqual(parseCataloguePath(path),{kind,value});
@@ -45,4 +45,17 @@ test('category route resolves current parent and child without changing names',(
  assert.deepEqual(resolveCatalogueCategory(categories,'Boots'),{category:'Shoes',subcategory:'Boots',parentId:'p'});
  assert.deepEqual(resolveCatalogueCategory(categories,'Shoes'),{category:'Shoes',subcategory:null,parentId:'p'});
  assert.deepEqual(resolveCatalogueCategory(categories,'Unknown'),{category:'Unknown',subcategory:null,parentId:null});
+});
+
+test('plain primary click is intercepted; browser new-tab and modifier behavior is preserved',()=>{
+ assert.equal(shouldHandleCatalogueClick({button:0}),true);
+ for(const event of [{button:1},{button:0,ctrlKey:true},{button:0,metaKey:true},{button:0,shiftKey:true},{button:0,altKey:true},{button:0,defaultPrevented:true}])assert.equal(shouldHandleCatalogueClick(event),false);
+});
+test('metadata never exposes hidden or unverified products',()=>{
+ const rows=[{id:'a',name:'Test shoe',description:'A description',category:'Shoes'},{id:'b',name:'Private name',isPublished:false,category:'Private'}];
+ assert.deepEqual(catalogueMetadata({kind:'product',value:'a'},rows,true),{title:'Test shoe | GEOSTORE',description:'A description',indexable:true});
+ assert.equal(catalogueMetadata({kind:'product',value:'a'},rows,false).indexable,false);
+ assert.equal(catalogueMetadata({kind:'product',value:'b'},rows,true).indexable,false);
+ assert.equal(catalogueMetadata({kind:'category',value:'Private'},rows,true).indexable,false);
+ assert.equal(catalogueMetadata({kind:'category',value:'Shoes'},rows,true).indexable,true);
 });

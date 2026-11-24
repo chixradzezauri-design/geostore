@@ -43,7 +43,7 @@ import { getCartFeedbackMessage } from './utils/cartFeedback.js';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
-import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath } from './utils/catalogueSeo.js';
+import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath, catalogueMetadata } from './utils/catalogueSeo.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -3572,6 +3572,20 @@ export default function App() {
     t
   ]);
 
+  // Client metadata supplements crawlable HTML; server-side metadata/status and
+  // the verified canonical domain are a separate SEO release gate.
+  useEffect(()=>{
+    const meta=catalogueMetadata(catalogueRoute,products,catalogueVerifiedEpoch===productsAccessEpoch.current,categories);
+    document.title=meta.title;
+    document.querySelector('meta[name="description"]')?.setAttribute('content',meta.description);
+    let robots=document.head.querySelector('meta[data-gs-route-robots]');
+    const noIndex=activeTab!=='store'||!catalogueRoute||!meta.indexable;
+    if(noIndex){
+      if(!robots){robots=document.createElement('meta');robots.name='robots';robots.dataset.gsRouteRobots='true';document.head.appendChild(robots);}
+      robots.content='noindex, follow';
+    }else robots?.remove();
+  },[activeTab,catalogueRoute,products,catalogueVerifiedEpoch,categories,adminAccess]);
+
   const formatPrice = (p) =>
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
@@ -3659,13 +3673,13 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             catalogueNavigation
             catalogueRoute={catalogueRoute}
             catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current}
             catalogueProducts={products}
             onCatalogueNavigate={navigateCatalogue}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
             requestedSavedProductId={requestedSavedProductId}
             onSavedProductRequestHandled={setRequestedSavedProductId}
             wishlist={wishlist}

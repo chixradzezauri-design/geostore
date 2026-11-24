@@ -16,7 +16,8 @@ test('Stage 39: clear search restores focus and uses the active App search query
 test('Stage 39: category-safe reset clears query, category, prices, subcategory and sorting',()=>{
   assert.match(a,/filteredProducts=\{filteredProducts\}\s*searchQuery=\{searchQuery\}\s*setSearchQuery=\{setSearchQuery\}/);
   const f=s.slice(s.indexOf('const resetCatalogFilters = () => {'),s.indexOf('const resetCatalogFilters = () => {')+350);
-  for(const op of ["setSearchQuery?.('')","setSelectedCategory?.('ყველა')","setSelectedSubCategory(null)","setOpenParentCatId(null)","setMinPrice('')","setMaxPrice('')","setSortBy('default')","setProductPage(1)"]) assert.ok(f.includes(op),op);
+  for(const op of ["setSearchQuery?.('')","selectCatalogueCategory('ყველა')","setMinPrice('')","setMaxPrice('')","setSortBy('default')","setProductPage(1)"]) assert.ok(f.includes(op),op);
+  assert.match(s,/const selectCatalogueCategory=\(name,subcategory=null,parentId=null\)=>\{[\s\S]*?setSelectedCategory\(name\);setSelectedSubCategory\(subcategory\);setOpenParentCatId\(parentId\);/);
   assert.match(s,/className="gs-filter-reset-all/);
   assert.match(s,/className="gs-empty-products-reset/);
   assert.match(s,/const validSubcategory = selectedSubCategory && selectedParent/);
