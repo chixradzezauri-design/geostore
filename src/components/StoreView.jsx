@@ -561,7 +561,7 @@ export default function StoreView({
           <h1 data-visual-editor-target="hero.title" style={videoElementStyle('hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
           <p data-visual-editor-target="hero.description" style={videoElementStyle('hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); const target = ['gs-video-collections', 'gs-video-catalog-anchor'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
+            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
           </div>
         </div>
@@ -681,13 +681,13 @@ export default function StoreView({
       {renderCustomSections('after-flash-sale')}
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div id="gs-video-collections" data-visual-editor-target="categories" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories')} className="gs-editorial-collections space-y-6">
+      <div id="gs-video-collections" data-visual-editor-target="categories" style={videoElementStyle('categories')} className="gs-editorial-collections space-y-6">
         <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
-            <h3 data-visual-editor-target="categories.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories.title')} className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+            <h3 data-visual-editor-target="categories.title" style={videoElementStyle('categories.title')} className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
               <FolderTree className="w-4 h-4 text-amber-400" /> {visualCopy.categoriesTitle || storeText.discoverCollections}
             </h3>
-            <p data-visual-editor-target="categories.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories.description')} className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
+            <p data-visual-editor-target="categories.description" style={videoElementStyle('categories.description')} className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
           </div>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
             {processedProducts?.length || 0} {storeText.productsOnDisplay}
@@ -724,7 +724,7 @@ export default function StoreView({
         <div className="gs-category-grid gs-catalog-category-grid gs-editorial-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div
             data-visual-editor-target="category.card"
-            style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
+            style={videoElementStyle('category.card')}
             role="button"
             tabIndex={0}
             aria-label={storeText.allCategories}
@@ -745,8 +745,8 @@ export default function StoreView({
               </span>
             </div>
             <div className="relative z-10">
-              <h4 data-visual-editor-target="category.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
-              <p data-visual-editor-target="category.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.description')} className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
+              <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
+              <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
             </div>
           </div>
 
@@ -763,7 +763,7 @@ export default function StoreView({
               <div
                 key={catId}
                 data-visual-editor-target="category.card"
-                style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
+                style={videoElementStyle('category.card')}
                 role="button"
                 tabIndex={0}
                 aria-label={`${catName} — ${pCount} ${storeText.productsOnDisplay}`}
@@ -793,8 +793,8 @@ export default function StoreView({
                   </div>
                 </div>
                 <div className="z-10">
-                  <h4 data-visual-editor-target="category.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
-                  <p data-visual-editor-target="category.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
+                  <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
+                  <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                 </div>
               </div>
             );
@@ -843,9 +843,9 @@ export default function StoreView({
       {renderCustomSections('after-categories')}
 
       {/* Filters & Sorting */}
-      <div id="gs-video-catalog-anchor" data-visual-editor-target="filters" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div id="gs-video-catalog-anchor" data-visual-editor-target="filters" style={videoElementStyle('filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
-          <div data-visual-editor-target="filters.priceLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+          <div data-visual-editor-target="filters.priceLabel" style={videoElementStyle('filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
           <input 
@@ -859,9 +859,9 @@ export default function StoreView({
             aria-describedby={hasInvalidPriceRange ? 'gs-price-range-error' : undefined}
             value={minPrice}
             onChange={e => setMinPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            data-visual-editor-target="filters.input" style={videoElementStyle('filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
-          <span className="text-slate-500">-</span>
+          <span className="text-slate-500" aria-hidden="true">–</span>
           <input 
             type="number"
             min="0"
@@ -873,22 +873,22 @@ export default function StoreView({
             aria-describedby={hasInvalidPriceRange ? 'gs-price-range-error' : undefined}
             value={maxPrice}
             onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            data-visual-editor-target="filters.input" style={videoElementStyle('filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button data-visual-editor-target="filters.clearButton" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.clearButton')} onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
+            <button data-visual-editor-target="filters.clearButton" style={videoElementStyle('filters.clearButton')} type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
           )}
         </div>
 
         <div className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
-          <div data-visual-editor-target="filters.sortLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.sortLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+          <div data-visual-editor-target="filters.sortLabel" style={videoElementStyle('filters.sortLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
           <select 
             aria-label={storeText.sort}
             value={sortBy} 
             onChange={e => setSortBy(e.target.value)}
-            data-visual-editor-target="filters.sortSelect" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.sortSelect')} className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
+            data-visual-editor-target="filters.sortSelect" style={videoElementStyle('filters.sortSelect')} className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
             <option value="default">{storeText.defaultSort}</option>
             <option value="price-asc">{storeText.priceLow}</option>
@@ -919,7 +919,7 @@ export default function StoreView({
 
       {/* Products Grid */}
       {processedProducts.length === 0 ? (
-        <div className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
+        <div id="gs-catalog-products" className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
           {hasActiveCatalogFilters && (
             <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
@@ -941,7 +941,7 @@ export default function StoreView({
             return (
               <article
                 data-visual-editor-target="product.card"
-                style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.card')}
+                style={videoElementStyle('product.card')}
                 key={prod.id}
                 draggable={typeof onProductOrderChange === 'function' && sortBy === 'default'}
                 onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(prod.id)); }}
@@ -951,10 +951,10 @@ export default function StoreView({
               >
                 
                 <div 
-                  onClick={() => handleOpenProduct(prod)}
+                  onClick={(event) => handleOpenProduct(prod, event.currentTarget.querySelector('.gs-catalog-product-title-action') || event.currentTarget.closest('article')?.querySelector('.gs-catalog-product-title-action'))}
                   className="gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
-                  {prod.image ? <img data-visual-editor-target="product.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.image')} src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
+                  {prod.image ? <img data-visual-editor-target="product.image" style={videoElementStyle('product.image')} src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
                   <button
                     type="button"
@@ -999,7 +999,7 @@ export default function StoreView({
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 data-visual-editor-target="product.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                  <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
                     <button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>
                   </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
@@ -1011,7 +1011,7 @@ export default function StoreView({
                 <button
                   type="button"
                   data-visual-editor-target="product.button"
-                  style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.button')}
+                  style={videoElementStyle('product.button')}
                   onClick={(event) => handleOpenProduct(prod, event.currentTarget)}
                   aria-label={`${visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}: ${prod.name}`}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
