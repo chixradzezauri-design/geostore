@@ -906,6 +906,14 @@ export function buildAdminPanelVisualStyle(rawDesign) {
   const mobile = effectiveViewport(design, 'mobile');
   const style = {};
 
+  // Compact defaults apply only to inherited mobile layout values.
+  // Mobile and tablet layout overrides independently inherit desktop values.
+  for (const key of ['sectionGap', 'cardPadding', 'cardRadius', 'headerPadding', 'headerRadius', 'titleFontSize']) {
+    if (Object.hasOwn(design.responsive.mobile.layout, key)) {
+      style[`--admin-vd-video-mobile-${key}`] = `${mobile.layout[key]}px`;
+    }
+  }
+
   const responsiveComponents = {
     tablet: normalizeComponents(design.responsive?.tablet?.components, design.components, true),
     mobile: normalizeComponents(design.responsive?.mobile?.components, design.components, true)
