@@ -19,3 +19,5 @@ References: Google Search Central crawlable links and sitemap guidelines; Vercel
 
 ## 4B — catalogue navigation integration
 StoreView opts in only from the real App, not the visual editor. Shared route parser controls history, direct product waits for verified current catalogue epoch and excludes unpublished rows; category and child routes resolve existing filters, back/forward handled, unknown product displays unavailable message. Existing saved-product flow retained. Query/hash and legacy admin route preserved. This block does not change canonical origin or sitemap. CI pending; browser tests and crawlable anchor links/metadata are next. No production changes.
+
+4B follow-up: navigation to the same path is a no-op; category resolution does not depend on product refreshes, preserving manually collapsed panels. Browser integration tests are still required.

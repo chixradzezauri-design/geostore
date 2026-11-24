@@ -43,7 +43,7 @@ import { getCartFeedbackMessage } from './utils/cartFeedback.js';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
-import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath, resolveCatalogueCategory } from './utils/catalogueSeo.js';
+import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath } from './utils/catalogueSeo.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -565,7 +565,8 @@ export default function App() {
   const navigateCatalogue=(path,{replace=false}={})=>{
     const target=catalogueNavigationTarget(window.location,path);
     if(!target)return false;
-    if(window.location.pathname!==path)window.history[replace?'replaceState':'pushState'](window.history.state,'',target);
+    if(window.location.pathname===path)return true;
+    window.history[replace?'replaceState':'pushState'](window.history.state,'',target);
     const next=catalogueRouteFromLocation(window.location);
     catalogueRouteRef.current=next;setCatalogueRoute(next);
     return true;

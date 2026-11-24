@@ -228,21 +228,22 @@ export default function StoreView({
   // Direct route resolution waits for a verified server catalogue, never cached
   // or hidden products. Editor instances opt out of browser navigation.
   useEffect(()=>{
-    if(!catalogueNavigation||!catalogueRoute)return;
-    if(catalogueRoute.kind==='product'){
-      const product=findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,catalogueReady);
-      if(product&&String(selectedProduct?.id)!==String(product.id))handleOpenProduct(product,null,true);
-      else if(!product&&selectedProduct&&catalogueReady)closeProductDetails(true);
+    if(!catalogueNavigation||catalogueRoute?.kind!=='product')return;
+    const product=findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,catalogueReady);
+    if(product&&String(selectedProduct?.id)!==String(product.id))handleOpenProduct(product,null,true);
+    else if(!product&&selectedProduct&&catalogueReady)closeProductDetails(true);
+  },[catalogueNavigation,catalogueRoute,catalogueReady,catalogueProducts]);
+  // Product refreshes must not reopen a manually collapsed category panel.
+  useEffect(()=>{
+    if(!catalogueNavigation||!catalogueRoute||catalogueRoute.kind==='product')return;
+    if(selectedProduct)closeProductDetails(true);
+    if(catalogueRoute.kind==='category'){
+      const target=resolveCatalogueCategory(categories,catalogueRoute.value);
+      setSelectedCategory(target.category);setSelectedSubCategory(target.subcategory);setOpenParentCatId(target.parentId);
     }else{
-      if(selectedProduct)closeProductDetails(true);
-      if(catalogueRoute.kind==='category'){
-        const target=resolveCatalogueCategory(categories,catalogueRoute.value);
-        setSelectedCategory(target.category);setSelectedSubCategory(target.subcategory);setOpenParentCatId(target.parentId);
-      }else{
-        setSelectedCategory('ყველა');setSelectedSubCategory(null);setOpenParentCatId(null);
-      }
+      setSelectedCategory('ყველა');setSelectedSubCategory(null);setOpenParentCatId(null);
     }
-  },[catalogueNavigation,catalogueRoute,catalogueReady,catalogueProducts,categories]);
+  },[catalogueNavigation,catalogueRoute,categories]);
   const selectCatalogueCategory=(name,subcategory=null,parentId=null)=>{
     if(catalogueNavigation)onCatalogueNavigate?.(categoryPath(subcategory||name)||'/');
     setSelectedCategory(name);setSelectedSubCategory(subcategory);setOpenParentCatId(parentId);
