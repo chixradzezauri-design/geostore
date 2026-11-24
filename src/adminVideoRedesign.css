@@ -985,3 +985,24 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price { flex-wrap:wrap;gap:6px; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-note-controls input { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
 }
+
+/* Workspace audit 04 — complete product content editor and visible gallery priority. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-content { min-width:0;background:var(--av-inset);border:1px solid var(--av-border);border-radius:var(--admin-vd-cardRadius-active,14px);padding:clamp(12px,2vw,20px); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field { display:grid;gap:6px;min-width:0;color:var(--av-text);line-height:1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field :is(input,textarea) { width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--av-border);border-radius:var(--admin-vd-inputRadius-active,10px);background:var(--av-surface);color:var(--admin-vd-inputText-active,var(--av-text)); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field textarea { resize:vertical;min-height:100px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field small { color:var(--av-muted);overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-featured { min-height:44px;line-height:1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-help { line-height:1.5;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,116px),1fr));gap:12px;min-width:0;padding-top:6px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-card { display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-card .admin-product-gallery-thumbnail { width:100%!important;height:auto!important;aspect-ratio:1; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-card .admin-product-gallery-remove { top:3px!important;right:3px!important;min-width:44px!important;min-height:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-primary,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-select { display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,8px);text-align:center;line-height:1.4;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-primary { color:var(--av-nav-active-text);background:var(--av-nav-active-bg); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-gallery-select,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-reset { background:var(--av-inset);color:var(--av-text);cursor:pointer; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-reset { min-height:44px;margin-top:10px;padding:8px 12px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,8px); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-pagination button { min-height:44px!important;min-width:44px!important; }
+@media(max-width:767px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-product-field :is(input,textarea) { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
+}

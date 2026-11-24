@@ -27,3 +27,11 @@ test('workspace audit 03 keeps order actions and marks unverified lists correctl
  for(const term of ['if (!hasOrdersPermission || !ordersReady || ordersError)','admin-workspace-orders-notice','admin-workspace-orders-reset','admin-workspace-order-clear','setOrderPageByStatus({})','getOrderStatusFilterKey(selectedOrderForModal.status)','htmlFor="admin-workspace-order-note"','handlePrintInvoice(selectedOrderForModal)','handleSaveOrderAdminNote(selectedOrderForModal.id)',"handleUpdateOrderStatus(o.id, 'ახალი')",'Boolean(o.stock_restored_at)','orderDetailTriggerRef.current = event.currentTarget'])assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 03'));assert.ok(css.includes('.admin-workspace-order-clear'));assert.ok(css.includes('.admin-order-detail-header > button'));
 });
+
+test('workspace audit 04 exposes existing product content fields and decimal price input without changing save contracts',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ const form=jsx.slice(jsx.indexOf('<form id="geostore-product-form"'),jsx.indexOf('</form>',jsx.indexOf('<form id="geostore-product-form"')));
+ for(const field of ['oldPriceGEL','vendor','description','tags'])assert.ok(form.includes('value={productForm.'+field+'}'),field);
+ for(const term of ['step="0.01" inputMode="decimal"','checked={Boolean(productForm.isFeatured)}','MAX_PRODUCT_GALLERY_IMAGES','მთავრად არჩევა','setSelectedImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])','onSubmit={handleSaveProduct}'])assert.ok(form.includes(term),term);
+ assert.ok(jsx.includes('const mainImage = galleryImages[0] || null'));assert.ok(jsx.includes('admin_update_product_with_stock'));assert.ok(css.includes('Workspace audit 04'));
+});

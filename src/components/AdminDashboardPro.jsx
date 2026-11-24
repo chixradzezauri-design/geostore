@@ -6452,7 +6452,7 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება (კატეგორიის მახასიათებლებით & ვარიანტებით)'}
+                  <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება'}
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -6465,23 +6465,23 @@ export default function AdminDashboardPro({
               <form id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
-                    <input type="text" required placeholder="მაგ: ჰუდი / iPhone" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                    <label htmlFor="admin-workspace-product-name" className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
+                    <input id="admin-workspace-product-name" type="text" required maxLength={160} placeholder="მაგ: ჰუდი / iPhone" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (GEL) *</label>
-                    <input type="number" required placeholder="99" value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-black outline-none focus:border-emerald-400 shadow-inner" />
+                    <label htmlFor="admin-workspace-product-price" className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (GEL) *</label>
+                    <input id="admin-workspace-product-price" type="number" min="0" max="1000000000" step="0.01" inputMode="decimal" required placeholder="99" value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-black outline-none focus:border-emerald-400 shadow-inner" />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">თვითღირებულება (COGS ₾)</label>
-                    <input type="number" placeholder="45" value={productForm.purchaseCost} onChange={e => setProductForm({...productForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-cyan-400 font-bold outline-none focus:border-emerald-400 shadow-inner" />
+                    <label htmlFor="admin-workspace-product-cost" className="text-slate-400 font-bold block mb-1">თვითღირებულება (COGS ₾)</label>
+                    <input id="admin-workspace-product-cost" type="number" min="0" max="1000000000" step="0.01" inputMode="decimal" placeholder="45" value={productForm.purchaseCost} onChange={e => setProductForm({...productForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-cyan-400 font-bold outline-none focus:border-emerald-400 shadow-inner" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">კატეგორია *</label>
-                    <select 
+                    <label htmlFor="admin-workspace-product-category" className="text-slate-400 font-bold block mb-1">კატეგორია *</label>
+                    <select id="admin-workspace-product-category"
                       value={productForm.category} 
                       onChange={e => handleCategoryChange(e.target.value)} 
                       className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
@@ -6492,16 +6492,37 @@ export default function AdminDashboardPro({
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">ბრენდი</label>
-                    <input type="text" placeholder="Apple / Nike" value={productForm.brand} onChange={e => setProductForm({...productForm, brand: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                    <label htmlFor="admin-workspace-product-brand" className="text-slate-400 font-bold block mb-1">ბრენდი</label>
+                    <input id="admin-workspace-product-brand" type="text" placeholder="Apple / Nike" value={productForm.brand} onChange={e => setProductForm({...productForm, brand: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">მარაგი</label>
-                    <input type="number" min="0" step="1" inputMode="numeric" placeholder="10" value={productForm.stock} disabled={Boolean(editingProductId)} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed" />
+                    <label htmlFor="admin-workspace-product-stock" className="text-slate-400 font-bold block mb-1">მარაგი</label>
+                    <input id="admin-workspace-product-stock" type="number" min="0" max="1000000" step="1" inputMode="numeric" placeholder="10" value={productForm.stock} disabled={Boolean(editingProductId)} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed" />
                     {editingProductId && <p className="mt-1 text-[11px] leading-relaxed text-amber-300">არსებული პროდუქტის მარაგი შეცვალეთ პროდუქტის სიაში — შეკვეთების ჩამოჭრა უსაფრთხოდ იქნება გათვალისწინებული.</p>}
                   </div>
                 </div>
 
+                <section className="admin-workspace-product-content space-y-3" aria-labelledby="admin-workspace-product-content-title">
+                  <h4 id="admin-workspace-product-content-title" className="font-bold text-white text-sm">აღწერა და დამატებითი ინფორმაცია</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="admin-workspace-product-field">ძველი ფასი (₾)
+                      <input type="number" min="0" max="1000000000" step="0.01" inputMode="decimal" value={productForm.oldPriceGEL} onChange={e => setProductForm(prev => ({ ...prev, oldPriceGEL: e.target.value }))} placeholder="არასავალდებულო" />
+                      <small>ფასდაკლების გარეშე დატოვეთ ცარიელი.</small>
+                    </label>
+                    <label className="admin-workspace-product-field">მომწოდებელი
+                      <input type="text" value={productForm.vendor} onChange={e => setProductForm(prev => ({ ...prev, vendor: e.target.value }))} />
+                    </label>
+                    <label className="admin-workspace-product-field sm:col-span-2">პროდუქტის აღწერა
+                      <textarea rows={4} maxLength={5000} value={productForm.description} onChange={e => setProductForm(prev => ({ ...prev, description: e.target.value }))} placeholder="მასალა, დეტალები, გამოყენება…" />
+                      <small>{String(productForm.description || '').length} / 5000</small>
+                    </label>
+                    <label className="admin-workspace-product-field sm:col-span-2">ტეგები
+                      <input type="text" maxLength={1000} value={productForm.tags} onChange={e => setProductForm(prev => ({ ...prev, tags: e.target.value }))} placeholder="ახალი, საზაფხულო, კლასიკური" />
+                      <small>გამოყავით მძიმეებით; მაქსიმუმ 30 უნიკალური ტეგი.</small>
+                    </label>
+                  </div>
+                  <label className="admin-workspace-product-featured flex items-center gap-2"><input type="checkbox" checked={Boolean(productForm.isFeatured)} onChange={e => setProductForm(prev => ({ ...prev, isFeatured: e.target.checked }))} /> გამორჩეული პროდუქტი</label>
+                </section>
                 <div className="admin-product-attributes bg-slate-950 p-5 rounded-3xl border border-emerald-500/30 space-y-4 shadow-inner">
                   <h4 className="font-black text-amber-400 text-sm flex items-center gap-2">
                     <Sparkles className="w-4 h-4" /> 
@@ -6622,9 +6643,9 @@ export default function AdminDashboardPro({
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ინდივიდუალური ვარიანტები</h4>
                   <p className="text-slate-400 text-xs leading-relaxed">თითოეულ ვარიანტს აქვს საკუთარი ფასი და მარაგი. შეკვეთისას ორივე სერვერზე მოწმდება.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                    <input value={newVarName} onChange={e => setNewVarName(e.target.value)} maxLength={80} placeholder="ვარიანტის სახელი" className="sm:col-span-2 min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
-                    <input value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} inputMode="decimal" placeholder="ფასი ₾" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
-                    <input value={newVarStock} onChange={e => setNewVarStock(e.target.value)} inputMode="numeric" placeholder="მარაგი (ც.)" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input aria-label="ვარიანტის სახელი" value={newVarName} onChange={e => setNewVarName(e.target.value)} maxLength={80} placeholder="ვარიანტის სახელი" className="sm:col-span-2 min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input aria-label="ვარიანტის ფასი ლარში" value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} inputMode="decimal" placeholder="ფასი ₾" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input aria-label="ვარიანტის მარაგი" value={newVarStock} onChange={e => setNewVarStock(e.target.value)} inputMode="numeric" placeholder="მარაგი (ც.)" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
                     <button type="button" onClick={() => handleAddCustomVariant({ preventDefault: () => {} })} className="sm:col-span-4 rounded-xl bg-amber-400 px-4 py-3 text-xs font-black text-slate-950">ვარიანტის დამატება</button>
                   </div>
                   {productVariants.length ? <div className="space-y-2">{productVariants.map(variant => (
@@ -6640,17 +6661,20 @@ export default function AdminDashboardPro({
                 </div>
 
                 <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
-                  <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
+                  <label htmlFor="admin-workspace-product-gallery" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
-                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
+                  <input id="admin-workspace-product-gallery" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
                   
+                  <p className="admin-workspace-gallery-help text-slate-400 text-xs">{selectedImages.length} / {MAX_PRODUCT_GALLERY_IMAGES} ფოტო · თითოეული მაქსიმუმ 5 MB. პირველი ფოტო მთავარია.</p>
                   {selectedImages.length > 0 && (
-                    <div className="flex gap-3 overflow-x-auto pt-3 pb-1">
+                    <div className="admin-workspace-gallery-grid">
                       {selectedImages.map((img, idx) => (
-                        <div key={idx} className="admin-product-gallery-thumbnail relative w-20 h-20 bg-slate-900 border border-emerald-500/20 rounded-2xl p-1.5 shrink-0 shadow-lg">
+                        <div key={idx} className="admin-workspace-gallery-card"><div className="admin-product-gallery-thumbnail relative w-20 h-20 bg-slate-900 border border-emerald-500/20 rounded-2xl p-1.5 shrink-0 shadow-lg">
                           <img src={img} alt="" className="w-full h-full object-cover rounded-xl" />
                           <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} aria-label={`ფოტო ${idx + 1} — წაშლა`} className="admin-product-gallery-remove absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-5 h-5 text-[11px] font-black flex items-center justify-center shadow cursor-pointer">×</button>
+                        </div>
+                        {idx === 0 ? <span className="admin-workspace-gallery-primary">მთავარი ფოტო</span> : <button type="button" className="admin-workspace-gallery-select" onClick={() => setSelectedImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])}>მთავრად არჩევა</button>}
                         </div>
                       ))}
                     </div>
@@ -6659,7 +6683,7 @@ export default function AdminDashboardPro({
 
                 {editingProductId && <button type="button" onClick={resetProductEditor} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold p-3 rounded-2xl">რედაქტირების გაუქმება</button>}
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  {editingProductId ? 'ცვლილებების შენახვა' : 'პროდუქტის ბაზაში შენახვა'} 🚀
+                  {editingProductId ? 'ცვლილებების შენახვა' : 'პროდუქტის შენახვა'}
                 </button>
               </form>
             </div>
@@ -6667,7 +6691,7 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <div>
-                  <h3 className="admin-product-inventory-title font-black text-white text-base">ბაზაში არსებული პროდუქტები & COGS ({products?.length || 0})</h3>
+                  <h3 className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
                   <p className="mt-1 text-[10px] text-slate-400">
                     გამოქვეყნებული: {(products || []).filter(product => (product.isPublished ?? product.is_published) !== false).length}
                     {' · '}დამალული: {(products || []).filter(product => (product.isPublished ?? product.is_published) === false).length}
@@ -6704,7 +6728,8 @@ export default function AdminDashboardPro({
               <div className="admin-products-list space-y-3.5">
                 {filteredProducts.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
-                    არჩეულ კატეგორიაში პროდუქტები ვერ მოიძებნა.
+                    <p>{productSearchQuery || productCategoryFilter !== "ყველა" ? "შერჩეული ფილტრებით პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის."}</p>
+                    {(productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}
                   </div>
                 ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">

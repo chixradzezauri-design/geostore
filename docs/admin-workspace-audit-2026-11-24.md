@@ -15,3 +15,6 @@ Four KPI cards retain navigation and show unavailable data rather than false zer
 
 ## Block 03 — orders
 Verified previous block: all five CI workflows passed, 1069/1069 automated tests. Orders list distinguishes unverified/error data from empty results, CSV export blocked until confirmed complete data (existing all-orders semantics unchanged), filter clear action and reset search pagination across statuses. Canonical localized status labels and matching status colors in card/modal; actual stock and owner-only reactivation guards unchanged. Accessible note label, accurate item-row count, localized missing-photo label, responsive detail actions and financial wrapping. No order mutation/RPC/DB changes. New CI pending; production unchanged.
+
+## Block 04 — products
+Restored controls for existing persisted description, old price, vendor, tags and featured fields; native decimal step matches existing validated two-decimal price contract. Associated basic labels, accessible custom variant inputs, gallery count and primary image selection by existing array order, wrapping gallery grid and reset catalogue filters. Existing image validation/upload, stock RPC, price guards and publication/delete actions unchanged. Block 03 build, dependency and isolated PostgreSQL checks passed at inspection; remaining checks pending. New CI pending; no production or preview.
