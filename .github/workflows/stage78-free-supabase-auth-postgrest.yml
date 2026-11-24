@@ -25,6 +25,14 @@ on:
       - 'scripts/stage83ProductTriggerContract.mjs'
       - 'scripts/stage84ExtractOrderTriggers.mjs'
       - 'scripts/stage85ExtractOrderLifecycle.mjs'
+      - 'supabase/migrations/20261117231534_staff_crm_support_permissions.sql'
+      - 'scripts/stage88ExtractStaffSupportPolicies.mjs'
+      - 'scripts/stage88SignedSupportStaffHttp.mjs'
+      - 'scripts/stage88SupportStaffLiveReleaseGate.mjs'
+      - 'tests/stage88SupportStaffLiveReleaseGate.test.js'
+      - 'docs/stage88-support-staff-phase-cutover.md'
+      - 'release/stage88-live-support-staff-surface.json'
+      - 'release/stage88-read-only-support-staff-surface.sql'
       - 'scripts/stage85OrderLifecycleHttp.mjs'
       - 'tests/stage85OrderLifecycle.test.js'
       - 'docs/stage85-eight-order-triggers-ci.md'
@@ -111,6 +119,10 @@ jobs:
           node "$GITHUB_WORKSPACE/scripts/stage84OrderTriggerHttp.mjs"
           node "$GITHUB_WORKSPACE/scripts/stage83ProductTriggerContract.mjs"
           node "$GITHUB_WORKSPACE/scripts/stage85OrderLifecycleHttp.mjs"
+          node "$GITHUB_WORKSPACE/scripts/stage88ExtractStaffSupportPolicies.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f stage88-support-staff-rls.sql
+          node "$GITHUB_WORKSPACE/scripts/stage88SignedSupportStaffHttp.mjs"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase

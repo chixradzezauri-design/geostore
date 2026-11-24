@@ -51,6 +51,16 @@ on:
       - 'release/stage87-read-only-phase-a-preflight.sql'
       - 'release/stage87-read-only-high-risk-functions.sql'
       - 'scripts/stage87PhaseAPreflightHighRiskGate.mjs'
+      - 'release/stage88-live-support-staff-surface.json'
+      - 'release/stage88-read-only-support-staff-surface.sql'
+      - 'scripts/stage88ExtractStaffSupportPolicies.mjs'
+      - 'scripts/stage88SupportStaffLiveReleaseGate.mjs'
+      - 'tests/stage88SupportStaffLiveReleaseGate.test.js'
+      - 'docs/stage88-support-staff-phase-cutover.md'
+      - 'supabase/migrations/20261117231534_staff_crm_support_permissions.sql'
+      - 'src/App.jsx'
+      - 'src/components/AdminDashboardPro.jsx'
+      - 'src/utils/adminOrderLedgerSafety.js'
       - 'tests/stage87PhaseAPreflightHighRiskGate.test.js'
       - 'docs/stage87-phase-a-preflight-nine-high-risk-contracts.md'
       - 'tests/stage86MissingHistoryProvenanceGate.test.js'
@@ -146,3 +156,4 @@ jobs:
           node scripts/stage82LiveEffectiveSchemaGate.mjs --verify-pinned
           node scripts/stage86MissingHistoryProvenanceGate.mjs --verify-pinned
           node scripts/stage87PhaseAPreflightHighRiskGate.mjs --verify-pinned
+          node scripts/stage88SupportStaffLiveReleaseGate.mjs --verify-pinned
