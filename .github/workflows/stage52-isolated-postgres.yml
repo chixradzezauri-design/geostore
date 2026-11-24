@@ -94,6 +94,8 @@ on:
       - 'release/staged-admin-suppliers.sql'
       - 'release/staged-admin-purchases.sql'
       - 'release/staged-admin-supplier-payments.sql'
+      - 'release/staged-marketing-consent.sql'
+      - 'tests/sql/admin_marketing_consent_contract.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
@@ -164,3 +166,6 @@ jobs:
 
           createdb admin_supplier_purchase
           PGDATABASE=admin_supplier_purchase psql -v ON_ERROR_STOP=1 -f tests/sql/admin_supplier_purchase_contract.sql
+
+          createdb admin_marketing_consent
+          PGDATABASE=admin_marketing_consent psql -v ON_ERROR_STOP=1 -f tests/sql/admin_marketing_consent_contract.sql
