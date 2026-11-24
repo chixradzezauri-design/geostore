@@ -53,7 +53,7 @@ test('batch 04 responsive order, staff and finance layouts retain security-sensi
 });
 
 test('batch 05 catalog and promotion controls retain mutation handlers and accessible names',()=>{
- for(const term of ["handleSaveProduct","handleRemoveCustomVariant(variant.id)","handleImageChange","saveInventoryReplenishmentSetting(position)","recoverInventoryReplenishmentConflict(position.key)","handleAddBanner","handleDeleteBanner(b.id)","handleAddCategory","handleCreateCoupon","handleDeleteCoupon(c.id)","handleApplyFlashSale","aria-label={`ბანერის წაშლა: ${b.title}`}","aria-label={`კუპონის წაშლა: ${c.code}`}","admin-product-gallery-remove","(კომპიუტერიდან / მობილურიდან)"]) assert.ok(jsx.includes(term),term);
+ for(const term of ["handleSaveProduct","handleRemoveCustomVariant(variant.id)","handleImageChange","saveInventoryReplenishmentSetting(position)","recoverInventoryReplenishmentConflict(position.key)","handleAddBanner","handleDeleteBanner(b.id)","handleAddCategory","handleCreateCoupon","handleDeleteCoupon(c.id)","handleApplyFlashSale","aria-label={`ბანერის წაშლა: ${b.title}`}","aria-label={`კუპონის წაშლა: ${c.code}`}","admin-product-gallery-remove",'id="admin-category-create-photo"','htmlFor="admin-category-create-photo"']) assert.ok(jsx.includes(term),term);
  for(const term of ["Video redesign 05",".admin-replenishment-metric strong",".admin-inventory-table-scroll","overscroll-behavior-inline: contain",".admin-subcategory-list","input[type=\"file\"]::file-selector-button","min-width: 44px !important","min-width: 768px) and (max-width: 1279px)"]) assert.ok(css.includes(term),term);
 });
 

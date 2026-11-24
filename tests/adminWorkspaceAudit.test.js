@@ -48,3 +48,11 @@ test('workspace audit 06 category search preserves sibling order and existing pr
  assert.equal((jsx.match(/aria-label="რედაქტირებული კატეგორიის ხატულა"/g)||[]).length,2);
  assert.ok(css.includes('Workspace audit 06'));
 });
+
+test('workspace audit 07 gates detailed financial views and keeps expense and calculator contracts',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['!verifiedFinanceSnapshot || expensesLoading','ordersVerifiedForReports ? financialOverview.pipelineOrders.length','expensesVerifiedForReports ? financialOverview.periodExpenses.length','expensesVerifiedForReports && <div className="admin-finance-recent-list','admin-workspace-expense-summary','filteredExpenses.reduce','setExpenseCategoryFilter(\'all\'); setExpensePage(1)','calculatedSalesMetrics.revenue > 0 ? calculatedSalesMetrics.profitMargin','Number(calcForm.purchaseCost) > 0 ? calculatedSalesMetrics.markup','onSubmit={handleAddExpense}','handleDeleteExpense(exp.id)','handleExportAnalytics'])assert.ok(jsx.includes(term),term);
+ const analytics=jsx.slice(jsx.indexOf('<div className="admin-analytics space-y-6">'),jsx.indexOf('<div className="admin-profit-calculator'));
+ for(const expression of ['financialOverview.salesTrend','financialOverview.bestSellingProducts','incomeSources','financialOverview.productProfitability','financialOverview.vendorProfitability']) assert.ok(analytics.includes('ისტორია ჯერ არ არის დადასტურებული.</p> : '+expression+'.length === 0'),expression);
+ assert.ok(css.includes('Workspace audit 07'));
+});

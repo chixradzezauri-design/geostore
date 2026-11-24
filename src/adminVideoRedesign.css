@@ -1034,3 +1034,15 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select) { font-size: 16px; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-subcategory-list { padding-left: 8px; }
 }
+
+/* Workspace audit 07 — finance and calculator */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-analytics,.admin-expenses,.admin-profit-calculator) { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-analytics-note,.admin-finance-breakdown-row,.admin-finance-recent-row,.admin-profitability-row) { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-note { display: inline-block; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-calculator-results > div,.admin-finance-breakdown-row,.admin-finance-recent-row,.admin-profitability-heading,.admin-profitability-results) { flex-wrap: wrap; gap: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results b { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-calculator-fields,.admin-expense-form) :is(input,select) { min-width: 0; min-height: 44px; }
+@media (max-width: 480px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-field-grid { grid-template-columns: minmax(0,1fr); }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-calculator-fields,.admin-expense-form) :is(input,select) { font-size: 16px; }
+}
