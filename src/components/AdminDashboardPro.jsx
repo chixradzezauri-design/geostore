@@ -37,6 +37,7 @@ import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
 import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
+import { analyzeBusinessCampaigns } from '../utils/businessCampaignAnalytics.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -1239,6 +1240,7 @@ export default function AdminDashboardPro({
   const [businessComparisonDays, setBusinessComparisonDays] = useState(30);
   const [businessForecastHorizon, setBusinessForecastHorizon] = useState(7);
   const [businessCustomerDays, setBusinessCustomerDays] = useState(30);
+  const [businessCampaignDays, setBusinessCampaignDays] = useState(30);
   const [inventoryMovementRows, setInventoryMovementRows] = useState([]);
   const [inventoryMovementLoading, setInventoryMovementLoading] = useState(false);
   const [inventoryMovementError, setInventoryMovementError] = useState('');
@@ -2868,6 +2870,7 @@ export default function AdminDashboardPro({
   const businessComparison = useMemo(() => compareBusinessPeriods({ orders, verified: isOwner && ordersVerifiedForReports, days: businessComparisonDays, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessComparisonDays, businessReportingDay]);
   const businessForecast = useMemo(() => forecastBusinessSales({ orders, verified: isOwner && ordersVerifiedForReports, horizon: businessForecastHorizon, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessForecastHorizon, businessReportingDay]);
   const businessCustomers = useMemo(() => analyzeBusinessCustomers({ orders, verified: isOwner && ordersVerifiedForReports, days: businessCustomerDays, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessCustomerDays, businessReportingDay]);
+  const businessCampaigns = useMemo(() => analyzeBusinessCampaigns({ orders, verified: isOwner && ordersVerifiedForReports, days: businessCampaignDays, now: new Date(businessReportingDay) }), [orders, isOwner, ordersVerifiedForReports, businessCampaignDays, businessReportingDay]);
   aiFinanceSnapshotRef.current = { financialOverview, ordersVerifiedForReports, expensesVerifiedForReports, analyticsPeriod };
   const ordersVerifiedForReportsRef = useRef(ordersVerifiedForReports);
   ordersVerifiedForReportsRef.current = ordersVerifiedForReports;
@@ -5915,6 +5918,29 @@ export default function AdminDashboardPro({
                   {(businessCustomers.unknownCategoryUnits>0||businessCustomers.missingLines>0||businessCustomers.invalidQuantityLines>0)&&<p className="text-xs text-amber-200">არასრული ისტორია: კატეგორიის გარეშე {businessCustomers.unknownCategoryUnits} ერთეული · დეტალების გარეშე {businessCustomers.missingLines} შეკვეთა · არასწორი რაოდენობის {businessCustomers.invalidQuantityLines} ჩანაწერი. რეიტინგი მოიცავს მხოლოდ ცნობილ მონაცემებს.</p>}
                 </div>
               </>}
+            </section>
+            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-campaign-title">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0"><h3 id="admin-business-campaign-title" className="text-white text-sm font-black">კუპონებისა და კამპანიების შედეგები</h3><p className="text-xs text-slate-400">დადასტურებული ჩაბარებული შეკვეთების ისტორია · თბილისის დრო</p></div>
+                <select aria-label="კამპანიის ანალიტიკის პერიოდი" value={businessCampaignDays} onChange={e=>setBusinessCampaignDays(Number(e.target.value))} className="min-h-11 rounded-xl bg-slate-950 border border-emerald-500/30 px-3 text-white text-sm"><option value={30}>30 დღე</option><option value={90}>90 დღე</option><option value={365}>365 დღე</option></select>
+              </div>
+              {!businessCampaigns?<p role="status" className="text-xs text-amber-200">საჭიროა შეკვეთების დადასტურებული სრული ისტორია.</p>:businessCampaigns.status!=='ready'?<p role="status" className="text-xs text-amber-200">ანგარიში შეჩერებულია: {businessCampaigns.missingDates>0?'შეკვეთების თარიღები არასრულია.':'თანხების ჯამი დასაშვებ დიაპაზონს აჭარბებს.'}</p>:<>
+                <p className="text-xs text-slate-400">{businessCampaigns.from} — {businessCampaigns.to} · ჩაბარებული შეკვეთები: {businessCampaigns.deliveredOrders} · კლასიფიცირებული: {businessCampaigns.classifiedOrders}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                  {[['კუპონით შეკვეთები',String(businessCampaigns.withCoupon.orders)],['კუპონით ბრუნვა',businessCampaigns.withCoupon.revenue.toFixed(2)+' ₾'],['კუპონის ფასდაკლება',businessCampaigns.withCoupon.discount.toFixed(2)+' ₾'],['კუპონის წილი კლასიფიცირებულ შეკვეთებში',businessCampaigns.couponShare===null?'—':businessCampaigns.couponShare.toFixed(1)+'%']].map(([label,value])=><div key={label} className="min-w-0 rounded-xl border border-slate-700 p-3"><p className="text-xs text-slate-400">{label}</p><strong className="block text-lg font-black text-white tabular-nums break-words">{value}</strong></div>)}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div className="min-w-0 rounded-xl border border-slate-700 p-3"><p className="text-slate-400">კუპონის გარეშე დაფიქსირებული ბრუნვა</p><strong className="text-white break-words">{businessCampaigns.withoutRecordedCoupon.revenue.toFixed(2)} ₾</strong><p className="text-slate-400">{businessCampaigns.withoutRecordedCoupon.orders} შეკვეთა · საშუალო: {businessCampaigns.withoutRecordedCoupon.averageOrder===null?'—':businessCampaigns.withoutRecordedCoupon.averageOrder.toFixed(2)+' ₾'}</p></div>
+                  <div className="min-w-0 rounded-xl border border-slate-700 p-3"><p className="text-slate-400">კუპონით საშუალო შეკვეთა</p><strong className="text-white break-words">{businessCampaigns.withCoupon.averageOrder===null?'—':businessCampaigns.withCoupon.averageOrder.toFixed(2)+' ₾'}</strong><p className="text-slate-400">ბრუნვა მოიცავს მიწოდებასა და დამატებით მომსახურებას.</p></div>
+                </div>
+                <div className="rounded-xl border border-slate-700 p-3 space-y-2"><h4 className="text-white text-xs font-black">კუპონების რეიტინგი — ჩაბარებული შეკვეთებით</h4>
+                  {businessCampaigns.byCode.length===0?<p className="text-xs text-slate-400">დადასტურებული კუპონის გამოყენება არ არის.</p>:businessCampaigns.byCode.slice(0,10).map(entry=><div key={entry.code} className="flex flex-wrap justify-between gap-2 border-b border-slate-700 pb-2 text-xs"><span className="min-w-0 break-all text-white font-bold">{entry.code}</span><span className="text-slate-300 tabular-nums break-words">{entry.orders} შეკვეთა · {entry.revenue.toFixed(2)} ₾ · ფასდაკლება {entry.discount.toFixed(2)} ₾</span></div>)}
+                  <p className="text-xs text-slate-400">მაქსიმუმ 10 / {businessCampaigns.byCode.length} კოდი. ფასდაკლება არის შეკვეთის ისტორიული თანხა და არა კუპონის მიმდინარე განაკვეთი.</p>
+                </div>
+                {businessCampaigns.unknownOrders>0&&<p role="status" className="text-xs text-amber-200">კლასიფიკაციის გარეშე: {businessCampaigns.unknownOrders} შეკვეთა (დეტალების გარეშე {businessCampaigns.missingBreakdown}, თანხის/კოდის შეუსაბამობა {businessCampaigns.mismatch}, ფასდაკლება კოდის გარეშე {businessCampaigns.unattributedDiscount}, კოდი ფასდაკლების გარეშე {businessCampaigns.zeroDiscountCode}). ჯამები მოიცავს მხოლოდ კლასიფიცირებულ ჩანაწერებს.</p>}
+                {businessCampaigns.legacyDates>0&&<p className="text-xs text-amber-200">{businessCampaigns.legacyDates} ძველ შეკვეთაზე გამოყენებულია შექმნის თარიღი.</p>}
+              </>}
+              <p className="text-xs text-slate-400">კუპონით ბრუნვა არ ადასტურებს აქციის მიერ გამოწვეულ დამატებით გაყიდვას ან მოგებას. სარეკლამო ხარჯი, ვიზიტები, კონვერსია, ROI და კონკრეტულ Flash Sale კამპანიასთან კავშირი ჯერ არ იზომება.</p>
             </section>
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
