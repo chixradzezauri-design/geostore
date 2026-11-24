@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
+import {loadAdminCss} from './utils/loadAdminCss.js';
 import CustomerMarketingConsent from './components/CustomerMarketingConsent.jsx';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
@@ -47,7 +48,7 @@ import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath, ca
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
-const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
+const AdminDashboardPro = lazy(() => Promise.all([import('./components/AdminDashboardPro'),loadAdminCss()]).then(([module])=>module));
 const AIDigitalWardrobe = lazy(() => import('./components/AIDigitalWardrobe'));
 const ProductCompareModal = lazy(() => import('./components/ProductCompareModal'));
 const ImageSearchModal = lazy(() => import('./components/ImageSearchModal'));

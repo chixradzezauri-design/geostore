@@ -80,9 +80,14 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       await auth.locator('form button[type="submit"]').click();
       const shortcut = page.locator('.geostore-admin-shortcut button');
       await shortcut.waitFor({ state: 'visible', timeout: 20000 });
+      const adminCss=await page.locator('meta[name="gs-admin-css-slot"]').getAttribute('content');
+      assert.ok(adminCss?.includes('/assets/admin-core-'));
+      assert.equal(await page.locator('link[data-gs-admin-core]').count(),0,'Admin CSS must not load for the storefront');
       await shortcut.click();
       const shell = page.locator('.admin-dashboard-shell');
       await shell.waitFor({ state: 'visible', timeout: 20000 });
+      assert.equal(await page.locator('link[data-gs-admin-core]').count(),1,'Admin CSS loads once on entry');
+      assert.ok(await page.locator('link[data-gs-admin-core]').evaluate(node=>Boolean(node.sheet)&&node.nextElementSibling?.getAttribute('name')==='gs-admin-css-slot'),'Loaded stylesheet stays in original cascade slot');
       const picker = page.locator('#geostore-admin-mobile-section');
       for (const [tab, selector] of Object.entries(modules)) {
         // Desktop and phone use the real exposed navigation controls.
