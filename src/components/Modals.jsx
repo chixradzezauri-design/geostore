@@ -43,6 +43,7 @@ export default function Modals({
   setSelectedRegion,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   currentUser,
+  storefrontThemeStyle = {},
   currentLang = 'ka'
 }) {
   const termsCopy = ({
@@ -465,7 +466,7 @@ export default function Modals({
     <>
       {/* 1. შეკვეთის გაფორმების მოდალი */}
       {isCheckoutOpen && createPortal(
-        <div className="gs-commerce-overlay gs-commerce-overlay--checkout fixed inset-0 z-[10000] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm sm:p-6">
+        <div style={storefrontThemeStyle} className="gs-commerce-overlay gs-commerce-overlay--checkout fixed inset-0 z-[10000] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm sm:p-6">
           <section
             ref={checkoutDialogRef}
             role="dialog"
@@ -566,7 +567,7 @@ export default function Modals({
       )}
 
       {orderConfirmation && createPortal(
-        <div className="gs-commerce-overlay gs-commerce-overlay--success fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-black/70 p-4 py-8 backdrop-blur-sm">
+        <div style={storefrontThemeStyle} className="gs-commerce-overlay gs-commerce-overlay--success fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-black/70 p-4 py-8 backdrop-blur-sm">
           <section
             role="dialog"
             aria-modal="true"

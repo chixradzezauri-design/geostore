@@ -3726,6 +3726,7 @@ export default function App() {
 
               {wishlist.length > 0 && (
                 <button
+                  type="button"
                   onClick={handleShareWishlist}
                   className="gs-wishlist-share bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
                 >
@@ -3736,9 +3737,7 @@ export default function App() {
             </div>
 
             {wishlist.length === 0 ? (
-              <p className="gs-wishlist-empty text-slate-500 text-xs py-8">
-                {t.emptyWishlist}
-              </p>
+              <div className="gs-video-wishlist-empty"><p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
             ) : (
               <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map((savedProd) => {
@@ -3809,6 +3808,7 @@ export default function App() {
                   <ShoppingBag className="w-6 h-6" aria-hidden="true" />
                 </span>
                 <p className="text-slate-500 text-sm font-medium">{t.emptyCart}</p>
+                <button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button>
               </div>
             ) : (
               <div className="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -3834,11 +3834,11 @@ export default function App() {
                           fallbackClassName="flex h-full w-full items-center justify-center text-center text-[9px] font-black tracking-widest text-amber-400/60"
                         />
                       </div>
-                      <div className="min-w-0 flex-1 space-y-1">
+                      <div className="gs-video-cart-item-details min-w-0 flex-1 space-y-1">
                         <h4 className="gs-cart-item-title break-words font-bold text-xs text-white">
                           {item.name}
                         </h4>
-                        {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">ვარიანტი: {item.customVariantName}</p>}
+                        {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">{currentLang === 'en' ? 'Variant' : currentLang === 'ru' ? 'Вариант' : 'ვარიანტი'}: {item.customVariantName}</p>}
 
                         {(item.selectedSize || item.selectedColor) && (
                           <p className="gs-cart-item-variant text-slate-400 text-[11px]">
@@ -3921,7 +3921,7 @@ export default function App() {
                     </span>
 
                     {eligibleAppliedCoupon ? (
-                      <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
+                      <div className="gs-video-applied-coupon bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
                         <div>
                           <b className="text-amber-300 uppercase">
                             {eligibleAppliedCoupon.code}
@@ -4763,6 +4763,7 @@ export default function App() {
       {hasLoadedModals && (
         <Suspense fallback={null}>
           <Modals
+        storefrontThemeStyle={buildStorefrontVisualStyle(siteSettings?.visualDesign)}
         currentLang={currentLang}
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}

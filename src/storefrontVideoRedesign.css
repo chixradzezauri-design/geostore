@@ -686,3 +686,95 @@
   .geostore-shell.geostore-fashion-store .geostore-storefront .gs-product-modal-body :is(input:not([type="checkbox"]):not([type="file"]),select,textarea),
   .geostore-shell.geostore-fashion-store .geostore-storefront .gs-size-modal-panel input { font-size: 16px !important; }
 }
+
+/* Storefront video redesign 06 — cart, saved products and checkout.
+   All purchase calculations, validation and submit handlers are unchanged. */
+.geostore-shell.geostore-fashion-store :is(.gs-cart-page,.gs-wishlist-page) { min-width: 0; color: var(--gs-ink,#302820); }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-title,.gs-wishlist-title) { color: var(--gs-ink,#302820) !important; font-size: clamp(20px,2.5vw,28px) !important; line-height: 1.4; }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-item,.gs-cart-summary,.gs-wishlist-card,.gs-cart-empty,.gs-video-wishlist-empty) {
+  min-width: 0; background: var(--gs-surface,#fffdfa) !important;
+  border: 1px solid var(--gs-line,#e5d8c8) !important;
+  border-radius: var(--gs-card-radius,12px) !important;
+  box-shadow: 0 4px 16px rgba(48,40,32,.06) !important;
+}
+.geostore-shell.geostore-fashion-store .gs-video-wishlist-empty { text-align: center; padding: 24px 16px; }
+.geostore-shell.geostore-fashion-store .gs-video-wishlist-empty .gs-wishlist-empty { padding: 8px 0 16px !important; }
+.geostore-shell.geostore-fashion-store .gs-video-continue-shopping,
+.geostore-shell.geostore-fashion-store :is(.gs-cart-checkout,.gs-wishlist-add,.gs-wishlist-share) {
+  background: var(--gs-button-bg,#302820) !important; color: var(--gs-button-text,#fff) !important;
+  border-radius: var(--gs-button-radius,8px) !important; min-height: 44px !important;
+  white-space: normal !important; line-height: 1.4 !important;
+}
+.geostore-shell.geostore-fashion-store .gs-video-continue-shopping { padding: 10px 18px; font-weight: 600; cursor: pointer; }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-item-media,.gs-wishlist-image) { background: var(--gs-surface-soft,#f0ebe4) !important; border-color: var(--gs-line,#e5d8c8) !important; }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-item-media img,img.gs-wishlist-image) { mix-blend-mode: normal !important; filter: none !important; opacity: 1 !important; }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-item-title,.gs-wishlist-product-title,.gs-wishlist-detail-link,.gs-cart-item-price,.gs-wishlist-product-price) {
+  color: var(--gs-ink,#302820) !important; font-size: 14px !important; overflow-wrap: anywhere; line-height: 1.45;
+}
+.geostore-shell.geostore-fashion-store :is(.gs-cart-item-variant,.gs-cart-item-options,.gs-cart-gift-message,.gs-wishlist-empty,.gs-cart-empty p) {
+  color: var(--gs-muted,#776b60) !important; font-size: 12px !important; line-height: 1.5; overflow-wrap: anywhere;
+}
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-cart-quantity-controls { flex-wrap: wrap; }
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-cart-quantity-controls button {
+  background: var(--gs-surface-soft,#f0ebe4) !important; color: var(--gs-ink,#302820) !important; border-color: var(--gs-line,#e5d8c8) !important;
+}
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-cart-quantity-controls > span { color: var(--gs-ink,#302820) !important; }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-remove,.gs-wishlist-remove) { color: #9f1239 !important; background: #fff1f2 !important; min-height: 44px !important; min-width: 44px !important; }
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-summary :is(input,select) {
+  min-height: 44px !important; min-width: 0 !important; color: var(--gs-ink,#302820) !important;
+  background: var(--gs-surface-soft,#f0ebe4) !important; border-color: var(--gs-line,#e5d8c8) !important;
+}
+.geostore-shell.geostore-fashion-store .gs-cart-summary input::placeholder { color: var(--gs-muted,#776b60) !important; opacity: 1; }
+.geostore-shell.geostore-fashion-store .gs-cart-summary .gs-video-applied-coupon { min-width: 0; gap: 8px; background: var(--gs-surface-soft,#f0ebe4) !important; }
+.geostore-shell.geostore-fashion-store .gs-video-applied-coupon > div { min-width: 0; overflow-wrap: anywhere; }
+.geostore-shell.geostore-fashion-store .gs-video-applied-coupon button { min-width: 44px; min-height: 44px; flex-shrink: 0; }
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-totals > div { color: var(--gs-ink,#302820) !important; line-height: 1.5; font-size: 13px !important; }
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-totals > div:last-child { font-size: clamp(18px,2vw,24px) !important; }
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-totals > div > :last-child { max-width: 100%; overflow-wrap: anywhere; }
+.geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-coupon-form button { background: var(--gs-button-bg,#302820) !important; color: var(--gs-button-text,#fff) !important; }
+.geostore-shell.geostore-fashion-store :is(.gs-cart-page,.gs-wishlist-page) :is(button,input,select):focus-visible { outline: 2px solid var(--gs-accent,#92785f) !important; outline-offset: 2px !important; }
+.gs-commerce-overlay--checkout .gs-checkout-dialog,
+.gs-commerce-overlay--success .gs-order-success-dialog {
+  background: var(--gs-surface,#fffdfa) !important; color: var(--gs-ink,#302820) !important;
+  border-color: var(--gs-line,#e5d8c8) !important;
+  font-family: var(--gs-font-family,inherit);
+}
+.gs-commerce-overlay--checkout .gs-checkout-header { background: var(--gs-surface,#fffdfa) !important; border-color: var(--gs-line,#e5d8c8) !important; }
+.gs-commerce-overlay--checkout .gs-checkout-heading h3,
+.gs-commerce-overlay--success #geostore-order-success-title { color: var(--gs-ink,#302820) !important; line-height: 1.4; }
+.gs-commerce-overlay--checkout .gs-checkout-heading p,
+.gs-commerce-overlay--checkout .gs-checkout-form label > span:first-child,
+.gs-commerce-overlay--checkout .gs-checkout-form label > span:last-child:not(.relative),
+.gs-commerce-overlay--checkout .gs-checkout-submit-area p { color: var(--gs-muted,#776b60) !important; }
+.gs-commerce-overlay--checkout .gs-checkout-form label > span:first-child { font-size: 13px !important; }
+.gs-commerce-overlay--checkout .gs-checkout-form :is(input,select) {
+  color: var(--gs-ink,#302820) !important; background: var(--gs-surface-soft,#f0ebe4) !important;
+  border-color: var(--gs-line,#e5d8c8) !important; min-height: 44px !important;
+}
+.gs-commerce-overlay--checkout .gs-checkout-form [aria-invalid="true"] { border-color: #be123c !important; }
+.gs-commerce-overlay--checkout .gs-checkout-form input::placeholder { color: var(--gs-muted,#776b60) !important; opacity: 1; }
+.gs-commerce-overlay--checkout .gs-checkout-submit-area {
+  background: var(--gs-surface,#fffdfa) !important; border-color: var(--gs-line,#e5d8c8) !important;
+}
+.gs-commerce-overlay--checkout .gs-checkout-submit-area button,
+.gs-commerce-overlay--success .gs-order-success-dialog button:last-child {
+  background: var(--gs-button-bg,#302820) !important; color: var(--gs-button-text,#fff) !important;
+  border-radius: var(--gs-button-radius,8px) !important; min-height: 44px !important;
+}
+.gs-commerce-overlay--success .gs-order-code-panel { background: var(--gs-surface-soft,#f0ebe4) !important; border-color: var(--gs-line,#e5d8c8) !important; }
+.gs-commerce-overlay--success .gs-order-code-value { color: var(--gs-ink,#302820) !important; }
+.gs-commerce-overlay--checkout :is(button,input,select):focus-visible,
+.gs-commerce-overlay--success button:focus-visible { outline: 2px solid var(--gs-accent,#92785f) !important; outline-offset: 2px !important; }
+@media(max-width:640px) {
+  .geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item { display: grid !important; grid-template-columns: 72px minmax(0,1fr) !important; align-items: start !important; }
+  .geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-video-cart-item-details { grid-column: 2; min-width: 0; }
+  .geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item .gs-cart-remove { grid-column: 2; justify-self: end; max-width: 100% !important; }
+  .geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-summary :is(input,select),
+  .gs-commerce-overlay--checkout .gs-checkout-form :is(input,select) { font-size: 16px !important; }
+  .gs-commerce-overlay--checkout .gs-checkout-submit-area { position: static !important; box-shadow: none !important; }
+  .gs-commerce-overlay--checkout .gs-checkout-form { scroll-padding-bottom: 16px; }
+}
+@media(max-width:380px) {
+  .geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-item { grid-template-columns: 64px minmax(0,1fr) !important; }
+  .geostore-shell.geostore-fashion-store .gs-cart-layout .gs-cart-summary .gs-cart-coupon-form { grid-template-columns: minmax(0,1fr) !important; }
+}
