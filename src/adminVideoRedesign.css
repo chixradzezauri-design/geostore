@@ -955,3 +955,33 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) { flex-wrap:wrap;gap:6px!important; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) > span:first-child { flex:1 1 135px; }
 }
+
+/* Workspace audit 03 — orders: reliable data states and compact operational controls.
+   Owner-defined module/element geometry and colors remain authoritative. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-search { min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-search:has(.admin-workspace-order-clear) input { padding-inline-end:48px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-order-clear { position:absolute;inset-inline-end:3px;top:50%;transform:translateY(-50%);display:grid;place-items:center;min-width:44px;min-height:44px;color:var(--av-muted);background:transparent;border:0;cursor:pointer; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-result { color:var(--av-muted)!important;line-height:1.5;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-notice { line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-empty { display:grid;justify-items:center;gap:12px;min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-orders-reset { min-height:44px;padding:8px 14px;border:1px solid var(--av-border);border-radius:var(--admin-vd-buttonRadius-active,10px);color:var(--av-text);background:var(--av-inset);white-space:normal; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header > button:disabled { opacity:.55!important;cursor:not-allowed!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-heading > div { min-width:0;max-width:100%;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-heading > div:last-child { font-variant-numeric:tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-customer > p { min-width:0;line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[aria-pressed="true"] { outline:1px solid currentColor;outline-offset:-1px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-pagination button { min-height:44px!important;min-width:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > div { min-width:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > div > div:last-child { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > button { min-width:44px!important;min-height:44px!important;flex-shrink:0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal :is(.admin-order-customer,.admin-order-item-info,.admin-order-financials,.admin-order-note-editor) { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-financials .flex > :first-child { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-financials .flex > :last-child { font-variant-numeric:tabular-nums;max-width:50%;text-align:end;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-note-controls input { min-width:0;min-height:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-order-note-controls,.admin-order-detail-footer) > button { min-height:44px!important;white-space:normal!important; }
+@media(max-width:640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item { gap:10px!important; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info { width:100%; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price { flex-wrap:wrap;gap:6px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-note-controls input { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
+}

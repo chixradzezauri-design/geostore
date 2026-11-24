@@ -21,3 +21,9 @@ test('workspace audit 02 command center uses the same low-stock positions as rep
  for(const term of ['const commandCenterLowStockPositions = replenishmentPositions.filter(position => position.isLowStock)','commandCenterLowStockByProduct','commandCenterLowStockPositions.length','ordersVerifiedForReports ? commandCenterNewOrders.length','!ordersVerifiedForReports ? (','supportTicketsError ? "—"','!replenishmentSettingsReady || replenishmentError','შევსების ინდივიდუალური ზღვრების მიხედვით','admin-workspace-command-row-title','dateTime={new Date(event.timestamp).toISOString()}'])assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 02'));assert.ok(css.includes('.admin-workspace-command-row-title'));
 });
+
+test('workspace audit 03 keeps order actions and marks unverified lists correctly',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'), css=read('src/adminVideoRedesign.css');
+ for(const term of ['if (!hasOrdersPermission || !ordersReady || ordersError)','admin-workspace-orders-notice','admin-workspace-orders-reset','admin-workspace-order-clear','setOrderPageByStatus({})','getOrderStatusFilterKey(selectedOrderForModal.status)','htmlFor="admin-workspace-order-note"','handlePrintInvoice(selectedOrderForModal)','handleSaveOrderAdminNote(selectedOrderForModal.id)',"handleUpdateOrderStatus(o.id, 'ახალი')",'Boolean(o.stock_restored_at)','orderDetailTriggerRef.current = event.currentTarget'])assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 03'));assert.ok(css.includes('.admin-workspace-order-clear'));assert.ok(css.includes('.admin-order-detail-header > button'));
+});

@@ -4633,6 +4633,10 @@ export default function AdminDashboardPro({
   };
 
   const handleExportOrders = () => {
+    if (!hasOrdersPermission || !ordersReady || ordersError) {
+      alert('შეკვეთების სრული სია ჯერ არ არის დადასტურებული. ექსპორტი დროებით მიუწვდომელია.');
+      return;
+    }
     if (!orders || orders.length === 0) {
       alert('გადმოსაწერი შეკვეთები არ არის.');
       return;
@@ -6010,12 +6014,15 @@ export default function AdminDashboardPro({
             <div className="admin-orders-header admin-orders-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
                 <h3 className="font-black text-white text-lg flex items-center gap-2.5">
-                  <PackageCheck className="w-6 h-6 text-emerald-400" /> {adminVisualDesign.content.ordersTitle} ({filteredOrders.length})
+                  <PackageCheck className="w-6 h-6 text-emerald-400" /> {adminVisualDesign.content.ordersTitle} ({ordersReady && !ordersError ? filteredOrders.length : "—"})
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">{adminVisualDesign.content.ordersDescription}</p>
               </div>
               <button 
+                type="button"
                 onClick={handleExportOrders}
+                disabled={!hasOrdersPermission || !ordersReady || Boolean(ordersError) || !orders?.length}
+                title="ყველა დადასტურებული შეკვეთის CSV ექსპორტი (ფილტრებისგან დამოუკიდებლად)"
                 className="bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-emerald-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow"
               >
                 <Download className="w-4 h-4" /> {adminVisualDesign.content.ordersExportLabel}
@@ -6027,13 +6034,14 @@ export default function AdminDashboardPro({
               <div className="admin-order-search admin-orders-search relative w-full sm:w-80">
                 <input 
                   type="text" 
-                  placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
+                  placeholder="ნომერი, სახელი, ტელეფონი, პროდუქტი..." 
                   aria-label="შეკვეთების ძებნა"
                   value={orderSearchQuery} 
-                  onChange={e => { setOrderSearchQuery(e.target.value); setCurrentOrderPage(1); }} 
+                  onChange={e => { setOrderSearchQuery(e.target.value); setOrderPageByStatus({}); }} 
                   className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
                 />
-                <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
+                <Search aria-hidden="true" className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
+                {orderSearchQuery && <button type="button" className="admin-workspace-order-clear" aria-label="ძიების გასუფთავება" onClick={() => { setOrderSearchQuery(''); setOrderPageByStatus({}); }}><X className="w-4 h-4" aria-hidden="true" /></button>}
               </div>
 
               <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto" role="group" aria-label="შეკვეთების სტატუსის ფილტრები">
@@ -6051,10 +6059,11 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
+            {!ordersReady || ordersError ? <p role={ordersError ? "alert" : "status"} className="admin-workspace-orders-notice rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">{ordersError ? "შეკვეთების სრული სია ვერ ჩაიტვირთა. ნაჩვენები ჩანაწერები შესაძლოა არასრული იყოს." : "შეკვეთების სრული სია ჯერ არ დადასტურებულა."}</p> : <p className="admin-workspace-orders-result text-xs text-slate-400" role="status">ნაპოვნია {filteredOrders.length} / {orders.length} შეკვეთა</p>}
             {/* შეკვეთების სია */}
             <div className="admin-orders-list space-y-4">
               {filteredOrders.length === 0 ? (
-                <p className="text-slate-500 text-xs py-10 text-center">შეკვეთები ვერ მოიძებნა.</p>
+                <div className="admin-workspace-orders-empty text-center py-8"><p className="text-slate-400 text-xs">{!ordersReady || ordersError ? "დადასტურებული ჩანაწერები ჯერ არ არის ხელმისაწვდომი." : orderSearchQuery || orderStatusFilter !== "ყველა" ? "შერჩეული ფილტრებით შეკვეთები ვერ მოიძებნა." : "შეკვეთები ჯერ არ არის."}</p>{(orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
@@ -6084,8 +6093,8 @@ export default function AdminDashboardPro({
                     <div className="admin-order-card-footer flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
-                        <span className={`admin-order-status-badge ${getOrderStatusClasses(o.status || 'ახალი')} px-3 py-1 rounded-xl text-[10px] font-black`}>
-                          {o.status || 'ახალი'}
+                        <span className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(o.status))} px-3 py-1 rounded-xl text-[10px] font-black`}>
+                          {getOrderStatusFilterKey(o.status) || 'სტატუსი უცნობია'}
                         </span>
                       </div>
 
@@ -6145,11 +6154,11 @@ export default function AdminDashboardPro({
                           )
                         ) : (
                           <div className="admin-order-status-actions flex flex-wrap items-center justify-start sm:justify-end gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 w-full sm:w-auto" role="group" aria-label={`შეკვეთა #${o.id} — სტატუსის ცვლილება`}>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status)} title={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
+                            <button type="button" aria-pressed={getOrderStatusFilterKey(o.status) === 'ახალი'} onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button type="button" aria-pressed={getOrderStatusFilterKey(o.status) === 'მუშავდება'} onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button type="button" aria-pressed={getOrderStatusFilterKey(o.status) === 'გაგზავნილი'} onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                            <button type="button" aria-pressed={getOrderStatusFilterKey(o.status) === 'დასრულებული'} onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                            <button type="button" aria-pressed={getOrderStatusFilterKey(o.status) === 'გაუქმებული'} onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status)} title={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
                           </div>
                         )}
                       </div>
@@ -6208,14 +6217,14 @@ export default function AdminDashboardPro({
                   <p>სახელი და გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
                   <p>ტელეფონი: <a href={`tel:${selectedOrderForModal.phone}`} className="text-emerald-300 font-black hover:underline">📞 {selectedOrderForModal.phone}</a></p>
                   <p>ელფოსტა: <b className="text-white">{selectedOrderForModal.user_email || 'მითითებული არ არის'}</b></p>
-                  <p>სტატუსი: <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">{selectedOrderForModal.status || 'ახალი'}</span></p>
+                  <p>სტატუსი: <span className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(selectedOrderForModal.status))} px-2.5 py-0.5 rounded-full font-bold`}>{getOrderStatusFilterKey(selectedOrderForModal.status) || 'სტატუსი უცნობია'}</span></p>
                   <p className="sm:col-span-2 text-slate-300 pt-1">📍 სრული მისამართი: <b className="text-white">{selectedOrderForModal.address}</b></p>
                 </div>
               </div>
 
               {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
               <div className="admin-order-items-section space-y-3">
-                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length || 1})</h4>
+                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length})</h4>
                 
                 <div className="space-y-3">
                   {normalizeOrderItems(selectedOrderForModal.items).length > 0 ? (
@@ -6224,7 +6233,7 @@ export default function AdminDashboardPro({
                         {resolveOrderItemImage(item, products) ? (
                           <img src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
-                          <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">No Img</div>
+                          <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">ფოტო არ არის</div>
                         )}
                         <div className="admin-order-item-info flex-1 space-y-1">
                           <h5 className="font-black text-white text-sm">{item.name}</h5>
@@ -6283,9 +6292,10 @@ export default function AdminDashboardPro({
 
               {/* 4. ადმინისტრატორის პირადი შენიშვნა */}
               <div className="admin-order-note-editor space-y-2">
-                <label className="text-slate-300 font-bold block">📝 ადმინისტრატორის პირადი შენიშვნა შეკვეთაზე:</label>
+                <label htmlFor="admin-workspace-order-note" className="text-slate-300 font-bold block">ადმინისტრატორის შენიშვნა შეკვეთაზე:</label>
                 <div className="admin-order-note-controls flex flex-col sm:flex-row gap-2">
                   <input 
+                    id="admin-workspace-order-note"
                     type="text" 
                     maxLength={5000}
                     placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
@@ -6308,12 +6318,13 @@ export default function AdminDashboardPro({
               {/* მოდალის ქვედა ღილაკები */}
               <div className="admin-order-detail-footer flex flex-col sm:flex-row gap-3 pt-2">
                 <button 
+                  type="button"
                   onClick={() => handlePrintInvoice(selectedOrderForModal)} 
                   className="flex-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black py-3.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Printer className="w-4 h-4" /> ინვოისის ბეჭდვა / PDF
                 </button>
-                <button 
+                <button type="button"
                   onClick={() => setSelectedOrderForModal(null)} 
                   className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl transition cursor-pointer"
                 >
