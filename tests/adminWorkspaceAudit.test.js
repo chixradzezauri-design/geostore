@@ -35,3 +35,9 @@ test('workspace audit 04 exposes existing product content fields and decimal pri
  for(const term of ['step="0.01" inputMode="decimal"','checked={Boolean(productForm.isFeatured)}','MAX_PRODUCT_GALLERY_IMAGES','მთავრად არჩევა','setSelectedImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])','onSubmit={handleSaveProduct}'])assert.ok(form.includes(term),term);
  assert.ok(jsx.includes('const mainImage = galleryImages[0] || null'));assert.ok(jsx.includes('admin_update_product_with_stock'));assert.ok(css.includes('Workspace audit 04'));
 });
+
+test('workspace audit 05 inventory filters are read-only and recommendations distinguish saved from unverified settings',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['admin-workspace-inventory-products','admin-workspace-inventory-filter-state','setInventoryMovementProductFilter(\'\')','replenishmentStockFilter','position.isOutOfStock','replenishmentSummaryVerified','admin-workspace-replenishment-filter','setReplenishmentPage(1)','saveInventoryReplenishmentSetting(position)','recoverInventoryReplenishmentConflict(position.key)','fetchInventoryMovements(inventoryMovementCursor, true)'])assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 05'));assert.ok(css.includes('.admin-workspace-inventory-name'));
+});
