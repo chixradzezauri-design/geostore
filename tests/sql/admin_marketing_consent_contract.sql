@@ -29,8 +29,8 @@ BEGIN
  BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'unknown',NULL); RAISE EXCEPTION 'Unknown version accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN PERFORM public.admin_marketing_consent_summary(); RAISE EXCEPTION 'Customer aggregate access'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM 1 FROM private.marketing_email_consent_events; RAISE EXCEPTION 'Raw ledger read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
- BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL); RAISE EXCEPTION 'Stale initial opt-in accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
- BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',e); RAISE EXCEPTION 'Stale opt-in after withdrawal accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',NULL); RAISE EXCEPTION 'Stale initial opt-in accepted'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
+ BEGIN PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',e); RAISE EXCEPTION 'Stale opt-in after withdrawal accepted'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
  PERFORM public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1',w);
 END $test$;
 SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000002';
@@ -161,7 +161,7 @@ BEGIN
  BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Test','all','Offer','Text',statement_timestamp()-interval '1 day'); RAISE EXCEPTION 'Past plan'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  r:=public.admin_save_marketing_campaign(c,e,1,'edit','Updated','repeat','Offer 2',E'Line one\nLine two',NULL);
  IF r->>'revision'<>'2' OR r->>'segment'<>'repeat' THEN RAISE EXCEPTION 'Edit mismatch'; END IF;
- BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Stale','all','Offer','Text',NULL); RAISE EXCEPTION 'Stale edit allowed'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Stale','all','Offer','Text',NULL); RAISE EXCEPTION 'Stale edit allowed'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
  r:=public.admin_save_marketing_campaign(c,a,2,'archive',NULL,NULL,NULL,NULL,NULL);
  IF r->>'archived'<>'true' OR r->>'revision'<>'3' OR r->>'delivery_enabled'<>'false' THEN RAISE EXCEPTION 'Archive mismatch'; END IF;
  BEGIN PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),3,'edit','Archived','all','Offer','Text',NULL); RAISE EXCEPTION 'Archived edit allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
@@ -195,7 +195,7 @@ BEGIN
  BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f||'{"extra":"invalid"}'); RAISE EXCEPTION 'Extra field'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  r:=public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f||'{"subject":"Updated"}');
  IF r->>'revision'<>'2' OR r->>'subject'<>'Updated' THEN RAISE EXCEPTION 'Template edit mismatch'; END IF;
- BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f); RAISE EXCEPTION 'Stale edit'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.admin_save_marketing_template(t,gen_random_uuid(),1,'edit',f); RAISE EXCEPTION 'Stale edit'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
  IF public.admin_save_marketing_template(t,a,2,'archive','{}')->>'archived'<>'true' THEN RAISE EXCEPTION 'Archive failed'; END IF;
  IF public.admin_save_marketing_template(t,a,2,'archive','{}')->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Archive retry failed'; END IF;
  r:=public.admin_read_marketing_templates(t);
@@ -226,7 +226,7 @@ BEGIN
  IF public.admin_check_marketing_campaign(c,1,q)->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Preflight retry mismatch'; END IF;
  BEGIN PERFORM public.admin_check_marketing_campaign(c,2,q); RAISE EXCEPTION 'Altered preflight replay'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  PERFORM public.admin_save_marketing_campaign(c,gen_random_uuid(),1,'edit','Preflight','vip','Offer','Text',NULL);
- BEGIN PERFORM public.admin_check_marketing_campaign(c,1,gen_random_uuid()); RAISE EXCEPTION 'Stale preflight allowed'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.admin_check_marketing_campaign(c,1,gen_random_uuid()); RAISE EXCEPTION 'Stale preflight allowed'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
  r:=public.admin_read_marketing_preflights(c,q);
  IF r->>'current_revision'<>'2' OR r->>'total'<>'1' OR r->'checks'->0->>'campaign_revision'<>'1' THEN RAISE EXCEPTION 'Historical revision lost'; END IF;
  r:=public.admin_check_marketing_campaign(c,2,gen_random_uuid());

@@ -74,7 +74,7 @@ BEGIN
   VALUES(p_id,p_name,p_segment,p_subject,p_body,p_planned_at,v_actor) RETURNING * INTO v_row;
  ELSE
   SELECT * INTO v_row FROM private.marketing_campaigns WHERE id=p_id FOR UPDATE;
-  IF NOT FOUND OR v_row.revision<>p_revision THEN RAISE EXCEPTION 'Campaign revision conflict' USING ERRCODE='40001'; END IF;
+  IF NOT FOUND OR v_row.revision<>p_revision THEN RAISE EXCEPTION 'Campaign revision conflict' USING ERRCODE='PT409'; END IF;
   IF v_row.archived THEN RAISE EXCEPTION 'Archived campaign is read-only' USING ERRCODE='22023'; END IF;
   IF p_operation='archive' THEN
    UPDATE private.marketing_campaigns SET archived=true,planned_at=NULL,revision=revision+1,updated_at=clock_timestamp() WHERE id=p_id RETURNING * INTO v_row;

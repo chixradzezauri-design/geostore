@@ -2,7 +2,7 @@
   "schema": 1,
   "projectId": "xmtnszxtnfxnrojionoa",
   "capturedDate": "2026-11-24",
-  "sourceCommit": "46c0188368928e1bd480e4b138ed50d5ffe8661d",
+  "sourceCommit": "331dff4518740a8d3817cd4a418026e6a0a0d06d",
   "deliveryEnabled": false,
   "releaseApproved": false,
   "appliedMigrations": [
@@ -566,15 +566,15 @@
     },
     {
       "path": "release/staged-admin-purchases.sql",
-      "sha": "c1fbd64301a8d21a3b9d750cf9de39e5ee418761"
+      "sha": "7aa7c9b526a2b879dd4f284e92b1e98e0180f370"
     },
     {
       "path": "release/staged-admin-supplier-payments.sql",
-      "sha": "29aa4a621b741561c73604b86dc391da60bd9fe2"
+      "sha": "d8724b5b2a7fed9a7df481376afc525a72f4b574"
     },
     {
       "path": "release/staged-marketing-consent.sql",
-      "sha": "0b7926bfc8ee7e2c177e618de2d9893a5038b620"
+      "sha": "1bb4d038c7e86ae3e425593030fc55f1f5caf49b"
     },
     {
       "path": "release/staged-marketing-segments.sql",
@@ -582,15 +582,15 @@
     },
     {
       "path": "release/staged-marketing-campaigns.sql",
-      "sha": "32fc2e7cbec88c12a9126dc1da0b93a1ec647516"
+      "sha": "fb8204b18227a068f87e553fceb4789203b9ea0b"
     },
     {
       "path": "release/staged-marketing-templates.sql",
-      "sha": "2b2db66daf9a355dec726101cebbd32ff2a5a3bf"
+      "sha": "f2a6b7ba6c91b9e0406f372018c99441ad8fa7bf"
     },
     {
       "path": "release/staged-marketing-preflight.sql",
-      "sha": "87480c15d4094a254ff9394e0ad8b4978b59263e"
+      "sha": "5fc8f32cb3411eb259160b4bfea68436ff4f2b4e"
     }
   ]
 }

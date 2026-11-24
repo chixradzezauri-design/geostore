@@ -42,7 +42,7 @@ BEGIN
   RETURN private.marketing_preflight_json(v_record)||jsonb_build_object('idempotent_replay',true);
  END IF;
  SELECT * INTO v_campaign FROM private.marketing_campaigns WHERE id=p_id FOR SHARE;
- IF NOT FOUND OR v_campaign.revision<>p_revision THEN RAISE EXCEPTION 'Campaign revision conflict' USING ERRCODE='40001'; END IF;
+ IF NOT FOUND OR v_campaign.revision<>p_revision THEN RAISE EXCEPTION 'Campaign revision conflict' USING ERRCODE='PT409'; END IF;
  v_segments:=private.read_admin_marketing_segments();
  v_counts:=v_segments->'segments'->v_campaign.segment;
  IF v_counts IS NULL OR coalesce(v_counts->>'accounts','') !~ '^[0-9]+$' OR coalesce(v_counts->>'consent_candidates','') !~ '^[0-9]+$' THEN RAISE EXCEPTION 'Audience data unavailable' USING ERRCODE='22023'; END IF;

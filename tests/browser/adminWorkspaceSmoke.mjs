@@ -142,7 +142,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await library.getByText('Fixture design',{exact:true}).waitFor({state:'visible'});
           await editor.getByRole('button',{name:'გაუქმება',exact:true}).click();
           await library.getByText('Fixture design',{exact:true}).waitFor({state:'detached'});
-          const sections=editor.locator('details').filter({has:editor.locator('summary').filter({hasText:'სექციების ჩართვა და თანმიმდევრობა'})});
+          const sections=editor.locator('[data-gs-section-controls="true"]');
           await sections.locator(':scope > summary').click();
           const desktop=editor.getByRole('button',{name:'Desktop',exact:true});
           const mobile=editor.getByRole('button',{name:'Mobile',exact:true});

@@ -75,7 +75,7 @@ BEGIN
   END IF;
   RETURN private.purchase_payment_json(v_payment)||jsonb_build_object('idempotent_replay',true);
  END IF;
- IF p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='40001'; END IF;
+ IF p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='PT409'; END IF;
  IF v_order.status NOT IN ('partial','received') THEN RAISE EXCEPTION 'No received goods to pay' USING ERRCODE='22023'; END IF;
  SELECT coalesce(sum(quantity*unit_cost*100),0) INTO v_received FROM public.admin_purchase_receipts WHERE purchase_id=p_id;
  SELECT coalesce(sum(h.amount_tetri),0) INTO v_paid FROM public.admin_purchase_payments h WHERE h.purchase_id=p_id AND NOT EXISTS(SELECT 1 FROM public.admin_purchase_payment_corrections c WHERE c.payment_id=h.id);
@@ -119,7 +119,7 @@ BEGIN
   END IF;
   v_replay:=true;
  ELSE
-  IF p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='40001'; END IF;
+  IF p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='PT409'; END IF;
   IF EXISTS(SELECT 1 FROM public.admin_purchase_payment_corrections WHERE payment_id=p_payment) THEN RAISE EXCEPTION 'Payment already corrected' USING ERRCODE='22023'; END IF;
   INSERT INTO public.admin_purchase_payment_corrections(id,payment_id,reason,actor_id,recorded_revision)
    VALUES(p_correction,p_payment,p_reason,v_actor,v_order.revision+1) RETURNING * INTO v_correction;

@@ -35,7 +35,7 @@ BEGIN
  result:=public.admin_receive_purchase(po,line,receipt,2,2);
  IF result->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Receipt retry failed'; END IF;
  BEGIN PERFORM public.admin_receive_purchase(po,line,receipt,2,3); RAISE EXCEPTION 'Changed replay allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
- BEGIN PERFORM public.admin_receive_purchase(po,line,gen_random_uuid(),2,1); RAISE EXCEPTION 'Stale revision allowed'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.admin_receive_purchase(po,line,gen_random_uuid(),2,1); RAISE EXCEPTION 'Stale revision allowed'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
  BEGIN PERFORM public.admin_receive_purchase(po,line,gen_random_uuid(),3,4); RAISE EXCEPTION 'Overreceipt allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN PERFORM public.admin_transition_purchase(po,3,'cancel'); RAISE EXCEPTION 'Partial cancellation allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  PERFORM public.admin_receive_purchase(po,line,gen_random_uuid(),3,3);
@@ -73,7 +73,7 @@ BEGIN
  result:=public.admin_record_purchase_payment(po,p,rev,'1000','bank_transfer','test-001');
  IF result->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Payment replay failed'; END IF;
  BEGIN PERFORM public.admin_record_purchase_payment(po,p,rev,'1001','bank_transfer','test-001'); RAISE EXCEPTION 'Changed replay accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
- BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1','cash','stale'); RAISE EXCEPTION 'Stale payment accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1','cash','stale'); RAISE EXCEPTION 'Stale payment accepted'; EXCEPTION WHEN SQLSTATE 'PT409' THEN NULL; END;
  rev:=rev+1;
  BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'2726','cash','over'); RAISE EXCEPTION 'Overpayment accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1','bank_transfer','TEST-001'); RAISE EXCEPTION 'Duplicate reference accepted'; EXCEPTION WHEN unique_violation THEN NULL; END;

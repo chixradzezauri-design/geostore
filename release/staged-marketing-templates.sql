@@ -49,7 +49,7 @@ BEGIN
   RETURN private.marketing_template_json(v_old)||jsonb_build_object('request_id',p_request,'idempotent_replay',true);
  END IF;
  SELECT * INTO v_old FROM private.marketing_template_versions WHERE template_id=p_id ORDER BY revision DESC LIMIT 1;
- IF coalesce(v_old.revision,0)<>p_revision THEN RAISE EXCEPTION 'Template revision conflict' USING ERRCODE='40001'; END IF;
+ IF coalesce(v_old.revision,0)<>p_revision THEN RAISE EXCEPTION 'Template revision conflict' USING ERRCODE='PT409'; END IF;
  IF coalesce(v_old.archived,false) THEN RAISE EXCEPTION 'Archived template is read-only' USING ERRCODE='22023'; END IF;
  IF p_operation='archive' THEN v_fields:=jsonb_build_object('name',v_old.name,'category',v_old.category,'segment',v_old.segment,'subject',v_old.subject,'body',v_old.body); ELSE v_fields:=p_fields; END IF;
  INSERT INTO private.marketing_template_versions(template_id,revision,request_id,operation,name,category,segment,subject,body,archived,actor_id)

@@ -101,7 +101,7 @@ CREATE FUNCTION private.transition_admin_purchase(p_id uuid,p_revision bigint,p_
 DECLARE v_actor uuid:=private.require_purchase_owner(); v_order public.admin_purchase_orders%ROWTYPE; v_status text;
 BEGIN
  SELECT * INTO v_order FROM public.admin_purchase_orders WHERE id=p_id FOR UPDATE;
- IF NOT FOUND OR p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='40001'; END IF;
+ IF NOT FOUND OR p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='PT409'; END IF;
  IF p_action='approve' AND v_order.status='draft' THEN
    PERFORM 1 FROM public.admin_suppliers WHERE id=v_order.supplier_id AND is_active FOR SHARE;
    IF NOT FOUND THEN RAISE EXCEPTION 'Supplier unavailable' USING ERRCODE='22023'; END IF;
@@ -126,7 +126,7 @@ BEGIN
    IF v_receipt.purchase_id IS DISTINCT FROM p_id OR v_receipt.line_id IS DISTINCT FROM p_line OR v_receipt.quantity IS DISTINCT FROM p_quantity THEN RAISE EXCEPTION 'Receipt identity conflict' USING ERRCODE='22023'; END IF;
    RETURN to_jsonb(v_receipt)||jsonb_build_object('idempotent_replay',true);
  END IF;
- IF p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='40001'; END IF;
+ IF p_revision IS DISTINCT FROM v_order.revision THEN RAISE EXCEPTION 'Purchase revision conflict' USING ERRCODE='PT409'; END IF;
  IF v_order.status NOT IN ('approved','partial') THEN RAISE EXCEPTION 'Purchase not receivable' USING ERRCODE='22023'; END IF;
  SELECT * INTO v_line FROM public.admin_purchase_lines WHERE id=p_line AND purchase_id=p_id FOR UPDATE;
  IF NOT FOUND OR p_quantity>v_line.quantity-v_line.received_quantity THEN RAISE EXCEPTION 'Receipt exceeds outstanding quantity' USING ERRCODE='22023'; END IF;

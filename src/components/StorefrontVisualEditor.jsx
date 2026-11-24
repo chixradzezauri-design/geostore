@@ -1290,7 +1290,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details hidden={!isControlGroupVisible('sections')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
+          <details data-gs-section-controls="true" hidden={!isControlGroupVisible('sections')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Layout className="h-4 w-4 text-emerald-300" /> სექციების ჩართვა და თანმიმდევრობა</summary>
             <div className="mt-4 space-y-2">
               <p className="text-xs text-slate-400">თანმიმდევრობა: {previewMode==='desktop'?'კომპიუტერი / საერთო':previewMode==='tablet'?'ტაბლეტი':'მობილური'} · სექციების ჩართვა/გამორთვა საერთო რჩება.</p>

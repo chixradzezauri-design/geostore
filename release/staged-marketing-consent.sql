@@ -69,7 +69,7 @@ BEGIN
   v_replay:=true;
  ELSE
   SELECT event_id INTO v_latest FROM private.marketing_email_consent_events WHERE user_id=v_user ORDER BY sequence_id DESC LIMIT 1;
-  IF p_opted_in AND v_latest IS DISTINCT FROM p_expected_event THEN RAISE EXCEPTION 'Consent changed; refresh before opting in' USING ERRCODE='40001'; END IF;
+  IF p_opted_in AND v_latest IS DISTINCT FROM p_expected_event THEN RAISE EXCEPTION 'Consent changed; refresh before opting in' USING ERRCODE='PT409'; END IF;
   IF p_opted_in AND (v_confirmed IS NULL OR coalesce(btrim(v_email),'')='') THEN RAISE EXCEPTION 'Verified email required' USING ERRCODE='22023'; END IF;
   INSERT INTO private.marketing_email_consent_events(event_id,user_id,opted_in,policy_version,email_fingerprint,expected_event_id,verified_email_confirmed_at)
   VALUES(p_event,v_user,p_opted_in,p_policy_version,CASE WHEN p_opted_in THEN private.marketing_email_fingerprint(v_email) ELSE NULL END,p_expected_event,CASE WHEN p_opted_in THEN v_confirmed ELSE NULL END)
