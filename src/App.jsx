@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
+import CustomerMarketingConsent from './components/CustomerMarketingConsent.jsx';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
@@ -4081,6 +4082,7 @@ export default function App() {
                 </p>
               </div>
 
+              <CustomerMarketingConsent key={currentUser.id+':'+currentUser.email} userId={currentUser.id} lang={currentLang} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>
               <button
                 type="button"
                 onClick={handleLogout}

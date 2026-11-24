@@ -26,7 +26,7 @@ BEGIN
   LEFT JOIN LATERAL (
    SELECT count(*) AS completed,max((ord.created_at AT TIME ZONE 'Asia/Tbilisi')::date) AS last_day
    FROM public.orders ord
-   WHERE ord.user_id=a.id AND lower(btrim(ord.status)) IN ('დასრულებული','completed','delivered','доставлен','завершён','завершен')
+   WHERE ord.user_id=a.id AND lower(btrim(ord.status)) IN ('დასრულებული','ჩაბარებულია','completed','delivered','доставлен','завершён','завершен')
    AND ord.created_at IS NOT NULL AND ord.created_at<=statement_timestamp()
   ) o ON true
  ), dedup AS (
