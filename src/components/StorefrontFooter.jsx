@@ -1,22 +1,30 @@
 import React from 'react';
 import { FileText, ShieldCheck } from 'lucide-react';
 import { translations } from '../utils/translations';
-import { buildStorefrontElementStyle } from '../utils/storefrontVisualDesign.js';
+import { buildStorefrontElementStyle, withStorefrontVideoTokens } from '../utils/storefrontVisualDesign.js';
 
 export default function StorefrontFooter({
   siteSettings,
   visualDesign = siteSettings?.visualDesign,
+  visualEditorViewport = null,
   activeTab,
   setActiveTab,
   setIsTermsOpen,
   setIsWarrantyOpen,
+  onOpenSupport,
   currentLang = 'ka'
 }) {
   const t = translations[currentLang] || translations.ka;
-  const styleFor = id => buildStorefrontElementStyle(visualDesign, id);
+  const styleFor = id => withStorefrontVideoTokens(buildStorefrontElementStyle(visualDesign, id, visualEditorViewport), id);
 
   return (
     <footer data-visual-editor-target="footer" style={styleFor('footer')} className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">
+      {activeTab !== 'admin' && (
+        <div className="gs-video-footer-identity">
+          <strong>{siteSettings?.storeName || 'GEOSTORE'}</strong>
+          {onOpenSupport && <button type="button" className="gs-video-footer-support" onClick={onOpenSupport}>{currentLang === 'en' ? 'Contact support' : currentLang === 'ru' ? 'Связаться с поддержкой' : 'მხარდაჭერასთან დაკავშირება'}</button>}
+        </div>
+      )}
       <div data-visual-editor-target="footer.links" style={styleFor('footer.links')} className="geostore-footer-links flex flex-wrap justify-center items-center gap-4 px-2 text-slate-400 font-bold">
         <button type="button" data-visual-editor-target="footer.termsLink" style={styleFor('footer.termsLink')} onClick={() => setIsTermsOpen?.(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
           <FileText className="w-4 h-4" />

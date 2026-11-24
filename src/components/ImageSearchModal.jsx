@@ -49,7 +49,7 @@ export default function ImageSearchModal({
 
   return (
     <div className="gs-image-search-overlay fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="gs-image-search-dialog bg-slate-900/95 border border-slate-800/80 rounded-[2.5rem] max-w-lg w-full flex flex-col p-6 shadow-2xl backdrop-blur-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none">
+      <div role="dialog" aria-modal="true" aria-labelledby="gs-video-image-search-title" className="gs-image-search-dialog bg-slate-900/95 border border-slate-800/80 rounded-[2.5rem] max-w-lg w-full flex flex-col p-6 shadow-2xl backdrop-blur-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none">
         
         {/* Header */}
         <div className="gs-image-search-header flex justify-between items-center border-b border-slate-800/80 pb-4">
@@ -58,8 +58,8 @@ export default function ImageSearchModal({
               <Camera className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-black text-white text-sm">ფოტოთი ძიება (Visual Search)</h3>
-              <p className="text-[10px] text-slate-400">აატვირთეთ ფოტო და იპოვეთ მსგავსი პროდუქტები</p>
+              <h3 id="gs-video-image-search-title" className="font-black text-white text-sm">ფოტოთი ძიება (Visual Search)</h3>
+              <p className="text-[10px] text-slate-400">ატვირთეთ ფოტო შესამოწმებლად. მსგავსი პროდუქტების ავტომატური ძიება ჯერ არ არის ჩართული.</p>
             </div>
           </div>
           <button 
@@ -73,8 +73,9 @@ export default function ImageSearchModal({
         {/* Body Content */}
         <div className="gs-image-search-body py-6 space-y-5">
           {!selectedImage ? (
-            <div 
-              onClick={() => fileInputRef.current?.click()}
+            <div role="button" tabIndex={0} aria-label="ფოტოს ატვირთვა"
+              onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); fileInputRef.current?.click(); } }}
+              onClick={event => { if (event.target !== fileInputRef.current) fileInputRef.current?.click(); }}
               className="gs-image-search-dropzone border-2 border-dashed border-slate-700/80 hover:border-emerald-500/60 bg-slate-950/40 rounded-[2rem] p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 group"
             >
               <div className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition shadow-inner">

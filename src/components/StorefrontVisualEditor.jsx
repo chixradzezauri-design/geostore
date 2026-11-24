@@ -1433,6 +1433,7 @@ export default function StorefrontVisualEditor({
           `}</style>
           <div onClickCapture={handlePreviewSelect} onKeyDownCapture={handlePreviewKeyDown} tabIndex={selectionMode ? 0 : undefined} aria-label={selectionMode ? 'საიტის Preview — ელემენტის არჩევა; გამოსასვლელად Escape' : undefined} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : previewMode === 'tablet' ? '820px' : '100%' }}>
             <Header
+              visualEditorViewport={previewMode}
               siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
               visualDesign={previewDesign}
               setActiveTab={NOOP}
@@ -1480,6 +1481,8 @@ export default function StorefrontVisualEditor({
               />
             </div>
             <StorefrontFooter
+              visualEditorViewport={previewMode}
+              onOpenSupport={NOOP}
               siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
               visualDesign={previewDesign}
               activeTab="store"

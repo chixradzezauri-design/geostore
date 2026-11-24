@@ -509,3 +509,16 @@ export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewp
   else if (objectPositionY !== null) style.objectPosition = 'center ' + String(objectPositionY) + '%';
   return style;
 }
+
+/** Preserve sanitized, explicitly edited element values in the video design layer.
+ * A separate helper keeps the original editor style API and persisted schema unchanged. */
+export function withStorefrontVideoTokens(style, elementId) {
+  const result = { ...style };
+  const key = elementId.replaceAll('.', '-');
+  for (const property of ['color','backgroundColor','borderColor','borderWidth','borderRadius','padding','paddingTop','paddingBottom','paddingLeft','paddingRight','fontSize','fontFamily','fontWeight','lineHeight','letterSpacing','textAlign','textTransform','textDecoration','fontStyle','boxShadow','marginTop','marginBottom','objectFit','objectPosition','opacity']) {
+    if (style[property] == null) continue;
+    result[`--gs-video-${key}-${property}`] = style[property];
+    result[`--gs-video-explicit-${property}`] = String(style[property]);
+  }
+  return result;
+}

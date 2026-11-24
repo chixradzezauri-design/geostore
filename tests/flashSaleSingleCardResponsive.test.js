@@ -18,9 +18,9 @@ test('Flash Sale CSS selectors match the actual StoreView card DOM', () => {
   assert.match(flashSaleMarkup, /className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4/);
   assert.match(flashSaleMarkup, /className="gs-flash-sale-card[^"]*"/);
   assert.match(flashSaleMarkup, /className="gs-flash-sale-media/);
-  assert.match(flashSaleMarkup, /className="py-3 space-y-1\.5"/);
+  assert.match(flashSaleMarkup, /className="gs-video-flash-copy py-3 space-y-1\.5"/);
   assert.match(flashSaleMarkup, /className="flex items-baseline gap-2"/);
-  assert.match(flashSaleMarkup, /<button[\s\S]*?className="w-full/);
+  assert.match(flashSaleMarkup, /<button[\s\S]*?className="gs-video-flash-add w-full/);
   assert.match(flashSaleMarkup, /flashSaleProducts\.map\(prod =>/);
   assert.match(flashSaleMarkup, /handleOpenProduct\(prod, event\.currentTarget\)/);
   assert.match(flashSaleMarkup, /addToCart\(prod\)/);

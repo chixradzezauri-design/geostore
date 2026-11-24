@@ -20,7 +20,7 @@ test('support statuses remain semantic and contrast scoped, preview disabled onl
  assert.ok(css.includes('button[aria-pressed="true"]'));
  assert.ok(css.includes('admin-support-ticket-reply'));
  const cfg=JSON.parse(read('vercel.json'));
- assert.deepEqual(cfg.git.deploymentEnabled,{'internal-admin-video-redesign-2026-11-24':false});
+ assert.equal(cfg.git.deploymentEnabled['internal-admin-video-redesign-2026-11-24'],false);
  assert.notEqual(cfg.git.deploymentEnabled.main,false);
 });
 

@@ -12,6 +12,7 @@ import './adminDashboardPolish.css'
 import './designSystemV2.css'
 // Video-audited compact phone admin layout after all legacy visual layers.
 import './videoAuditMobileAdmin.css'
+import './storefrontVideoRedesign.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -3726,6 +3726,7 @@ export default function App() {
 
               {wishlist.length > 0 && (
                 <button
+                  type="button"
                   onClick={handleShareWishlist}
                   className="gs-wishlist-share bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
                 >
@@ -3736,9 +3737,7 @@ export default function App() {
             </div>
 
             {wishlist.length === 0 ? (
-              <p className="gs-wishlist-empty text-slate-500 text-xs py-8">
-                {t.emptyWishlist}
-              </p>
+              <div className="gs-video-wishlist-empty"><p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
             ) : (
               <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map((savedProd) => {
@@ -3809,6 +3808,7 @@ export default function App() {
                   <ShoppingBag className="w-6 h-6" aria-hidden="true" />
                 </span>
                 <p className="text-slate-500 text-sm font-medium">{t.emptyCart}</p>
+                <button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button>
               </div>
             ) : (
               <div className="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -3834,11 +3834,11 @@ export default function App() {
                           fallbackClassName="flex h-full w-full items-center justify-center text-center text-[9px] font-black tracking-widest text-amber-400/60"
                         />
                       </div>
-                      <div className="min-w-0 flex-1 space-y-1">
+                      <div className="gs-video-cart-item-details min-w-0 flex-1 space-y-1">
                         <h4 className="gs-cart-item-title break-words font-bold text-xs text-white">
                           {item.name}
                         </h4>
-                        {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">ვარიანტი: {item.customVariantName}</p>}
+                        {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">{currentLang === 'en' ? 'Variant' : currentLang === 'ru' ? 'Вариант' : 'ვარიანტი'}: {item.customVariantName}</p>}
 
                         {(item.selectedSize || item.selectedColor) && (
                           <p className="gs-cart-item-variant text-slate-400 text-[11px]">
@@ -3921,7 +3921,7 @@ export default function App() {
                     </span>
 
                     {eligibleAppliedCoupon ? (
-                      <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
+                      <div className="gs-video-applied-coupon bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
                         <div>
                           <b className="text-amber-300 uppercase">
                             {eligibleAppliedCoupon.code}
@@ -4031,14 +4031,14 @@ export default function App() {
                 {t.profile}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
+              <div className="gs-video-profile-identity grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
                     {currentLang === 'en' ? 'Name' : currentLang === 'ru' ? 'Имя' : 'სახელი'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
-                    {currentUser.name}
+                    {currentUser.name || "—"}
                   </b>
                 </div>
 
@@ -4047,8 +4047,8 @@ export default function App() {
                     {currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელ-ფოსტა'}
                   </span>
 
-                  <b className="text-white text-sm mt-1 block truncate">
-                    {currentUser.email}
+                  <b className="gs-video-profile-email text-white text-sm mt-1 block">
+                    {currentUser.email || "—"}
                   </b>
                 </div>
 
@@ -4058,12 +4058,12 @@ export default function App() {
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
-                    {currentUser.phone}
+                    {currentUser.phone || "—"}
                   </b>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-800/80 space-y-3">
+              <div className="gs-video-profile-security pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" />
                   {t.security}
@@ -4079,8 +4079,9 @@ export default function App() {
               </div>
 
               <button
+                type="button"
                 onClick={handleLogout}
-                className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
+                className="gs-video-profile-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
               >
                 {t.logout}
               </button>
@@ -4092,7 +4093,8 @@ export default function App() {
                 {t.orderHistory}
               </h3>
 
-              <div className="space-y-3">
+              <div className="gs-video-profile-order-list space-y-3" aria-busy={myOrdersLoading}>
+                {myOrdersError && myOrders.length > 0 && <p role="status" className="gs-video-profile-history-warning">{myOrdersError}</p>}
                 {myOrdersLoading && myOrders.length === 0 ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
                     {currentLang === 'en' ? 'Loading orders…' : currentLang === 'ru' ? 'Загрузка заказов…' : 'შეკვეთები იტვირთება…'}
@@ -4111,7 +4113,7 @@ export default function App() {
                         key={order.id}
                         className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
                       >
-                        <div className="space-y-1">
+                        <div className="gs-video-profile-order-info space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="gs-profile-order-code font-black text-emerald-400">#{order.id}</span>
 
@@ -4130,12 +4132,12 @@ export default function App() {
                           )}
                         </div>
 
-                        <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
+                        <div className="gs-video-profile-order-summary text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
                           <span className="font-black text-white text-sm">
                             {formatPrice(order.totalGEL)}
                           </span>
 
-                          <span className={`${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
+                          <span className={`gs-video-profile-status ${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
                             {localizeOrderStatus(order.status || 'New', currentLang)}
                           </span>
                         </div>
@@ -4148,7 +4150,7 @@ export default function App() {
         )}
       </main>
 
-      <div className="gs-floating-ai">
+      <div className={`gs-floating-ai${supportOpen || isCheckoutOpen || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen ? " gs-video-assistance-obscured" : ""}`}>
         <button
           type="button"
           onClick={() => setIsAiAssistantOpen(true)}
@@ -4167,7 +4169,7 @@ export default function App() {
         </button>
       </div>
 
-      <div className="gs-floating-support">
+      <div className={`gs-floating-support${supportOpen ? " gs-video-support-open" : ""}${isCheckoutOpen || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen ? " gs-video-assistance-obscured" : ""}`}>
         {supportOpen ? (
           <div className="gs-support-panel">
             <div className="gs-support-panel-heading">
@@ -4763,6 +4765,7 @@ export default function App() {
       {hasLoadedModals && (
         <Suspense fallback={null}>
           <Modals
+        storefrontThemeStyle={buildStorefrontVisualStyle(siteSettings?.visualDesign)}
         currentLang={currentLang}
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -4897,6 +4900,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         setIsTermsOpen={setIsTermsOpen}
         setIsWarrantyOpen={setIsWarrantyOpen}
+        onOpenSupport={() => { setSupportSubmission(null); setSupportOpen(true); }}
         currentLang={currentLang}
       />
     </div>

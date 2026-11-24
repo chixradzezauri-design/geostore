@@ -85,7 +85,7 @@ test('storefront category tiles, catalog controls and product cards have respons
   assert.match(view, /setMinPrice\(/);
   assert.match(view, /setMaxPrice\(/);
   assert.match(view, /setSortBy\(/);
-  assert.match(view, /handleOpenProduct\(prod\)/);
+  assert.match(view, /handleOpenProduct\(prod, event\.currentTarget\.closest\('article'\)\?\.querySelector\('\.gs-catalog-product-title-action'\)\)/);
 });
 
 

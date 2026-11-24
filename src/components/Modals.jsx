@@ -43,6 +43,7 @@ export default function Modals({
   setSelectedRegion,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   currentUser,
+  storefrontThemeStyle = {},
   currentLang = 'ka'
 }) {
   const termsCopy = ({
@@ -465,7 +466,7 @@ export default function Modals({
     <>
       {/* 1. შეკვეთის გაფორმების მოდალი */}
       {isCheckoutOpen && createPortal(
-        <div className="gs-commerce-overlay gs-commerce-overlay--checkout fixed inset-0 z-[10000] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm sm:p-6">
+        <div style={storefrontThemeStyle} className="gs-commerce-overlay gs-commerce-overlay--checkout fixed inset-0 z-[10000] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm sm:p-6">
           <section
             ref={checkoutDialogRef}
             role="dialog"
@@ -566,7 +567,7 @@ export default function Modals({
       )}
 
       {orderConfirmation && createPortal(
-        <div className="gs-commerce-overlay gs-commerce-overlay--success fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-black/70 p-4 py-8 backdrop-blur-sm">
+        <div style={storefrontThemeStyle} className="gs-commerce-overlay gs-commerce-overlay--success fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-black/70 p-4 py-8 backdrop-blur-sm">
           <section
             role="dialog"
             aria-modal="true"
@@ -619,9 +620,9 @@ export default function Modals({
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
       {isTrackerOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--tracker fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div ref={trackerDialogRef} className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+          <div ref={trackerDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-video-tracker-title" className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
+              <h3 id="gs-video-tracker-title" className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
               </h3>
               <button type="button" aria-label={copy.close} onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
@@ -723,10 +724,10 @@ export default function Modals({
       {/* 🔔 3. ADVANCED NOTIFICATIONS CENTER MODAL */}
       {isNotificationsOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--notifications fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="gs-commerce-dialog gs-commerce-dialog--notifications bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
+          <div role="dialog" aria-modal="true" aria-labelledby="gs-video-notifications-title" className="gs-commerce-dialog gs-commerce-dialog--notifications bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Bell className="w-5 h-5 text-amber-400 animate-bounce" /> {copy.notifications}
+              <h3 id="gs-video-notifications-title" className="font-black text-white text-base flex items-center gap-2.5">
+                <Bell className="w-5 h-5 text-amber-400" aria-hidden="true" /> {copy.notifications}
               </h3>
               <button type="button" aria-label={copy.close} onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
@@ -760,7 +761,7 @@ export default function Modals({
                 </div>
               ) : (
                 notifications.map(n => (
-                  <div key={n.id} className="bg-[#121216] border border-amber-500/20 p-4 rounded-2xl space-y-1.5 shadow-inner hover:border-amber-400/50 transition">
+                  <div key={n.id} className="gs-video-notification-card bg-[#121216] border border-amber-500/20 p-4 rounded-2xl space-y-1.5 shadow-inner hover:border-amber-400/50 transition">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-black text-amber-300 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {getNotificationCopy(n).title}
@@ -805,7 +806,7 @@ export default function Modals({
                   </div>
                   <div className="space-y-1">
                     <label htmlFor="geostore-auth-phone" className="text-slate-300 font-bold">{copy.phone}</label>
-                    <input id="geostore-auth-phone" type="tel" required minLength={9} maxLength={24} autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
+                    <input id="geostore-auth-phone" type="tel" inputMode="tel" required minLength={9} maxLength={24} autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
                       onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
