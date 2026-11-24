@@ -8,7 +8,8 @@
     "build": "vite build",
     "vercel-build": "npm test && npm run build",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --test",
+    "build:measure": "vite build && node scripts/reportBuildPerformance.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
