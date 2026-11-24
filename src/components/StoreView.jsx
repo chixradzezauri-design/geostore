@@ -67,6 +67,13 @@ export default function StoreView({
   })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max' };
 
   const visualCopy = siteSettings?.visualDesign?.copy || {};
+  const videoElementStyle = (targetId) => {
+    const style = buildStorefrontElementStyle(siteSettings?.visualDesign, targetId);
+    for (const property of ['color', 'backgroundColor', 'fontSize', 'padding', 'borderRadius', 'lineHeight']) {
+      if (style[property] != null) style[`--gs-video-${targetId.replaceAll('.', '-')}-${property}`] = style[property];
+    }
+    return style;
+  };
   const customSections = normalizeStorefrontCustomSections(siteSettings?.visualDesign?.customSections);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -546,15 +553,15 @@ export default function StoreView({
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
       {/* GEOSTORE FASHION EDITORIAL HERO */}
-      <section data-visual-editor-target="hero" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero')} className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
+      <section data-visual-editor-target="hero" style={videoElementStyle('hero')} className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
         <div data-visual-editor-target="hero.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.image')} className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
         <div className="gs-fashion-hero__content gs-editorial-hero-content">
           <span className="gs-fashion-eyebrow">{visualCopy.heroEyebrow || 'GEOSTORE / NEW SEASON'}</span>
           <p className="gs-fashion-kicker">{visualCopy.heroKicker || storeText.styleKicker}</p>
-          <h1 data-visual-editor-target="hero.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
-          <p data-visual-editor-target="hero.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
+          <h1 data-visual-editor-target="hero.title" style={videoElementStyle('hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
+          <p data-visual-editor-target="hero.description" style={videoElementStyle('hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button data-visual-editor-target="hero.button" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
+            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); const target = ['gs-video-collections', 'gs-video-catalog-anchor'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
           </div>
         </div>
@@ -574,14 +581,14 @@ export default function StoreView({
               if (['https:', 'http:'].includes(parsed.protocol)) safeTarget = parsed.href;
             } catch {}
             const content = (
-              <div data-visual-editor-target="banner.card" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.card')} className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
+              <div data-visual-editor-target="banner.card" style={videoElementStyle('banner.card')} className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
                 {imageUrl && (
                   <img data-visual-editor-target="banner.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.image')} src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
                 <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
-                  <h2 data-visual-editor-target="banner.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
-                  {banner?.subtitle && <p data-visual-editor-target="banner.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
+                  <h2 data-visual-editor-target="banner.title" style={videoElementStyle('banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
+                  {banner?.subtitle && <p data-visual-editor-target="banner.description" style={videoElementStyle('banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
                   {safeTarget && <span data-visual-editor-target="banner.button" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
                 </div>
               </div>
@@ -597,17 +604,17 @@ export default function StoreView({
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
-        <div data-visual-editor-target="flashSale" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale')} className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
+        <div data-visual-editor-target="flashSale" style={videoElementStyle('flashSale')} className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
+          <div className="gs-video-flash-heading flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
-              <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
+              <div className="gs-video-flash-icon bg-amber-400 p-3 rounded-2xl text-slate-950">
                 <Timer className="w-6 h-6" />
               </div>
               <div>
-                <h3 data-visual-editor-target="flashSale.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale.title')} id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
-                  {visualCopy.flashSaleTitle || '⚡ FLASH SALE'} <span data-visual-editor-target="flashSale.badge" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale.badge')} className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{visualCopy.flashSaleBadge || storeText.limitedOffer}</span>
+                <h3 data-visual-editor-target="flashSale.title" style={videoElementStyle('flashSale.title')} id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                  {visualCopy.flashSaleTitle || '⚡ FLASH SALE'} <span data-visual-editor-target="flashSale.badge" style={videoElementStyle('flashSale.badge')} className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{visualCopy.flashSaleBadge || storeText.limitedOffer}</span>
                 </h3>
-                <p data-visual-editor-target="flashSale.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale.description')} className="text-slate-400 text-xs">{visualCopy.flashSaleSubtitle || storeText.hurryDiscount}</p>
+                <p data-visual-editor-target="flashSale.description" style={videoElementStyle('flashSale.description')} className="text-slate-400 text-xs">{visualCopy.flashSaleSubtitle || storeText.hurryDiscount}</p>
                 {flashSaleEndAt !== null && (
                   <p className="gs-flash-sale-deadline text-[10px] sm:text-xs text-amber-200/75 mt-1">
                     დასრულდება: {new Date(flashSaleEndAt).toLocaleString('ka-GE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -652,7 +659,7 @@ export default function StoreView({
                     {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="gs-video-flash-image h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
                     <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </button>
-                  <div className="py-3 space-y-1.5">
+                  <div className="gs-video-flash-copy py-3 space-y-1.5">
                     <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300"><button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button></h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
@@ -661,7 +668,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
-                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
@@ -674,7 +681,7 @@ export default function StoreView({
       {renderCustomSections('after-flash-sale')}
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div data-visual-editor-target="categories" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories')} className="gs-editorial-collections space-y-6">
+      <div id="gs-video-collections" data-visual-editor-target="categories" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories')} className="gs-editorial-collections space-y-6">
         <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 data-visual-editor-target="categories.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories.title')} className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -836,7 +843,7 @@ export default function StoreView({
       {renderCustomSections('after-categories')}
 
       {/* Filters & Sorting */}
-      <div data-visual-editor-target="filters" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div id="gs-video-catalog-anchor" data-visual-editor-target="filters" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
           <div data-visual-editor-target="filters.priceLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}

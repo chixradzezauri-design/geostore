@@ -284,3 +284,163 @@
     grid-template-columns: minmax(0,1fr) !important;
   }
 }
+
+/* Storefront video redesign 03 — editorial hero, banners and time-limited offers.
+   Keep configured section visibility/order, hero height/image and editor styles. */
+.geostore-shell.geostore-fashion-store .geostore-storefront :is(#gs-video-collections,#gs-video-catalog-anchor) {
+  scroll-margin-top: 150px;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero {
+  isolation: isolate;
+  min-inline-size: 0;
+  border-radius: var(--gs-video-hero-borderRadius, var(--gs-card-radius, 8px)) !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero__content {
+  min-inline-size: 0;
+  box-sizing: border-box;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero h1 {
+  max-width: 16ch !important;
+  font-size: var(--gs-video-hero-title-fontSize, clamp(32px, calc(4.7vw * var(--gs-heading-scale, 1)), 72px)) !important;
+  line-height: var(--gs-video-hero-title-lineHeight, 1.13) !important;
+  color: var(--gs-video-hero-title-color, var(--gs-hero-text, #25201c)) !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero__description {
+  font-size: var(--gs-video-hero-description-fontSize, 14px) !important;
+  line-height: var(--gs-video-hero-description-lineHeight, 1.65) !important;
+  color: var(--gs-video-hero-description-color, var(--gs-muted, #776b60)) !important;
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero__actions {
+  flex-wrap: wrap !important;
+  min-width: 0;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-primary {
+  min-height: 44px !important;
+  max-width: 100%;
+  white-space: normal !important;
+  padding: var(--gs-video-hero-button-padding, 12px 18px) !important;
+  font-size: var(--gs-video-hero-button-fontSize, 13px) !important;
+  color: var(--gs-video-hero-button-color, var(--gs-button-text, #fff)) !important;
+  background: var(--gs-video-hero-button-backgroundColor, var(--gs-button-bg, #302820)) !important;
+  border-radius: var(--gs-video-hero-button-borderRadius, var(--gs-button-radius, 8px)) !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-published-banners > * {
+  min-width: 0;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-published-banners [data-visual-editor-target="banner.card"] {
+  border-radius: var(--gs-video-banner-card-borderRadius, var(--gs-card-radius, 8px)) !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-published-banners :is(h2,p) {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-published-banners h2 {
+  font-size: var(--gs-video-banner-title-fontSize, clamp(19px, 2.3vw, 28px)) !important;
+  color: var(--gs-video-banner-title-color, #fff) !important;
+  line-height: 1.3;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-published-banners p {
+  color: var(--gs-video-banner-description-color, #f5eee8) !important;
+  font-size: var(--gs-video-banner-description-fontSize, 13px) !important;
+  line-height: 1.55;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section {
+  padding: var(--gs-video-flashSale-padding, clamp(12px, 2vw, 24px)) !important;
+  background: var(--gs-video-flashSale-backgroundColor, var(--gs-surface, #fffdfa)) !important;
+  border-radius: var(--gs-video-flashSale-borderRadius, var(--gs-card-radius, 8px)) !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section .gs-video-flash-heading {
+  gap: 12px !important;
+  padding-bottom: 12px !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-video-flash-heading > div:first-child,
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-video-flash-heading > div:first-child > div:last-child {
+  min-width: 0 !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-video-flash-heading .gs-video-flash-icon {
+  display: grid !important;
+  place-items: center;
+  flex: 0 0 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 8px !important;
+  border-radius: 10px !important;
+  background: var(--gs-surface-soft, #f0ebe4) !important;
+  color: var(--gs-accent-dark, #302820) !important;
+  animation: none !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section #gs-flash-sale-title {
+  font-size: var(--gs-video-flashSale-title-fontSize, clamp(17px, 2vw, 23px)) !important;
+  color: var(--gs-video-flashSale-title-color, var(--gs-ink, #302820)) !important;
+  line-height: 1.35 !important;
+  word-break: normal !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section #gs-flash-sale-title > span {
+  color: var(--gs-video-flashSale-badge-color, var(--gs-accent-dark, #302820)) !important;
+  background: var(--gs-video-flashSale-badge-backgroundColor, var(--gs-surface-soft, #f0ebe4)) !important;
+  font-size: var(--gs-video-flashSale-badge-fontSize, 11px) !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section .gs-video-flash-heading p {
+  color: var(--gs-video-flashSale-description-color, var(--gs-muted, #776b60)) !important;
+  font-size: var(--gs-video-flashSale-description-fontSize, 12px) !important;
+  line-height: 1.5 !important;
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-countdown .gs-flash-sale-timer {
+  background: var(--gs-surface-soft, #f0ebe4) !important;
+  border-color: var(--gs-line, #e5d8c8) !important;
+  border-radius: 10px !important;
+  color: var(--gs-ink, #302820) !important;
+  font-variant-numeric: tabular-nums;
+  box-shadow: none !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-countdown .gs-flash-sale-timer > span:first-child {
+  color: var(--gs-ink, #302820) !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-countdown .gs-flash-sale-timer > span:last-child {
+  color: var(--gs-muted, #776b60) !important;
+  font-size: 10px !important;
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > .gs-video-flash-copy {
+  min-width: 0 !important;
+  overflow-wrap: break-word !important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > .gs-video-flash-add {
+  min-height: 44px !important;
+  background: var(--gs-button-bg, #302820) !important;
+  color: var(--gs-button-text, #fff) !important;
+  border-radius: var(--gs-button-radius, 8px) !important;
+  white-space: normal !important;
+}
+@media (max-width: 640px) {
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero__content {
+    padding: 22px 18px 76px !important;
+    width: 100% !important;
+  }
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero h1 {
+    font-size: var(--gs-video-hero-title-fontSize, clamp(28px, calc(7.5vw * var(--gs-heading-scale, 1)), 44px)) !important;
+    max-width: 16ch !important;
+  }
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero__actions {
+    gap: 8px !important;
+  }
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card:only-child > .gs-flash-sale-media {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+  }
+}
+@media (max-width: 359px) {
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card:only-child {
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-rows: auto !important;
+  }
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card:only-child > :is(.gs-flash-sale-media,.gs-video-flash-copy,.gs-video-flash-add) {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+}

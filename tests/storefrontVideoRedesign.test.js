@@ -29,3 +29,9 @@ test('video 02 menu remains complete, compact and respects existing editor targe
  assert.ok(header.includes("buildStorefrontElementStyle(visualDesign, targetId)"));
  for(const term of ['--gs-video-header-menu-padding','--gs-video-header-search-input-fontSize','--gs-video-header-storeName-fontSize','grid-template-columns: repeat(2,minmax(0,1fr))','max-width: 359px','min-block-size: 44px !important'])assert.ok(css.includes(term),term);
 });
+
+test('video 03 hero and offers preserve configured editor hooks and business operations',()=>{
+ for(const term of ["videoElementStyle('hero.title')","videoElementStyle('hero.button')","videoElementStyle('flashSale.title')","gs-video-collections","gs-video-catalog-anchor","scrollIntoView","prefers-reduced-motion: reduce","getActiveFlashSaleProducts(activeProducts, flashSaleClock)","getEarliestFlashSaleEnd(flashSaleProducts)","getFlashSaleCountdown(flashSaleEndAt, flashSaleClock)","getProductAvailableStock(prod) <= 0","addToCart(prod)","rel=\"noopener noreferrer\"","renderCustomSections('after-hero')","renderCustomSections('after-flash-sale')"])assert.ok(store.includes(term),term);
+ for(const term of ['--gs-video-hero-title-fontSize','--gs-video-flashSale-title-color','--gs-hero-text','--gs-card-radius','--gs-button-bg','font-variant-numeric: tabular-nums','gs-video-flash-add','scroll-margin-top: 150px'])assert.ok(css.includes(term),term);
+ assert.ok(!css.includes('--gs-show-hero,'));
+});
