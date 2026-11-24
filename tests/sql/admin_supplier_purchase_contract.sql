@@ -7,7 +7,7 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(
 CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.jwt',true),''),'{}')::jsonb; $$;
 CREATE TABLE public.products(id text PRIMARY KEY,name text NOT NULL,category text,vendor text,stock integer CHECK(stock BETWEEN 0 AND 1000000),variants jsonb DEFAULT '[]',purchase_cost numeric);
 REVOKE ALL ON public.products FROM PUBLIC,anon,authenticated;
-INSERT INTO public.products VALUES ('base','Fixture base','fixture','Supplier',10,'[]',3),('other','Other','fixture','Supplier',2,'[]',7),('variant','Variant','fixture','Supplier',2,'[{"id":"v","stock":2}]',8);
+INSERT INTO public.products VALUES ('base','Fixture base','fixture','Supplier',10,'[]',3),('other','Other','fixture','Supplier',2,'[]',7),('variant','Variant','fixture','Supplier',2,'[{"id":"v","name":"Red S","variantType":"size_color","stock":2,"priceGEL":20},{"id":"w","name":"Blue M","variantType":"size_color","stock":4,"priceGEL":25}]',8);
 \i /tmp/stage60_original_inventory_trigger_prefix.sql
 \ir ../../release/staged-admin-suppliers.sql
 \ir ../../release/staged-admin-purchases.sql
@@ -43,12 +43,31 @@ BEGIN
  BEGIN PERFORM public.admin_create_purchase(gen_random_uuid(),supplier,'[{"product_id":"variant","quantity":2,"unit_cost":1}]'); RAISE EXCEPTION 'Variant receipt incorrectly supported'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  BEGIN UPDATE public.admin_purchase_receipts SET quantity=1 WHERE id=receipt; RAISE EXCEPTION 'Receipt write allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $test$;
+-- Independent variant order: two variants of one product may be purchased separately.
+DO $variant_test$
+DECLARE supplier uuid; po uuid:='10000000-0000-4000-8000-000000000009'; line uuid; otherline uuid; receipt uuid:=gen_random_uuid(); result jsonb;
+BEGIN
+ SELECT id INTO supplier FROM public.admin_suppliers WHERE name='Supplier';
+ BEGIN PERFORM public.admin_create_purchase(gen_random_uuid(),supplier,'[{"product_id":"variant","variant_id":"missing","quantity":1,"unit_cost":1}]'); RAISE EXCEPTION 'Unknown variant accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_create_purchase(gen_random_uuid(),supplier,'[{"product_id":"variant","variant_id":"v","quantity":1,"unit_cost":1},{"product_id":"variant","variant_id":"v","quantity":1,"unit_cost":1}]'); RAISE EXCEPTION 'Duplicate variant accepted'; EXCEPTION WHEN unique_violation THEN NULL; END;
+ PERFORM public.admin_create_purchase(po,supplier,'[{"product_id":"variant","variant_id":"v","quantity":3,"unit_cost":9},{"product_id":"variant","variant_id":"w","quantity":1,"unit_cost":10}]');
+ SELECT id INTO line FROM public.admin_purchase_lines WHERE purchase_id=po AND variant_id='v';
+ SELECT id INTO otherline FROM public.admin_purchase_lines WHERE purchase_id=po AND variant_id='w';
+ PERFORM public.admin_transition_purchase(po,1,'approve');
+ result:=public.admin_receive_purchase(po,line,receipt,2,3);
+ IF result->>'stock_before'<>'2' OR result->>'stock_after'<>'5' THEN RAISE EXCEPTION 'Variant receipt snapshot mismatch'; END IF;
+ PERFORM public.admin_receive_purchase(po,otherline,gen_random_uuid(),3,1);
+ result:=public.admin_receive_purchase(po,line,receipt,2,3);
+ IF result->>'idempotent_replay'<>'true' OR (SELECT status FROM public.admin_purchase_orders WHERE id=po)<>'received' THEN RAISE EXCEPTION 'Completed variant replay failed'; END IF;
+END $variant_test$;
 RESET ROLE;
 DO $test$
 BEGIN
  IF (SELECT stock FROM public.products WHERE id='base')<>15 OR (SELECT stock FROM public.products WHERE id='other')<>4 OR (SELECT stock FROM public.products WHERE id='variant')<>2 OR (SELECT purchase_cost FROM public.products WHERE id='base')<>3 THEN RAISE EXCEPTION 'Stock or historical cost mismatch'; END IF;
  IF (SELECT sum(quantity_delta) FROM private.inventory_movements WHERE reason='manual_adjustment' AND product_id='base')<>5 THEN RAISE EXCEPTION 'Existing movement audit missing'; END IF;
- IF (SELECT count(*) FROM public.admin_purchase_orders)<>1 THEN RAISE EXCEPTION 'Invalid draft not rolled back'; END IF;
+ IF (SELECT (variants->0->>'stock')::integer FROM public.products WHERE id='variant')<>5 OR (SELECT (variants->1->>'stock')::integer FROM public.products WHERE id='variant')<>5 OR (SELECT (variants->0->>'priceGEL')::integer FROM public.products WHERE id='variant')<>20 OR (SELECT purchase_cost FROM public.products WHERE id='variant')<>8 THEN RAISE EXCEPTION 'Variant stock or price mismatch'; END IF;
+ IF (SELECT count(*) FROM private.inventory_movements WHERE product_id='variant' AND reason='manual_adjustment')<>2 OR (SELECT sum(quantity_delta) FROM private.inventory_movements WHERE product_id='variant' AND reason='manual_adjustment')<>4 THEN RAISE EXCEPTION 'Variant movement audit mismatch'; END IF;
+ IF (SELECT count(*) FROM public.admin_purchase_orders)<>2 THEN RAISE EXCEPTION 'Invalid draft not rolled back'; END IF;
 END $test$;
 SET ROLE authenticated;
 SET request.jwt.claim.sub='56000000-0000-4000-8000-000000000003';
