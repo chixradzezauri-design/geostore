@@ -1025,3 +1025,12 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > select { font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important; }
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-inventory-filter-state > button,.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-replenishment-filters > button { width:100%; }
 }
+
+/* Workspace audit 06 — category management */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select,button:not(.admin-video-category-actions > button)) { min-width: 0; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select,.admin-category-card button:not(.admin-video-category-actions > button)) { min-height: 44px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(h4,h5,p) { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager :is(input:not([type="file"]),select) { font-size: 16px; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-subcategory-list { padding-left: 8px; }
+}

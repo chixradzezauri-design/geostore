@@ -1953,6 +1953,8 @@ export default function AdminDashboardPro({
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
   
   const [newCatName, setNewCatName] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+  const categoryPhotoRequestRef = useRef({ create: 0, edit: 0 });
   const [newCatIcon, setNewCatIcon] = useState('Shirt');
   const [newCatImage, setNewCatImage] = useState('');
   const [selectedParentId, setSelectedParentId] = useState('');
@@ -3095,11 +3097,16 @@ export default function AdminDashboardPro({
     const input = e.target;
     const file = input.files?.[0];
     if (!file) return;
+    const slot = isEditing ? 'edit' : 'create';
+    const request = ++categoryPhotoRequestRef.current[slot];
+    const isCurrent = () => categoryPhotoRequestRef.current[slot] === request;
 
     try {
       await validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES);
+      if (!isCurrent()) return;
       const reader = new FileReader();
       reader.onload = () => {
+        if (!isCurrent()) return;
         const result = typeof reader.result === 'string' ? reader.result : '';
         if (!result || !isValidImageDataUrl(result, MAX_PRODUCT_IMAGE_BYTES)) {
           alert('ფოტოს შიგთავსის შემოწმება ვერ მოხერხდა. აირჩიეთ სწორი JPG, PNG, WEBP ან GIF.');
@@ -3111,11 +3118,13 @@ export default function AdminDashboardPro({
         input.value = '';
       };
       reader.onerror = () => {
+        if (!isCurrent()) return;
         alert('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
         input.value = '';
       };
       reader.readAsDataURL(file);
     } catch (error) {
+      if (!isCurrent()) return;
       alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
       input.value = '';
     }
@@ -3150,6 +3159,7 @@ export default function AdminDashboardPro({
     };
 
     persistCategoryList([...safeCategories, newCatObj]);
+    categoryPhotoRequestRef.current.create++;
     setNewCatName('');
     setNewCatImage('');
     setSelectedParentId('');
@@ -3187,6 +3197,7 @@ export default function AdminDashboardPro({
       : category
     );
     persistCategoryList(updatedCategories);
+    categoryPhotoRequestRef.current.edit++;
     setEditingCatId(null);
     setEditCatName('');
     setEditCatImage('');
@@ -4940,6 +4951,12 @@ export default function AdminDashboardPro({
   const setCurrentOrderPage = (page) => setOrderPageByStatus(prev => ({ ...prev, [orderStatusFilter]: page }));
 
   const mainCategories = safeCategories.filter(c => !c.parentId);
+  const categorySearchTerm = categorySearch.trim().toLocaleLowerCase();
+  const filteredMainCategories = mainCategories.filter(parent =>
+    !categorySearchTerm || parent.name.toLocaleLowerCase().includes(categorySearchTerm) ||
+    parent.id === editingCatId || safeCategories.some(child => child.parentId === parent.id &&
+      (child.name.toLocaleLowerCase().includes(categorySearchTerm) || child.id === editingCatId))
+  );
 
   const catLower = productForm.category.toLowerCase();
   const isClothing = isClothingProductCategory(productForm.category);
@@ -7162,21 +7179,21 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'categories' || adminContentTab === 'categories') && (
-          <div className="admin-category-manager space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-category-manager space-y-4">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <FolderTree className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.categoriesCreateTitle}
               </h3>
               <form onSubmit={handleAddCategory} className="admin-category-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <input type="text" placeholder="სახელწოდება *" required maxLength={60} value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
-                    <option value="">📁 მთავარი კატეგორია (Parent)</option>
+                  <input aria-label="კატეგორიის სახელწოდება" type="text" placeholder="სახელწოდება *" required maxLength={60} value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <select aria-label="მთავარი კატეგორიის არჩევა" value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
+                    <option value="">მთავარი კატეგორია</option>
                     {mainCategories.map(cat => (
                       <option key={cat.id} value={cat.id}>↳ ქვეშ: {cat.name}</option>
                     ))}
                   </select>
-                  <select value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                  <select aria-label="კატეგორიის ხატულა" value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
                     <option value="Shirt">👕 ტანსაცმელი</option>
                     <option value="Footprints">👟 ფეხსაცმელი</option>
                     <option value="Gem">💎 აქსესუარები</option>
@@ -7188,21 +7205,21 @@ export default function AdminDashboardPro({
                 </div>
 
                 <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
-                  <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
-                    <ImageIcon className="w-4 h-4 text-emerald-400" /> ატვირთეთ კატეგორიის ფოტო / ბანერი (კომპიუტერიდან / მობილურიდან):
+                  <label htmlFor="admin-category-create-photo" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
+                    <ImageIcon className="w-4 h-4 text-emerald-400" /> კატეგორიის ფოტო ან ბანერი
                   </label>
                   <input 
                     type="file" 
                     accept="image/jpeg,image/png,image/webp,image/gif" 
-                    onChange={e => handleCategoryFileChange(e, false)} 
+                    id="admin-category-create-photo" onChange={e => handleCategoryFileChange(e, false)} 
                     className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" 
                   />
                   {newCatImage && (
                     <div className="relative w-24 h-24 bg-slate-900 border border-emerald-500/30 rounded-2xl p-1.5 mt-3 shadow-lg">
-                      <img src={newCatImage} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                      <img src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
                       <button 
                         type="button" 
-                        onClick={() => setNewCatImage('')} 
+                        aria-label="ახალი ფოტოს წაშლა" onClick={() => { categoryPhotoRequestRef.current.create++; setNewCatImage(''); }} 
                         className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full w-6 h-6 text-xs font-black flex items-center justify-center shadow cursor-pointer"
                       >
                         ×
@@ -7215,31 +7232,39 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.categoriesTreeTitle}</h3>
               <p className="text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
-              <div className="admin-category-tree space-y-4">
-                {mainCategories.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
+              <div className="admin-workspace-category-toolbar grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] items-end">
+                <div className="min-w-0">
+                  <label htmlFor="admin-workspace-category-search" className="block mb-1 text-xs text-slate-300 font-bold">კატეგორიის ძიება</label>
+                  <input id="admin-workspace-category-search" type="search" value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="კატეგორია ან სუბკატეგორია" className="w-full min-h-11 min-w-0 bg-slate-950 text-white border border-slate-700 rounded-xl px-3 text-sm" />
+                </div>
+                {categorySearch && <button type="button" onClick={() => setCategorySearch('')} className="min-h-11 px-3 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">ძიების გასუფთავება</button>}
+              </div>
+              <p role="status" className="text-xs text-slate-300 break-words">მთავარი: {mainCategories.length} · სუბკატეგორიები: {safeCategories.filter(category => category.parentId).length}{categorySearchTerm ? ' · ნაჩვენები ჯგუფები: ' + filteredMainCategories.length : ''}</p>
+              <div className="admin-category-tree space-y-3">
+                {filteredMainCategories.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-6">{categorySearchTerm ? "ძიების შედეგი არ მოიძებნა." : "მთავარი კატეგორიები არ არის."}</p>
                 ) : (
-                  mainCategories.map(parentCat => {
+                  filteredMainCategories.map(parentCat => {
                     const subCats = safeCategories.filter(c => c.parentId === parentCat.id);
                     const isEditingParent = editingCatId === parentCat.id;
                     const displayImage = parentCat.image || parentCat.img;
 
                     return (
-                      <div key={parentCat.id} className="admin-category-card bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
+                      <div key={parentCat.id} className="admin-category-card bg-slate-950/60 border border-slate-700 rounded-2xl p-3 sm:p-4 space-y-3 shadow-inner">
                         <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
                           <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
                               <img src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
-                              <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">No Img</div>
+                              <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">ფოტო არ არის</div>
                             )}
                             <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">📁 მთავარი</span>
-                                <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                              <div className="min-w-0">
+                                <h4 className="font-black text-white text-sm break-words">{parentCat.name}</h4>
+                                <p className="text-slate-300 text-xs mt-1">მთავარი · {subCats.length} სუბკატეგორია</p>
                               </div>
                             </div>
                           </div>
@@ -7249,9 +7274,9 @@ export default function AdminDashboardPro({
                             <button type="button" onClick={() => moveCategory(parentCat.id, 1)} disabled={mainCategories[mainCategories.length - 1]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ქვემოთ ჩამოწევა" aria-label={`კატეგორიის ${parentCat.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-4 h-4" /></button>
                             {!isEditingParent && (
                               <button 
-                                onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(displayImage || ''); }} 
+                                onClick={() => { categoryPhotoRequestRef.current.edit++; setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(displayImage || ''); }} 
                                 className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
-                                title="რედაქტირება"
+                                type="button" aria-label={`კატეგორიის ${parentCat.name} რედაქტირება`} title="რედაქტირება"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
@@ -7267,29 +7292,39 @@ export default function AdminDashboardPro({
                               <div>
                                 <label className="text-slate-400 text-[10px] block mb-1">სახელწოდება</label>
                                 <input 
-                                  type="text" maxLength={60}
+                                  aria-label="რედაქტირებული სახელწოდება" type="text" maxLength={60}
                                   value={editCatName} 
                                   onChange={e => setEditCatName(e.target.value)} 
                                   className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
                                 />
                               </div>
                               <div>
-                                <label className="text-slate-400 text-[10px] block mb-1">ატვირთეთ ახალი ფოტო კომპიუტერიდან</label>
+                                <label className="text-slate-400 text-[10px] block mb-1">ახალი ფოტო</label>
                                 <input 
                                   type="file" 
                                   accept="image/jpeg,image/png,image/webp,image/gif" 
-                                  onChange={e => handleCategoryFileChange(e, true)} 
+                                  aria-label="ახალი კატეგორიის ფოტო" onChange={e => handleCategoryFileChange(e, true)} 
                                   className="w-full text-slate-400 text-[10px] file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                 />
                               </div>
                             </div>
-                            {editCatImage && (
-                              <div className="w-16 h-16 rounded-xl overflow-hidden border border-amber-500/30 mt-2">
-                                <img src={editCatImage} alt="Edit preview" className="w-full h-full object-cover" />
-                              </div>
-                            )}
+                            <div className="grid gap-2 sm:grid-cols-2 items-start">
+                              <select aria-label="რედაქტირებული კატეგორიის ხატულა" value={editCatIcon} onChange={e => setEditCatIcon(e.target.value)} className="w-full min-h-11 min-w-0 bg-slate-950 text-white border border-slate-700 rounded-xl px-3 text-xs">
+                                <option value="Shirt">👕 ტანსაცმელი</option>
+                    <option value="Footprints">👟 ფეხსაცმელი</option>
+                    <option value="Gem">💎 აქსესუარები</option>
+                    <option value="Smartphone">📱 სმარტფონი</option>
+                    <option value="Laptop">💻 ლეპტოპი</option>
+                    <option value="Watch">⌚ საათი</option>
+                    <option value="Sparkles">✨ სხვა</option>
+                              </select>
+                              {editCatImage && <div className="flex items-center gap-2 flex-wrap">
+                                <img src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
+                              </div>}
+                            </div>
                             <div className="flex justify-end gap-2 pt-1">
-                              <button onClick={() => setEditingCatId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
+                              <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditingCatId(null); }} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
                               <button onClick={() => handleSaveEditedCategory(parentCat.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
                             </div>
                           </div>
@@ -7301,12 +7336,12 @@ export default function AdminDashboardPro({
                               const isEditingSub = editingCatId === sub.id;
                               const subImg = sub.image || sub.img;
                               return (
-                                <div key={sub.id} className="admin-subcategory-card bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/15 space-y-2">
+                                <div key={sub.id} className="admin-subcategory-card bg-slate-950 p-3 rounded-xl border border-slate-700 space-y-2">
                                   <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
                                     <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                                       {subImg && <img src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
-                                      <span className="font-bold text-slate-200">{sub.name}</span>
+                                      <span className="font-bold text-slate-200 min-w-0 break-words">{sub.name}</span>
                                     </div>
 
                                     <div className="admin-video-category-actions flex items-center gap-1.5">
@@ -7314,9 +7349,9 @@ export default function AdminDashboardPro({
                                       <button type="button" onClick={() => moveCategory(sub.id, 1)} disabled={subCats[subCats.length - 1]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ქვემოთ ჩამოწევა" aria-label={`სუბკატეგორიის ${sub.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-3.5 h-3.5" /></button>
                                       {!isEditingSub && (
                                         <button 
-                                          onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(subImg || ''); }} 
+                                          onClick={() => { categoryPhotoRequestRef.current.edit++; setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(subImg || ''); }} 
                                           className="p-1.5 bg-slate-900 text-amber-400 rounded-lg cursor-pointer"
-                                          title="სუბკატეგორიის რედაქტირება"
+                                          type="button" aria-label={`სუბკატეგორიის ${sub.name} რედაქტირება`} title="სუბკატეგორიის რედაქტირება"
                                         >
                                           <Edit3 className="w-3.5 h-3.5" />
                                         </button>
@@ -7329,7 +7364,7 @@ export default function AdminDashboardPro({
                                     <div className="bg-slate-900 p-3 rounded-xl border border-amber-500/30 space-y-2.5 animate-in fade-in">
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <input 
-                                          type="text" maxLength={60}
+                                          aria-label="რედაქტირებული სახელწოდება" type="text" maxLength={60}
                                           value={editCatName} 
                                           onChange={e => setEditCatName(e.target.value)} 
                                           placeholder="სახელი"
@@ -7338,12 +7373,27 @@ export default function AdminDashboardPro({
                                         <input 
                                           type="file" 
                                           accept="image/jpeg,image/png,image/webp,image/gif" 
-                                          onChange={e => handleCategoryFileChange(e, true)} 
+                                          aria-label="ახალი კატეგორიის ფოტო" onChange={e => handleCategoryFileChange(e, true)} 
                                           className="w-full text-slate-400 text-[10px] file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                         />
                                       </div>
+                                      <div className="grid gap-2 sm:grid-cols-2 items-start">
+                              <select aria-label="რედაქტირებული კატეგორიის ხატულა" value={editCatIcon} onChange={e => setEditCatIcon(e.target.value)} className="w-full min-h-11 min-w-0 bg-slate-950 text-white border border-slate-700 rounded-xl px-3 text-xs">
+                                <option value="Shirt">👕 ტანსაცმელი</option>
+                    <option value="Footprints">👟 ფეხსაცმელი</option>
+                    <option value="Gem">💎 აქსესუარები</option>
+                    <option value="Smartphone">📱 სმარტფონი</option>
+                    <option value="Laptop">💻 ლეპტოპი</option>
+                    <option value="Watch">⌚ საათი</option>
+                    <option value="Sparkles">✨ სხვა</option>
+                              </select>
+                              {editCatImage && <div className="flex items-center gap-2 flex-wrap">
+                                <img src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
+                              </div>}
+                            </div>
                                       <div className="flex justify-end gap-2">
-                                        <button onClick={() => setEditingCatId(null)} className="px-2.5 py-1 bg-slate-950 text-slate-400 rounded-lg text-[10px]">გაუქმება</button>
+                                        <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditingCatId(null); }} className="px-2.5 py-1 bg-slate-950 text-slate-400 rounded-lg text-[10px]">გაუქმება</button>
                                         <button onClick={() => handleSaveEditedCategory(sub.id)} className="px-3 py-1 bg-amber-400 text-slate-950 rounded-lg font-black text-[10px]">შენახვა</button>
                                       </div>
                                     </div>

@@ -41,3 +41,10 @@ test('workspace audit 05 inventory filters are read-only and recommendations dis
  for(const term of ['admin-workspace-inventory-products','admin-workspace-inventory-filter-state','setInventoryMovementProductFilter(\'\')','replenishmentStockFilter','position.isOutOfStock','replenishmentSummaryVerified','admin-workspace-replenishment-filter','setReplenishmentPage(1)','saveInventoryReplenishmentSetting(position)','recoverInventoryReplenishmentConflict(position.key)','fetchInventoryMovements(inventoryMovementCursor, true)'])assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('Workspace audit 05'));assert.ok(css.includes('.admin-workspace-inventory-name'));
 });
+
+test('workspace audit 06 category search preserves sibling order and existing product safeguards',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ for(const term of ['filteredMainCategories.map(parentCat => {','child.parentId === parent.id','admin-workspace-category-search','setCategorySearch(\'\')','mainCategories[0]?.id === parentCat.id','subCats[0]?.id === sub.id','assignedProducts.length > 0','assignedCount > 0','categoryPhotoRequestRef.current.edit++','value={editCatIcon}','validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES)','persistCategoryList(updatedCategories)'])assert.ok(jsx.includes(term),term);
+ assert.equal((jsx.match(/aria-label="რედაქტირებული კატეგორიის ხატულა"/g)||[]).length,2);
+ assert.ok(css.includes('Workspace audit 06'));
+});
