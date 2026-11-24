@@ -649,7 +649,7 @@ export default function StoreView({
               return (
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <button type="button" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 w-full flex items-center justify-center cursor-pointer overflow-hidden">
-                    {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
+                    {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="gs-video-flash-image h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
                     <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </button>
                   <div className="py-3 space-y-1.5">
@@ -1167,13 +1167,13 @@ export default function StoreView({
 
                   {availableSizesForSelectedColor.length > 0 && (
                     <div data-visual-editor-target="product.detail.variants" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.variants')} className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
-                      <div className="flex justify-between items-center flex-wrap gap-2">
+                      <div className="gs-video-size-heading flex justify-between items-center flex-wrap gap-2">
                         <span className="text-slate-300 font-bold">{storeText.sizePrompt} <b className="text-amber-400">{selectedSize}</b></span>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => setIsSmartSizeModalOpen(true)} className="text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-amber-500/20 transition shadow">
+                        <div className="gs-video-size-tools flex items-center gap-2">
+                          <button type="button" onClick={() => setIsSmartSizeModalOpen(true)} className="text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-amber-500/20 transition shadow">
                             <Calculator className="w-3.5 h-3.5 text-amber-400" /> {storeText.smartSize}
                           </button>
-                          <button onClick={() => setIsSizeGuideOpen(true)} className="text-slate-400 hover:text-white font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
+                          <button type="button" onClick={() => setIsSizeGuideOpen(true)} className="text-slate-400 hover:text-white font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
                             <Ruler className="w-3.5 h-3.5" /> {storeText.sizeGuide}
                           </button>
                         </div>

@@ -619,9 +619,9 @@ export default function Modals({
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
       {isTrackerOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--tracker fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div ref={trackerDialogRef} className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+          <div ref={trackerDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-video-tracker-title" className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
+              <h3 id="gs-video-tracker-title" className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
               </h3>
               <button type="button" aria-label={copy.close} onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
