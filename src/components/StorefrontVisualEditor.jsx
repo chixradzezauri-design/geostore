@@ -1,3 +1,4 @@
+import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -1294,6 +1295,7 @@ export default function StorefrontVisualEditor({
             <div className="mt-4 space-y-2">
               <p className="text-xs text-slate-400">თანმიმდევრობა: {previewMode==='desktop'?'კომპიუტერი / საერთო':previewMode==='tablet'?'ტაბლეტი':'მობილური'} · სექციების ჩართვა/გამორთვა საერთო რჩება.</p>
               {previewMode!=='desktop'&&<div className="flex flex-wrap gap-2 items-center"><span className="text-xs text-slate-300">{design.responsive?.[previewMode]?.sectionOrder?'ინდივიდუალური რიგი':'საერთო რიგის მემკვიდრეობა'}</span><button type="button" disabled={!design.responsive?.[previewMode]?.sectionOrder} onClick={()=>{const next=inheritStorefrontSectionOrder(designRef.current,previewMode);if(next)commitDesign(next);}} className="min-h-11 rounded-lg border border-slate-700 px-3 py-2 text-xs text-white disabled:opacity-40">საერთო რიგის აღდგენა</button></div>}
+              <StorefrontSectionGeometry design={design} viewport={previewMode} labels={SECTION_LABELS} onChange={commitDesign}/>
               {currentSectionOrder.map((id, index) => (
                 <div
                   key={id}

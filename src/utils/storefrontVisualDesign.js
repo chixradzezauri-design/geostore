@@ -341,6 +341,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     },
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
     sectionOrder,
+    sectionGeometry: normalizeSectionGeometry(raw.sectionGeometry),
     productOrder,
     customSections: normalizeStorefrontCustomSections(raw.customSections),
     designTemplates: normalizeStorefrontDesignTemplates(raw.designTemplates),
@@ -360,6 +361,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       return [viewport, {
         layout: normalizeResponsiveLayout(responsive.layout),
         ...(validSectionOrder(responsive.sectionOrder)?{sectionOrder:[...responsive.sectionOrder]}:{}),
+        sectionGeometry: normalizeSectionGeometry(responsive.sectionGeometry),
         theme: Object.fromEntries(Object.keys(defaults.theme).map(key => [key,
           responsiveTheme[key] == null ? '' : safeColor(responsiveTheme[key], '')
         ]).filter(([, value]) => value)),
@@ -585,4 +587,42 @@ export function renameStorefrontDesignTemplate(raw,id,name){
 export function deleteStorefrontDesignTemplate(raw,id){
  const d=normalizeStorefrontVisualDesign(raw);
  return normalizeStorefrontVisualDesign({...d,designTemplates:d.designTemplates.filter(t=>t.id!==id)});
+}
+
+const SECTION_GEOMETRY_LIMITS={marginTop:[0,72],maxWidth:[85,100]};
+function normalizeSectionGeometry(raw){
+ const result={};
+ if(!isPlainObject(raw))return result;
+ for(const id of SECTION_IDS){
+  const value=raw[id];if(!isPlainObject(value))continue;
+  const safe={};
+  for(const [key,[min,max]] of Object.entries(SECTION_GEOMETRY_LIMITS)){
+   const n=value[key];
+   if(typeof n==='number'&&Number.isFinite(n))safe[key]=Math.round(Math.max(min,Math.min(max,n)));
+  }
+  if(Object.keys(safe).length)result[id]=safe;
+ }
+ return result;
+}
+export function getStorefrontSectionGeometry(raw,id,viewport='desktop'){
+ if(!SECTION_IDS.includes(id))return {};
+ const base=normalizeSectionGeometry(raw?.sectionGeometry)[id]||{};
+ const override=['tablet','mobile'].includes(viewport)?normalizeSectionGeometry(raw?.responsive?.[viewport]?.sectionGeometry)[id]||{}:{};
+ return {...base,...override};
+}
+export function setStorefrontSectionGeometry(raw,id,viewport,key,value){
+ if(!SECTION_IDS.includes(id)||!['desktop','tablet','mobile'].includes(viewport)||!Object.hasOwn(SECTION_GEOMETRY_LIMITS,key))return null;
+ const [min,max]=SECTION_GEOMETRY_LIMITS[key];
+ if(value!==null&&(!Number.isInteger(value)||value<min||value>max))return null;
+ const d=normalizeStorefrontVisualDesign(raw);
+ const geometry={...(viewport==='desktop'?d.sectionGeometry:d.responsive[viewport].sectionGeometry)};
+ const row={...geometry[id]};if(value===null)delete row[key];else row[key]=value;
+ if(Object.keys(row).length)geometry[id]=row;else delete geometry[id];
+ return normalizeStorefrontVisualDesign(viewport==='desktop'?{...d,sectionGeometry:geometry}:{...d,responsive:{...d.responsive,[viewport]:{...d.responsive[viewport],sectionGeometry:geometry}}});
+}
+export function buildStorefrontSectionGeometryProps(raw,id,viewport,{secondary=false}={}){
+ const g=getStorefrontSectionGeometry(raw,id,viewport),style={};
+ if(g.marginTop!==undefined&&!secondary)style['--gs-section-margin-top']=g.marginTop+'px';
+ if(g.maxWidth!==undefined)style['--gs-section-max-width']=g.maxWidth+'%';
+ return {style,...(Object.hasOwn(style,'--gs-section-margin-top')?{'data-gs-section-margin':'true'}:{}),...(Object.hasOwn(style,'--gs-section-max-width')?{'data-gs-section-width':'true'}:{})};
 }
