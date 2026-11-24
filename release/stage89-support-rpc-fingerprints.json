@@ -1,0 +1,82 @@
+[
+  {
+    "schema": "private",
+    "name": "add_support_ticket_message_idempotent",
+    "signature": "private.add_support_ticket_message_idempotent(p_ticket_id text, p_message text, p_access_token text, p_request_id uuid)",
+    "md5": "c42f458e01b2b6d84b4e83ee6f2fef28",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "private",
+    "name": "get_my_support_tickets_page",
+    "signature": "private.get_my_support_tickets_page(p_limit integer, p_before_last_message_at timestamp with time zone, p_before_ticket_id text)",
+    "md5": "611c769b6ad0c8b94b8f7bb77f2ca3df",
+    "anon": false,
+    "auth": true
+  },
+  {
+    "schema": "private",
+    "name": "get_support_ticket_messages",
+    "signature": "private.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+    "md5": "acb5b90b297b07c2b0681d6a29097932",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "private",
+    "name": "get_support_ticket_status",
+    "signature": "private.get_support_ticket_status(p_ticket_id text, p_access_token text)",
+    "md5": "2c940c9d658cb637c7a5d786cf67101e",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "private",
+    "name": "mark_support_ticket_messages_read",
+    "signature": "private.mark_support_ticket_messages_read(p_ticket_id text, p_access_token text)",
+    "md5": "5fdab1ba72ed2898b2d4df3f7f5d2c83",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "public",
+    "name": "add_support_ticket_message_idempotent",
+    "signature": "public.add_support_ticket_message_idempotent(p_ticket_id text, p_message text, p_access_token text, p_request_id uuid)",
+    "md5": "a4e6d697bfcaad4036863d0fbcf10b00",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "public",
+    "name": "get_my_support_tickets_page",
+    "signature": "public.get_my_support_tickets_page(p_limit integer, p_before_last_message_at timestamp with time zone, p_before_ticket_id text)",
+    "md5": "f8728928a3ba45e61df529e7a1faa219",
+    "anon": false,
+    "auth": true
+  },
+  {
+    "schema": "public",
+    "name": "get_support_ticket_messages",
+    "signature": "public.get_support_ticket_messages(p_ticket_id text, p_access_token text)",
+    "md5": "fcd13ba9a9404172863a52c0310c1e44",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "public",
+    "name": "get_support_ticket_status",
+    "signature": "public.get_support_ticket_status(p_ticket_id text, p_access_token text)",
+    "md5": "5c74c249861e99baba02a33d5ead148f",
+    "anon": true,
+    "auth": true
+  },
+  {
+    "schema": "public",
+    "name": "mark_support_ticket_messages_read",
+    "signature": "public.mark_support_ticket_messages_read(p_ticket_id text, p_access_token text)",
+    "md5": "866f32be7d5c4e65e69ffa67305fa4e1",
+    "anon": true,
+    "auth": true
+  }
+]
