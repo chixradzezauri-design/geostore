@@ -5,6 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createClient} from '@supabase/supabase-js';
 import {fetchVerifiedAdminOrderLedger} from '../src/utils/adminOrderLedgerSafety.js';
+import {requireProjectionReady} from './stage90ProjectionReady.mjs';
 const {API_URL,ANON_KEY,SERVICE_ROLE_KEY}=process.env;
 assert.ok(API_URL&&ANON_KEY&&SERVICE_ROLE_KEY);
 const target=new URL(API_URL);
@@ -72,13 +73,20 @@ async function projection(who){
   loadSession:async()=>({data:{session:{user:{id:who.id},access_token:who.token}},error:null})});
 }
 async function verifyNew(){
+ // Committed DDL is not proof that PostgREST has refreshed its API schema.
+ // Probe the two read-only RPCs before using the unchanged actual loader.
+ const readyLedger=await requireProjectionReady(()=>staff.api.rpc('admin_order_ledger_page',{p_offset:0,p_limit:1}));
+ ok(Array.isArray(readyLedger),'Orders projection HTTP schema ready');
+ const readyImages=await requireProjectionReady(()=>products.api.rpc('admin_order_image_refs_page',{p_offset:0,p_limit:1}));
+ ok(Array.isArray(readyImages),'Image projection HTTP schema ready');
  const rows=await projection(staff);checks++;
  ok(rows.some(x=>x.id===id&&!('purchase_cost' in x.items[0])),'Actual new frontend loader signed and cost redacted');
  const fr=await projection(finance);checks++;
  ok(fr.some(x=>x.id===id&&x.items[0].purchase_cost===40),'Actual new frontend finance scope preserved');
  const refs=good(await products.api.rpc('admin_order_image_refs_page',{p_offset:0,p_limit:100}),'New products image refs');
  ok(refs.every(x=>Object.keys(x).join(',')==='items'),'Only projected image references');
- ok(Boolean((await anon.rpc('admin_order_ledger_page',{p_offset:0,p_limit:10})).error),'Anonymous ledger denied');
+ const guestResult=await anon.rpc('admin_order_ledger_page',{p_offset:0,p_limit:10});
+ ok(Boolean(guestResult.error)&&['42501','PGRST202'].includes(guestResult.error.code),'Anonymous ledger denied by permission or nonexposed RPC');
 }
 await verifyNew();
 preserved();

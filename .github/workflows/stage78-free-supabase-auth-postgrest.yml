@@ -30,6 +30,7 @@ on:
       - 'scripts/stage88SignedSupportStaffHttp.mjs'
       - 'scripts/stage89SupportRpcHttp.mjs'
       - 'scripts/stage90ReleaseSequence.mjs'
+      - 'scripts/stage90ProjectionReady.mjs'
       - 'tests/stage90ReleaseSequence.test.js'
       - 'docs/stage90-release-sequence.md'
       - 'release/stage89-support-rpc-fingerprints.json'
