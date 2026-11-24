@@ -22,13 +22,20 @@ export function verifyPaymentSnapshot(data,order){
  const received=order.admin_purchase_lines.reduce((sum,l)=>sum+BigInt(Math.round(l.unit_cost*100))*BigInt(l.received_quantity),0n);
  const paid=BigInt(data.paid_tetri),count=BigInt(data.payment_count);
  if(received!==BigInt(data.received_tetri)||paid+BigInt(data.balance_tetri)!==received||data.has_more!==(count>100n)||BigInt(data.payments.length)!==(count>100n?100n:count))throw Error('გადახდის ჯამები არ ემთხვევა შესყიდვას.');
- const ids=new Set(),refs=new Set(),revisions=new Set();let sum=0n;
+ const ids=new Set(),refs=new Set(),revisions=new Set(),correctionIds=new Set();let sum=0n,corrected=0n;
+ const correctionCount=data.correction_count??'0';
+ if(!decimal(correctionCount)||BigInt(correctionCount)>count)throw Error('კორექტირების რაოდენობა არასწორია.');
  for(const record of data.payments){
   verifyRecord(record,order.id);const ref=record.reference.toLowerCase();
   if(ids.has(record.id)||refs.has(ref)||revisions.has(record.recorded_revision)||BigInt(record.recorded_revision)>BigInt(order.revision))throw Error('გადახდის დუბლირებული ან შეცვლილი ჩანაწერი.');
-  ids.add(record.id);refs.add(ref);revisions.add(record.recorded_revision);sum+=BigInt(record.amount_tetri);
+  ids.add(record.id);refs.add(ref);revisions.add(record.recorded_revision);
+  const c=record.correction;
+  if(c!=null){
+   if(!uuid(c.id)||correctionIds.has(c.id)||typeof c.reason!=='string'||c.reason.trim()!==c.reason||c.reason.length<5||c.reason.length>300||!decimal(c.recorded_revision)||BigInt(c.recorded_revision)<=BigInt(record.recorded_revision)||BigInt(c.recorded_revision)>BigInt(order.revision)||revisions.has(c.recorded_revision)||!Number.isFinite(Date.parse(c.recorded_at)))throw Error('კორექტირების ისტორია ვერ დადასტურდა.');
+   correctionIds.add(c.id);revisions.add(c.recorded_revision);corrected++;
+  }else sum+=BigInt(record.amount_tetri);
  }
- if(sum>paid||(!data.has_more&&sum!==paid)||(data.has_more&&sum>=paid))throw Error('გადახდის ისტორია არასრულია.');
+ if(corrected>BigInt(correctionCount)||(!data.has_more&&corrected!==BigInt(correctionCount))||sum>paid||(!data.has_more&&sum!==paid))throw Error('გადახდის ისტორია არასრულია.');
  return data;
 }
 export function paymentMatches(record,operation){

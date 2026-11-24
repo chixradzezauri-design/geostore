@@ -86,6 +86,27 @@ BEGIN
  IF result->>'paid_tetri'<>'3725' OR result->>'balance_tetri'<>'0' OR result->>'payment_count'<>'2' OR jsonb_array_length(result->'payments')<>2 THEN RAISE EXCEPTION 'Settled balance mismatch'; END IF;
  BEGIN UPDATE public.admin_purchase_payments SET amount_tetri=1 WHERE id=p; RAISE EXCEPTION 'Direct payment write allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $payment_test$;
+DO $correction_test$
+DECLARE po uuid:='10000000-0000-4000-8000-000000000001'; p uuid:='40000000-0000-4000-8000-000000000001'; c uuid:='50000000-0000-4000-8000-000000000001'; s uuid; rev bigint; result jsonb;
+BEGIN
+ SELECT revision,supplier_id INTO rev,s FROM public.admin_purchase_orders WHERE id=po;
+ result:=public.admin_correct_purchase_payment(po,p,c,rev,'Duplicate payment entry');
+ IF result->>'amount_tetri'<>'1000' OR result->>'idempotent_replay'<>'false' THEN RAISE EXCEPTION 'Correction snapshot mismatch'; END IF;
+ result:=public.admin_correct_purchase_payment(po,p,c,rev,'Duplicate payment entry');
+ IF result->>'idempotent_replay'<>'true' THEN RAISE EXCEPTION 'Correction retry failed'; END IF;
+ BEGIN PERFORM public.admin_correct_purchase_payment(po,p,c,rev,'Different reason'); RAISE EXCEPTION 'Changed replay accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ rev:=rev+1;
+ BEGIN PERFORM public.admin_correct_purchase_payment(po,p,gen_random_uuid(),rev,'Second correction'); RAISE EXCEPTION 'Double correction accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_correct_purchase_payment('10000000-0000-4000-8000-000000000009',p,gen_random_uuid(),rev,'Wrong purchase'); RAISE EXCEPTION 'Cross-purchase correction allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ result:=public.admin_read_purchase_payments(po);
+ IF result->>'paid_tetri'<>'2725' OR result->>'balance_tetri'<>'1000' OR result->>'correction_count'<>'1' OR result->>'payment_count'<>'2' THEN RAISE EXCEPTION 'Corrected balance mismatch: %',result; END IF;
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(result->'payments') e(item) WHERE item->>'id'=p::text AND item->'correction'->>'id'=c::text) THEN RAISE EXCEPTION 'Correction history missing'; END IF;
+ result:=public.admin_read_supplier_balance(s);
+ IF result->>'received_tetri'<>'7425' OR result->>'paid_tetri'<>'2725' OR result->>'balance_tetri'<>'4700' OR result->>'purchase_count'<>'2' THEN RAISE EXCEPTION 'Supplier balance mismatch: %',result; END IF;
+ IF public.admin_read_supplier_balance(NULL)->>'balance_tetri'<>'4700' THEN RAISE EXCEPTION 'Global balance mismatch'; END IF;
+ PERFORM public.admin_record_purchase_payment(po,gen_random_uuid(),rev,'1000','bank_transfer','test-003-corrected');
+ IF public.admin_read_purchase_payments(po)->>'balance_tetri'<>'0' THEN RAISE EXCEPTION 'Replacement payment failed'; END IF;
+END $correction_test$;
 RESET ROLE;
 DO $test$
 BEGIN
@@ -101,6 +122,8 @@ SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
 DO $test$
 BEGIN
  IF EXISTS(SELECT 1 FROM public.admin_suppliers) OR EXISTS(SELECT 1 FROM public.admin_purchase_orders) OR EXISTS(SELECT 1 FROM public.admin_purchase_lines) OR EXISTS(SELECT 1 FROM public.admin_purchase_receipts) THEN RAISE EXCEPTION 'Non-owner read'; END IF;
+ BEGIN PERFORM public.admin_read_supplier_balance(NULL); RAISE EXCEPTION 'Non-owner supplier balance'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+ BEGIN PERFORM public.admin_correct_purchase_payment('10000000-0000-4000-8000-000000000001',gen_random_uuid(),gen_random_uuid(),1,'Staff correction'); RAISE EXCEPTION 'Non-owner correction'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM public.admin_read_purchase_payments('10000000-0000-4000-8000-000000000001'); RAISE EXCEPTION 'Non-owner payment read'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM public.admin_record_purchase_payment('10000000-0000-4000-8000-000000000001',gen_random_uuid(),1,'1','cash','staff'); RAISE EXCEPTION 'Non-owner payment write'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM public.admin_create_purchase(gen_random_uuid(),gen_random_uuid(),'[]'); RAISE EXCEPTION 'Non-owner RPC allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
@@ -113,7 +136,9 @@ END $test$;
 DO $payment_privileges$
 BEGIN
  IF has_function_privilege('anon','public.admin_record_purchase_payment(uuid,uuid,bigint,text,text,text)','EXECUTE') OR has_function_privilege('anon','public.admin_read_purchase_payments(uuid)','EXECUTE') OR has_table_privilege('authenticated','public.admin_purchase_payments','SELECT') THEN RAISE EXCEPTION 'Payment privilege leak'; END IF;
- IF (SELECT count(*) FROM public.admin_purchase_payments)<>2 THEN RAISE EXCEPTION 'Unexpected payment count'; END IF;
+ IF (SELECT count(*) FROM public.admin_purchase_payments)<>3 OR (SELECT count(*) FROM public.admin_purchase_payment_corrections)<>1 THEN RAISE EXCEPTION 'Unexpected audit count'; END IF;
+ IF has_function_privilege('anon','public.admin_correct_purchase_payment(uuid,uuid,uuid,bigint,text)','EXECUTE') OR has_function_privilege('anon','public.admin_read_supplier_balance(uuid)','EXECUTE') OR has_table_privilege('authenticated','public.admin_purchase_payment_corrections','SELECT') THEN RAISE EXCEPTION 'Correction privilege leak'; END IF;
+ BEGIN DELETE FROM public.admin_purchase_payment_corrections; RAISE EXCEPTION 'Correction deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
  BEGIN DELETE FROM public.admin_purchase_payments; RAISE EXCEPTION 'Payment audit deletion allowed'; EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL; END;
 END $payment_privileges$;
 \echo 'PASS supplier, purchase and payment contract (isolated)'

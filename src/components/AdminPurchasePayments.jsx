@@ -32,8 +32,8 @@ export default function AdminPurchasePayments({order,adminUserId,loadSession,sup
    <h6 className="text-xs font-bold text-white">გადახდის ისტორია ({snapshot.payment_count})</h6>
    {snapshot.has_more&&<p className="text-xs text-amber-200">ნაჩვენებია ბოლო 100 ჩანაწერი; ჯამები მოიცავს სრულ ისტორიას.</p>}
    {!snapshot.payments.length&&<p className="text-xs text-slate-400">გადახდა ჯერ არ დაფიქსირებულა.</p>}
-   {snapshot.payments.map(p=><div key={p.id} className="rounded-lg border border-slate-700 p-2 text-xs text-slate-300 break-words"><strong className="text-white">{money(p.amount_tetri)}</strong> · {paymentMethods[p.method]} · {p.recorded_at.slice(0,10)}<p className="break-all">{p.reference}</p></div>)}
-   <p className="text-xs text-slate-400">წინასწარი გადახდა და ჩანაწერის პირდაპირი წაშლა დაუშვებელია. შეცდომის კორექტირების ცალკე მექანიზმი ჯერ არ არის ჩართული.</p>
+   {snapshot.payments.map(p=><div key={p.id} className="rounded-lg border border-slate-700 p-2 text-xs text-slate-300 break-words"><strong className="text-white">{money(p.amount_tetri)}</strong> · {paymentMethods[p.method]} · {p.recorded_at.slice(0,10)}<p className="break-all">{p.reference}</p>{p.correction&&<p className="text-xs text-amber-200 break-words">კორექტირებულია · {p.correction.reason} · {p.correction.recorded_at.slice(0,10)}</p>}</div>)}
+   <p className="text-xs text-slate-400">წინასწარი გადახდა და ჩანაწერის პირდაპირი წაშლა დაუშვებელია. კორექტირებული გადახდა ჯამში აღარ შედის. ახალი კორექტირების ფორმა ჯერ არ არის ჩართული.</p>
   </>}
  </section>;
 }

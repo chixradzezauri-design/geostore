@@ -36,3 +36,11 @@ test('payment API preserves UUID, decimal string and original revision; guards o
  assert.equal(await api.payments({...order,revision:4}),snapshot);
  await assert.rejects(createAdminPurchaseApi({...config,expectedUserId:'other'}).recordPayment(operation));assert.equal(calls,2);
 });
+
+test('corrected payments retain original evidence but are excluded from net paid',()=>{
+ const correction={id:'30000000-0000-4000-8000-000000000001',reason:'Duplicate record',recorded_at:'2026-11-24T12:01:00Z',recorded_revision:'5'};
+ const corrected={...snapshot,revision:'5',paid_tetri:'0',balance_tetri:'850',correction_count:'1',payments:[{...record,correction}]};
+ assert.equal(verifyPaymentSnapshot(corrected,{...order,revision:5}),corrected);
+ assert.throws(()=>verifyPaymentSnapshot({...corrected,correction_count:'0'},{...order,revision:5}));
+ assert.throws(()=>verifyPaymentSnapshot({...corrected,paid_tetri:'100',balance_tetri:'750'},{...order,revision:5}));
+});
