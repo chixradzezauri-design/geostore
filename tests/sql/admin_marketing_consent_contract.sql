@@ -59,4 +59,52 @@ DO $test$ BEGIN
  IF EXISTS(SELECT 1 FROM private.marketing_email_consent_events WHERE user_id='10000000-0000-4000-8000-000000000001') THEN RAISE EXCEPTION 'Account deletion cleanup failed'; END IF;
  IF has_table_privilege('authenticated','private.marketing_email_consent_events','SELECT') OR has_function_privilege('anon','public.set_my_marketing_email_consent(uuid,boolean,text)','EXECUTE') OR has_function_privilege('anon','public.admin_marketing_consent_summary()','EXECUTE') THEN RAISE EXCEPTION 'Consent privilege leak'; END IF;
 END $test$;
-\echo 'PASS marketing consent contract (isolated)'
+-- Segment fixture uses real account/CRM/staff/order column contracts, no live rows.
+ALTER TABLE auth.users ADD COLUMN created_at timestamptz DEFAULT now(), ADD COLUMN banned_until timestamptz, ADD COLUMN raw_app_meta_data jsonb DEFAULT '{}', ADD COLUMN is_anonymous boolean DEFAULT false, ADD COLUMN deleted_at timestamptz;
+CREATE TABLE private.admin_customer_crm_profiles(user_id uuid PRIMARY KEY,is_vip boolean,is_blocked boolean);
+CREATE TABLE public.admin_staff_members(user_id uuid PRIMARY KEY);
+CREATE TABLE public.orders(id text PRIMARY KEY,user_id uuid,status text,created_at timestamptz);
+INSERT INTO auth.users(id,email,email_confirmed_at,created_at) VALUES
+ ('10000000-0000-4000-8000-000000000003','repeat@example.invalid',now(),now()-interval '200 days'),
+ ('10000000-0000-4000-8000-000000000004','new@example.invalid',now(),now()),
+ ('10000000-0000-4000-8000-000000000005','blocked@example.invalid',now(),now()),
+ ('10000000-0000-4000-8000-000000000006','staff@example.invalid',now(),now()),
+ ('10000000-0000-4000-8000-000000000007','repeat@example.invalid',now(),now()-interval '200 days');
+INSERT INTO private.admin_customer_crm_profiles VALUES
+ ('10000000-0000-4000-8000-000000000003',true,false),
+ ('10000000-0000-4000-8000-000000000005',true,true);
+INSERT INTO public.admin_staff_members VALUES ('10000000-0000-4000-8000-000000000006');
+INSERT INTO public.orders VALUES
+ ('old1','10000000-0000-4000-8000-000000000003','დასრულებული',now()-interval '120 days'),
+ ('old2','10000000-0000-4000-8000-000000000003','completed',now()-interval '100 days'),
+ ('cancel','10000000-0000-4000-8000-000000000004','გაუქმებული',now()),
+ ('new1','10000000-0000-4000-8000-000000000005','delivered',now());
+\ir ../../release/staged-marketing-segments.sql
+SET ROLE authenticated;
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000003';
+SET request.jwt.claim.jwt='{}';
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000004';
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000005';
+SELECT public.set_my_marketing_email_consent(gen_random_uuid(),true,'email-marketing-v1');
+DO $test$ BEGIN
+ BEGIN PERFORM public.admin_marketing_segments(); RAISE EXCEPTION 'Customer segment read allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $test$;
+SET request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE r jsonb;
+BEGIN
+ r:=public.admin_marketing_segments()->'segments';
+ IF r->'all'->>'accounts'<>'5' OR r->'all'->>'consent_candidates'<>'1'
+ OR r->'vip'->>'accounts'<>'2' OR r->'vip'->>'consent_candidates'<>'0'
+ OR r->'repeat'->>'accounts'<>'1' OR r->'inactive'->>'accounts'<>'1'
+ OR r->'no_purchase'->>'accounts'<>'3' OR r->'one_purchase'->>'accounts'<>'1'
+ OR r->'new'->>'consent_candidates'<>'1' THEN RAISE EXCEPTION 'Segment mismatch: %',r; END IF;
+END $test$;
+RESET ROLE;
+DO $test$ BEGIN
+ IF has_function_privilege('anon','public.admin_marketing_segments()','EXECUTE') THEN RAISE EXCEPTION 'Anonymous segment access'; END IF;
+END $test$;
+\echo 'PASS marketing consent and segment contract (isolated)'
