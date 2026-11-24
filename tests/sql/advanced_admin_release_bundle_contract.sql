@@ -77,9 +77,62 @@ END)
 REVOKE ALL ON public.products FROM PUBLIC,anon,authenticated;
 CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz,created_at timestamptz DEFAULT now(),banned_until timestamptz,raw_app_meta_data jsonb DEFAULT '{}',is_anonymous boolean DEFAULT false,deleted_at timestamptz);
 REVOKE ALL ON auth.users FROM PUBLIC,anon,authenticated;
-CREATE TABLE private.admin_customer_crm_profiles(user_id uuid PRIMARY KEY,is_vip boolean,is_blocked boolean);
-CREATE TABLE public.admin_staff_members(user_id uuid PRIMARY KEY,email text NOT NULL,display_name text NOT NULL,role text NOT NULL);
-CREATE TABLE public.orders(id text PRIMARY KEY,user_id uuid,status text,created_at timestamptz,customer_name text NOT NULL,phone text NOT NULL,address text NOT NULL,total_gel numeric NOT NULL,items jsonb DEFAULT '[]');
+-- Live column/default/constraint metadata only; local fixture.
+CREATE TABLE private.admin_customer_crm_profiles (
+ user_id uuid NOT NULL,
+ is_vip boolean NOT NULL DEFAULT false,
+ is_blocked boolean NOT NULL DEFAULT false,
+ discount_percent numeric(5,2) NOT NULL DEFAULT 0,
+ admin_notes text NOT NULL DEFAULT ''::text,
+ created_at timestamp with time zone NOT NULL DEFAULT now(),
+ updated_at timestamp with time zone NOT NULL DEFAULT now(),
+ CONSTRAINT admin_customer_crm_profiles_admin_notes_check CHECK ((char_length(admin_notes) <= 1000)),
+ CONSTRAINT admin_customer_crm_profiles_discount_percent_check CHECK (((discount_percent >= (0)::numeric) AND (discount_percent <= (100)::numeric))),
+ CONSTRAINT admin_customer_crm_profiles_pkey PRIMARY KEY (user_id)
+);
+-- Live column/default/constraint metadata only; local fixture.
+CREATE TABLE public.admin_staff_members (
+ id uuid NOT NULL DEFAULT gen_random_uuid(),
+ user_id uuid NOT NULL,
+ email text NOT NULL,
+ display_name text NOT NULL,
+ role text NOT NULL,
+ permissions jsonb NOT NULL DEFAULT '{}'::jsonb,
+ is_active boolean NOT NULL DEFAULT true,
+ invited_by uuid,
+ created_at timestamp with time zone NOT NULL DEFAULT now(),
+ updated_at timestamp with time zone NOT NULL DEFAULT now(),
+ CONSTRAINT admin_staff_display_name_length CHECK (((char_length(btrim(display_name)) >= 2) AND (char_length(btrim(display_name)) <= 100))),
+ CONSTRAINT admin_staff_email_normalized CHECK (((email = lower(btrim(email))) AND (POSITION(('@'::text) IN (email)) > 1) AND (POSITION((' '::text) IN (email)) = 0))),
+ CONSTRAINT admin_staff_members_invited_by_fkey FOREIGN KEY (invited_by) REFERENCES auth.users(id) ON DELETE SET NULL,
+ CONSTRAINT admin_staff_members_permissions_check CHECK ((jsonb_typeof(permissions) = 'object'::text)),
+ CONSTRAINT admin_staff_members_pkey PRIMARY KEY (id),
+ CONSTRAINT admin_staff_members_role_check CHECK ((role = ANY (ARRAY['manager'::text, 'operator'::text, 'finance'::text, 'product_manager'::text]))),
+ CONSTRAINT admin_staff_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+ CONSTRAINT admin_staff_members_user_id_key UNIQUE (user_id)
+);
+-- Live column/default/constraint metadata only; local fixture.
+CREATE TABLE public.orders (
+ id text NOT NULL,
+ customer_name text NOT NULL,
+ phone text NOT NULL,
+ address text NOT NULL,
+ user_email text,
+ items jsonb,
+ total_gel numeric NOT NULL,
+ status text NOT NULL DEFAULT 'ახალი'::text,
+ created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+ stock_deducted_at timestamp with time zone,
+ stock_restored_at timestamp with time zone,
+ checkout_result jsonb,
+ checkout_request jsonb,
+ customer_email text,
+ admin_note text,
+ status_changed_at timestamp with time zone,
+ user_id uuid,
+ CONSTRAINT orders_pkey PRIMARY KEY (id),
+ CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+);
 INSERT INTO auth.users(id,email,email_confirmed_at) VALUES
  ('1060de3d-d28a-45f8-9a64-5e0368cffc4b','owner@example.invalid',now()),
  ('10000000-0000-4000-8000-000000000001','customer@example.invalid',now());
@@ -244,3 +297,51 @@ BEGIN
 END $test$;
 ROLLBACK;
 \echo 'PASS exact live product column/constraint fixture, null stock denial and atomic aggregate overflow rejection'
+
+-- Synthetic CRM/staff/order segmentation with live column and constraint shapes.
+-- Roll back all added identities, orders and profile state before HTTP tests.
+BEGIN;
+INSERT INTO auth.users(id,email,email_confirmed_at) VALUES
+ ('10000000-0000-4000-8000-000000000002','staff-parity@example.invalid',now());
+INSERT INTO public.admin_staff_members(user_id,email,display_name,role,is_active)
+ VALUES('10000000-0000-4000-8000-000000000002','staff-parity@example.invalid','Fixture Staff','manager',false);
+INSERT INTO private.admin_customer_crm_profiles(user_id,is_vip)
+ VALUES('10000000-0000-4000-8000-000000000001',true);
+INSERT INTO public.orders(id,customer_name,phone,address,total_gel,status,created_at,user_id) VALUES
+ ('parity-complete-old','Synthetic','000000000','Fixture',20,'დასრულებული',now()-interval '100 days','10000000-0000-4000-8000-000000000001'),
+ ('parity-cancelled','Synthetic','000000000','Fixture',20,'გაუქმებული',now(),'10000000-0000-4000-8000-000000000001'),
+ ('parity-future','Synthetic','000000000','Fixture',20,'completed',now()+interval '1 day','10000000-0000-4000-8000-000000000001'),
+ ('parity-guest','Synthetic','000000000','Fixture',20,'completed',now(),NULL);
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET LOCAL request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE s jsonb:=public.admin_marketing_segments()->'segments';
+BEGIN
+ IF s->'all'->>'accounts' IS DISTINCT FROM '1'
+ OR s->'all'->>'consent_candidates' IS DISTINCT FROM '1'
+ OR s->'vip'->>'accounts' IS DISTINCT FROM '1'
+ OR s->'one_purchase'->>'accounts' IS DISTINCT FROM '1'
+ OR s->'inactive'->>'accounts' IS DISTINCT FROM '1'
+ OR s->'repeat'->>'accounts' IS DISTINCT FROM '0'
+ OR s->'no_purchase'->>'accounts' IS DISTINCT FROM '0'
+ THEN RAISE EXCEPTION 'Unexpected staff exclusion or completed order segmentation'; END IF;
+END $test$;
+RESET ROLE;
+UPDATE private.admin_customer_crm_profiles SET is_blocked=true WHERE user_id='10000000-0000-4000-8000-000000000001';
+INSERT INTO public.orders(id,customer_name,phone,address,total_gel,status,user_id)
+ VALUES('parity-recent','Synthetic','000000000','Fixture',20,'completed','10000000-0000-4000-8000-000000000001');
+SET LOCAL ROLE authenticated;
+DO $test$
+DECLARE s jsonb:=public.admin_marketing_segments()->'segments';
+BEGIN
+ IF s->'all'->>'accounts' IS DISTINCT FROM '1'
+ OR s->'all'->>'consent_candidates' IS DISTINCT FROM '0'
+ OR s->'repeat'->>'accounts' IS DISTINCT FROM '1'
+ OR s->'inactive'->>'accounts' IS DISTINCT FROM '0'
+ OR s->'vip'->>'consent_candidates' IS DISTINCT FROM '0'
+ THEN RAISE EXCEPTION 'Blocked profile or repeat purchase segmentation mismatch'; END IF;
+END $test$;
+RESET ROLE;
+ROLLBACK;
+\echo 'PASS live orders/staff/CRM column and constraint fixtures, completed-only segments, inactive staff exclusion and blocked consent'
