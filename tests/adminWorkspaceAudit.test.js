@@ -111,3 +111,8 @@ test('workspace audit 15 separates neutral and destructive actions and uses shar
  for(const term of ['[id^="admin-workspace-"]','var(--admin-vd-inputRadius-active, 12px)','var(--admin-vd-sectionGap-active, 16px)','var(--admin-vd-video-mobile-sectionGap','max(16px, var(--admin-vd-inputFontSize-active, 16px))','prefers-reduced-motion: reduce','width: auto !important;','min-height: 44px !important;',':focus-visible']) assert.ok(polish.includes(term),term);
  assert.ok(css.includes('button:not(.admin-workspace-secondary-action)'));
 });
+
+test('workspace release regression: leaving visual preview permits only sidebar navigation outside direct selection',()=>{
+ const editor=read('src/components/AdminPanelVisualEditor.jsx');
+ for(const term of ['const isWorkspaceNavigation = target => !directSelectionMode','[data-admin-sidebar="true"] [data-admin-visual-nav-item="true"]','|| isWorkspaceNavigation(target)) return;','if (isWorkspaceNavigation(event.target) || event.key === \'Tab\') return;','document.addEventListener(\'submit\', handlePreviewSubmit, true)','event.stopImmediatePropagation?.()']) assert.ok(editor.includes(term),term);
+});

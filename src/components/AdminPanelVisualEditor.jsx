@@ -533,10 +533,16 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
 
   // Select mapped elements from the real admin module without triggering its actions.
   useEffect(() => {
+    // Only actual sidebar navigation is exempt, and only outside direct
+    // selection mode. Header publish controls and preview actions stay blocked.
+    const isWorkspaceNavigation = target => !directSelectionMode &&
+      target instanceof Element && Boolean(target.closest(
+        '[data-admin-sidebar="true"] [data-admin-visual-nav-item="true"], [data-admin-sidebar="true"] #geostore-admin-mobile-section'
+      ));
     const handlePreviewClick = event => {
       const target = event.target;
       if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
-      if (!target.closest('.admin-dashboard-shell')) return;
+      if (!target.closest('.admin-dashboard-shell') || isWorkspaceNavigation(target)) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
@@ -557,6 +563,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       }
     };
     const handlePreviewKeydown = event => {
+      if (isWorkspaceNavigation(event.target) || event.key === 'Tab') return;
       if (event.target instanceof Element && event.target.closest('.admin-dashboard-shell') && !event.target.closest('.admin-visual-editor-panel')) {
         event.preventDefault();
         event.stopPropagation();

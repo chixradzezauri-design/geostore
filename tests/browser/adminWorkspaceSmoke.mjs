@@ -82,7 +82,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
             has: page.getByText(label, { exact: true })
           }).click();
         }
-        await shell.locator(selector).first().waitFor({ state: 'visible', timeout: 20000 });
+        try {
+          await shell.locator(selector).first().waitFor({ state: 'visible', timeout: 20000 });
+          await page.waitForFunction(expected => document.querySelector('#geostore-admin-mobile-section')?.value === expected, tab, { timeout: 5000 });
+        } catch (error) {
+          const selected = await picker.inputValue().catch(() => 'unavailable');
+          throw new Error(width + 'px: expected module ' + tab + ', active ' + selected + ', errors: ' + errors.join('; ') + '; ' + error.message);
+        }
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         if (tab === 'settings') {
           const fee = page.locator('#admin-workspace-delivery-tbilisi');
