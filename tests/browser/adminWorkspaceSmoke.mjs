@@ -49,6 +49,8 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
         if (path === '/rest/v1/rpc/get_admin_panel_visual_design_state' && method === 'POST') return respond({ design: null, updated_at: null });
         if (path === '/rest/v1/rpc/has_staff_permission' && method === 'POST') return respond(true);
+        // Verified STABLE read-only RPC: the POST transport does not mutate orders.
+        if (path === '/rest/v1/rpc/admin_order_ledger_page' && method === 'POST') return respond([]);
         if (path === '/functions/v1/manage-admin-staff' && method === 'POST' && req.postDataJSON()?.action === 'list') return respond({ staff: [] });
         if (method === 'GET' || (method === 'POST' && /^\/rest\/v1\/rpc\/(?:get_|list_|admin_list_|admin_order_image_refs_page$)/.test(path))) return respond([]);
         writes.push(method + ' ' + path);
