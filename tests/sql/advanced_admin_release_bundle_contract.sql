@@ -75,7 +75,60 @@ CASE
 END)
 );
 REVOKE ALL ON public.products FROM PUBLIC,anon,authenticated;
-CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,email_confirmed_at timestamptz,created_at timestamptz DEFAULT now(),banned_until timestamptz,raw_app_meta_data jsonb DEFAULT '{}',is_anonymous boolean DEFAULT false,deleted_at timestamptz);
+-- Metadata-derived auth.users fixture; not a substitute for managed Auth service.
+CREATE TABLE auth.users (
+ instance_id uuid,
+ id uuid NOT NULL,
+ aud character varying(255),
+ role character varying(255),
+ email character varying(255),
+ encrypted_password character varying(255),
+ email_confirmed_at timestamp with time zone,
+ invited_at timestamp with time zone,
+ confirmation_token character varying(255),
+ confirmation_sent_at timestamp with time zone,
+ recovery_token character varying(255),
+ recovery_sent_at timestamp with time zone,
+ email_change_token_new character varying(255),
+ email_change character varying(255),
+ email_change_sent_at timestamp with time zone,
+ last_sign_in_at timestamp with time zone,
+ raw_app_meta_data jsonb,
+ raw_user_meta_data jsonb,
+ is_super_admin boolean,
+ created_at timestamp with time zone,
+ updated_at timestamp with time zone,
+ phone text DEFAULT NULL::character varying,
+ phone_confirmed_at timestamp with time zone,
+ phone_change text DEFAULT ''::character varying,
+ phone_change_token character varying(255) DEFAULT ''::character varying,
+ phone_change_sent_at timestamp with time zone,
+ confirmed_at timestamp with time zone GENERATED ALWAYS AS (LEAST(email_confirmed_at, phone_confirmed_at)) STORED,
+ email_change_token_current character varying(255) DEFAULT ''::character varying,
+ email_change_confirm_status smallint DEFAULT 0,
+ banned_until timestamp with time zone,
+ reauthentication_token character varying(255) DEFAULT ''::character varying,
+ reauthentication_sent_at timestamp with time zone,
+ is_sso_user boolean NOT NULL DEFAULT false,
+ deleted_at timestamp with time zone,
+ is_anonymous boolean NOT NULL DEFAULT false,
+ CONSTRAINT users_email_change_confirm_status_check CHECK (((email_change_confirm_status >= 0) AND (email_change_confirm_status <= 2))),
+ CONSTRAINT users_phone_key UNIQUE (phone),
+ CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX confirmation_token_idx ON auth.users USING btree (confirmation_token) WHERE ((confirmation_token)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX email_change_token_current_idx ON auth.users USING btree (email_change_token_current) WHERE ((email_change_token_current)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX email_change_token_new_idx ON auth.users USING btree (email_change_token_new) WHERE ((email_change_token_new)::text !~ '^[0-9 ]*$'::text);
+CREATE INDEX idx_users_created_at_desc ON auth.users USING btree (created_at DESC);
+CREATE INDEX idx_users_email ON auth.users USING btree (email);
+CREATE INDEX idx_users_last_sign_in_at_desc ON auth.users USING btree (last_sign_in_at DESC);
+CREATE INDEX idx_users_name ON auth.users USING btree (((raw_user_meta_data ->> 'name'::text))) WHERE ((raw_user_meta_data ->> 'name'::text) IS NOT NULL);
+CREATE UNIQUE INDEX reauthentication_token_idx ON auth.users USING btree (reauthentication_token) WHERE ((reauthentication_token)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX recovery_token_idx ON auth.users USING btree (recovery_token) WHERE ((recovery_token)::text !~ '^[0-9 ]*$'::text);
+CREATE UNIQUE INDEX users_email_partial_key ON auth.users USING btree (email) WHERE (is_sso_user = false);
+CREATE INDEX users_instance_id_email_idx ON auth.users USING btree (instance_id, lower((email)::text));
+CREATE INDEX users_instance_id_idx ON auth.users USING btree (instance_id);
+CREATE INDEX users_is_anonymous_idx ON auth.users USING btree (is_anonymous);
 REVOKE ALL ON auth.users FROM PUBLIC,anon,authenticated;
 -- Live column/default/constraint metadata only; local fixture.
 CREATE TABLE private.admin_customer_crm_profiles (
@@ -345,3 +398,35 @@ END $test$;
 RESET ROLE;
 ROLLBACK;
 \echo 'PASS live orders/staff/CRM column and constraint fixtures, completed-only segments, inactive staff exclusion and blocked consent'
+
+-- Exercise the real partial unique email index with synthetic SSO duplicates.
+BEGIN;
+INSERT INTO auth.users(id,email,email_confirmed_at,is_sso_user,created_at) VALUES
+ ('10000000-0000-4000-8000-000000000003','customer@example.invalid',now(),true,now());
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+SET LOCAL request.jwt.claim.jwt='{"app_metadata":{"role":"admin"}}';
+DO $test$
+DECLARE s jsonb:=public.admin_marketing_segments()->'segments';
+BEGIN
+ IF s->'all'->>'accounts' IS DISTINCT FROM '2'
+ OR s->'all'->>'consent_candidates' IS DISTINCT FROM '0'
+ THEN RAISE EXCEPTION 'Ambiguous address was not excluded'; END IF;
+END $test$;
+RESET ROLE;
+DELETE FROM auth.users WHERE id='10000000-0000-4000-8000-000000000003';
+SET LOCAL ROLE authenticated;
+DO $test$
+BEGIN
+ IF public.admin_marketing_segments()->'segments'->'all'->>'consent_candidates' IS DISTINCT FROM '1'
+ THEN RAISE EXCEPTION 'Unambiguous verified address not restored'; END IF;
+END $test$;
+RESET ROLE;
+DELETE FROM auth.users WHERE id='10000000-0000-4000-8000-000000000001';
+DO $test$
+BEGIN
+ IF EXISTS(SELECT 1 FROM private.marketing_email_consent_events WHERE user_id='10000000-0000-4000-8000-000000000001')
+ THEN RAISE EXCEPTION 'Deleted account consent not cascaded'; END IF;
+END $test$;
+ROLLBACK;
+\echo 'PASS live Auth column/constraint/index fixture, SSO duplicate exclusion and account deletion cascade'
