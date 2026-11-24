@@ -3,14 +3,29 @@ const OWNER='1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 const integer=(v,min,max)=>{if(typeof v==='string'&&/^\d+$/.test(v))v=Number(v);return Number.isSafeInteger(v)&&v>=min&&v<=max?v:null;};
 const amount=v=>{if(typeof v==='string'&&/^\d+(?:\.\d{1,2})?$/.test(v))v=Number(v);return typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1e9&&Math.abs(v*100-Math.round(v*100))<1e-5?v:null;};
+const variantId=v=>typeof v==='string'&&v.trim()!==''&&v.length<=120;
+export const purchaseLineKey=(product,variant)=>JSON.stringify([product,variant??null]);
+export function purchaseCatalogOptions(products,supplierName){
+ if(!Array.isArray(products)||!supplierName)return [];
+ const options=[],seen=new Set(),duplicates=new Set();
+ for(const p of products){
+  if(!p||typeof p.id!=='string'||!p.id.trim()||p.vendor!==supplierName||typeof p.name!=='string'||!p.name.trim()||!Array.isArray(p.variants))continue;
+  if(seen.has(p.id)){duplicates.add(p.id);continue;}seen.add(p.id);
+  if(!p.variants.length){if(integer(p.stock,0,1000000)!==null)options.push({product_id:p.id,variant_id:null,label:p.name,stock:Number(p.stock)});continue;}
+  const ids=new Set();
+  if(p.variants.some(v=>{if(!variantId(v?.id)||ids.has(v.id)||integer(v.stock,0,1000000)===null)return true;ids.add(v.id);return false;}))continue;
+  for(const v of p.variants)if(typeof v.name==='string'&&v.name.trim()&&typeof v.variantType==='string'&&v.variantType.trim())options.push({product_id:p.id,variant_id:v.id,label:p.name+' · '+v.name,stock:Number(v.stock)});
+ }
+ return options.filter(o=>!duplicates.has(o.product_id));
+}
 const statuses=['draft','approved','partial','received','cancelled'];
 export function normalizePurchaseLines(lines){
  if(!Array.isArray(lines)||!lines.length||lines.length>50)return null;
  const ids=new Set(),result=[];
  for(const row of lines){
-  const id=row?.product_id,quantity=integer(row?.quantity,1,1000000),unit_cost=amount(row?.unit_cost);
-  if(typeof id!=='string'||!id.trim()||ids.has(id)||quantity===null||unit_cost===null)return null;
-  ids.add(id);result.push({product_id:id,quantity,unit_cost});
+  const id=row?.product_id,variant=row?.variant_id,key=purchaseLineKey(id,variant),quantity=integer(row?.quantity,1,1000000),unit_cost=amount(row?.unit_cost);
+  if(typeof id!=='string'||!id.trim()||ids.has(key)||(variant!=null&&!variantId(variant))||quantity===null||unit_cost===null)return null;
+  ids.add(key);result.push({product_id:id,...(variant!=null?{variant_id:variant}:{}),quantity,unit_cost});
  }
  return result;
 }
@@ -24,7 +39,7 @@ export function verifyPurchaseRows(rows){
   if(!normalized)throw Error('შესყიდვის დეტალები არასრულია.');
   const lineIds=new Set(),receipts=new Set(),sums=new Map();
   const lines=rawLines.map((line,i)=>{
-   if(!uuid(line.id)||lineIds.has(line.id)||line.purchase_id!==order.id||typeof line.product_name!=='string'||!line.product_name.trim()||integer(line.received_quantity,0,normalized[i].quantity)===null)throw Error('შესყიდვის ხაზი ვერ დადასტურდა.');
+   if(!uuid(line.id)||lineIds.has(line.id)||line.purchase_id!==order.id||typeof line.product_name!=='string'||!line.product_name.trim()||(line.variant_id!=null?(!variantId(line.variant_id)||typeof line.variant_name!=='string'||!line.variant_name.trim()||typeof line.variant_type!=='string'||!line.variant_type.trim()):(line.variant_name!=null||line.variant_type!=null))||integer(line.received_quantity,0,normalized[i].quantity)===null)throw Error('შესყიდვის ხაზი ვერ დადასტურდა.');
    lineIds.add(line.id);return {...line,...normalized[i],received_quantity:Number(line.received_quantity)};
   });
   for(const r of order.admin_purchase_receipts){
@@ -38,7 +53,7 @@ export function verifyPurchaseRows(rows){
   return {...order,admin_purchase_lines:lines};
  });
 }
-const projection='id,supplier_id,supplier_name,status,revision,created_at,admin_purchase_lines(id,purchase_id,product_id,product_name,quantity,received_quantity,unit_cost),admin_purchase_receipts(id,purchase_id,line_id,quantity,stock_before,stock_after,unit_cost,received_at)';
+const projection='id,supplier_id,supplier_name,status,revision,created_at,admin_purchase_lines(id,purchase_id,product_id,product_name,variant_id,variant_name,variant_type,quantity,received_quantity,unit_cost),admin_purchase_receipts(id,purchase_id,line_id,quantity,stock_before,stock_after,unit_cost,received_at)';
 export function createAdminPurchaseApi({loadSession,expectedUserId,supabaseUrl,apiKey,fetchImpl=fetch,isCurrent=()=>true}={}){
  const config={loadSession,expectedUserId,supabaseUrl,apiKey,fetchImpl,isCurrent};
  async function request(path,method='GET',body){
@@ -63,7 +78,7 @@ export function createAdminPurchaseApi({loadSession,expectedUserId,supabaseUrl,a
 export function purchaseOperationConfirmed(operation,order){
  if(!operation||!order||order.id!==operation.orderId)return false;
  if(operation.type==='receive')return order.admin_purchase_receipts.some(r=>r.id===operation.receiptId&&r.line_id===operation.line.id&&Number(r.quantity)===Number(operation.quantity));
- if(operation.type==='create')return order.supplier_id===operation.supplierId&&operation.lines.length===order.admin_purchase_lines.length&&operation.lines.every(l=>order.admin_purchase_lines.some(x=>x.product_id===l.product_id&&x.quantity===l.quantity&&x.unit_cost===l.unit_cost));
+ if(operation.type==='create')return order.supplier_id===operation.supplierId&&operation.lines.length===order.admin_purchase_lines.length&&operation.lines.every(l=>order.admin_purchase_lines.some(x=>purchaseLineKey(x.product_id,x.variant_id)===purchaseLineKey(l.product_id,l.variant_id)&&x.quantity===l.quantity&&x.unit_cost===l.unit_cost));
  if(operation.type==='transition')return order.revision>operation.order.revision&&(operation.action==='cancel'?order.status==='cancelled':['approved','partial','received'].includes(order.status));
  return false;
 }
