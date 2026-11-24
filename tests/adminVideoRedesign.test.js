@@ -29,3 +29,20 @@ test('batch 02 chrome uses editor tokens and retains owner/staff navigation and 
  for(const term of ['--admin-vd-headerBackground-active','--admin-vd-navActiveBackground-active','--admin-vd-navInactiveText-active','--admin-vd-primaryButtonText-active','--admin-vd-inputFocus-active','clamp(10px, var(--admin-vd-headerPadding-active','button:only-of-type',':focus-visible']) assert.ok(css.includes(term),term);
  assert.ok(css.includes('Video redesign 02'));
 });
+
+test('batch 03 shared card geometry cannot leak one module settings into another',()=>{
+ const studio=read('src/adminPanelVisualDesign.css');
+ const rules=[...studio.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+ const shared=rules.find(([,selector,body])=>selector.includes('.admin-command-kpi,')&&body.includes('contentCardBackground-active'));
+ assert.ok(shared);
+ assert.match(shared[2],/--admin-vd-cardPadding-active/);
+ assert.doesNotMatch(shared[2],/--admin-vd-(staff|inventory|orders|support|discounts)-padding-active/);
+ for(const [key,selector] of Object.entries({staff:'.admin-staff-panel',inventory:'.admin-inventory-panel',orders:'.admin-orders-panel',support:'.admin-support-panel',discounts:'.admin-discounts-panel',analytics:'.admin-analytics-card'})){
+   const rule=rules.find(([,s,b])=>s.includes(selector)&&b.includes('--admin-vd-'+key+'-padding-active'));
+   assert.ok(rule,key);
+   for(const other of ['staff','inventory','orders','support','discounts','analytics'].filter(k=>k!==key)) assert.ok(!rule[2].includes('--admin-vd-'+other+'-padding-active'),key+' vs '+other);
+ }
+ assert.ok(studio.indexOf('Batch 03: independent module geometry')<studio.indexOf('.admin-banner-form {'));
+ assert.ok(css.includes('Video redesign 03'));
+ assert.ok(css.includes('max(16px, var(--admin-vd-inputFontSize-active, 16px))'));
+});

@@ -396,3 +396,36 @@
     grid-column: 1 / -1 !important;
   }
 }
+
+/* Video redesign 03 — safe card/form flow; do not override element-editor colors or dimensions. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-command-kpi,.admin-command-panel,.admin-analytics-card,.admin-analytics-toolbar,.admin-staff-panel,.admin-staff-list-panel,.admin-inventory-panel,.admin-orders-panel,.admin-support-panel,.admin-discounts-panel,.admin-audit-logs-panel,.admin-broadcasts-panel,.admin-crm-panel,.admin-replenishment-row,.admin-replenishment-metric,.admin-banner-form,.admin-category-form,.admin-coupon-form) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-form,.admin-category-form,.admin-coupon-form,.admin-staff-create-form,.admin-support-reply-form) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),textarea,select) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-form,.admin-category-form,.admin-coupon-form,.admin-staff-create-form,.admin-support-reply-form) :is(h2,h3,h4,label) {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  line-height: 1.45;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-form,.admin-category-form,.admin-coupon-form,.admin-staff-create-form,.admin-support-reply-form) :is(input,textarea,select):focus-visible {
+  outline: max(2px, var(--admin-vd-inputFocusRingWidth-active, 2px)) solid var(--av-focus);
+  outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-orders-panel,.admin-inventory-panel,.admin-analytics-toolbar) table :is(th,td) {
+  line-height: 1.45;
+  word-break: normal;
+  vertical-align: middle;
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banner-form,.admin-category-form,.admin-coupon-form,.admin-staff-create-form,.admin-support-reply-form) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]):not([type="file"]),textarea,select) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+    min-height: 44px;
+  }
+}
