@@ -1,0 +1,251 @@
+/* Video redesign 01 — 2026-11-24. Scoped to actual admin workspace.
+   Explicit component layout protects long Georgian labels from legacy icon-only
+   rules. Theme tokens retain owner-set colors; no stored preferences rewritten. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] {
+  --av-surface: var(--admin-vd-panel-active, #0f172a);
+  --av-inset: var(--admin-vd-inputBackground-active, #020617);
+  --av-text: var(--admin-vd-text-active, #f8fafc);
+  --av-muted: var(--admin-vd-muted-active, #b9c9d9);
+  --av-border: var(--admin-vd-border-active, #334155);
+  --av-accent: var(--admin-vd-accent-active, #34d399);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-row {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > div {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-inline-size: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > div > span {
+  color: var(--av-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls input[type="number"] {
+  color: var(--admin-vd-inputText-active, var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > :is(.admin-video-publish,.admin-video-edit,.admin-video-delete) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  inline-size: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: auto !important;
+  block-size: auto !important;
+  min-height: 44px !important;
+  padding: 9px 10px !important;
+  gap: 7px !important;
+  border-radius: 10px !important;
+  font-size: max(12px, var(--admin-vd-buttonFontSize-active, 12px)) !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  text-align: center !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > :is(.admin-video-publish,.admin-video-edit,.admin-video-delete) > svg {
+  flex: 0 0 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > :is(.admin-video-edit,.admin-video-delete) > span {
+  min-width: 0 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-edit {
+  background: #12334b !important;
+  border: 1px solid #31566e !important;
+  color: #d6eeff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-delete,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-sidebar="true"] > .admin-video-logout {
+  background: #351c2a !important;
+  border: 1px solid #704052 !important;
+  color: #ffd4df !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-publish {
+  background: #133b31 !important;
+  border: 1px solid #27654f !important;
+  color: #b8f5d9 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-publish[title*="დამალვა"] {
+  background: #3b2d18 !important;
+  border-color: #70552a !important;
+  color: #ffe4a6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-size-color-stock-row {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-width: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-size-color-stock-row :is(b,label,span) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  word-break: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-status-actions {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-status-actions > button {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border: 1px solid var(--av-border) !important;
+  min-height: 44px !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  line-height: 1.35 !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-status-actions > button[aria-pressed="true"] {
+  background: #14543d !important;
+  color: #d3ffe9 !important;
+  border-color: #4ca87e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-ticket-controls > button {
+  background: #12334b !important;
+  color: #d6eeff !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-color: #31566e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(.admin-support-ticket-message,.admin-support-ticket-reply) {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(.admin-support-ticket-message,.admin-support-ticket-reply) :is(b,p) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  gap: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-identity {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-identity > img {
+  flex: 0 0 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-identity > div:not(:first-child),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-identity > div > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  min-width: 0 !important;
+  width: auto !important;
+  gap: 4px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-identity :is(h4,span) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.4 !important;
+  max-width: 100% !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-actions {
+  display: grid !important;
+  grid-template-columns: repeat(4, 44px) !important;
+  width: auto !important;
+  justify-content: end !important;
+  gap: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-actions > button {
+  min-width: 44px !important;
+  width: 44px !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 9px !important;
+  flex-shrink: 0 !important;
+  justify-self: start;
+  border-radius: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-video-category-actions > button,.admin-product-controls > button):disabled {
+  opacity: .5 !important;
+  cursor: not-allowed !important;
+}
+@media(max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-mobile-section-picker select {
+    color: var(--av-text) !important;
+    -webkit-text-fill-color: currentColor !important;
+    background: var(--av-inset) !important;
+    border-color: var(--av-border) !important;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls {
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 5px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > div:has(input[aria-label^="მარაგი"]),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-publish {
+    grid-column: 1 / -1 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > :is(.admin-video-edit,.admin-video-delete) {
+    grid-column: auto !important;
+    width: 100% !important;
+    inline-size: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls input[type="number"] {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-row {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-actions {
+    grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-actions > button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+@media(max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-video-category-actions {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}

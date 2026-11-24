@@ -33,6 +33,7 @@ import AdminPanelVisualEditor from './AdminPanelVisualEditor';
 import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, loadAdminPanelVisualDesign, normalizeAdminPanelVisualDesign, saveAdminPanelVisualDesign } from '../utils/adminPanelVisualDesign.js';
 import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
 import '../adminPanelVisualDesign.css';
+import '../adminVideoRedesign.css';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -5014,7 +5015,7 @@ export default function AdminDashboardPro({
   ].filter(tab => canAccessAdminTab(tab.id));
 
   return (
-    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined}>
+    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined} data-admin-video-layout="v1">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div data-admin-sidebar="true" className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
@@ -5075,7 +5076,7 @@ export default function AdminDashboardPro({
 
         <button 
           onClick={() => { if (typeof handleLogout === 'function') handleLogout(); }} 
-          className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-4"
+          className="admin-video-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-4"
         >
           <LogOut className="w-4 h-4" /> სისტემიდან გასვლა
         </button>
@@ -6684,7 +6685,7 @@ export default function AdminDashboardPro({
 
                     <div className="admin-product-controls flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-400 text-[11px]">COGS:</span>
+                        <span className="text-slate-400 text-[11px]">თვითღირებულება</span>
                         <input 
                           type="number"
                           min="0"
@@ -6778,14 +6779,14 @@ export default function AdminDashboardPro({
                         onClick={() => handleToggleProductPublished(p.id)}
                         aria-label={`${(p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}: ${p.name}`}
                         disabled={Boolean(productPublishBusyIds[String(p.id)])}
-                        className={`inline-flex items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-[10px] font-bold transition disabled:opacity-50 disabled:cursor-wait ${(p.isPublished ?? p.is_published) === false ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}
+                        className={`admin-video-publish inline-flex items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-[10px] font-bold transition disabled:opacity-50 disabled:cursor-wait ${(p.isPublished ?? p.is_published) === false ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}
                         title={(p.isPublished ?? p.is_published) === false ? 'პროდუქტის მაღაზიაში გამოქვეყნება' : 'პროდუქტის მაღაზიიდან დამალვა'}
                       >
                         {(p.isPublished ?? p.is_published) === false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                         {productPublishBusyIds[String(p.id)] ? 'ინახება…' : (p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}
                       </button>
-                      <button type="button" onClick={() => handleEditProduct(p)} aria-label={`რედაქტირება: ${p.name}`} className="inline-flex items-center justify-center gap-2 text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4 shrink-0" /><span>რედაქტირება</span></button>
-                      <button type="button" onClick={() => handleDeleteProduct(p.id)} aria-label={`წაშლა: ${p.name}`} className="inline-flex items-center justify-center gap-2 text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4 shrink-0" /><span>წაშლა</span></button>
+                      <button type="button" onClick={() => handleEditProduct(p)} aria-label={`რედაქტირება: ${p.name}`} className="admin-video-edit inline-flex items-center justify-center gap-2 text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4 shrink-0" /><span>რედაქტირება</span></button>
+                      <button type="button" onClick={() => handleDeleteProduct(p.id)} aria-label={`წაშლა: ${p.name}`} className="admin-video-delete inline-flex items-center justify-center gap-2 text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4 shrink-0" /><span>წაშლა</span></button>
                     </div>
                   </div>
                 ))}
@@ -7145,8 +7146,8 @@ export default function AdminDashboardPro({
 
                     return (
                       <div key={parentCat.id} className="admin-category-card bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
-                        <div className="flex justify-between items-center flex-wrap gap-3">
-                          <div className="flex items-center gap-3">
+                        <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
+                          <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
                               <img src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
@@ -7160,7 +7161,7 @@ export default function AdminDashboardPro({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="admin-video-category-actions flex items-center gap-2">
                             <button type="button" onClick={() => moveCategory(parentCat.id, -1)} disabled={mainCategories[0]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ზემოთ აწევა" aria-label={`კატეგორიის ${parentCat.name} ზემოთ აწევა`}><ChevronUp className="w-4 h-4" /></button>
                             <button type="button" onClick={() => moveCategory(parentCat.id, 1)} disabled={mainCategories[mainCategories.length - 1]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ქვემოთ ჩამოწევა" aria-label={`კატეგორიის ${parentCat.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-4 h-4" /></button>
                             {!isEditingParent && (
@@ -7172,7 +7173,7 @@ export default function AdminDashboardPro({
                                 <Edit3 className="w-4 h-4" />
                               </button>
                             )}
-                            <button onClick={() => handleDeleteCategory(parentCat.id, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                            <button type="button" aria-label={`კატეგორიის ${parentCat.name} წაშლა`} onClick={() => handleDeleteCategory(parentCat.id, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
 
@@ -7218,14 +7219,14 @@ export default function AdminDashboardPro({
                               const subImg = sub.image || sub.img;
                               return (
                                 <div key={sub.id} className="admin-subcategory-card bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/15 space-y-2">
-                                  <div className="flex justify-between items-center text-xs gap-2">
-                                    <div className="admin-subcategory-identity flex items-center gap-2.5 flex-1">
+                                  <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
+                                    <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                                       {subImg && <img src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200">{sub.name}</span>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="admin-video-category-actions flex items-center gap-1.5">
                                       <button type="button" onClick={() => moveCategory(sub.id, -1)} disabled={subCats[0]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ზემოთ აწევა" aria-label={`სუბკატეგორიის ${sub.name} ზემოთ აწევა`}><ChevronUp className="w-3.5 h-3.5" /></button>
                                       <button type="button" onClick={() => moveCategory(sub.id, 1)} disabled={subCats[subCats.length - 1]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ქვემოთ ჩამოწევა" aria-label={`სუბკატეგორიის ${sub.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-3.5 h-3.5" /></button>
                                       {!isEditingSub && (
@@ -7237,7 +7238,7 @@ export default function AdminDashboardPro({
                                           <Edit3 className="w-3.5 h-3.5" />
                                         </button>
                                       )}
-                                      <button onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                                      <button type="button" aria-label={`სუბკატეგორიის ${sub.name} წაშლა`} onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
                                     </div>
                                   </div>
 
