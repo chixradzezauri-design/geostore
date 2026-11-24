@@ -29,6 +29,15 @@ async function read(token){
 const a=await user('a'),b=await user('b',{user_metadata:{role:'admin'},app_metadata:{role:'admin'}});
 const denied=r=>assert.ok([401,403].includes(r.status),'Expected permission denial, got '+r.status);
 denied(await rpc('my_marketing_email_consent',null));
+if(process.argv.includes('--paused')){
+ for(const t of [a.token,b.token,SERVICE_ROLE_KEY]){
+  const blocked=r=>assert.ok([401,403,404].includes(r.status),'Expected paused RPC denial, got '+r.status);
+  blocked(await rpc('my_marketing_email_consent',t));
+  for(const opted of [true,false])blocked(await rpc('set_my_marketing_email_consent',t,{p_event:randomUUID(),p_opted_in:opted,p_policy_version:'email-marketing-v1',p_expected_event:null}));
+ }
+ console.log('PASS actual local Auth and service-role requests cannot read or collect paused consent');
+ process.exit(0);
+}
 for(const t of [a.token,b.token]){
  denied(await rpc('admin_marketing_segments',t));
  denied(await rpc('admin_read_marketing_templates',t,{p_id:null}));

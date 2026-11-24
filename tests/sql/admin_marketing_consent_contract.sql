@@ -12,6 +12,12 @@ INSERT INTO auth.users VALUES
  ('10000000-0000-4000-8000-000000000001','one@example.invalid',now()),
  ('10000000-0000-4000-8000-000000000002','two@example.invalid',NULL);
 \ir ../../release/staged-marketing-consent.sql
+\ir advanced_admin_consent_paused_verify.sql
+-- Synthetic-only activation of dormant logic for regression tests.
+GRANT EXECUTE ON FUNCTION private.read_my_marketing_email_consent() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_marketing_email_consent() TO authenticated;
+GRANT EXECUTE ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
 SET ROLE authenticated;
 SET request.jwt.claim.sub='10000000-0000-4000-8000-000000000001';
 SET request.jwt.claim.jwt='{}';

@@ -9,3 +9,9 @@ BEGIN
  IF (SELECT count(*) FROM public.admin_purchase_receipts r JOIN public.admin_purchase_lines l ON l.id=r.line_id WHERE l.product_id='http-variant')<>1 THEN RAISE EXCEPTION 'Duplicate variant receipt'; END IF;
 END $test$;
 \echo 'PASS HTTP variant receipt aggregate, sibling, cost and append-only inventory ledger'
+
+-- Restore paused candidate ACL after synthetic HTTP behavior tests.
+REVOKE ALL ON FUNCTION private.read_my_marketing_email_consent() FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.my_marketing_email_consent() FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM PUBLIC,anon,authenticated;

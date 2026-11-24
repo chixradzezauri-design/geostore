@@ -98,6 +98,7 @@ on:
       - 'tests/sql/advanced_admin_http_fixture.sql'
       - 'tests/sql/advanced_admin_http_inventory_verify.sql'
       - 'tests/sql/advanced_admin_acl_verify.sql'
+      - 'tests/sql/advanced_admin_consent_paused_verify.sql'
       - 'tests/advancedAdminHttpContract.mjs'
       - 'release/staged-admin-suppliers.sql'
       - 'release/staged-admin-purchases.sql'

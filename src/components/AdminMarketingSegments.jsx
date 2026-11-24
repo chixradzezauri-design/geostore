@@ -12,7 +12,7 @@ export default function AdminMarketingSegments({adminUserId,loadSession,supabase
  const keys=filter==='all'?segmentKeys:segmentKeys.filter(k=>k===filter);
  return <section className="admin-marketing-segments min-w-0 rounded-xl border border-emerald-500/25 p-3 space-y-3" aria-label="მარკეტინგული სეგმენტები">
   <div className="flex flex-wrap justify-between gap-2"><h4 className="text-sm font-bold text-white">მარკეტინგული სეგმენტები</h4><button type="button" disabled={phase==='loading'} className="min-h-11 rounded-xl border border-slate-700 px-3 text-xs text-white disabled:opacity-50" onClick={()=>setRetry(n=>n+1)}>სეგმენტების განახლება</button></div>
-  <p className="text-xs text-slate-400">სრული სერვერული ანგარიში. ჯგუფები შეიძლება გადაიკვეთოს; არააქტიურობა ითვლება ბოლო დასრულებული შეკვეთის შექმნის თარიღიდან. თანხმობის კანდიდატები ჯერ არ არიან გასაგზავნი აუდიტორია.</p>
+  <p className="text-xs text-slate-400">სრული სერვერული ანგარიში. ჯგუფები შეიძლება გადაიკვეთოს; არააქტიურობა ითვლება ბოლო დასრულებული შეკვეთის შექმნის თარიღიდან. თანხმობის შეგროვება და გაგზავნა დროებით გამორთულია. სტატისტიკა მხოლოდ მონახაზების დაგეგმვისთვისაა.</p>
   {phase==='loading'&&<p role="status" className="text-xs text-slate-300">სეგმენტები იტვირთება…</p>}
   {phase==='error'&&<p role="alert" className="text-xs text-amber-200">სეგმენტების მონაცემები ვერ დადასტურდა.</p>}
   {phase==='ready'&&snapshot&&<>

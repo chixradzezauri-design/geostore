@@ -44,13 +44,13 @@ BEGIN
 END;
 $consent$;
 REVOKE ALL ON FUNCTION private.read_my_marketing_email_consent() FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION private.read_my_marketing_email_consent() TO authenticated;
+-- Customer consent RPC deliberately not granted in this release.
 CREATE FUNCTION public.my_marketing_email_consent() RETURNS jsonb
 LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $consent$
  SELECT private.read_my_marketing_email_consent();
 $consent$;
 REVOKE ALL ON FUNCTION public.my_marketing_email_consent() FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.my_marketing_email_consent() TO authenticated;
+-- Customer consent RPC deliberately not granted in this release.
 
 CREATE FUNCTION private.set_my_marketing_email_consent(p_event uuid,p_opted_in boolean,p_policy_version text,p_expected_event uuid) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $consent$
@@ -80,13 +80,13 @@ BEGIN
 END;
 $consent$;
 REVOKE ALL ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
+-- Customer consent RPC deliberately not granted in this release.
 CREATE FUNCTION public.set_my_marketing_email_consent(p_event uuid,p_opted_in boolean,p_policy_version text,p_expected_event uuid) RETURNS jsonb
 LANGUAGE sql SECURITY INVOKER SET search_path='' AS $consent$
  SELECT private.set_my_marketing_email_consent(p_event,p_opted_in,p_policy_version,p_expected_event);
 $consent$;
 REVOKE ALL ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
+-- Customer consent RPC deliberately not granted in this release.
 
 -- Owner-only aggregate; not a deliverable audience or a list of customer addresses.
 CREATE FUNCTION private.read_admin_marketing_consent_summary() RETURNS jsonb
@@ -115,4 +115,16 @@ LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $consent$
 $consent$;
 REVOKE ALL ON FUNCTION public.admin_marketing_consent_summary() FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_marketing_consent_summary() TO authenticated;
+-- Release hold: no real consent reads/writes until retention and activation are approved.
+DO $pause$
+BEGIN
+ IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN
+  EXECUTE 'REVOKE ALL ON FUNCTION private.read_my_marketing_email_consent() FROM service_role';
+  EXECUTE 'REVOKE ALL ON FUNCTION public.my_marketing_email_consent() FROM service_role';
+  EXECUTE 'REVOKE ALL ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM service_role';
+  EXECUTE 'REVOKE ALL ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM service_role';
+  EXECUTE 'REVOKE ALL ON private.marketing_email_consent_events FROM service_role';
+  EXECUTE 'REVOKE ALL ON SEQUENCE private.marketing_email_consent_events_sequence_id_seq FROM service_role';
+ END IF;
+END $pause$;
 COMMIT;

@@ -16,6 +16,9 @@ test('drift, reordering, changed history and approval flags fail closed',()=>{
  assert.throws(()=>buildAdvancedBundle(m,readAdvancedSource,m.appliedMigrations.slice(1)),/history changed/);
  assert.throws(()=>buildAdvancedBundle({...m,releaseApproved:true},readAdvancedSource),/scope\/order/);
  assert.throws(()=>buildAdvancedBundle({...m,deliveryEnabled:true},readAdvancedSource),/scope\/order/);
+ assert.throws(()=>buildAdvancedBundle({...m,consentCollectionEnabled:true},readAdvancedSource),/scope\/order/);
+ assert.throws(()=>buildAdvancedBundle({...m,consentCollectionEnabled:undefined},readAdvancedSource),/scope\/order/);
+ assert.ok(!buildAdvancedBundle(m,readAdvancedSource).includes('GRANT EXECUTE ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;'));
  const s=m.sources[0],bad=readAdvancedSource(s.path)+'SELECT 1;\n';
  assert.throws(()=>buildAdvancedBundle({...m,sources:[{...s,sha:gitBlobSha(bad)},...m.sources.slice(1)]},p=>p===s.path?bad:readAdvancedSource(p)),/transaction boundary/);
 });

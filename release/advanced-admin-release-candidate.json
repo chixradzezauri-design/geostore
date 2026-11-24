@@ -574,7 +574,7 @@
     },
     {
       "path": "release/staged-marketing-consent.sql",
-      "sha": "1bb4d038c7e86ae3e425593030fc55f1f5caf49b"
+      "sha": "c7aae916350f7d7f108901678b53041b6611ecd8"
     },
     {
       "path": "release/staged-marketing-segments.sql",
@@ -592,5 +592,6 @@
       "path": "release/staged-marketing-preflight.sql",
       "sha": "5fc8f32cb3411eb259160b4bfea68436ff4f2b4e"
     }
-  ]
+  ],
+  "consentCollectionEnabled": false
 }

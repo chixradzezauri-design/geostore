@@ -6,7 +6,7 @@ const copy={
  ru:{title:'Рекламные письма',description:'По желанию получайте предложения и скидки GEOSTORE по электронной почте. Согласие добровольное и не влияет на заказы или доступ к аккаунту. Его можно отозвать в любое время.',not_set:'Согласие не дано',withdrawn:'Согласие отозвано',reconfirmation_required:'Требуется повторное согласие',opted_in:'Согласие на рекламные письма дано',enable:'Согласен получать рекламные письма',disable:'Отозвать согласие',refresh:'Обновить',loading:'Проверка…',error:'Не удалось подтвердить статус согласия. Обновите данные.',conflict:'Статус согласия изменился. Обновите данные и подтвердите согласие только при желании.',verify:'Подтвердите адрес электронной почты перед подпиской.',confirm:'Я согласен получать рекламные предложения GEOSTORE по электронной почте.'}
 };
 const button='min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50';
-export default function CustomerMarketingConsent({userId,lang,loadSession,supabaseUrl,apiKey}){
+function FutureCustomerMarketingConsent({userId,lang,loadSession,supabaseUrl,apiKey}){
  const t=copy[lang]||copy.ka;
  const [snapshot,setSnapshot]=useState(null),[phase,setPhase]=useState('loading'),[checked,setChecked]=useState(false);
  const active=useRef(false),generation=useRef(0),lock=useRef(null);
@@ -36,4 +36,13 @@ export default function CustomerMarketingConsent({userId,lang,loadSession,supaba
    <button type="button" className={button} disabled={busy} onClick={()=>void run()}>{t.refresh}</button>
   </div>
  </section>;
+}
+
+// Activation requires a separate reviewed UI change and database migration.
+const CONSENT_COLLECTION_ENABLED=false;
+const paused={ka:'სარეკლამო ელფოსტის თანხმობის შეგროვება და გაგზავნა დროებით გამორთულია.',en:'Marketing email consent collection and sending are temporarily disabled.',ru:'Сбор согласий и отправка рекламных писем временно отключены.'};
+export default function CustomerMarketingConsent(props){
+ if(CONSENT_COLLECTION_ENABLED)return <FutureCustomerMarketingConsent {...props}/>;
+ const t=copy[props.lang]||copy.ka;
+ return <section className="gs-profile-marketing min-w-0 border-t border-slate-800/80 pt-4 space-y-2" aria-label={t.title}><h3 className="text-sm font-bold text-white">{t.title}</h3><p className="text-xs text-slate-400 leading-relaxed">{paused[props.lang]||paused.ka}</p></section>;
 }

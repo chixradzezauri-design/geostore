@@ -10,7 +10,7 @@ export function historyKey(rows){
 }
 export function gitBlobSha(s){return createHash('sha1').update('blob '+Buffer.byteLength(s,'utf8')+'\0').update(s,'utf8').digest('hex');}
 export function buildAdvancedBundle(manifest,readSource,freshHistory=null){
- if(manifest?.schema!==1||manifest.projectId!=='xmtnszxtnfxnrojionoa'||manifest.releaseApproved!==false||manifest.deliveryEnabled!==false||!Array.isArray(manifest.sources)||JSON.stringify(manifest.sources.map(s=>s.path))!==JSON.stringify(expected))fail('invalid release scope/order');
+ if(manifest?.schema!==1||manifest.projectId!=='xmtnszxtnfxnrojionoa'||manifest.releaseApproved!==false||manifest.deliveryEnabled!==false||manifest.consentCollectionEnabled!==false||!Array.isArray(manifest.sources)||JSON.stringify(manifest.sources.map(s=>s.path))!==JSON.stringify(expected))fail('invalid release scope/order');
  const pinned=historyKey(manifest.appliedMigrations);
  if(freshHistory!==null&&historyKey(Array.isArray(freshHistory)?freshHistory:freshHistory.migrations)!==pinned)fail('live migration history changed; re-audit before release');
  const parts=manifest.sources.map(({path,sha})=>{

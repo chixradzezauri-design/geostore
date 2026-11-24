@@ -294,6 +294,12 @@ END $default_acl$;
 ROLLBACK;
 \echo 'PASS broad PostgreSQL 17 public default ACLs reproduced before candidate installation'
 \i /tmp/geostore-advanced-admin-candidate.sql
+\ir advanced_admin_consent_paused_verify.sql
+-- Synthetic-only activation for legacy behavior regression and signed HTTP fixtures.
+GRANT EXECUTE ON FUNCTION private.read_my_marketing_email_consent() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_marketing_email_consent() TO authenticated;
+GRANT EXECUTE ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
 DO $test$
 DECLARE relation text;
 BEGIN

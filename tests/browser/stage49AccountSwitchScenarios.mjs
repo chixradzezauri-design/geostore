@@ -143,10 +143,9 @@ export async function runStage49AccountSwitchScenario(browser, host) {
         return reply(200, stage49FixtureProductRows);
       }
       // This specific STABLE RPC is read-only despite POST transport.
-      if (path === '/rest/v1/rpc/my_marketing_email_consent' && method === 'POST') {
-        const key=userForRequest(request);
-        if (!key || Object.keys(request.postDataJSON() || {}).length) return reply(403,{message:'Invalid consent read'});
-        return reply(200,{status:'not_set',policy_version:'email-marketing-v1',event_id:null,recorded_at:null,can_opt_in:true});
+      if (['/rest/v1/rpc/my_marketing_email_consent','/rest/v1/rpc/set_my_marketing_email_consent'].includes(path)) {
+        pageErrors.push('Paused consent unexpectedly requested');
+        return reply(403,{message:'Consent paused'});
       }
       if (path === '/rest/v1/rpc/get_my_admin_access' && method === 'POST') {
         return reply(200, { is_admin: false, is_staff: false, permissions: {} });
