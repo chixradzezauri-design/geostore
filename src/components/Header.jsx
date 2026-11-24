@@ -106,7 +106,15 @@ export default function Header({
     ? 'Main navigation'
     : currentLang === 'ru' ? 'Главная навигация' : 'მთავარი ნავიგაცია';
   const categoryName = (category) => typeof category === 'string' ? category : (category?.name || '');
-  const visualStyle = (targetId) => buildStorefrontElementStyle(visualDesign, targetId);
+  const visualStyle = (targetId) => {
+    const style = buildStorefrontElementStyle(visualDesign, targetId);
+    // Keep explicitly edited sizing authoritative over the compact menu defaults.
+    const key = targetId.replaceAll('.', '-');
+    for (const property of ['padding', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'fontSize', 'borderRadius', 'backgroundColor', 'color']) {
+      if (style[property] != null) style[`--gs-video-${key}-${property}`] = style[property];
+    }
+    return style;
+  };
 
   return (
     <header ref={headerRef} data-visual-editor-target="header" style={visualStyle('header')} className={`gs-site-header${menuOpen ? ' is-menu-open' : ''}`}>
@@ -184,11 +192,11 @@ export default function Header({
         <nav id="geostore-main-menu" data-visual-editor-target="header.menu" style={visualStyle('header.menu')} className="gs-main-menu" aria-label={mainNavigationLabel}>
           <div data-visual-editor-target="header.menu.heading" style={visualStyle('header.menu.heading')} className="gs-menu-heading">
             <div className="gs-menu-brand">
-              <strong>GEOSTORE</strong>
+              <strong>{siteSettings?.storeName || t.storeName || 'GEOSTORE'}</strong>
               <span>{currentUser ? (currentUser.name || currentUser.email || t.profile) : mainMenuLabel}</span>
             </div>
             {currentUser ? (
-              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-account" onClick={() => goTo('profile')}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-account" aria-current={activeTab === 'profile' ? 'page' : undefined} onClick={() => goTo('profile')}>
                 <User aria-hidden="true" />
                 <span>{t.profile || 'პროფილი'}</span>
               </button>
@@ -205,7 +213,7 @@ export default function Header({
           </div>
 
 
-          <section data-visual-editor-target="header.menu.section" style={visualStyle('header.menu.section')} className="gs-menu-section" aria-label={storeAccountLabel}>
+          <section data-visual-editor-target="header.menu.section" style={visualStyle('header.menu.section')} className="gs-menu-section gs-video-menu-primary" aria-label={storeAccountLabel}>
             <p data-visual-editor-target="header.menu.sectionTitle" style={visualStyle('header.menu.sectionTitle')} className="gs-menu-section-title">{storeAccountLabel}</p>
             <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('store')} onClick={() => goTo('store')}>
               <Store aria-hidden="true" /><span>{storeLabel}</span>
@@ -218,11 +226,6 @@ export default function Header({
               <Heart aria-hidden="true" /><span>{t.wishlist || 'ფავორიტები'}</span>
               <span className="gs-menu-count">{wishlistCount}</span>
             </button>
-            {currentUser && (
-              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('profile')} onClick={() => goTo('profile')}>
-                <User aria-hidden="true" /><span>{t.profile || 'პროფილი'}</span>
-              </button>
-            )}
             {adminLoggedIn && (
               <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('admin')} onClick={() => goTo('admin')}>
                 <ShieldCheck aria-hidden="true" /><span>{adminLabel}</span>
@@ -264,7 +267,7 @@ export default function Header({
             })}
           </section>
 
-          <section className="gs-menu-section" aria-label={servicesLabel}>
+          <section data-visual-editor-target="header.menu.section" style={visualStyle('header.menu.section')} className="gs-menu-section gs-video-menu-services" aria-label={servicesLabel}>
             <p data-visual-editor-target="header.menu.sectionTitle" style={visualStyle('header.menu.sectionTitle')} className="gs-menu-section-title">{servicesLabel}</p>
             <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsTrackerOpen)}>
               <PackageCheck aria-hidden="true" /><span>{t.orderTracker || 'შეკვეთის მოძებნა'}</span>

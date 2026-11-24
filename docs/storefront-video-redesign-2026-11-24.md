@@ -12,3 +12,6 @@ Source: 52.07s iPhone recording, sampled at 2-second intervals throughout (26 fr
 Fixed specific size tool layout, flash photo blending/title treatment and tracker contrast with scoped CSS and minimal semantic hooks. Existing product selection, stock checks, order lookup and editor state remain unchanged. No database or API changes. No Preview; production remains unchanged pending approval. CI and authenticated real-device visual verification pending.
 ## Next
 Header/menu/search, hero, category and catalog layout, profile/commerce surfaces and floating actions, editor compatibility, final verification.
+
+## Batch 02 — Header, search and mobile navigation
+Removed redundant authenticated profile menu link (profile remains in heading), use configured brand name in menu, restored services section's existing editor target. Two-column menu groups with single-column fallback at <=359px; all navigation handlers and admin condition preserved. Compact spacing, 44px controls, readable search placeholder, iOS focus-safe search input and focus outlines. Derived element-specific CSS variables retain explicitly edited menu padding, typography and colors where new rules apply. Batch 01 four reported CI workflows passed; new batch CI and real visual verification pending. No production/preview action.
