@@ -4968,7 +4968,17 @@ export default function AdminDashboardPro({
     const createdAt = Date.parse(ticket?.createdAt || '');
     return Number.isFinite(createdAt) && flashSaleStatusClock - createdAt >= 24 * 60 * 60 * 1000;
   });
-  const commandCenterLowStockGroups = Array.isArray(lowStockGroups) ? lowStockGroups : [];
+  // Match the replenishment planner, including each saved variant threshold.
+  const commandCenterLowStockPositions = replenishmentPositions.filter(position => position.isLowStock);
+  const commandCenterLowStockByProduct = new Map();
+  for (const position of commandCenterLowStockPositions) {
+    const group = commandCenterLowStockByProduct.get(position.productId) || {
+      key: position.productId, name: position.productName, sku: position.sku, positions: []
+    };
+    group.positions.push(position);
+    commandCenterLowStockByProduct.set(position.productId, group);
+  }
+  const commandCenterLowStockGroups = [...commandCenterLowStockByProduct.values()];
   const commandCenterRecentEvents = [
     ...(Array.isArray(orders) ? orders : []).map(order => ({
       id: `order-${order?.id ?? ''}`,
@@ -5160,9 +5170,9 @@ export default function AdminDashboardPro({
             <div className="admin-command-hero rounded-2xl border border-emerald-400/25 p-3 sm:p-5">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[.22em] text-emerald-300">GEOSTORE / OPERATIONS</p>
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[.22em] text-emerald-300">დღიური ოპერაციები</p>
                   <h3 id="admin-command-title" className="mt-1 text-lg sm:text-2xl font-black tracking-tight text-white">მთავარი მართვის ცენტრი</h3>
-                  <p className="mt-1 max-w-2xl text-[11px] sm:text-xs leading-5 text-slate-300">მაღაზიის ყოველდღიური ოპერაციები ერთ სივრცეში — შეკვეთები, მხარდაჭერა, მარაგი და აქციები.</p>
+                  <p className="mt-1 max-w-2xl text-[11px] sm:text-xs leading-5 text-slate-300">შეკვეთები, მხარდაჭერა, მარაგები და აქციები — ერთ სივრცეში.</p>
                 </div>
                 <button type="button" onClick={() => setAdminTab('analytics')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-slate-950/50 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/10">
                   <BarChart3 className="h-4 w-4" /> ფინანსური ანალიტიკა
@@ -5173,23 +5183,23 @@ export default function AdminDashboardPro({
             <div className="admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3">
               <button type="button" onClick={() => setAdminTab('orders')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-emerald-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-4 w-4 shrink-0 text-emerald-300" /></span>
-                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterNewOrders.length}</strong>
-                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მოლოდინში სულ {commandCenterPendingOrders.length} შეკვეთა · გახსნა</span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{ordersVerifiedForReports ? commandCenterNewOrders.length : "—"}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{ordersVerifiedForReports ? `მოლოდინში: ${commandCenterPendingOrders.length} შეკვეთა` : "მონაცემები ჯერ არ დადასტურებულა"}</span>
               </button>
               <button type="button" onClick={() => setAdminTab('support')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-amber-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-amber-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-4 w-4 shrink-0 text-amber-300" /></span>
-                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterOverdueTickets.length}</strong>
-                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">ღია ტიკეტი 24 საათზე მეტი ხნით · გახსნა</span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{supportTicketsError ? "—" : commandCenterOverdueTickets.length}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{supportTicketsError ? "ჩატვირთვის შეცდომა" : "ღიაა 24 საათზე მეტხანს"}</span>
               </button>
               <button type="button" onClick={() => setAdminTab('replenishment')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-rose-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-rose-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-4 w-4 shrink-0 text-rose-300" /></span>
-                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{replenishmentPositions.filter(position => position.isLowStock).length}</strong>
-                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">პოზიცია/ვარიანტი საჭიროებს შევსების დაგეგმვას · გახსნა</span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{replenishmentSettingsReady && !replenishmentError ? commandCenterLowStockPositions.length : "—"}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{replenishmentSettingsReady && !replenishmentError ? "შესავსები პოზიციები" : "პარამეტრები დასადასტურებელია"}</span>
               </button>
               <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-sky-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-sky-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-4 w-4 shrink-0 text-sky-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
-                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მომდევნო 24 საათში · გახსნა</span>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მომდევნო 24 საათში</span>
               </button>
             </div>
 
@@ -5199,13 +5209,15 @@ export default function AdminDashboardPro({
                   <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">შეკვეთების რიგი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">ახალი და დამუშავების პროცესში მყოფი შეკვეთები</p></div>
                   <button type="button" onClick={() => setAdminTab('orders')} className="shrink-0 rounded-lg border border-emerald-400/25 px-3 py-2 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10">ყველა</button>
                 </div>
-                {commandCenterPendingOrders.length === 0 ? (
+                {!ordersVerifiedForReports ? (
+                  <p role="status" className="admin-workspace-command-notice rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">{ordersError ? "შეკვეთების ჩატვირთვა ვერ მოხერხდა. გახსენით შეკვეთების სექცია." : "შეკვეთების მონაცემები ჯერ არ დადასტურებულა."}</p>
+                ) : commandCenterPendingOrders.length === 0 ? (
                   <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">ამჟამად დასამუშავებელი შეკვეთები არ არის.</p>
                 ) : (
                   <div className="space-y-2">
                     {commandCenterPendingOrders.slice(0, 5).map(order => (
                       <button type="button" key={String(order.id)} onClick={() => setAdminTab('orders')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-emerald-400/40">
-                        <span className="min-w-0"><strong className="block truncate text-xs text-white">#{order.id} · {order.customerName || 'მომხმარებელი'}</strong><span className="mt-1 block text-[10px] text-slate-400">{order.status || 'სტატუსი უცნობია'}</span></span>
+                        <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">#{order.id} · {order.customerName || 'მომხმარებელი'}</strong><span className="mt-1 block text-[10px] text-slate-400">{order.status || 'სტატუსი უცნობია'}</span></span>
                         <span className="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">ნახვა</span>
                       </button>
                     ))}
@@ -5228,7 +5240,7 @@ export default function AdminDashboardPro({
                       const isOverdue = commandCenterOverdueTickets.some(item => String(item.id) === String(ticket.id));
                       return (
                         <button type="button" key={String(ticket.id)} onClick={() => setAdminTab('support')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-amber-400/40">
-                          <span className="min-w-0"><strong className="block truncate text-xs text-white">{ticket.subject || 'მხარდაჭერის მოთხოვნა'}</strong><span className="mt-1 block text-[10px] text-slate-400">{ticket.customerName || ticket.email || 'მომხმარებელი'}</span></span>
+                          <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">{ticket.subject || 'მხარდაჭერის მოთხოვნა'}</strong><span className="mt-1 block text-[10px] text-slate-400">{ticket.customerName || ticket.email || 'მომხმარებელი'}</span></span>
                           <span className={`max-w-[45%] shrink-0 break-words rounded-full px-2 py-1 text-right text-[10px] leading-4 font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
                         </button>
                       );
@@ -5239,16 +5251,18 @@ export default function AdminDashboardPro({
 
               <div className="admin-command-panel min-w-0 rounded-2xl border border-rose-400/20 bg-slate-900/75 p-3 sm:p-5">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
-                  <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">არსებული 5 ერთეულის ზღვრის მიხედვით</p></div>
+                  <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">შევსების ინდივიდუალური ზღვრების მიხედვით</p></div>
                   <button type="button" onClick={() => setAdminTab('replenishment')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">შევსების გეგმა</button>
                 </div>
-                {commandCenterLowStockGroups.length === 0 ? (
-                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">დაბალი მარაგის ჩანაწერები არ იძებნება არსებული ზღვრის ფარგლებში.</p>
+                {!replenishmentSettingsReady || replenishmentError ? (
+                  <p role="status" className="admin-workspace-command-notice rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">მარაგის პარამეტრები ჯერ არ დადასტურებულა. გახსენით შევსების გეგმა.</p>
+                ) : commandCenterLowStockGroups.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">შევსების საჭიროების მქონე პოზიციები არ იძებნება.</p>
                 ) : (
                   <div className="space-y-2">
                     {commandCenterLowStockGroups.slice(0, 5).map(group => (
                       <div key={group.key} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3">
-                        <span className="min-w-0"><strong className="block truncate text-xs text-white">{group.name}</strong><span className="mt-1 block truncate text-[10px] text-slate-400">{group.positions.map(position => position.variantName).filter(Boolean).join(', ') || group.sku}</span></span>
+                        <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">{group.name}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{group.positions.map(position => position.variantName).filter(Boolean).join(', ') || group.sku}</span></span>
                         <span className="shrink-0 rounded-full bg-rose-400/10 px-2.5 py-1 text-[10px] font-bold text-rose-200">{group.positions.length} პოზიცია</span>
                       </div>
                     ))}
@@ -5267,8 +5281,8 @@ export default function AdminDashboardPro({
                   <div className="space-y-2">
                     {commandCenterRecentEvents.map(event => (
                       <button type="button" key={event.id} onClick={() => setAdminTab(event.tab)} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-sky-400/40">
-                        <span className="min-w-0"><strong className="block truncate text-xs text-white">{event.title}</strong><span className="mt-1 block text-[10px] text-slate-400">{event.kind} · {event.detail}</span></span>
-                        <time className="max-w-[45%] shrink-0 break-words text-right text-[10px] leading-4 text-slate-500">{new Date(event.timestamp).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                        <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">{event.title}</strong><span className="mt-1 block text-[10px] text-slate-400">{event.kind} · {event.detail}</span></span>
+                        <time dateTime={new Date(event.timestamp).toISOString()} className="max-w-[45%] shrink-0 break-words text-right text-[10px] leading-4 text-slate-500">{new Date(event.timestamp).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' })}</time>
                       </button>
                     ))}
                   </div>

@@ -932,3 +932,26 @@
 @media(min-width:768px) and (max-width:1023px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group { display:none!important; }
 }
+
+/* Workspace audit 02 — readable operational overview, preserving editor colors and card geometry. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div { align-items:center; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero h3 { line-height:1.35!important;overflow-wrap:break-word; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi { display:flex!important;flex-direction:column;align-items:stretch;min-width:0;transform:none!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child { min-height:2.8em;line-height:1.4!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > span { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong { line-height:1.25!important;font-variant-numeric:tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:last-child { margin-top:auto!important;padding-top:6px;line-height:1.5!important;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child { flex-wrap:wrap;align-items:center; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > div { flex:1 1 140px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > button { min-height:44px!important;max-width:100%;white-space:normal!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel button { min-height:44px!important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-workspace-command-row-title { white-space:normal!important;overflow-wrap:anywhere;line-height:1.45; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) > span:first-child { min-width:0;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-workspace-command-notice { line-height:1.6;overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center :is(button,[role="button"]):focus-visible { outline:2px solid var(--av-focus)!important;outline-offset:2px!important; }
+@media(max-width:640px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div { align-items:stretch; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child { min-height:3.9em; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) { flex-wrap:wrap;gap:6px!important; }
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) > span:first-child { flex:1 1 135px; }
+}

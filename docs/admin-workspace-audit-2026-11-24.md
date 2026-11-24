@@ -9,3 +9,6 @@ AdminDashboardPro has 7,629 lines and 23 permission-filtered modules. Existing a
 
 ## Block 01
 Five logical navigation groups for desktop and native mobile optgroups; tablet rail retains all permitted actions. Removes redundant emoji in rendered labels (Lucide icons remain), exposes active section via aria-current, replaces generic greeting with current module title and compact role subtitle. No permission, data, server or publishing changes. Tests added for exact module coverage and permission preservation. CI pending.
+
+## Block 02 — command center
+Four KPI cards retain navigation and show unavailable data rather than false zero when orders, support or replenishment are not verified. Low-stock groups and KPI now use the same replenishment planner positions, including saved per-position thresholds (not the obsolete fixed five-unit summary). Improve card alignment, wrapping of long names, 44px actions, compact copy and semantic dates. No data mutation, permissions or financial calculation change. Block 01 CI 1066/1068: two literal navigation regex assertions updated to validate grouped permission-filtered desktop and mobile rendering. New CI pending; production untouched.

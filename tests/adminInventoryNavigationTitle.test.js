@@ -16,7 +16,7 @@ test('command center visibility condition avoids redundant nested checks', () =>
 
 test('admin navigation keeps long Georgian labels readable and focus visible', () => {
   assert.match(dashboard, /className="flex min-w-0 items-center gap-2\.5"/);
-  assert.match(dashboard, /className="min-w-0 break-words">\{tab\.label\}/);
+  assert.match(dashboard, /className="min-w-0 break-words">\{adminWorkspaceNavigationLabel\(tab\.label\)\}/);
   assert.match(dashboard, /focus-visible:outline-emerald-300/);
   assert.match(dashboard, /shrink-0 px-2 py-0\.5 rounded-full/);
 });

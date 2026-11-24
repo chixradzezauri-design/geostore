@@ -15,3 +15,9 @@ test('workspace audit 01 groups every admin module once and never adds unauthori
  for(const term of ['canAccessAdminTab(tab.id)','groupAdminWorkspaceNavigation(visibleAdminNavigationItems)','aria-current={isActive ? "page" : undefined}','<optgroup','onSaveStorefrontDraft()','onPublishStorefront()','currentAdminNavigationLabel'])assert.ok(jsx.includes(term),term);
  assert.equal(JSON.parse(read('vercel.json')).git.deploymentEnabled['internal-admin-workspace-audit-2026-11-24'],false);
 });
+
+test('workspace audit 02 command center uses the same low-stock positions as replenishment and avoids false zero on unverified orders',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'), css=read('src/adminVideoRedesign.css');
+ for(const term of ['const commandCenterLowStockPositions = replenishmentPositions.filter(position => position.isLowStock)','commandCenterLowStockByProduct','commandCenterLowStockPositions.length','ordersVerifiedForReports ? commandCenterNewOrders.length','!ordersVerifiedForReports ? (','supportTicketsError ? "—"','!replenishmentSettingsReady || replenishmentError','შევსების ინდივიდუალური ზღვრების მიხედვით','admin-workspace-command-row-title','dateTime={new Date(event.timestamp).toISOString()}'])assert.ok(jsx.includes(term),term);
+ assert.ok(css.includes('Workspace audit 02'));assert.ok(css.includes('.admin-workspace-command-row-title'));
+});
