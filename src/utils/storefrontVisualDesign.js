@@ -1,4 +1,25 @@
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
+const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
+export function getStorefrontSectionOrder(raw,viewport='desktop'){
+ const base=Array.isArray(raw?.sectionOrder)?[...new Set(raw.sectionOrder.filter(id=>SECTION_IDS.includes(id)))]:[];
+ const inherited=[...base,...SECTION_IDS.filter(id=>!base.includes(id))];
+ const override=['tablet','mobile'].includes(viewport)?raw?.responsive?.[viewport]?.sectionOrder:null;
+ return validSectionOrder(override)?[...override]:inherited;
+}
+export function setStorefrontSectionOrder(raw,viewport,order){
+ if(!['desktop','tablet','mobile'].includes(viewport)||!validSectionOrder(order))return null;
+ const d=normalizeStorefrontVisualDesign(raw);
+ return normalizeStorefrontVisualDesign(viewport==='desktop'?{...d,sectionOrder:order}:{...d,responsive:{...d.responsive,[viewport]:{...d.responsive[viewport],sectionOrder:order}}});
+}
+export function inheritStorefrontSectionOrder(raw,viewport){
+ if(!['tablet','mobile'].includes(viewport))return null;
+ const d=normalizeStorefrontVisualDesign(raw),next={...d.responsive[viewport]};
+ delete next.sectionOrder;
+ return normalizeStorefrontVisualDesign({...d,responsive:{...d.responsive,[viewport]:next}});
+}
+export function storefrontViewportForWidth(width){
+ return width<=640?'mobile':width<=1023?'tablet':'desktop';
+}
 const ELEMENT_STYLE_IDS = [
   'hero', 'hero.image', 'hero.title', 'hero.description', 'hero.button',
   'banner', 'banner.card', 'banner.image', 'banner.title', 'banner.description', 'banner.button',
@@ -338,6 +359,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       const responsiveStyles = isPlainObject(responsive.elementStyles) ? responsive.elementStyles : {};
       return [viewport, {
         layout: normalizeResponsiveLayout(responsive.layout),
+        ...(validSectionOrder(responsive.sectionOrder)?{sectionOrder:[...responsive.sectionOrder]}:{}),
         theme: Object.fromEntries(Object.keys(defaults.theme).map(key => [key,
           responsiveTheme[key] == null ? '' : safeColor(responsiveTheme[key], '')
         ]).filter(([, value]) => value)),
@@ -439,7 +461,7 @@ export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
   };
 
   if (hero.imageUrl) style['--gs-hero-image'] = 'url("' + hero.imageUrl + '")';
-  design.sectionOrder.forEach((id, index) => {
+  getStorefrontSectionOrder(design,viewport).forEach((id, index) => {
     style['--gs-order-' + id] = String(index + 1);
   });
   return style;

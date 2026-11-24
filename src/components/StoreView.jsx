@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
-import { buildStorefrontElementStyle, withStorefrontVideoTokens, normalizeStorefrontCustomSections } from '../utils/storefrontVisualDesign.js';
+import { buildStorefrontElementStyle, withStorefrontVideoTokens, normalizeStorefrontCustomSections, getStorefrontSectionOrder, storefrontViewportForWidth } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
 import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown, getFlashSaleNextTickDelay } from '../utils/flashSaleTime.js';
@@ -60,6 +60,14 @@ export default function StoreView({
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
+  const [liveSectionViewport,setLiveSectionViewport]=useState(()=>typeof window==='undefined'?'desktop':storefrontViewportForWidth(window.innerWidth));
+  useEffect(()=>{
+    if(visualEditorViewport||typeof window==='undefined')return;
+    const sync=()=>setLiveSectionViewport(storefrontViewportForWidth(window.innerWidth));
+    sync();window.addEventListener('resize',sync);
+    return()=>window.removeEventListener('resize',sync);
+  },[visualEditorViewport]);
+  const sectionOrder=getStorefrontSectionOrder(siteSettings?.visualDesign,visualEditorViewport||liveSectionViewport);
 
   const storeText = ({
     ka: { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'ჭკვიანი ზომის შერჩევა', styleKicker: 'შეარჩიე შენი სტილი', heroTitle: 'შენი სტილი. შენი არჩევანი.', heroSubtitle: 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.', productsOnDisplay: 'პროდუქტი ვიტრინაზე', addToCartShort: 'კალათაში', viewCollection: 'კოლექციის ნახვა', limitedOffer: 'დროში შეზღუდული შეთავაზება', hurryDiscount: 'იჩქარეთ, ფასდაკლება იწურება!', hours: 'საათი', minutes: 'წუთი', seconds: 'წამი', discoverCollections: 'აღმოაჩინე კოლექციები', collectionIntro: 'შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი', navigation: 'ნავიგაცია:', publishReview: 'შეფასების და ფოტოს გამოქვეყნება', price: 'ფასი:', clear: 'გასუფთავება', noFilterResults: 'მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.', wishlistTitle: 'სურვილების სიაში დამატება', compareTitle: 'შედარებაში დამატება', discount: 'ფასდაკლება', viewDetails: 'დეტალურად ნახვა', productDetails: 'პროდუქტის დეტალური ხედი', vendor: 'მომწოდებელი:', variant: 'აირჩიეთ ინდივიდუალური ვარიანტი:', material: 'მასალა / შემადგენლობა', durability: 'მდგრადობა / მახასიათებელი', giftWrap: 'სასაჩუქრე პრემიუმ შეფუთვა', giftWrapInfo: 'ყუთი, ბაფთა და ბარათი (+5 ₾)', giftMessage: 'სასაჩუქრე ბარათის ტექსტი (უფასო):', giftPlaceholder: 'ჩაწერეთ თქვენი სურვილი...', vipWarranty: 'VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)', warrantyInfo: 'სრული დაცვა დაზიანებისგან (+15 ₾)', uploadPhoto: 'ატვირთეთ ფოტო:', photoSelected: 'ფოტო არჩეულია', noReviews: 'ამ პროდუქტზე ჯერ არ არის შეფასებები.', enterMeasurements: 'მიეთითეთ თქვენი პარამეტრები', height: 'თქვენი სიმაღლე (სმ):', weight: 'თქვენი წონა (კგ):', heightExample: 'მაგ: 178', weightExample: 'მაგ: 75', calculateSize: 'ზომის გამოთვლა და შერჩევა', sizeGuide: 'ზომების გიდი', sizeChart: 'ზომების ცხრილი', clothingSizes: 'ტანსაცმლის ზომები', chest: 'გულმკერდი', waist: 'წელი', understand: 'გასაგებია', subcategoryHint: 'აირჩიეთ სუბკატეგორია ▾', categoryHint: 'კატეგორიის ნახვა', subCount: 'სუბ' },
@@ -543,8 +551,10 @@ export default function StoreView({
     );
   });
 
-  return (
-    <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
+  // Keyed, wrapper-free groups keep DOM and keyboard order aligned; attached
+  // custom blocks, filter errors and product pagination move with their section.
+  const sectionGroups = {
+    hero: <>
       
       {/* GEOSTORE FASHION EDITORIAL HERO */}
       <section data-visual-editor-target="hero" style={videoElementStyle('hero')} className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
@@ -563,6 +573,8 @@ export default function StoreView({
       </section>
 
       {renderCustomSections('after-hero')}
+    </>,
+    banners: <>
 
       {Array.isArray(banners) && banners.length > 0 && (
         <section data-visual-editor-target="banner" style={videoElementStyle('banner')} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
@@ -595,6 +607,8 @@ export default function StoreView({
       )}
 
       {renderCustomSections('after-banners')}
+    </>,
+    flashSale: <>
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
@@ -673,6 +687,8 @@ export default function StoreView({
       )}
 
       {renderCustomSections('after-flash-sale')}
+    </>,
+    categories: <>
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
       <div id="gs-video-collections" data-visual-editor-target="categories" style={videoElementStyle('categories')} className="gs-editorial-collections space-y-6">
@@ -835,6 +851,8 @@ export default function StoreView({
       </div>
 
       {renderCustomSections('after-categories')}
+    </>,
+    filters: <>
 
       {/* Filters & Sorting */}
       <div id="gs-video-catalog-anchor" data-visual-editor-target="filters" style={videoElementStyle('filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
@@ -899,8 +917,6 @@ export default function StoreView({
         </div>
       </div>
 
-      {renderCustomSections('after-filters')}
-
       {hasInvalidPriceRange && (
         <p id="gs-price-range-error" className="gs-price-range-error" role="alert">
           {currentLang === 'en'
@@ -910,6 +926,11 @@ export default function StoreView({
               : 'მინიმალური ფასი მაქსიმალურ ფასზე მეტი ვერ იქნება.'}
         </p>
       )}
+
+      
+      {renderCustomSections('after-filters')}
+    </>,
+    products: <>
 
       {/* Products Grid */}
       {processedProducts.length === 0 ? (
@@ -1052,6 +1073,12 @@ export default function StoreView({
       )}
 
       {renderCustomSections('after-products')}
+    </>
+  };
+
+  return (
+    <div data-gs-dom-order="true" className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
+      {sectionOrder.map(id=><React.Fragment key={id}>{sectionGroups[id]}</React.Fragment>)}
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
