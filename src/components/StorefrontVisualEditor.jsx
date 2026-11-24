@@ -1,3 +1,4 @@
+import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown, ChevronUp, Monitor, RotateCcw, RotateCw,
@@ -917,7 +918,7 @@ export default function StorefrontVisualEditor({
     heroImageReadRequestRef.current += 1;
     heroImagePendingRef.current = false;
     setHeroImagePending(false);
-    commitDesign(DEFAULT_STOREFRONT_VISUAL_DESIGN);
+    commitDesign({ ...DEFAULT_STOREFRONT_VISUAL_DESIGN, designTemplates: designRef.current.designTemplates });
   };
 
   return (
@@ -1004,6 +1005,7 @@ export default function StorefrontVisualEditor({
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
         <aside className="gs-visual-editor-controls order-2 min-w-0 space-y-4 2xl:order-1">
+          {isOwner && <StorefrontDesignTemplates design={design} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy || versionRestoreBusy} onChange={commitDesign}/>}
           <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
             <label htmlFor="gs-visual-editor-control-search" className="block text-xs font-bold text-slate-200">პარამეტრების ჯგუფების ძებნა</label>
             <input id="gs-visual-editor-control-search" type="search" value={controlSearch} onChange={event => setControlSearch(event.target.value)} placeholder="მაგალითად: ფერები, ტექსტი, ფოტო…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-base text-white placeholder:text-slate-500" />

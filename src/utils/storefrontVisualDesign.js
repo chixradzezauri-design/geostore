@@ -322,6 +322,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     sectionOrder,
     productOrder,
     customSections: normalizeStorefrontCustomSections(raw.customSections),
+    designTemplates: normalizeStorefrontDesignTemplates(raw.designTemplates),
     stylePresets: (Array.isArray(raw.stylePresets) ? raw.stylePresets : []).slice(0, 20).map((preset, index) => {
       if (!isPlainObject(preset)) return null;
       const id = String(preset.id ?? '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) || 'style-preset-' + index;
@@ -521,4 +522,45 @@ export function withStorefrontVideoTokens(style, elementId) {
     result[`--gs-video-explicit-${property}`] = String(style[property]);
   }
   return result;
+}
+
+export const STOREFRONT_DESIGN_TEMPLATE_LIMIT=5;
+const templateIdValid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+const templateNameValid=v=>typeof v==='string'&&v===v.trim()&&v.length>0&&v.length<=40&&!/[\u0000-\u001f\u007f-\u009f]/.test(v);
+function storefrontTemplateSnapshot(d){
+ return {theme:{...d.theme},typography:{...d.typography},layout:{...d.layout},responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{theme:{...d.responsive[v].theme},typography:{...d.responsive[v].typography},layout:{...d.responsive[v].layout}}]))};
+}
+function normalizeStorefrontDesignTemplates(raw){
+ if(!Array.isArray(raw))return [];
+ const ids=new Set(),out=[];
+ for(const entry of raw.slice(0,STOREFRONT_DESIGN_TEMPLATE_LIMIT)){
+  const s=entry?.snapshot;
+  if(!templateIdValid(entry?.id)||ids.has(entry.id)||!templateNameValid(entry.name)||!isPlainObject(s?.theme)||!isPlainObject(s?.typography)||!isPlainObject(s?.layout)||!isPlainObject(s?.responsive))continue;
+  // Project only presentation tokens before normalization; no nested libraries,
+  // content, images, private business data, product ordering or visibility.
+  const safe=normalizeStorefrontVisualDesign({theme:s.theme,typography:s.typography,layout:s.layout,responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{theme:s.responsive[v]?.theme,typography:s.responsive[v]?.typography,layout:s.responsive[v]?.layout}]))});
+  ids.add(entry.id);out.push({id:entry.id,name:entry.name,snapshot:storefrontTemplateSnapshot(safe)});
+ }
+ return out;
+}
+export function saveStorefrontDesignTemplate(raw,{id,name}={}){
+ const d=normalizeStorefrontVisualDesign(raw);
+ if(!templateIdValid(id)||!templateNameValid(name)||d.designTemplates.length>=STOREFRONT_DESIGN_TEMPLATE_LIMIT||d.designTemplates.some(t=>t.id===id||t.name.toLowerCase()===name.toLowerCase()))return null;
+ return normalizeStorefrontVisualDesign({...d,designTemplates:[...d.designTemplates,{id,name,snapshot:storefrontTemplateSnapshot(d)}]});
+}
+export function applyStorefrontDesignTemplate(raw,id,scope='all'){
+ const d=normalizeStorefrontVisualDesign(raw),t=d.designTemplates.find(x=>x.id===id);
+ if(!t||!['all','theme','typography','layout'].includes(scope))return null;
+ const keys=['theme','typography','layout'].filter(k=>scope==='all'||scope===k);
+ const s=t.snapshot;
+ return normalizeStorefrontVisualDesign({...d,...Object.fromEntries(keys.map(k=>[k,s[k]])),responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{...d.responsive[v],...Object.fromEntries(keys.map(k=>[k,s.responsive[v][k]]))}]))});
+}
+export function renameStorefrontDesignTemplate(raw,id,name){
+ const d=normalizeStorefrontVisualDesign(raw);
+ if(!templateNameValid(name)||!d.designTemplates.some(t=>t.id===id)||d.designTemplates.some(t=>t.id!==id&&t.name.toLowerCase()===name.toLowerCase()))return null;
+ return normalizeStorefrontVisualDesign({...d,designTemplates:d.designTemplates.map(t=>t.id===id?{...t,name}:t)});
+}
+export function deleteStorefrontDesignTemplate(raw,id){
+ const d=normalizeStorefrontVisualDesign(raw);
+ return normalizeStorefrontVisualDesign({...d,designTemplates:d.designTemplates.filter(t=>t.id!==id)});
 }
