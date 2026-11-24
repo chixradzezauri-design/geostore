@@ -135,3 +135,49 @@ assert.equal(finalBalance.purchase_count,'1');assert.equal(finalBalance.balance_
 assert.equal((await ok('/admin_purchase_receipts?select=id&purchase_id=eq.'+po,ownerToken)).length,1);
 assert.deepEqual(await ok('/admin_purchase_receipts?select=id&purchase_id=eq.'+po,customerToken),[]);
 console.log('PASS signed HTTP purchase lifecycle: access, stale conflicts, receipt/payment/correction replay and exact balance');
+
+// Template lifecycle and concurrent edits over the real HTTP boundary.
+const template=randomUUID();
+const templateFields={name:'HTTP reusable template',category:'promotion',segment:'all',subject:'Offer',body:'Fixture plain text'};
+const templateCreate={p_id:template,p_request:randomUUID(),p_revision:'0',p_operation:'create',p_fields:templateFields};
+for(const t of [null,customerToken,forgedRole,metadataOnly,wrongSignature,expired]){
+ await denyRpc('admin_save_marketing_template',t,templateCreate);
+ await denyRpc('admin_read_marketing_templates',t,{p_id:template});
+}
+const templateSave=p=>rpc('admin_save_marketing_template',ownerToken,p);
+const templateRead=()=>rpc('admin_read_marketing_templates',ownerToken,{p_id:template});
+const firstTemplate=await templateSave(templateCreate);
+assert.equal(firstTemplate.id,template);assert.equal(firstTemplate.revision,'1');
+assert.equal(firstTemplate.idempotent_replay,false);
+assert.equal((await templateSave(templateCreate)).idempotent_replay,true);
+const invalidTemplate=await call('/rpc/admin_save_marketing_template',ownerToken,{...templateCreate,p_fields:{...templateFields,body:'Changed replay'}});
+assert.equal(invalidTemplate.status,400);assert.equal(invalidTemplate.data?.code,'22023');
+const edits=['Concurrent A','Concurrent B'].map(subject=>({...templateCreate,p_request:randomUUID(),p_revision:'1',p_operation:'edit',p_fields:{...templateFields,subject}}));
+const results=await Promise.all(edits.map(p=>call('/rpc/admin_save_marketing_template',ownerToken,p)));
+assert.deepEqual(results.map(r=>r.status).sort((a,b)=>a-b),[200,409]);
+const winner=results.findIndex(r=>r.status===200),loser=1-winner;
+assert.equal(results[loser].data?.code,'PT409');
+assert.equal(results[winner].data.revision,'2');
+assert.equal(results[winner].data.request_id,edits[winner].p_request);
+assert.equal((await templateSave(edits[winner])).idempotent_replay,true);
+let currentTemplate=await templateRead();
+assert.equal(currentTemplate.total,'1');assert.equal(currentTemplate.templates[0].revision,'2');
+assert.equal(currentTemplate.templates[0].subject,edits[winner].p_fields.subject);
+const archiveTemplate={p_id:template,p_request:randomUUID(),p_revision:'2',p_operation:'archive',p_fields:{}};
+const archivedTemplate=await templateSave(archiveTemplate);
+assert.equal(archivedTemplate.revision,'3');assert.equal(archivedTemplate.archived,true);
+assert.equal((await templateSave(archiveTemplate)).idempotent_replay,true);
+const afterArchive=await call('/rpc/admin_save_marketing_template',ownerToken,{...edits[winner],p_request:randomUUID(),p_revision:'3'});
+assert.equal(afterArchive.status,400);assert.equal(afterArchive.data?.code,'22023');
+currentTemplate=await templateRead();
+assert.equal(currentTemplate.templates[0].revision,'3');assert.equal(currentTemplate.templates[0].archived,true);
+assert.equal(currentTemplate.templates[0].subject,edits[winner].p_fields.subject);
+// Old exact replay returns historical acknowledgement without reverting the current row.
+assert.equal((await templateSave(templateCreate)).revision,'1');
+assert.equal((await templateRead()).templates[0].revision,'3');
+await denied('/marketing_template_versions?select=*',ownerToken);
+const independentCampaign=await rpc('admin_read_marketing_campaigns',ownerToken,{p_id:campaign});
+assert.equal(independentCampaign.campaigns[0].revision,'2');
+assert.equal(independentCampaign.campaigns[0].subject,'Offer');
+assert.equal(independentCampaign.delivery_enabled,false);
+console.log('PASS signed HTTP template lifecycle: permissions, concurrent edit conflict, immutable archive, replay and campaign independence');
