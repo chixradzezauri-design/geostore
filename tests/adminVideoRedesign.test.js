@@ -46,3 +46,8 @@ test('batch 03 shared card geometry cannot leak one module settings into another
  assert.ok(css.includes('Video redesign 03'));
  assert.ok(css.includes('max(16px, var(--admin-vd-inputFontSize-active, 16px))'));
 });
+
+test('batch 04 responsive order, staff and finance layouts retain security-sensitive actions',()=>{
+ for(const term of ['aria-pressed={orderStatusFilter === st}','handleUpdateOrderStatus(o.id, \'ახალი\')','isDeliveredOrderStatus(o.status)','isShippedOrderStatus(o.status)','handlePrintInvoice(o)','handleExportOrders','handleInviteStaff','revokeStaff(staff)','reactivateStaff(staff)','handleExportAnalytics','!ordersVerifiedForReports','handleAddExpense','handleDeleteExpense(exp.id)']) assert.ok(jsx.includes(term),term);
+ for(const term of ['Video redesign 04','--admin-vd-filterBackground-active','button[aria-pressed="true"]','.admin-order-status-actions > button:disabled','.admin-staff-permission-grid > label','.admin-analytics-kpis .admin-analytics-value','font-variant-numeric: tabular-nums','.admin-expense-row','grid-template-columns: repeat(2,minmax(0,1fr))']) assert.ok(css.includes(term),term);
+});
