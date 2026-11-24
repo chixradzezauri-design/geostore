@@ -35,10 +35,10 @@ test('Stage88 denies relaxed staff RLS, exposed staff records and CRM/support pr
 });
 test('Stage88 rejects direct SECURITY DEFINER public RPC and anonymous staff permission escalation',()=>{
  let x=clone(frozen);
- x.supportSurface.rpcs.find(r=>r.sig==='public.has_staff_permission(text)').anon=true;
+ x.supportSurface.rpcs.find(r=>r.sig.startsWith('public.has_staff_permission(')).anon=true;
  assert.throws(()=>verifyStage88({observed:x}),/support\/staff AUTH RPC/);
  x=clone(frozen);
- x.supportSurface.rpcs.find(r=>r.sig==='public.get_support_ticket_messages(text,text)').definer=true;
+ x.supportSurface.rpcs.find(r=>r.sig.startsWith('public.get_support_ticket_messages(')).definer=true;
  assert.throws(()=>verifyStage88({observed:x}),/support\/staff AUTH RPC/);
 });
 test('Stage88 checks frontend only uses new order read/image-ref APIs and server staff management',()=>{

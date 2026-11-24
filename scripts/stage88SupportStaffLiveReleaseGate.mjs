@@ -13,6 +13,7 @@ const SNAP_SHA='da130644e7f258533929455cd220148b1080253f';
 const source=new URL('../release/stage88-live-support-staff-surface.json',import.meta.url);
 const frozen=JSON.parse(readFileSync(source,'utf8'));
 const stage82=JSON.parse(readFileSync(new URL('../release/stage82-live-effective-schema-surface.json',import.meta.url),'utf8'));
+const stage81=JSON.parse(readFileSync(new URL('../release/stage81-production-schema-baseline.json',import.meta.url),'utf8'));
 const phase=JSON.parse(readFileSync(new URL('../release/stage72-production-history-baseline.json',import.meta.url),'utf8'));
 const get=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const reject=why=>{throw Error('Stage88 support/staff/Phase B release BLOCKED: '+why)};
@@ -103,28 +104,42 @@ export function verifyStage88({observed=frozen,freshSurface=null}={}){
  const rpcs=new Map(s.rpcs.map(x=>[x.sig,x]));
  demand(rpcs.size===16,'duplicate support/staff RPC signature');
  const catalog=new Map(stage82.surface.functions.map(x=>[x.signature,x]));
+ const staffBaseline=new Map(stage81.catalog.rpcs.map(x=>[x.signature,x]));
+ // Stage81 stores canonical SQL identity args (text); Stage82 includes named
+ // pg_get_function_identity_arguments (p_permission text) for most routines,
+ // but excluded the permission helper. These are the same PostgreSQL overload.
+ const byPrefix=prefix=>{
+  const hits=[...rpcs.values()].filter(v=>v.sig.startsWith(prefix));
+  demand(hits.length===1,'support/staff RPC overload missing or ambiguous: '+prefix);
+  return hits[0];
+ };
  for(const [signature,v] of rpcs){
   const prev=catalog.get(signature);
-  demand(Boolean(prev)&&v.md5===prev.definition_md5&&
-   v.definer===prev.definer&&
-   v.anon===prev.anon_execute&&v.authenticated===prev.authenticated_execute&&
-   v.pathLocked===true,
+  const staffKey=signature.endsWith('has_staff_permission(p_permission text)')
+   ? signature.replace('(p_permission text)','(text)') : null;
+  const staff=staffKey?staffBaseline.get(staffKey):null;
+  demand(v.pathLocked===true&&(
+   (Boolean(prev)&&v.md5===prev.definition_md5&&
+    v.definer===prev.definer&&
+    v.anon===prev.anon_execute&&v.authenticated===prev.authenticated_execute)||
+   (Boolean(staff)&&v.md5===staff.definition_md5&&
+    v.definer===staff.security_definer&&
+    v.anon===staff.anon_execute&&v.authenticated===staff.authenticated_execute)),
    'support/staff AUTH RPC definition or grant mismatch: '+signature);
   demand(signature.startsWith('public.') ? v.definer===false : v.definer===true,
    'public support RPC escalates privileges directly: '+signature);
  }
- for(const name of ['public.has_staff_permission(text)','private.has_staff_permission(text)',
-  'public.get_my_support_tickets(integer)','public.get_support_ticket_unread_counts()']){
-  const entry=rpcs.get(name);
-  demand(entry?.anon===false&&entry.authenticated===true,
-   'authenticated-only module or history RPC no longer locked: '+name);
+ for(const prefix of ['public.has_staff_permission(','private.has_staff_permission(',
+  'public.get_my_support_tickets(','public.get_support_ticket_unread_counts(']){
+  const entry=byPrefix(prefix);
+  demand(entry.anon===false&&entry.authenticated===true,
+   'authenticated-only module or history RPC no longer locked: '+prefix);
  }
- for(const name of ['public.get_support_ticket_messages(text,text)',
-  'private.get_support_ticket_messages(text,text)',
-  'public.create_support_ticket(text,text,text,text,text,text)']){
-  const entry=rpcs.get(name);
-  demand(entry?.anon===true&&entry.authenticated===true,
-   'guest-support token-gated endpoint access changed: '+name);
+ for(const prefix of ['public.get_support_ticket_messages(',
+  'private.get_support_ticket_messages(','public.create_support_ticket(']){
+  const entry=byPrefix(prefix);
+  demand(entry.anon===true&&entry.authenticated===true,
+   'guest-support token-gated endpoint access changed: '+prefix);
  }
  verifyNewFrontendEntrypoints();
  const wf=get('.github/workflows/stage78-free-supabase-auth-postgrest.yml');
