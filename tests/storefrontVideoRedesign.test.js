@@ -50,7 +50,7 @@ test('video 06 cart and checkout preserve existing purchase contract and empty-s
  const app=read('src/App.jsx');
  for(const term of ["gs-video-continue-shopping","gs-video-cart-item-details","gs-video-applied-coupon","handleAddSavedProduct(savedProd)","handleFindSavedProduct(savedProd)","toggleWishlist(savedProd)","changeCartQuantity(item, Number(item.quantity) + 1)","removeFromCart(item)","onSubmit={handleApplyCoupon}","setAppliedCoupon(null)","calculateCheckoutTotals({","formatPrice(cartTotalGEL)","setIsCheckoutOpen(true)","storefrontThemeStyle={buildStorefrontVisualStyle(siteSettings?.visualDesign)}"])assert.ok(app.includes(term),term);
  for(const term of ["onSubmit={handlePlaceOrder}","disabled={isSubmittingOrder}","readOnly={Boolean(currentUser?.email)}","aria-invalid={checkoutErrorField","style={storefrontThemeStyle}","navigator.clipboard.writeText(code)"])assert.ok(modals.includes(term),term);
- for(const term of ["gs-video-continue-shopping","gs-video-applied-coupon","grid-template-columns: 72px minmax(0,1fr)","gs-checkout-submit-area { position: static !important","font-size: 16px !important"])assert.ok(css.includes(term),term);
+ for(const term of ["gs-video-continue-shopping","gs-video-applied-coupon","grid-template-columns: 72px minmax(0,1fr)","gs-checkout-submit-area { position: sticky !important","font-size: 16px !important"])assert.ok(css.includes(term),term);
 });
 
 test('video 07 profile and account dialogs retain identity and security handlers',()=>{
@@ -59,3 +59,5 @@ test('video 07 profile and account dialogs retain identity and security handlers
  for(const term of ['gs-video-notifications-title','gs-video-notification-card','onClick={markAllNotificationsAsRead}','onSubmit={handleAuthSubmit}',"setAuthMode('reset-request')",'minLength={authMode'])assert.ok(modals.includes(term),term);
  for(const term of ['gs-video-profile-status[class*="text-emerald-"]','grid-template-columns: minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr)','gs-video-profile-email','--gs-surface','gs-commerce-dialog--account form input'])assert.ok(css.includes(term),term);
 });
+
+test('video 08 preserves assistance actions and restores sticky checkout',()=>{const app=read('src/App.jsx'), image=read('src/components/ImageSearchModal.jsx');for(const term of ['gs-video-assistance-obscured','gs-video-support-open','setIsAiAssistantOpen(true)'])assert.ok(app.includes(term),term);for(const term of ['validateImageFile(file, 5 * 1024 * 1024','handleStartVisualSearch','gs-video-image-search-title','fileInputRef.current?.click()'])assert.ok(image.includes(term),term);for(const term of ['gs-checkout-submit-area { position: sticky !important','scroll-padding-bottom: 116px','gs-video-assistance-obscured','gs-ai-message-text','gs-image-search-notice','gs-product-compare-specs','gs-wardrobe-add-form'])assert.ok(css.includes(term),term);});

@@ -30,3 +30,6 @@ Added localized continue-shopping controls to empty states; improved cart item l
 
 ## Batch 07 — customer profile, order history and account dialogs
 Replaced conflicting dark profile surfaces with storefront theme tokens, removed email truncation, improved order code/date/item wrapping and accessible status contrast, added existing history error visibility when cached orders remain. Login, registration and password recovery forms plus notification cards use consistent surfaces and 44px targets; no authentication/security policy, identity, status or order API changes. Batch 06 build/dependency/isolated checkout contract passed; browser/CodeQL were running at inspection. No Production/Preview. New CI pending.
+
+## Batch 08 — assistance and additional services
+Hide launchers behind active dialogs and AI launcher while support is open. Refine assistance messages, support inputs, photo upload keyboard access and truthful visual search limitation, compare and wardrobe surfaces. Restore sticky mobile checkout submit and scroll padding after 320px browser failure on batch 07 (other four checks passed). No service integration, database or production change. CI pending.

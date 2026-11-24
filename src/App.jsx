@@ -4150,7 +4150,7 @@ export default function App() {
         )}
       </main>
 
-      <div className="gs-floating-ai">
+      <div className={`gs-floating-ai${supportOpen || isCheckoutOpen || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen ? " gs-video-assistance-obscured" : ""}`}>
         <button
           type="button"
           onClick={() => setIsAiAssistantOpen(true)}
@@ -4169,7 +4169,7 @@ export default function App() {
         </button>
       </div>
 
-      <div className="gs-floating-support">
+      <div className={`gs-floating-support${supportOpen ? " gs-video-support-open" : ""}${isCheckoutOpen || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen ? " gs-video-assistance-obscured" : ""}`}>
         {supportOpen ? (
           <div className="gs-support-panel">
             <div className="gs-support-panel-heading">
