@@ -8,6 +8,7 @@ on:
       - 'tests/stage78-supabase/**'
       - 'scripts/stage78AuthPostgrest.mjs'
       - 'scripts/advancedAdminRealAuth.mjs'
+      - 'tests/stage78-supabase/advanced-admin-migration-rehearsal.sh'
       - 'tests/sql/advanced_admin_acl_verify.sql'
       - 'scripts/advancedAdminReleaseBundle.mjs'
       - 'release/advanced-admin-release-candidate.json'
@@ -146,8 +147,7 @@ jobs:
           node "$GITHUB_WORKSPACE/scripts/advancedAdminReleaseBundle.mjs" > "$RUNNER_TEMP/advanced-admin-candidate.sql"
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -f advanced-admin-auth-fixture.sql
-          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
-            -v ON_ERROR_STOP=1 -f "$RUNNER_TEMP/advanced-admin-candidate.sql"
+          bash advanced-admin-migration-rehearsal.sh
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
           node "$GITHUB_WORKSPACE/scripts/advancedAdminRealAuth.mjs"
