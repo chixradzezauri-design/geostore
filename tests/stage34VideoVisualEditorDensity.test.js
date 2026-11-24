@@ -22,7 +22,7 @@ test('Stage 34: phone save/publish actions reuse the protected handlers', () => 
   assert.match(mobile, /md:hidden/);
   assert.match(mobile, /onClick=\{saveDraft\}/);
   assert.match(mobile, /onClick=\{publish\}/);
-  assert.match(mobile, /disabled=\{!isOwner \|\| storefrontDraftBusy \|\| storefrontPublishBusy\}/);
+  assert.match(mobile, /disabled=\{heroImagePending \|\| !isOwner \|\| storefrontDraftBusy \|\| storefrontPublishBusy\}/);
   assert.match(source, /hidden md:sticky md:bottom-2 md:z-20 md:grid/);
   assert.match(source, /if \(!isOwner \|\| typeof onPublishStorefront !== 'function'/);
   assert.match(source, /if \(localDesignDirtyRef\.current/);

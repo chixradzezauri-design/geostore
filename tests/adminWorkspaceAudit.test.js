@@ -101,3 +101,13 @@ test('workspace audit 14 protects pending image reads and shared visual save que
  for(const term of ['heroImagePendingRef.current','heroImageReadRequestRef.current += 1','const currentDesign = designRef.current','finishRead();','disabled={heroImagePending || storefrontDraftBusy','disabled={heroImagePending || !isOwner','visibleControlGroupCount === 0']) assert.ok(store.includes(term),term);
  assert.ok(admin.includes('syncStatus === \'saved\' ?')); assert.ok(admin.includes('onReloadRemote?.()')); assert.ok(jsx.includes('if (!active || saveVersion !== adminVisualSaveVersionRef.current) return null;')); assert.ok(css.includes('Workspace audit 14'));
 });
+
+test('workspace audit 15 separates neutral and destructive actions and uses shared responsive tokens',()=>{
+ const jsx=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminVideoRedesign.css');
+ assert.ok(jsx.includes('admin-workspace-main flex-1'));
+ assert.ok(jsx.includes('admin-workspace-secondary-action rounded-xl'));
+ assert.ok(jsx.includes('admin-workspace-danger-action text-rose-400'));
+ const polish=css.slice(css.indexOf('/* Workspace audit 15'));
+ for(const term of ['[id^="admin-workspace-"]','var(--admin-vd-inputRadius-active, 12px)','var(--admin-vd-sectionGap-active, 16px)','var(--admin-vd-video-mobile-sectionGap','max(16px, var(--admin-vd-inputFontSize-active, 16px))','prefers-reduced-motion: reduce','width: auto !important;','min-height: 44px !important;',':focus-visible']) assert.ok(polish.includes(term),term);
+ assert.ok(css.includes('button:not(.admin-workspace-secondary-action)'));
+});

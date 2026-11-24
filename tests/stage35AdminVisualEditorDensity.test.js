@@ -37,6 +37,6 @@ test('Stage 35: multi-device cloud save and conflict UI stay connected to the ow
   assert.match(shell, /saveAdminPanelVisualDesignToCloud\(adminVisualDesign, adminVisualUpdatedAtRef\.current\)/);
   assert.match(shell, /visibleAdminTab === 'admin_visual_editor' && isOwner/);
   assert.match(source, /syncStatus === 'conflict'/);
-  assert.match(source, /onClick=\{onReloadRemote\}/);
+  assert.match(source, /onClick=\{\(\) => \{ if \(window\.confirm\([^)]*\)\) onReloadRemote\?\.\(\); \}\}/);
   assert.match(source, /onClick=\{onRetrySave\}/);
 });

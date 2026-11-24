@@ -5379,7 +5379,7 @@ export default function AdminDashboardPro({
       </div>
 
       {/* 🖥️ MAIN CONTENT AREA */}
-      <div className="flex-1 w-full space-y-6">
+      <div className="admin-workspace-main flex-1 w-full space-y-6">
 
         <div data-admin-visual-header="true" className="flex w-full min-w-0 flex-col justify-start lg:flex-row lg:justify-between items-start lg:items-center bg-slate-900/80 border border-emerald-500/30 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 lg:p-5 gap-3 shadow-2xl backdrop-blur-3xl">
           <div>
@@ -7467,10 +7467,10 @@ export default function AdminDashboardPro({
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <button type="button" disabled={index === 0} aria-label={`ბანერის ზემოთ აწევა: ${b.title}`} onClick={() => moveBanner(b.id, -1)} className="rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronUp className="w-4 h-4" /></button>
-                      <button type="button" disabled={index === (bannersList || []).length - 1} aria-label={`ბანერის ქვემოთ ჩამოწევა: ${b.title}`} onClick={() => moveBanner(b.id, 1)} className="rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronDown className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => { setEditingBannerId(b.id); setBannerForm({ title: b.title || "", subtitle: b.subtitle || "", image: b.image || "", link: b.link || "" }); }} className="rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
-                    <button type="button" aria-label={`ბანერის წაშლა: ${b.title}`} onClick={() => handleDeleteBanner(b.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" disabled={index === 0} aria-label={`ბანერის ზემოთ აწევა: ${b.title}`} onClick={() => moveBanner(b.id, -1)} className="admin-workspace-secondary-action rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronUp className="w-4 h-4" /></button>
+                      <button type="button" disabled={index === (bannersList || []).length - 1} aria-label={`ბანერის ქვემოთ ჩამოწევა: ${b.title}`} onClick={() => moveBanner(b.id, 1)} className="admin-workspace-secondary-action rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronDown className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => { setEditingBannerId(b.id); setBannerForm({ title: b.title || "", subtitle: b.subtitle || "", image: b.image || "", link: b.link || "" }); }} className="admin-workspace-secondary-action rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
+                    <button type="button" aria-label={`ბანერის წაშლა: ${b.title}`} onClick={() => handleDeleteBanner(b.id)} className="admin-workspace-danger-action text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
@@ -7776,8 +7776,8 @@ export default function AdminDashboardPro({
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black">{v.status}</span>
-                      <button type="button" onClick={() => { setEditingVendorId(v.id); setVendorForm({ name: v.name || "", commission: String(v.commission ?? "") }); }} aria-label={`საკომისიოს შეცვლა: ${v.name}`} className="rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
-                      <button type="button" aria-label={`მომწოდებლის წაშლა: ${v.name}`} onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => { setEditingVendorId(v.id); setVendorForm({ name: v.name || "", commission: String(v.commission ?? "") }); }} aria-label={`საკომისიოს შეცვლა: ${v.name}`} className="admin-workspace-secondary-action rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
+                      <button type="button" aria-label={`მომწოდებლის წაშლა: ${v.name}`} onClick={() => handleDeleteVendor(v.id)} className="admin-workspace-danger-action text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
