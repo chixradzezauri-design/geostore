@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
@@ -61,6 +65,11 @@
       "internal-admin-workspace-audit-2026-11-24": false,
       "internal-admin-advanced-capabilities-2026-11-24": false,
       "internal-technical-excellence-2026-11-25": false
+    }
+  },
+  "functions": {
+    "api/sitemap.js": {
+      "includeFiles": "src/supabaseClient.js"
     }
   }
 }
