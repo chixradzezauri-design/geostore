@@ -1,11 +1,12 @@
 import React from 'react';
 import { FileText, ShieldCheck } from 'lucide-react';
 import { translations } from '../utils/translations';
-import { buildStorefrontElementStyle } from '../utils/storefrontVisualDesign.js';
+import { buildStorefrontElementStyle, withStorefrontVideoTokens } from '../utils/storefrontVisualDesign.js';
 
 export default function StorefrontFooter({
   siteSettings,
   visualDesign = siteSettings?.visualDesign,
+  visualEditorViewport = null,
   activeTab,
   setActiveTab,
   setIsTermsOpen,
@@ -14,13 +15,7 @@ export default function StorefrontFooter({
   currentLang = 'ka'
 }) {
   const t = translations[currentLang] || translations.ka;
-  const styleFor = id => {
-    const style = buildStorefrontElementStyle(visualDesign, id);
-    for (const property of ['color', 'backgroundColor', 'borderColor', 'borderRadius', 'padding', 'fontSize', 'lineHeight']) {
-      if (style[property] != null) style[`--gs-video-${id.replaceAll('.', '-')}-${property}`] = style[property];
-    }
-    return style;
-  };
+  const styleFor = id => withStorefrontVideoTokens(buildStorefrontElementStyle(visualDesign, id, visualEditorViewport), id);
 
   return (
     <footer data-visual-editor-target="footer" style={styleFor('footer')} className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">

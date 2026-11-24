@@ -36,3 +36,6 @@ Hide launchers behind active dialogs and AI launcher while support is open. Refi
 
 ## Batch 09 — footer and shared visual consistency
 Use theme-aware footer surfaces and explicit visual-editor values for legal controls and copyright. Added existing customer-support entry and configured store identity, no fabricated social/contact addresses. Legal links and admin footer behavior retained; mobile two-column links and narrow single-column fallback. Batch 08 build, dependency and isolated checkout contract succeeded; browser and CodeQL were still running at inspection. No production/preview change. Next: editor compatibility and consolidated visual/functional tests.
+
+## Batch 10 — visual editor compatibility
+Internal preview previously lacked the storefront shell selector, and Header/Footer inferred device from browser rather than selected preview. Shared sanitized style-token helper, explicit viewport props and guarded editor CSS overrides now align preview/live surfaces. No persisted schema, authorization, publication, or cloud synchronization changes. Existing draft polling, version conflict and save/publish paths inspected and preserved. Batch 09 build/dependency/isolated checkout checks passed; browser/CodeQL pending at inspection. New CI pending; no deployment.

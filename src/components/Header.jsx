@@ -6,11 +6,12 @@ import {
   FileText, ShieldCheck, Download
 } from 'lucide-react';
 import { translations } from '../utils/translations';
-import { buildStorefrontElementStyle } from '../utils/storefrontVisualDesign.js';
+import { buildStorefrontElementStyle, withStorefrontVideoTokens } from '../utils/storefrontVisualDesign.js';
 
 export default function Header({
   siteSettings,
   visualDesign = siteSettings?.visualDesign,
+  visualEditorViewport = null,
   setActiveTab,
   activeTab,
   wishlistCount = 0,
@@ -106,15 +107,7 @@ export default function Header({
     ? 'Main navigation'
     : currentLang === 'ru' ? 'Главная навигация' : 'მთავარი ნავიგაცია';
   const categoryName = (category) => typeof category === 'string' ? category : (category?.name || '');
-  const visualStyle = (targetId) => {
-    const style = buildStorefrontElementStyle(visualDesign, targetId);
-    // Keep explicitly edited sizing authoritative over the compact menu defaults.
-    const key = targetId.replaceAll('.', '-');
-    for (const property of ['padding', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'fontSize', 'borderRadius', 'backgroundColor', 'color']) {
-      if (style[property] != null) style[`--gs-video-${key}-${property}`] = style[property];
-    }
-    return style;
-  };
+  const visualStyle = targetId => withStorefrontVideoTokens(buildStorefrontElementStyle(visualDesign, targetId, visualEditorViewport), targetId);
 
   return (
     <header ref={headerRef} data-visual-editor-target="header" style={visualStyle('header')} className={`gs-site-header${menuOpen ? ' is-menu-open' : ''}`}>

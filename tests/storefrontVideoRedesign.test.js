@@ -26,7 +26,7 @@ test('video 02 menu remains complete, compact and respects existing editor targe
  const header=read('src/components/Header.jsx');
  for(const term of ["goTo('profile')","goTo('cart')","goTo('wishlist')","goTo('admin')","runAction(setIsTrackerOpen)","runAction(setIsNotificationsOpen)","runAction(setIsComparisonOpen)","runAction(setIsAiAssistantOpen)","goTo('wardrobe')","runAction(setSupportOpen)","runAction(setIsTermsOpen)","runAction(setIsWarrantyOpen)","handleInstallClick(); closeMenu();","setSelectedCategory(name)","setSearchQuery?.('')","runAction(setIsImageSearchOpen)","handleLangChange(lang)","aria-expanded={menuOpen}","menuToggleRef.current?.focus()","gs-video-menu-primary","gs-video-menu-services"])assert.ok(header.includes(term),term);
  assert.equal(header.split("goTo('profile')").length-1,1);
- assert.ok(header.includes("buildStorefrontElementStyle(visualDesign, targetId)"));
+ assert.ok(header.includes("buildStorefrontElementStyle(visualDesign, targetId, visualEditorViewport)"));
  for(const term of ['--gs-video-header-menu-padding','--gs-video-header-search-input-fontSize','--gs-video-header-storeName-fontSize','grid-template-columns: repeat(2,minmax(0,1fr))','max-width: 359px','min-block-size: 44px !important'])assert.ok(css.includes(term),term);
 });
 
@@ -67,4 +67,13 @@ test('video 09 footer keeps legal navigation and editor controls and adds existi
  for(const term of ['footer.termsLink','footer.privacyLink','footer.warrantyLink','footer.copyright','setIsTermsOpen?.(true)',"setActiveTab?.('privacy')",'setIsWarrantyOpen?.(true)','onClick={onOpenSupport}',"activeTab !== 'admin'","siteSettings?.storeName"])assert.ok(footer.includes(term),term);
  assert.ok(app.includes('onOpenSupport={() => { setSupportSubmission(null); setSupportOpen(true); }}'));
  for(const term of ['--gs-video-footer-backgroundColor','--gs-video-footer-termsLink-color','--gs-video-footer-privacyLink-fontSize','--gs-video-footer-warrantyLink-color','--gs-video-footer-copyright-fontSize','gs-video-footer-support','grid-template-columns:repeat(2,minmax(0,1fr))'])assert.ok(css.includes(term),term);
+});
+
+test('video 10 explicit editor style tokens preserve viewport selection and do not mutate original styles',async()=>{
+ const {buildStorefrontElementStyle,withStorefrontVideoTokens,buildStorefrontVisualStyle}=await import('../src/utils/storefrontVisualDesign.js');
+ const design={elementStyles:{'header.storeName':{fontSize:22,textColor:'#123456',paddingX:8}},responsive:{mobile:{elementStyles:{'header.storeName':{fontSize:16,textColor:'#abcdef'}}},tablet:{elementStyles:{'header.storeName':{fontSize:19}}}}};
+ const base=buildStorefrontElementStyle(design,'header.storeName','desktop');const mobile=withStorefrontVideoTokens(buildStorefrontElementStyle(design,'header.storeName','mobile'),'header.storeName');const tablet=withStorefrontVideoTokens(buildStorefrontElementStyle(design,'header.storeName','tablet'),'header.storeName');
+ assert.equal(base.fontSize,'22px');assert.equal(base['--gs-video-explicit-fontSize'],undefined);assert.equal(mobile['--gs-video-header-storeName-fontSize'],'16px');assert.equal(mobile['--gs-video-explicit-color'],'#abcdef');assert.equal(mobile['--gs-video-explicit-paddingLeft'],'8px');assert.equal(tablet['--gs-video-explicit-fontSize'],'19px');assert.equal(tablet['--gs-video-explicit-color'],'#123456');assert.equal(withStorefrontVideoTokens({},'header.storeName')['--gs-video-explicit-fontSize'],undefined);
+ assert.equal(buildStorefrontVisualStyle({sections:{hero:false}},'desktop')['--gs-show-hero'],'none');
+ const editor=read('src/components/StorefrontVisualEditor.jsx');assert.equal(editor.split('visualEditorViewport={previewMode}').length-1,3);assert.ok(css.includes('.gs-visual-preview-frame.geostore-fashion-store'));assert.ok(css.includes('[style*="--gs-video-explicit-color:"]'));
 });
