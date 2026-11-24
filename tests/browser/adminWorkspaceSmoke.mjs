@@ -50,6 +50,16 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
         if (path === '/rest/v1/rpc/get_admin_panel_visual_design_state' && method === 'POST') return respond({ design: null, updated_at: null });
         if (path === '/rest/v1/rpc/has_staff_permission' && method === 'POST') return respond(true);
+        // Explicit read-only RPC fixtures. No save/check/consent mutation is allowlisted.
+        if (method === 'POST' && ['/rest/v1/rpc/admin_read_supplier_balance','/rest/v1/rpc/admin_marketing_segments','/rest/v1/rpc/admin_read_marketing_campaigns','/rest/v1/rpc/admin_read_marketing_templates'].includes(path)) {
+          if (req.headers().authorization !== 'Bearer '+accessToken) return respond({message:'Owner required'},403);
+          const body=req.postDataJSON()||{};
+          if(path.endsWith('/admin_read_supplier_balance')&&Object.keys(body).length===1&&body.p_supplier===null)return respond({supplier_id:null,purchase_count:'0',received_tetri:'0',paid_tetri:'0',balance_tetri:'0'});
+          if(path.endsWith('/admin_marketing_segments')&&Object.keys(body).length===0)return respond({as_of:'2026-11-24T12:00:00Z',timezone:'Asia/Tbilisi',new_days:30,inactive_days:90,segments:Object.fromEntries(['all','vip','new','no_purchase','one_purchase','repeat','inactive'].map(k=>[k,{accounts:'0',consent_candidates:'0'}]))});
+          if(path.endsWith('/admin_read_marketing_campaigns')&&Object.keys(body).length===1&&body.p_id===null)return respond({total:'0',campaigns:[],delivery_enabled:false});
+          if(path.endsWith('/admin_read_marketing_templates')&&Object.keys(body).length===1&&body.p_id===null)return respond({total:'0',templates:[]});
+          return respond({message:'Unexpected read scope'},400);
+        }
         // Verified STABLE read-only RPC: the POST transport does not mutate orders.
         if (path === '/rest/v1/rpc/admin_order_ledger_page' && method === 'POST') return respond([]);
         if (path === '/functions/v1/manage-admin-staff' && method === 'POST' && req.postDataJSON()?.action === 'list') return respond({ staff: [] });
@@ -115,7 +125,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await supplier.getByRole('combobox',{name:'სერვერული მომწოდებლის სტატუსი'}).selectOption('all');
           assert.equal(await supplier.locator('.admin-supplier-card').count(),1);
         }
-        if (tab === 'users') await page.locator('#admin-workspace-crm-filter').selectOption('vip');
+        if (tab === 'users') {
+          await page.locator('#admin-workspace-crm-filter').selectOption('vip');
+          const segments=shell.locator('.admin-marketing-segments');
+          await segments.getByRole('combobox',{name:'სეგმენტის ფილტრი'}).selectOption('vip');
+          await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
+          assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
+        }
         if (tab === 'support') await page.locator('#admin-workspace-support-status').selectOption('ღია');
       }
       assert.deepEqual(writes, [], 'Opening and filtering modules must not mutate live or fixture data');
