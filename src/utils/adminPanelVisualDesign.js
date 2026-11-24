@@ -679,7 +679,8 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
       }).filter(Boolean).slice(-10)
     : [];
 
-  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets, stylePresetBackups, moduleDesignBackups };
+  const designTemplates = normalizeAdminDesignTemplates(raw.designTemplates);
+  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets, stylePresetBackups, moduleDesignBackups, designTemplates };
 }
 
 export function createAdminStylePresetBackup(rawDesign, reason = 'მნიშვნელოვანი ცვლილების წინ') {
@@ -982,4 +983,64 @@ export function saveAdminPanelVisualDesign(rawDesign, storage) {
   } catch {
     return false;
   }
+}
+
+export const ADMIN_DESIGN_TEMPLATE_LIMIT = 5;
+const templateIdValid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+const templateNameValid = value => typeof value === 'string' && value.trim()===value && value.length>0 && value.length<=40 && !/[\u0000-\u001f\u007f-\u009f]/.test(value);
+// Only broad design tokens. No nested templates, text, module visibility,
+// component overrides, saved element presets, or business settings.
+function adminTemplateSnapshot(design) {
+  return {
+    theme: {...design.theme},
+    layout: {...design.layout},
+    responsive: Object.fromEntries(['tablet','mobile'].map(viewport=>[viewport,{
+      theme:{...design.responsive[viewport].theme},layout:{...design.responsive[viewport].layout}
+    }]))
+  };
+}
+function normalizeAdminDesignTemplates(raw) {
+  if (!Array.isArray(raw)) return [];
+  const ids=new Set(),result=[];
+  for(const entry of raw.slice(0,ADMIN_DESIGN_TEMPLATE_LIMIT)){
+    if(!templateIdValid(entry?.id)||ids.has(entry.id)||!templateNameValid(entry.name)||!isObject(entry.snapshot?.theme)||!isObject(entry.snapshot?.layout)||!isObject(entry.snapshot?.responsive)||!Number.isFinite(Date.parse(entry.savedAt)))continue;
+    // Project before normalization: nested collections can never recurse.
+    const s=entry.snapshot;
+    const sanitized=normalizeAdminPanelVisualDesign({theme:s.theme,layout:s.layout,responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{theme:s.responsive[v]?.theme,layout:s.responsive[v]?.layout}]))});
+    ids.add(entry.id);
+    result.push({id:entry.id,name:entry.name,savedAt:new Date(entry.savedAt).toISOString(),snapshot:adminTemplateSnapshot(sanitized)});
+  }
+  return result;
+}
+export function saveAdminDesignTemplate(raw,{id,name,savedAt}={}){
+  const design=normalizeAdminPanelVisualDesign(raw);
+  if(!templateIdValid(id)||!templateNameValid(name)||!Number.isFinite(Date.parse(savedAt))||design.designTemplates.length>=ADMIN_DESIGN_TEMPLATE_LIMIT||design.designTemplates.some(t=>t.id===id||t.name.toLowerCase()===name.toLowerCase()))return null;
+  const next=normalizeAdminPanelVisualDesign({...design,designTemplates:[...design.designTemplates,{id,name,savedAt,snapshot:adminTemplateSnapshot(design)}]});
+  // Conservative client-side payload guard; the existing 128 KiB JSONB RPC limit
+  // remains authoritative and can still reject a save.
+  if(new TextEncoder().encode(JSON.stringify(next)).length>100000)return null;
+  return next;
+}
+export function applyAdminDesignTemplate(raw,id,scope='all'){
+  const design=normalizeAdminPanelVisualDesign(raw),template=design.designTemplates.find(t=>t.id===id);
+  if(!template||!['all','theme','layout'].includes(scope))return null;
+  const s=template.snapshot, useTheme=scope!=='layout', useLayout=scope!=='theme';
+  return normalizeAdminPanelVisualDesign({...design,
+    theme:useTheme?s.theme:design.theme,
+    layout:useLayout?s.layout:design.layout,
+    responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{
+      ...design.responsive[v],
+      theme:useTheme?s.responsive[v].theme:design.responsive[v].theme,
+      layout:useLayout?s.responsive[v].layout:design.responsive[v].layout
+    }]))
+  });
+}
+export function renameAdminDesignTemplate(raw,id,name){
+  const design=normalizeAdminPanelVisualDesign(raw);
+  if(!templateNameValid(name)||!design.designTemplates.some(t=>t.id===id)||design.designTemplates.some(t=>t.id!==id&&t.name.toLowerCase()===name.toLowerCase()))return null;
+  return normalizeAdminPanelVisualDesign({...design,designTemplates:design.designTemplates.map(t=>t.id===id?{...t,name}:t)});
+}
+export function deleteAdminDesignTemplate(raw,id){
+  const design=normalizeAdminPanelVisualDesign(raw);
+  return normalizeAdminPanelVisualDesign({...design,designTemplates:design.designTemplates.filter(t=>t.id!==id)});
 }
