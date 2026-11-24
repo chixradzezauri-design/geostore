@@ -34,6 +34,7 @@ import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADM
 import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
+import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -5015,6 +5016,9 @@ export default function AdminDashboardPro({
             { id: 'users', label: '👥 CRM მომხმარებლები', count: crmUsers.length, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
   ].filter(tab => canAccessAdminTab(tab.id));
+  const adminNavigationGroups = groupAdminWorkspaceNavigation(visibleAdminNavigationItems);
+  const orderedAdminNavigationItems = adminNavigationGroups.flatMap(group => group.items.map((tab, index) => ({ ...tab, groupHeading: index === 0 ? group.label : null })));
+  const currentAdminNavigationLabel = adminWorkspaceNavigationLabel(visibleAdminNavigationItems.find(tab => tab.id === visibleAdminTab)?.label || 'მართვის პანელი');
 
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined} data-admin-video-layout="v1">
@@ -5027,18 +5031,20 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h3 className="font-black text-white text-sm">GEOSTORE Admin</h3>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Database Edition</p>
+            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">მართვის პანელი</p>
           </div>
         </div>
 
-        <div id="geostore-admin-desktop-modules" className="space-y-1.5">
-          {visibleAdminNavigationItems.map(tab => {
+        <div id="geostore-admin-desktop-modules" className="space-y-1.5" role="navigation" aria-label="ადმინისტრატორის მოდულები">
+          {orderedAdminNavigationItems.map(tab => {
             const IconComp = tab.icon;
             const isActive = visibleAdminTab === tab.id;
             return (
+              <React.Fragment key={tab.id}>
+              {tab.groupHeading && <p className="admin-workspace-nav-group" aria-hidden="true">{tab.groupHeading}</p>}
               <button
-                key={tab.id}
                 type="button"
+                aria-current={isActive ? "page" : undefined}
                 data-admin-visual-nav-item="true"
                 data-admin-visual-nav-active={isActive ? 'true' : 'false'}
                 onClick={() => setAdminTab(tab.id)}
@@ -5050,7 +5056,7 @@ export default function AdminDashboardPro({
               >
                 <div className="flex min-w-0 items-center gap-2.5">
                   <IconComp className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-emerald-400'}`} />
-                  <span className="min-w-0 break-words">{tab.label}</span>
+                  <span className="min-w-0 break-words">{adminWorkspaceNavigationLabel(tab.label)}</span>
                 </div>
                 {tab.count !== undefined && tab.count > 0 && (
                   <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black ${isActive ? 'bg-slate-950 text-emerald-400' : 'bg-slate-900 text-slate-300'}`}>
@@ -5058,6 +5064,7 @@ export default function AdminDashboardPro({
                   </span>
                 )}
               </button>
+              </React.Fragment>
             );
           })}
         </div>
@@ -5070,13 +5077,15 @@ export default function AdminDashboardPro({
             value={visibleAdminTab}
             onChange={(event) => setAdminTab(event.target.value)}
           >
-            {visibleAdminNavigationItems.map(tab => (
-              <option key={tab.id} value={tab.id}>{tab.label}</option>
+            {adminNavigationGroups.map(group => (
+              <optgroup key={group.id} label={group.label}>
+                {group.items.map(tab => <option key={tab.id} value={tab.id}>{adminWorkspaceNavigationLabel(tab.label)}</option>)}
+              </optgroup>
             ))}
           </select>
         </div>
 
-        <button 
+        <button type="button"
           onClick={() => { if (typeof handleLogout === 'function') handleLogout(); }} 
           className="admin-video-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-4"
         >
@@ -5090,10 +5099,10 @@ export default function AdminDashboardPro({
         <div data-admin-visual-header="true" className="flex w-full min-w-0 flex-col justify-start lg:flex-row lg:justify-between items-start lg:items-center bg-slate-900/80 border border-emerald-500/30 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 lg:p-5 gap-3 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
-              {isOwner ? 'მოგესალმებით, მთავარო ადმინისტრატორ! 👋' : `მოგესალმებით, ${adminAccess?.display_name || 'თანამშრომელო'}! 👋`}
+              {currentAdminNavigationLabel}
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              {isOwner ? 'სრული კონტროლი GEOSTORE-ის მართვის პანელზე:' : 'თქვენთვის მინიჭებული მოდულების მართვა:'}
+              {isOwner ? 'მთავარი ადმინისტრატორი' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
             </p>
           </div>
           <div className="grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
