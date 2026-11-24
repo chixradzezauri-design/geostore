@@ -275,6 +275,24 @@ END;
 $function$;
 CREATE TRIGGER zz_sync_size_color_aggregate_stock BEFORE INSERT OR UPDATE OF variants, stock ON public.products FOR EACH ROW EXECUTE FUNCTION private.sync_size_color_aggregate_stock();
 \i /tmp/stage60_original_inventory_trigger_prefix.sql
+-- Production PostgreSQL 17 grants broad default privileges in public.
+-- Reproduce the anon/authenticated subset for newly created candidate objects.
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon,authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated;
+BEGIN;
+CREATE TABLE public.advanced_default_acl_sentinel(id bigint GENERATED ALWAYS AS IDENTITY);
+CREATE FUNCTION public.advanced_default_acl_sentinel() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$;
+DO $default_acl$
+BEGIN
+ IF NOT has_table_privilege('anon','public.advanced_default_acl_sentinel','MAINTAIN')
+ OR NOT has_table_privilege('authenticated','public.advanced_default_acl_sentinel','TRUNCATE')
+ OR NOT has_sequence_privilege('anon','public.advanced_default_acl_sentinel_id_seq','USAGE')
+ OR NOT has_function_privilege('anon','public.advanced_default_acl_sentinel()','EXECUTE')
+ THEN RAISE EXCEPTION 'Live-shaped default grant fixture not active'; END IF;
+END $default_acl$;
+ROLLBACK;
+\echo 'PASS broad PostgreSQL 17 public default ACLs reproduced before candidate installation'
 \i /tmp/geostore-advanced-admin-candidate.sql
 DO $test$
 DECLARE relation text;

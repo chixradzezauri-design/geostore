@@ -65,7 +65,7 @@ BEGIN
  -- Payment/correction tables are RPC-only even though they reside in public.
  FOREACH t IN ARRAY ARRAY['public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts','public.admin_purchase_payments','public.admin_purchase_payment_corrections','private.marketing_email_consent_events','private.marketing_campaigns','private.marketing_campaign_revisions','private.marketing_template_versions','private.marketing_campaign_preflights'] LOOP
   IF NOT EXISTS(SELECT 1 FROM pg_class WHERE oid=to_regclass(t) AND relrowsecurity) THEN RAISE EXCEPTION 'Missing RLS %',t; END IF;
-  FOREACH privilege IN ARRAY ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'] LOOP
+  FOREACH privilege IN ARRAY ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN'] LOOP
    expected:=t IN ('public.admin_suppliers','public.admin_purchase_orders','public.admin_purchase_lines','public.admin_purchase_receipts') AND privilege='SELECT';
    IF has_table_privilege('anon',t,privilege) OR has_table_privilege('authenticated',t,privilege) IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Unexpected table ACL % %',t,privilege; END IF;
   END LOOP;
@@ -79,4 +79,4 @@ BEGIN
  END LOOP;
  IF has_sequence_privilege('anon','private.marketing_email_consent_events_sequence_id_seq','USAGE,SELECT,UPDATE') OR has_sequence_privilege('authenticated','private.marketing_email_consent_events_sequence_id_seq','USAGE,SELECT,UPDATE') THEN RAISE EXCEPTION 'Consent sequence exposed'; END IF;
 END $audit$;
-\echo 'PASS candidate ACL matrix: 45 routines, 11 RLS tables, column permissions and consent sequence'
+\echo 'PASS candidate ACL matrix: 45 routines, 11 RLS tables, column permissions, MAINTAIN and consent sequence'
