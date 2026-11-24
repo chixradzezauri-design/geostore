@@ -87,10 +87,17 @@ try {
            assert.ok(chosenCategoryLabel, 'A main category has an accessible label');
            const chosenCategoryTitle = (await liveCard.locator('h4').innerText()).trim();
            assert.ok(chosenCategoryTitle, 'A main category has a stable visible title');
-           assert.ok(await liveCard.evaluate(node => {
+           // A catalog refresh can replace a card between reading the title and
+           // focusing it. Retry the existing bounded keyboard scenario; never
+           // pass unless a focused visible category actually responds to Enter.
+           const focused = await liveCard.evaluate(node => {
              node.focus();
-             return document.activeElement === node;
-           }), 'Main category receives keyboard focus');
+             return node.isConnected && document.activeElement === node;
+           });
+           if (!focused) {
+             if (attempt === 2) throw new Error('Main category never received keyboard focus at ' + width + 'px');
+             continue;
+           }
            await page.keyboard.press('Enter');
            try {
              await page.waitForFunction(title =>

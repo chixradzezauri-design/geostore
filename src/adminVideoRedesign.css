@@ -1177,3 +1177,7 @@
 @media (prefers-reduced-motion: reduce) {
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-visual-nav-item="true"],.admin-workspace-secondary-action,.admin-workspace-danger-action) { transition: none !important; }
 }
+
+/* Advanced analytics: compact, responsive, inherits existing workspace colors. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+@media(max-width:640px) { .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison select { font-size:16px; width:100%; } }

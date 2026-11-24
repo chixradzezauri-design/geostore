@@ -1,4 +1,25 @@
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
+const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
+export function getStorefrontSectionOrder(raw,viewport='desktop'){
+ const base=Array.isArray(raw?.sectionOrder)?[...new Set(raw.sectionOrder.filter(id=>SECTION_IDS.includes(id)))]:[];
+ const inherited=[...base,...SECTION_IDS.filter(id=>!base.includes(id))];
+ const override=['tablet','mobile'].includes(viewport)?raw?.responsive?.[viewport]?.sectionOrder:null;
+ return validSectionOrder(override)?[...override]:inherited;
+}
+export function setStorefrontSectionOrder(raw,viewport,order){
+ if(!['desktop','tablet','mobile'].includes(viewport)||!validSectionOrder(order))return null;
+ const d=normalizeStorefrontVisualDesign(raw);
+ return normalizeStorefrontVisualDesign(viewport==='desktop'?{...d,sectionOrder:order}:{...d,responsive:{...d.responsive,[viewport]:{...d.responsive[viewport],sectionOrder:order}}});
+}
+export function inheritStorefrontSectionOrder(raw,viewport){
+ if(!['tablet','mobile'].includes(viewport))return null;
+ const d=normalizeStorefrontVisualDesign(raw),next={...d.responsive[viewport]};
+ delete next.sectionOrder;
+ return normalizeStorefrontVisualDesign({...d,responsive:{...d.responsive,[viewport]:next}});
+}
+export function storefrontViewportForWidth(width){
+ return width<=640?'mobile':width<=1023?'tablet':'desktop';
+}
 const ELEMENT_STYLE_IDS = [
   'hero', 'hero.image', 'hero.title', 'hero.description', 'hero.button',
   'banner', 'banner.card', 'banner.image', 'banner.title', 'banner.description', 'banner.button',
@@ -320,8 +341,10 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     },
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
     sectionOrder,
+    sectionGeometry: normalizeSectionGeometry(raw.sectionGeometry),
     productOrder,
     customSections: normalizeStorefrontCustomSections(raw.customSections),
+    designTemplates: normalizeStorefrontDesignTemplates(raw.designTemplates),
     stylePresets: (Array.isArray(raw.stylePresets) ? raw.stylePresets : []).slice(0, 20).map((preset, index) => {
       if (!isPlainObject(preset)) return null;
       const id = String(preset.id ?? '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) || 'style-preset-' + index;
@@ -337,6 +360,8 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       const responsiveStyles = isPlainObject(responsive.elementStyles) ? responsive.elementStyles : {};
       return [viewport, {
         layout: normalizeResponsiveLayout(responsive.layout),
+        ...(validSectionOrder(responsive.sectionOrder)?{sectionOrder:[...responsive.sectionOrder]}:{}),
+        sectionGeometry: normalizeSectionGeometry(responsive.sectionGeometry),
         theme: Object.fromEntries(Object.keys(defaults.theme).map(key => [key,
           responsiveTheme[key] == null ? '' : safeColor(responsiveTheme[key], '')
         ]).filter(([, value]) => value)),
@@ -438,7 +463,7 @@ export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
   };
 
   if (hero.imageUrl) style['--gs-hero-image'] = 'url("' + hero.imageUrl + '")';
-  design.sectionOrder.forEach((id, index) => {
+  getStorefrontSectionOrder(design,viewport).forEach((id, index) => {
     style['--gs-order-' + id] = String(index + 1);
   });
   return style;
@@ -521,4 +546,83 @@ export function withStorefrontVideoTokens(style, elementId) {
     result[`--gs-video-explicit-${property}`] = String(style[property]);
   }
   return result;
+}
+
+export const STOREFRONT_DESIGN_TEMPLATE_LIMIT=5;
+const templateIdValid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+const templateNameValid=v=>typeof v==='string'&&v===v.trim()&&v.length>0&&v.length<=40&&!/[\u0000-\u001f\u007f-\u009f]/.test(v);
+function storefrontTemplateSnapshot(d){
+ return {theme:{...d.theme},typography:{...d.typography},layout:{...d.layout},responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{theme:{...d.responsive[v].theme},typography:{...d.responsive[v].typography},layout:{...d.responsive[v].layout}}]))};
+}
+function normalizeStorefrontDesignTemplates(raw){
+ if(!Array.isArray(raw))return [];
+ const ids=new Set(),out=[];
+ for(const entry of raw.slice(0,STOREFRONT_DESIGN_TEMPLATE_LIMIT)){
+  const s=entry?.snapshot;
+  if(!templateIdValid(entry?.id)||ids.has(entry.id)||!templateNameValid(entry.name)||!isPlainObject(s?.theme)||!isPlainObject(s?.typography)||!isPlainObject(s?.layout)||!isPlainObject(s?.responsive))continue;
+  // Project only presentation tokens before normalization; no nested libraries,
+  // content, images, private business data, product ordering or visibility.
+  const safe=normalizeStorefrontVisualDesign({theme:s.theme,typography:s.typography,layout:s.layout,responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{theme:s.responsive[v]?.theme,typography:s.responsive[v]?.typography,layout:s.responsive[v]?.layout}]))});
+  ids.add(entry.id);out.push({id:entry.id,name:entry.name,snapshot:storefrontTemplateSnapshot(safe)});
+ }
+ return out;
+}
+export function saveStorefrontDesignTemplate(raw,{id,name}={}){
+ const d=normalizeStorefrontVisualDesign(raw);
+ if(!templateIdValid(id)||!templateNameValid(name)||d.designTemplates.length>=STOREFRONT_DESIGN_TEMPLATE_LIMIT||d.designTemplates.some(t=>t.id===id||t.name.toLowerCase()===name.toLowerCase()))return null;
+ return normalizeStorefrontVisualDesign({...d,designTemplates:[...d.designTemplates,{id,name,snapshot:storefrontTemplateSnapshot(d)}]});
+}
+export function applyStorefrontDesignTemplate(raw,id,scope='all'){
+ const d=normalizeStorefrontVisualDesign(raw),t=d.designTemplates.find(x=>x.id===id);
+ if(!t||!['all','theme','typography','layout'].includes(scope))return null;
+ const keys=['theme','typography','layout'].filter(k=>scope==='all'||scope===k);
+ const s=t.snapshot;
+ return normalizeStorefrontVisualDesign({...d,...Object.fromEntries(keys.map(k=>[k,s[k]])),responsive:Object.fromEntries(['tablet','mobile'].map(v=>[v,{...d.responsive[v],...Object.fromEntries(keys.map(k=>[k,s.responsive[v][k]]))}]))});
+}
+export function renameStorefrontDesignTemplate(raw,id,name){
+ const d=normalizeStorefrontVisualDesign(raw);
+ if(!templateNameValid(name)||!d.designTemplates.some(t=>t.id===id)||d.designTemplates.some(t=>t.id!==id&&t.name.toLowerCase()===name.toLowerCase()))return null;
+ return normalizeStorefrontVisualDesign({...d,designTemplates:d.designTemplates.map(t=>t.id===id?{...t,name}:t)});
+}
+export function deleteStorefrontDesignTemplate(raw,id){
+ const d=normalizeStorefrontVisualDesign(raw);
+ return normalizeStorefrontVisualDesign({...d,designTemplates:d.designTemplates.filter(t=>t.id!==id)});
+}
+
+const SECTION_GEOMETRY_LIMITS={marginTop:[0,72],maxWidth:[85,100]};
+function normalizeSectionGeometry(raw){
+ const result={};
+ if(!isPlainObject(raw))return result;
+ for(const id of SECTION_IDS){
+  const value=raw[id];if(!isPlainObject(value))continue;
+  const safe={};
+  for(const [key,[min,max]] of Object.entries(SECTION_GEOMETRY_LIMITS)){
+   const n=value[key];
+   if(typeof n==='number'&&Number.isFinite(n))safe[key]=Math.round(Math.max(min,Math.min(max,n)));
+  }
+  if(Object.keys(safe).length)result[id]=safe;
+ }
+ return result;
+}
+export function getStorefrontSectionGeometry(raw,id,viewport='desktop'){
+ if(!SECTION_IDS.includes(id))return {};
+ const base=normalizeSectionGeometry(raw?.sectionGeometry)[id]||{};
+ const override=['tablet','mobile'].includes(viewport)?normalizeSectionGeometry(raw?.responsive?.[viewport]?.sectionGeometry)[id]||{}:{};
+ return {...base,...override};
+}
+export function setStorefrontSectionGeometry(raw,id,viewport,key,value){
+ if(!SECTION_IDS.includes(id)||!['desktop','tablet','mobile'].includes(viewport)||!Object.hasOwn(SECTION_GEOMETRY_LIMITS,key))return null;
+ const [min,max]=SECTION_GEOMETRY_LIMITS[key];
+ if(value!==null&&(!Number.isInteger(value)||value<min||value>max))return null;
+ const d=normalizeStorefrontVisualDesign(raw);
+ const geometry={...(viewport==='desktop'?d.sectionGeometry:d.responsive[viewport].sectionGeometry)};
+ const row={...geometry[id]};if(value===null)delete row[key];else row[key]=value;
+ if(Object.keys(row).length)geometry[id]=row;else delete geometry[id];
+ return normalizeStorefrontVisualDesign(viewport==='desktop'?{...d,sectionGeometry:geometry}:{...d,responsive:{...d.responsive,[viewport]:{...d.responsive[viewport],sectionGeometry:geometry}}});
+}
+export function buildStorefrontSectionGeometryProps(raw,id,viewport,{secondary=false}={}){
+ const g=getStorefrontSectionGeometry(raw,id,viewport),style={};
+ if(g.marginTop!==undefined&&!secondary)style['--gs-section-margin-top']=g.marginTop+'px';
+ if(g.maxWidth!==undefined)style['--gs-section-max-width']=g.maxWidth+'%';
+ return {style,...(Object.hasOwn(style,'--gs-section-margin-top')?{'data-gs-section-margin':'true'}:{}),...(Object.hasOwn(style,'--gs-section-max-width')?{'data-gs-section-width':'true'}:{})};
 }

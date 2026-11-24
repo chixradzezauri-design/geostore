@@ -1,3 +1,5 @@
+import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
+import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown, ChevronUp, Monitor, RotateCcw, RotateCw,
@@ -10,6 +12,7 @@ import { supabase } from '../supabaseClient';
 import {
   DEFAULT_STOREFRONT_VISUAL_DESIGN,
   normalizeStorefrontVisualDesign,
+  getStorefrontSectionOrder, setStorefrontSectionOrder, inheritStorefrontSectionOrder,
   buildStorefrontVisualStyle
 } from '../utils/storefrontVisualDesign.js';
 
@@ -697,24 +700,29 @@ export default function StorefrontVisualEditor({
     setSaveMessage('ვიზუალური ცვლილება აღდგა.');
   };
 
+  const currentSectionOrder = getStorefrontSectionOrder(design,previewMode);
+  const commitSectionOrder = order => {
+    const next=setStorefrontSectionOrder(designRef.current,previewMode,order);
+    if(next)commitDesign(next);
+  };
   const moveSection = (id, direction) => {
-    const current = [...design.sectionOrder];
+    const current = [...currentSectionOrder];
     const index = current.indexOf(id);
     const target = index + direction;
     if (index < 0 || target < 0 || target >= current.length) return;
     [current[index], current[target]] = [current[target], current[index]];
-    commitDesign({ ...design, sectionOrder: current });
+    commitSectionOrder(current);
   };
 
   const reorderSection = (sourceId, targetId) => {
     if (!sourceId || !targetId || sourceId === targetId) return;
-    const current = [...design.sectionOrder];
+    const current = [...currentSectionOrder];
     const from = current.indexOf(sourceId);
     const to = current.indexOf(targetId);
     if (from < 0 || to < 0) return;
     current.splice(from, 1);
     current.splice(to, 0, sourceId);
-    commitDesign({ ...design, sectionOrder: current });
+    commitSectionOrder(current);
   };
 
 
@@ -917,7 +925,7 @@ export default function StorefrontVisualEditor({
     heroImageReadRequestRef.current += 1;
     heroImagePendingRef.current = false;
     setHeroImagePending(false);
-    commitDesign(DEFAULT_STOREFRONT_VISUAL_DESIGN);
+    commitDesign({ ...DEFAULT_STOREFRONT_VISUAL_DESIGN, designTemplates: designRef.current.designTemplates });
   };
 
   return (
@@ -1004,6 +1012,7 @@ export default function StorefrontVisualEditor({
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
         <aside className="gs-visual-editor-controls order-2 min-w-0 space-y-4 2xl:order-1">
+          {isOwner && <StorefrontDesignTemplates design={design} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy || versionRestoreBusy} onChange={commitDesign}/>}
           <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
             <label htmlFor="gs-visual-editor-control-search" className="block text-xs font-bold text-slate-200">პარამეტრების ჯგუფების ძებნა</label>
             <input id="gs-visual-editor-control-search" type="search" value={controlSearch} onChange={event => setControlSearch(event.target.value)} placeholder="მაგალითად: ფერები, ტექსტი, ფოტო…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-base text-white placeholder:text-slate-500" />
@@ -1281,10 +1290,13 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details hidden={!isControlGroupVisible('sections')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
+          <details data-gs-section-controls="true" hidden={!isControlGroupVisible('sections')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Layout className="h-4 w-4 text-emerald-300" /> სექციების ჩართვა და თანმიმდევრობა</summary>
             <div className="mt-4 space-y-2">
-              {design.sectionOrder.map((id, index) => (
+              <p className="text-xs text-slate-400">თანმიმდევრობა: {previewMode==='desktop'?'კომპიუტერი / საერთო':previewMode==='tablet'?'ტაბლეტი':'მობილური'} · სექციების ჩართვა/გამორთვა საერთო რჩება.</p>
+              {previewMode!=='desktop'&&<div className="flex flex-wrap gap-2 items-center"><span className="text-xs text-slate-300">{design.responsive?.[previewMode]?.sectionOrder?'ინდივიდუალური რიგი':'საერთო რიგის მემკვიდრეობა'}</span><button type="button" disabled={!design.responsive?.[previewMode]?.sectionOrder} onClick={()=>{const next=inheritStorefrontSectionOrder(designRef.current,previewMode);if(next)commitDesign(next);}} className="min-h-11 rounded-lg border border-slate-700 px-3 py-2 text-xs text-white disabled:opacity-40">საერთო რიგის აღდგენა</button></div>}
+              <StorefrontSectionGeometry design={design} viewport={previewMode} labels={SECTION_LABELS} onChange={commitDesign}/>
+              {currentSectionOrder.map((id, index) => (
                 <div
                   key={id}
                   draggable
@@ -1297,7 +1309,7 @@ export default function StorefrontVisualEditor({
                   <input type="checkbox" checked={design.sections[id]} onChange={event => updateGroup('sections', id, event.target.checked)} aria-label={SECTION_LABELS[id] + ' — ჩვენება'} className="h-4 w-4 accent-emerald-400" />
                   <span className="min-w-0 flex-1 text-xs font-semibold text-slate-200"><span aria-hidden="true" className="mr-2 text-slate-500">⠿</span>{SECTION_LABELS[id]}</span>
                   <button type="button" onClick={() => moveSection(id, -1)} disabled={index === 0} aria-label={SECTION_LABELS[id] + ' ზემოთ'} className="rounded-lg border border-slate-700 p-2 text-slate-300 disabled:opacity-30"><ChevronUp className="h-3.5 w-3.5" /></button>
-                  <button type="button" onClick={() => moveSection(id, 1)} disabled={index === design.sectionOrder.length - 1} aria-label={SECTION_LABELS[id] + ' ქვემოთ'} className="rounded-lg border border-slate-700 p-2 text-slate-300 disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => moveSection(id, 1)} disabled={index === currentSectionOrder.length - 1} aria-label={SECTION_LABELS[id] + ' ქვემოთ'} className="rounded-lg border border-slate-700 p-2 text-slate-300 disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
                 </div>
               ))}
             </div>

@@ -1,3 +1,4 @@
+import AdminDesignTemplates from './AdminDesignTemplates.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ADMIN_PANEL_CONTENT_FIELDS,
@@ -1536,6 +1537,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </header>
 
+      <AdminDesignTemplates design={normalized} onChange={commitChange} syncStatus={syncStatus}/>
       <section className="rounded-2xl border border-sky-400/25 bg-slate-950/70 p-3 space-y-3" aria-label="რეალური ადმინპანელის Preview">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">

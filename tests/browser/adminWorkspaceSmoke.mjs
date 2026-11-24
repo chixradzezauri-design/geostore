@@ -44,11 +44,22 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           return req.headers().authorization === 'Bearer ' + accessToken ? respond(owner) : respond({ message: 'Unauthenticated fixture' }, 401);
         }
         if (path === '/auth/v1/logout' && method === 'POST') return route.fulfill({ status: 204 });
+        if (path === '/rest/v1/admin_suppliers' && method === 'GET') return respond([{id:'00000000-0000-4000-8000-000000000001',name:'Fixture supplier',commission:5,is_active:true,revision:1,updated_at:'2026-11-24T12:00:00Z'}]);
         if (path === '/rest/v1/products' && method === 'GET') return respond(stage49FixtureProductRows);
         if (path === '/rest/v1/rpc/admin_list_products' && method === 'POST') return respond(stage49FixtureProductRows);
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
         if (path === '/rest/v1/rpc/get_admin_panel_visual_design_state' && method === 'POST') return respond({ design: null, updated_at: null });
         if (path === '/rest/v1/rpc/has_staff_permission' && method === 'POST') return respond(true);
+        // Explicit read-only RPC fixtures. No save/check/consent mutation is allowlisted.
+        if (method === 'POST' && ['/rest/v1/rpc/admin_read_supplier_balance','/rest/v1/rpc/admin_marketing_segments','/rest/v1/rpc/admin_read_marketing_campaigns','/rest/v1/rpc/admin_read_marketing_templates'].includes(path)) {
+          if (req.headers().authorization !== 'Bearer '+accessToken) return respond({message:'Owner required'},403);
+          const body=req.postDataJSON()||{};
+          if(path.endsWith('/admin_read_supplier_balance')&&Object.keys(body).length===1&&body.p_supplier===null)return respond({supplier_id:null,purchase_count:'0',received_tetri:'0',paid_tetri:'0',balance_tetri:'0'});
+          if(path.endsWith('/admin_marketing_segments')&&Object.keys(body).length===0)return respond({as_of:'2026-11-24T12:00:00Z',timezone:'Asia/Tbilisi',new_days:30,inactive_days:90,segments:Object.fromEntries(['all','vip','new','no_purchase','one_purchase','repeat','inactive'].map(k=>[k,{accounts:'0',consent_candidates:'0'}]))});
+          if(path.endsWith('/admin_read_marketing_campaigns')&&Object.keys(body).length===1&&body.p_id===null)return respond({total:'0',campaigns:[],delivery_enabled:false});
+          if(path.endsWith('/admin_read_marketing_templates')&&Object.keys(body).length===1&&body.p_id===null)return respond({total:'0',templates:[]});
+          return respond({message:'Unexpected read scope'},400);
+        }
         // Verified STABLE read-only RPC: the POST transport does not mutate orders.
         if (path === '/rest/v1/rpc/admin_order_ledger_page' && method === 'POST') return respond([]);
         if (path === '/functions/v1/manage-admin-staff' && method === 'POST' && req.postDataJSON()?.action === 'list') return respond({ staff: [] });
@@ -97,7 +108,76 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await shell.getByRole('button', { name: 'მონახაზის გაუქმება', exact: true }).click();
           assert.equal(await fee.inputValue(), before, 'Delivery draft cancellation restores the original value');
         }
-        if (tab === 'users') await page.locator('#admin-workspace-crm-filter').selectOption('vip');
+        if (tab === 'vendors') {
+          const purchase = shell.locator('.admin-purchase-workspace');
+          await purchase.locator('[data-purchase-state="ready"]').waitFor({state:'visible'});
+          assert.equal(await purchase.getByRole('button',{name:'შესყიდვის მონახაზის შექმნა',exact:true}).isDisabled(),true);
+          await purchase.getByRole('combobox',{name:'შესყიდვის სტატუსი',exact:true}).selectOption('partial');
+          const supplier = shell.locator('.admin-supplier-workspace');
+          await supplier.locator('[data-supplier-state="ready"]').waitFor({state:'visible'});
+          await supplier.getByRole('button',{name:'სერვერული საკომისიოს შეცვლა: Fixture supplier',exact:true}).click();
+          const commission=supplier.getByRole('spinbutton',{name:'სერვერული საკომისიო'});
+          await commission.fill('12.50');
+          await supplier.getByRole('button',{name:'სერვერული რედაქტირების გაუქმება',exact:true}).click();
+          assert.equal(await commission.inputValue(),'','Cancelling the server supplier draft must not write');
+          await supplier.getByRole('combobox',{name:'სერვერული მომწოდებლის სტატუსი'}).selectOption('archived');
+          assert.equal(await supplier.locator('.admin-supplier-card').count(),0);
+          await supplier.getByRole('combobox',{name:'სერვერული მომწოდებლის სტატუსი'}).selectOption('all');
+          assert.equal(await supplier.locator('.admin-supplier-card').count(),1);
+        }
+        if (tab === 'users') {
+          await page.locator('#admin-workspace-crm-filter').selectOption('vip');
+          const segments=shell.locator('.admin-marketing-segments');
+          await segments.getByRole('combobox',{name:'სეგმენტის ფილტრი'}).selectOption('vip');
+          await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
+          assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
+        }
+        if (tab === 'visual_editor') {
+          const editor=shell.locator('.gs-storefront-visual-editor');
+          const frame=editor.locator('.gs-visual-preview-frame');
+          const library=editor.locator('.gs-storefront-design-templates');
+          await library.locator('summary').click();
+          await library.getByRole('textbox',{name:'შაბლონის სახელი',exact:true}).fill('Fixture design');
+          await library.getByRole('button',{name:'მიმდინარე საიტის დიზაინის შენახვა',exact:true}).click();
+          await library.getByText('Fixture design',{exact:true}).waitFor({state:'visible'});
+          await editor.getByRole('button',{name:'გაუქმება',exact:true}).click();
+          await library.getByText('Fixture design',{exact:true}).waitFor({state:'detached'});
+          const sections=editor.locator('[data-gs-section-controls="true"]');
+          await sections.locator(':scope > summary').click();
+          const desktop=editor.getByRole('button',{name:'Desktop',exact:true});
+          const mobile=editor.getByRole('button',{name:'Mobile',exact:true});
+          const readOrder=()=>frame.locator('.geostore-storefront').evaluate(node=>{
+            const category=node.querySelector('#gs-video-collections'),filter=node.querySelector('#gs-video-catalog-anchor');
+            return Boolean(category&&filter&&(category.compareDocumentPosition(filter)&Node.DOCUMENT_POSITION_FOLLOWING));
+          });
+          await desktop.click();
+          assert.equal(await readOrder(),true,'Default desktop categories precede filters');
+          await mobile.click();
+          await sections.getByRole('button',{name:'კატეგორიები ქვემოთ',exact:true}).click();
+          assert.equal(await readOrder(),false,'Mobile order must actually change the DOM');
+          await desktop.click();
+          assert.equal(await readOrder(),true,'Mobile reorder must not alter desktop');
+          await mobile.click();
+          assert.equal(await readOrder(),false,'Mobile override survives switching view');
+          await sections.getByRole('button',{name:'საერთო რიგის აღდგენა',exact:true}).click();
+          assert.equal(await readOrder(),true,'Inheritance restores desktop order');
+          const geometry=editor.locator('.gs-section-geometry');
+          await geometry.locator('summary').click();
+          await geometry.getByRole('combobox',{name:'დაშორების სექცია'}).selectOption('categories');
+          await geometry.getByRole('slider',{name:'მაქსიმალური სიგანე',exact:true}).press('Home');
+          const category=frame.locator('#gs-video-collections');
+          assert.equal(await category.getAttribute('data-gs-section-width'),'true');
+          assert.equal(await category.evaluate(node=>node.style.getPropertyValue('--gs-section-max-width')),'85%');
+          await desktop.click();
+          assert.equal(await category.getAttribute('data-gs-section-width'),null,'Mobile width cannot affect desktop');
+          await mobile.click();
+          assert.equal(await category.getAttribute('data-gs-section-width'),'true');
+          await geometry.getByRole('button',{name:'საერთო მნიშვნელობის აღდგენა',exact:true}).last().click();
+          assert.equal(await category.getAttribute('data-gs-section-width'),null,'Geometry reset removes explicit override');
+          await desktop.click();
+          assert.deepEqual(writes,[],'Local visual editor changes must not save or publish automatically');
+          console.log('PASS isolated storefront editor: template undo, responsive DOM order and width inheritance at '+width+'px');
+        }
         if (tab === 'support') await page.locator('#admin-workspace-support-status').selectOption('ღია');
       }
       assert.deepEqual(writes, [], 'Opening and filtering modules must not mutate live or fixture data');

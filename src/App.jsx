@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
+import CustomerMarketingConsent from './components/CustomerMarketingConsent.jsx';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
@@ -1972,6 +1973,8 @@ export default function App() {
           // Preserve the persisted amount for finance integrity checks; display
           // normalization can otherwise hide malformed historical values as 0.
           rawTotalGEL: o.total_gel,
+          // Verified admin ledger supplies the account ID; never merge buyers by phone/email.
+          user_id: o.user_id ?? null,
           checkoutBreakdown,
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
@@ -3693,6 +3696,7 @@ export default function App() {
             setUsersList={setUsersList}
             products={adminDashboardProducts}
             setProducts={setProducts}
+            refreshProducts={fetchProductsFromDatabase}
             vendorsList={vendorsList || []}
             setVendorsList={setVendorsList}
             coupons={coupons || []}
@@ -4078,6 +4082,7 @@ export default function App() {
                 </p>
               </div>
 
+              <CustomerMarketingConsent key={currentUser.id+':'+currentUser.email} userId={currentUser.id} lang={currentLang} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>
               <button
                 type="button"
                 onClick={handleLogout}

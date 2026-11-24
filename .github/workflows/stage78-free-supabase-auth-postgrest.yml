@@ -7,6 +7,13 @@ on:
       - '.github/workflows/stage78-free-supabase-auth-postgrest.yml'
       - 'tests/stage78-supabase/**'
       - 'scripts/stage78AuthPostgrest.mjs'
+      - 'scripts/advancedAdminRealAuth.mjs'
+      - 'tests/stage78-supabase/advanced-admin-migration-rehearsal.sh'
+      - 'tests/sql/advanced_admin_acl_verify.sql'
+      - 'tests/sql/advanced_admin_consent_paused_verify.sql'
+      - 'scripts/advancedAdminReleaseBundle.mjs'
+      - 'release/advanced-admin-release-candidate.json'
+      - 'release/staged-*.sql'
       - 'tests/stage78FreeSupabaseAuthPostgrest.test.js'
       - 'supabase/migrations/20261117231455_admin_staff_auth_foundation.sql'
       - 'supabase/migrations/20261121210000_scope_admin_order_ledger_permissions.sql'
@@ -137,6 +144,35 @@ jobs:
           PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
             -v ON_ERROR_STOP=1 -f stage90-pre-a-fixture.sql
           node "$GITHUB_WORKSPACE/scripts/stage90ReleaseSequence.mjs"
+          # Extend the same disposable stack; no hosted database or keys.
+          node "$GITHUB_WORKSPACE/scripts/advancedAdminReleaseBundle.mjs" > "$RUNNER_TEMP/advanced-admin-candidate.sql"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f advanced-admin-auth-fixture.sql
+          bash advanced-admin-migration-rehearsal.sh
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/sql/advanced_admin_consent_paused_verify.sql"
+          node "$GITHUB_WORKSPACE/scripts/advancedAdminRealAuth.mjs" --paused
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/sql/advanced_admin_consent_paused_verify.sql"
+          # Synthetic-only activation to preserve full future-feature regression tests.
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          GRANT EXECUTE ON FUNCTION private.read_my_marketing_email_consent() TO authenticated;
+          GRANT EXECUTE ON FUNCTION public.my_marketing_email_consent() TO authenticated;
+          GRANT EXECUTE ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
+          GRANT EXECUTE ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) TO authenticated;
+          NOTIFY pgrst, 'reload schema';
+          SQL
+          node "$GITHUB_WORKSPACE/scripts/advancedAdminRealAuth.mjs"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          REVOKE ALL ON FUNCTION private.read_my_marketing_email_consent() FROM PUBLIC,anon,authenticated;
+          REVOKE ALL ON FUNCTION public.my_marketing_email_consent() FROM PUBLIC,anon,authenticated;
+          REVOKE ALL ON FUNCTION private.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM PUBLIC,anon,authenticated;
+          REVOKE ALL ON FUNCTION public.set_my_marketing_email_consent(uuid,boolean,text,uuid) FROM PUBLIC,anon,authenticated;
+          SQL
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/sql/advanced_admin_acl_verify.sql"
       - name: Print only local diagnostic container state on failure
         if: failure()
         working-directory: tests/stage78-supabase

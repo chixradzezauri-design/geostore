@@ -20385,3 +20385,20 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 .geostore-fashion-store .geostore-storefront .gs-product-review-entry:not([open]) > .gs-product-review-form {
   display: none !important;
 }
+
+/* StoreView now renders keyed groups in actual DOM order, including custom blocks.
+   Override legacy flex-order rules only on that explicit rendering path. */
+.geostore-fashion-store .geostore-storefront[data-gs-dom-order="true"] > * { order: 0 !important; }
+
+/* Optional section-level geometry, applied only to explicitly customized roots.
+   No hidden elements, negative spacing or viewport-wide overflow. */
+.geostore-fashion-store .geostore-storefront[data-gs-dom-order="true"] > [data-gs-section-margin="true"] {
+  margin-top: var(--gs-section-margin-top) !important;
+}
+.geostore-fashion-store .geostore-storefront[data-gs-dom-order="true"] > [data-gs-section-width="true"] {
+  max-width: var(--gs-section-max-width) !important;
+  min-width: 0 !important;
+  margin-inline: auto !important;
+  align-self: center;
+  width: 100%;
+}
