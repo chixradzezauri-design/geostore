@@ -21,3 +21,6 @@ Scoped responsive layout improvements: wrapped order filters, visible active fil
 
 ## Batch 05 — products, inventory and promotions
 Improved catalog identity wrapping, tablet row flow, variant fields, accessible gallery removal, inventory table scrolling and narrow replenishment rows, banner and coupon card wrapping and delete targets, category nesting and upload controls, and promotion field/submit layout. Added accessible names to removal controls; corrected mixed-script Georgian upload copy. Existing mutation handlers, data and permissions unchanged. Batch 04 build, dependency audit and PostgreSQL checks passed; browser smoke and CodeQL in progress at inspection. Batch 05 runtime verification pending.
+
+## Batch 06 — communication, CRM, suppliers and settings
+Refined command center, support status/reply layout, legacy messages, audit entries, CRM actions and long contact labels, vendor cards, broadcast forms, delivery fees and global settings. Added accessible vendor-delete name and broadcast field labels; corrected Georgian search copy. Preserved permission checks, support handlers, CRM semantics and explicit local-only broadcast warning. Batch 05 all five reported workflows passed (build, responsive smoke, CodeQL, dependency audit, isolated PostgreSQL). Batch 06 runtime verification pending.

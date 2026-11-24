@@ -6850,7 +6850,7 @@ export default function AdminDashboardPro({
             ) : (
               <div className="space-y-3">
                 {legacyMessages.map((message) => (
-                  <article key={message.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 sm:p-5 space-y-2">
+                  <article key={message.id} className="admin-legacy-message-card rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 sm:p-5 space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>
                       <span className="text-[10px] text-slate-400">{message.created_at ? new Date(message.created_at).toLocaleString('ka-GE') : (message.time || '')}</span>
@@ -6938,7 +6938,7 @@ export default function AdminDashboardPro({
                 <p className="text-xs text-slate-400">შენახული აქტივობები ჯერ არ არის.</p>
               )}
               {paginatedActivityLogs.map(log => (
-                <div key={log.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
+                <div key={log.id} className="admin-audit-log-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
                   <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
                   <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
@@ -6987,12 +6987,12 @@ export default function AdminDashboardPro({
             <p className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
             <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="text-slate-400 font-bold">შეტყობინების სათაური</label>
-                <input type="text" placeholder="მაგ: ახალი კოლექცია უკვე საიტზეა!" required value={broadcastForm.title} onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <label htmlFor="admin-broadcast-title" className="text-slate-400 font-bold">შეტყობინების სათაური</label>
+                <input id="admin-broadcast-title" type="text" placeholder="მაგ: ახალი კოლექცია უკვე საიტზეა!" required value={broadcastForm.title} onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-slate-400 font-bold">შეტყობინების ტექსტი</label>
-                <textarea rows="4" placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
+                <label htmlFor="admin-broadcast-message" className="text-slate-400 font-bold">შეტყობინების ტექსტი</label>
+                <textarea id="admin-broadcast-message" rows="4" placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
               </div>
               <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Send className="w-4 h-4" /> სატესტო შეტყობინების შენახვა
@@ -7334,7 +7334,7 @@ export default function AdminDashboardPro({
                     </div>
                     <div className="flex items-center gap-2.5">
                       <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black">{v.status}</span>
-                      <button onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" aria-label={`მომწოდებლის წაშლა: ${v.name}`} onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
@@ -7350,7 +7350,7 @@ export default function AdminDashboardPro({
                 <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
-                <input type="search" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="search" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ელფოსტით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>

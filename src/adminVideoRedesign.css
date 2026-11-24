@@ -752,3 +752,120 @@
     grid-column: 1 / -1 !important;
   }
 }
+
+/* Video redesign 06 — communication, CRM, suppliers and settings. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-command-center,.admin-command-hero,.admin-command-kpi,.admin-command-panel,.admin-support-ticket,.admin-support-ticket-header,.admin-support-ticket-meta,.admin-support-ticket-controls,.admin-support-ticket-content,.admin-support-reply-form,.admin-legacy-message-card,.admin-audit-log-row,.admin-broadcasts-panel,.admin-crm-panel,.admin-crm-user-card,.admin-crm-user-actions,.admin-crm-edit-panel,.admin-vendor-card,.admin-vendor-form,.admin-delivery-settings,.admin-global-settings,.admin-security-notice) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-support-ticket-meta,.admin-support-ticket-content,.admin-support-ticket-reply,.admin-support-ticket [id^="admin-support-thread-"],.admin-legacy-message-card,.admin-audit-log-row,.admin-crm-user-card,.admin-vendor-card,.admin-security-notice,.admin-command-panel) :is(h3,h4,h5,p,b,strong,span) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.45;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-message {
+  white-space: pre-wrap;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions {
+  flex-wrap: wrap !important;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions > button {
+  flex: 1 1 auto;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-controls > button {
+  max-inline-size: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-card > div:first-child > div:first-child,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendor-card > div:first-child {
+  min-inline-size: 0;
+  flex: 1 1 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendor-card > div:last-child {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendor-card > div:last-child > button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  flex: 0 0 44px !important;
+  padding: 8px !important;
+  background: #351c2a !important;
+  border: 1px solid #704052 !important;
+  color: #ffd4df !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-user-actions > button,.admin-crm-edit-panel button,.admin-support-ticket-controls button,.admin-support-reply-form > button,.admin-support-panel > div:first-child > button,.admin-audit-logs-panel nav button,.admin-broadcasts-panel button[type="submit"],.admin-vendor-form button[type="submit"],.admin-delivery-settings > button,.admin-global-settings-form button[type="submit"]) {
+  min-height: 44px !important;
+  min-inline-size: 0 !important;
+  max-inline-size: 100%;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-actions > button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-user-actions,.admin-support-ticket-controls,.admin-support-reply-form,.admin-vendor-form) button > svg {
+  flex-shrink: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-broadcasts-panel,.admin-crm-edit-panel,.admin-crm-search,.admin-vendor-form,.admin-delivery-fee-fields,.admin-global-settings-form) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-kpi strong {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-command-center,.admin-support-panel,.admin-crm-panel,.admin-audit-logs-panel,.admin-broadcasts-panel,.admin-vendors-panel,.admin-settings-panel) :is(button,input,textarea,select):focus-visible {
+  outline: max(2px, var(--admin-vd-inputFocusRingWidth-active, 2px)) solid var(--av-focus) !important;
+  outline-offset: 2px !important;
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-actions > button {
+    width: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-controls {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions {
+    display: grid !important;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions > button {
+    padding-inline: 4px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-broadcasts-panel button[type="submit"],.admin-delivery-settings > button,.admin-support-reply-form > button) {
+    width: 100% !important;
+    justify-content: center;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-broadcasts-panel,.admin-crm-edit-panel,.admin-crm-search,.admin-vendor-form,.admin-delivery-fee-fields,.admin-global-settings-form,.admin-support-reply-form) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),textarea,select) {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+    min-height: 44px;
+  }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-user-actions,.admin-support-status-actions,.admin-command-kpis) {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+}
