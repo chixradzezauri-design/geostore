@@ -32,10 +32,62 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await page.locator('[data-signature-products="true"] .gs-catalog-product-card').first().waitFor({state:'visible',timeout:20000});
    assert.equal(await page.locator('[data-signature-categories="true"] .gs-category-card').count(),4);
    assert.equal(await page.locator('.gs-signature-service-link').count(),4);
+   const campaignBounds=await page.locator('[data-signature-banners="true"]').evaluate(grid=>{
+     const card=grid.querySelector('.gs-signature-banner-card');
+     if(!card || grid.children.length!==1) return false;
+     const g=grid.getBoundingClientRect(), c=card.getBoundingClientRect();
+     return c.width>=g.width-2 && c.right<=g.right+1 && c.left>=g.left-1;
+   });
+   assert.ok(campaignBounds,'Single published campaign fills available width at '+width);
    assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),width<=640);
+   if(width<=640){
+     const nav=page.locator('.gs-signature-mobile-nav');
+     const categoriesControl=nav.getByRole('button',{name:'კატეგორიები'});
+     const geometry=await nav.evaluate(el=>{
+       const outer=el.getBoundingClientRect();
+       return [...el.querySelectorAll('button')].every(button=>{
+         const r=button.getBoundingClientRect();
+         return r.height>=44 && r.left>=outer.left-1 && r.right<=outer.right+1;
+       });
+     });
+     assert.ok(geometry,'Mobile nav targets fit at '+width);
+     await categoriesControl.click();
+     const menu=page.locator('#geostore-main-menu');
+     await menu.waitFor({state:'visible'});
+     assert.equal(await categoriesControl.getAttribute('aria-expanded'),'true');
+     assert.equal(await categoriesControl.getAttribute('aria-controls'),'geostore-main-menu');
+     assert.ok(await menu.evaluate(el=>el.scrollWidth<=el.clientWidth+2),'Mobile menu does not overflow horizontally');
+     await page.keyboard.press('Escape');
+     await menu.waitFor({state:'detached'});
+     assert.equal(await categoriesControl.getAttribute('aria-expanded'),'false');
+     assert.ok(await page.locator('.gs-menu-toggle').evaluate(el=>document.activeElement===el),'Escape restores menu trigger focus');
+   }
    const columns=await page.locator('[data-signature-products="true"]').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
    assert.equal(columns,width<360?1:width<=640?2:width<=1023?3:6,'Signature columns at '+width);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Signature horizontal overflow at '+width);
+   const allCategories=page.locator('.gs-signature-all-categories');
+   assert.equal(await allCategories.getAttribute('aria-pressed'),'true');
+   await page.locator('[data-signature-categories="true"] .gs-category-card').first().click();
+   await page.waitForFunction(()=>document.querySelector('.gs-signature-all-categories')?.getAttribute('aria-pressed')==='false');
+   await allCategories.focus();
+   await page.keyboard.press('Space');
+   await page.waitForFunction(()=>document.querySelector('.gs-signature-all-categories')?.getAttribute('aria-pressed')==='true');
+   const headerBounds=await page.locator('.gs-signature-header .gs-site-header-inner').evaluate(el=>{
+     const row=el.getBoundingClientRect();
+     return [...el.querySelectorAll('.gs-signature-actions button')].filter(b=>b.getClientRects().length).every(b=>{
+       const rect=b.getBoundingClientRect();
+       return rect.width>=43 && rect.left>=row.left-1 && rect.right<=row.right+1;
+     });
+   });
+   assert.ok(headerBounds,'Signature header controls remain inside the row at '+width);
+   const cardsFit = await page.locator('[data-signature-products="true"] .gs-catalog-product-card').evaluateAll(cards => cards.every(card => {
+     const box=card.getBoundingClientRect();
+     const cta=card.querySelector('.gs-catalog-product-cta').getBoundingClientRect();
+     const shortcuts=[...card.querySelectorAll('.gs-catalog-media-toggle')].map(el=>el.getBoundingClientRect());
+     return cta.height>=43 && cta.left>=box.left-1 && cta.right<=box.right+1 &&
+       shortcuts.every(rect=>rect.width>=43 && rect.height>=43 && rect.right<=box.right+1);
+   }));
+   assert.ok(cardsFit,'Signature cards retain accessible and contained actions at '+width);
    const hero=page.locator('[data-signature-hero="true"]');
    await hero.locator('.gs-signature-hero-dot').nth(1).click();
    await hero.getByRole('heading',{name:'Signature campaign'}).waitFor({state:'visible'});
@@ -47,17 +99,53 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await search.locator('input').fill('Stage46 Everyday Wallet');
    await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-product-card').length===1);
    await search.locator('.gs-header-search-clear').click();
+   assert.equal(await search.isVisible(),true,'Search remains open after clearing');
+   assert.ok(await search.locator('input').evaluate(el=>document.activeElement===el),'Search clear restores focus in Signature at '+width);
    await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-product-card').length===4);
    await search.locator('.gs-signature-search-dismiss').click();
    await search.waitFor({state:'hidden'});
    const card=page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'});
    await card.locator('.gs-catalog-product-title-action').click();
    await page.locator('.gs-product-dialog').waitFor({state:'visible'});
+   const modalGeometry=await page.locator('.gs-product-dialog').evaluate(dialog=>{
+     const box=dialog.getBoundingClientRect();
+     const body=dialog.querySelector('.gs-product-modal-body');
+     const bodyRect=body.getBoundingClientRect();
+     const bar=dialog.querySelector('.gs-product-modal-purchase-bar');
+     const barRect=bar.getBoundingClientRect();
+     const cta=bar.querySelector('.gs-modal-add-to-cart').getBoundingClientRect();
+     return {inside:barRect.bottom<=box.bottom+1 && bodyRect.bottom<=barRect.top+1,
+       scrollSafe:body.scrollWidth<=body.clientWidth+2,
+       touchSafe:cta.height>=47 && cta.left>=box.left-1 && cta.right<=box.right+1};
+   });
+   assert.ok(modalGeometry.inside && modalGeometry.scrollSafe && modalGeometry.touchSafe,
+     'Signature product dialog stays contained and purchase remains accessible at '+width+': '+JSON.stringify(modalGeometry));
    assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),false);
    await page.locator('.gs-product-dialog .gs-modal-add-to-cart').click();
    await page.locator('.gs-product-dialog').waitFor({state:'detached'});
    await page.locator('.gs-signature-actions button').last().click();
    await page.locator('.gs-cart-item').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
+   const cartItem=page.locator('.gs-cart-item').filter({hasText:'Stage46 Everyday Wallet'});
+   assert.ok(await cartItem.evaluate(el=>{
+     const outer=el.getBoundingClientRect();
+     return [...el.querySelectorAll('.gs-cart-quantity-controls button,.gs-cart-remove')].every(button=>{
+       const r=button.getBoundingClientRect();
+       return r.width>=43 && r.height>=43 && r.left>=outer.left-1 && r.right<=outer.right+1;
+     });
+   }),'Cart action targets remain contained at '+width);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Cart does not overflow at '+width);
+   const footer=page.locator('.geostore-site-footer');
+   assert.equal(await footer.locator('.geostore-footer-links > button').count(),3);
+   assert.ok(await footer.evaluate(el=>{
+     const outer=el.getBoundingClientRect();
+     return [...el.querySelectorAll('.geostore-footer-links button,.gs-video-footer-support')].every(button=>{
+       const r=button.getBoundingClientRect();
+       return r.height>=43 && r.left>=outer.left-1 && r.right<=outer.right+1;
+     });
+   }),'Footer controls remain contained and accessible at '+width);
+   await footer.locator('[data-visual-editor-target="footer.privacyLink"]').click();
+   await page.waitForFunction(()=>document.querySelector('[data-visual-editor-target="footer.privacyLink"]')?.getAttribute('aria-current')==='page');
+
    assert.deepEqual(writes,[],'No live or attempted write in isolated guest scenario');
    assert.deepEqual(errors,[],'No browser exceptions in active Signature layout');
    console.log('PASS active Signature storefront '+width+'px');

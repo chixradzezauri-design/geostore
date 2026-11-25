@@ -1275,3 +1275,372 @@
 .gs-visual-preview-frame--mobile.geostore-fashion-store .gs-main-menu .gs-menu-section { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links { display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important; }
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links > button:last-child:nth-of-type(odd) { grid-column:1 / -1; }
+
+/* Signature video follow-up 01 — intrinsic catalog rows and aligned price range.
+   The section heading is a grid child, not a product card. Legacy 1fr rows
+   made it as tall as a product row. Keep product cards stretched within each row. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {
+  grid-auto-rows: auto !important;
+  align-content: start !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) > .gs-signature-products-heading {
+  grid-column: 1 / -1;
+  align-self: start;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* The existing visually hidden separator must not consume a third grid track.
+   Explicit field columns also keep Safari and the mobile editor in agreement. */
+@media (max-width: 640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-controls .gs-price-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-controls .gs-price-filter > input.gs-price-input {
+    grid-column: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-controls .gs-price-filter > span[aria-hidden="true"] {
+    display: none !important;
+  }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-catalog-controls .gs-price-filter {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-catalog-controls .gs-price-filter > input.gs-price-input {
+  grid-column: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-catalog-controls .gs-price-filter > span[aria-hidden="true"] {
+  display: none !important;
+}
+
+
+/* Signature video follow-up 03 — compact wordmark and consistent hero preview.
+   Retain the published color/type tokens and original navigation handlers. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-brand-name {
+  letter-spacing: -.025em;
+  word-break: normal !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-signature-category-nav > button {
+  min-inline-size: 0;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-signature-actions button {
+  flex: 0 0 44px;
+  inline-size: 44px;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-site-announcement > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__content {
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):not(:has(.gs-signature-hero-controls)) .gs-fashion-hero__content {
+  padding-bottom: clamp(20px, 4vw, 64px) !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-primary {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: normal !important;
+  overflow-wrap: break-word;
+}
+@media (max-width: 640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-brand-button {
+    flex: 1 1 0;
+  }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-brand-name {
+    font-size: var(--gs-video-header-storeName-fontSize, clamp(16px, 4.8vw, 22px)) !important;
+  }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):not(:has(.gs-signature-hero-controls)) .gs-fashion-hero__content {
+    padding-bottom: 20px !important;
+  }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-site-header:where(.gs-signature-header) .gs-brand-button {
+  flex: 1 1 0;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-site-header:where(.gs-signature-header) .gs-brand-name {
+  font-size: var(--gs-video-header-storeName-fontSize, 18px) !important;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__image {
+  left: 40% !important;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):not(:has(.gs-signature-hero-controls)) .gs-fashion-hero__content {
+  padding-bottom: 20px !important;
+}
+
+
+/* Signature video follow-up 04 — balanced tiles, readable prices and touch targets. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid .gs-category-card { min-inline-size: 0; box-sizing: border-box; transform: none !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card .gs-signature-category-copy { overflow-wrap: break-word; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card h4 { word-break: normal !important; line-height: 1.3 !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-card { min-inline-size: 0; display: flex; flex-direction: column; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-info { flex: 1 1 auto; min-inline-size: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-meta { flex-wrap: wrap; align-items: center; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-vendor { min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-rating { flex-shrink: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-price { flex-wrap: wrap; align-items: baseline; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-current-price, :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-old-price { white-space: nowrap; max-inline-size: 100%; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-cta { min-block-size: 44px !important; white-space: normal !important; overflow-wrap: break-word; margin-top: auto; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-cta svg { flex-shrink: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-media > .gs-catalog-media-toggle { min-inline-size: 44px !important; min-block-size: 44px !important; box-sizing: border-box; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-media > .gs-catalog-wishlist-toggle[aria-pressed="true"] { color: #9f1239 !important; border-color: #9f1239 !important; }
+@media (hover: none) { :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-image-overlay { opacity: 0 !important; pointer-events: none; } }
+
+
+/* Signature video follow-up 05 — compact product gallery and purchase footer.
+   All stock, variant, pricing and purchase callbacks stay in StoreView. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body {
+  min-inline-size: 0;
+  padding-bottom: 16px !important;
+  overflow-x: hidden;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body > .grid {
+  gap: clamp(12px, 2vw, 24px) !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery {
+  min-inline-size: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery > * { margin-block: 0 !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-image-stage {
+  min-height: 0 !important;
+  height: clamp(240px, 32vw, 390px) !important;
+  padding: 10px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-thumbnails {
+  max-inline-size: 100%;
+  padding: 3px 2px 5px !important;
+  gap: 6px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-thumb {
+  flex: 0 0 56px !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  padding: 4px !important;
+  box-shadow: none !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-toolbar { min-width: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-step { flex-shrink: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-price-panel { flex-wrap: wrap !important; gap: 8px !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-purchase-bar {
+  box-shadow: none !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-to-cart {
+  gap: 8px !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-label {
+  min-width: 0 !important;
+  flex: 1 1 100px;
+  text-align: start !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-price {
+  font-size: 13px !important;
+  max-inline-size: 100%;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog :is(.gs-size-option,.gs-color-option,.gs-custom-variant-option):focus-visible {
+  outline: 2px solid var(--gs-ink,#201c19);
+  outline-offset: 2px;
+}
+@media(max-width:767px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body > .grid { grid-template-columns: minmax(0,1fr) !important; }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-image-stage { height: clamp(200px, 60vw, 300px) !important; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body > .grid { grid-template-columns: minmax(0,1fr) !important; }
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-image-stage { height: 230px !important; }
+
+
+/* Signature video follow-up 06 — editorial campaign tiles and compact offers.
+   Keep published campaign URLs, timers, inventory and prices untouched. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) { align-items: stretch; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) > * { min-width: 0; display: flex; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) > :only-child { grid-column: 1 / -1; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-card { width: 100%; min-width: 0; box-sizing: border-box; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-copy {
+  box-sizing: border-box;
+  min-width: 0;
+  height: 100%;
+  overflow-wrap: break-word;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-copy h2 {
+  word-break: normal !important;
+  text-wrap: balance;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-copy p { line-height: 1.5 !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) [data-visual-editor-target="banner.button"] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) > a:focus-visible { outline: 2px solid var(--gs-accent-dark,#302720); outline-offset: 3px; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown { flex-shrink: 0; max-width: 100%; justify-content: center; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-timer { font-variant-numeric: tabular-nums; min-width: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-video-flash-copy > div { flex-wrap: wrap; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-card { min-width: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-video-flash-add { min-height: 44px !important; white-space: normal; overflow-wrap: break-word; }
+@media (max-width: 640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-copy { max-width: 88%; padding: 16px !important; }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown { align-self: center; gap: 5px !important; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-copy { max-width: 88%; padding: 16px !important; }
+
+
+/* Signature video follow-up 07 — mobile navigation, readable menus and safe areas. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu {
+  border-color: var(--gs-line,#e2d9ce) !important;
+  scrollbar-gutter: auto;
+  overscroll-behavior: contain;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-heading { min-width: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-brand span { overflow-wrap: anywhere; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-section > .gs-menu-link { box-sizing: border-box; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-link > span:not(.gs-menu-count):not(.gs-menu-category-dot) {
+  overflow-wrap: break-word;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-count { margin-inline-start: auto !important; font-variant-numeric: tabular-nums; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-languages { display: flex; flex-wrap: wrap; gap: 6px; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-languages button { min-width: 44px; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-signature-mobile-nav button { box-sizing: border-box; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-signature-mobile-nav button span { overflow-wrap: break-word; word-break: normal; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-signature-mobile-nav button small { max-width: 45%; width: max-content; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width:640px) {
+  .geostore-shell.geostore-fashion-store .gs-site-header:where(.gs-signature-header) .gs-main-menu {
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: min(76dvh,calc(100dvh - 164px - env(safe-area-inset-bottom))) !important;
+  }
+  .geostore-shell.geostore-fashion-store .gs-site-header:where(.gs-signature-header):has(.gs-header-search-row:not([data-signature-search-closed="true"])) .gs-main-menu {
+    max-height: min(76dvh,calc(100dvh - 224px - env(safe-area-inset-bottom))) !important;
+  }
+}
+@media (max-width:359px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-main-menu .gs-menu-section { grid-template-columns: minmax(0,1fr) !important; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-site-header:where(.gs-signature-header) .gs-main-menu {
+  left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important;
+}
+
+
+/* Signature video follow-up 08 — compact account, wishlist and cart surfaces.
+   Layout only; authenticated data, synchronization and purchasing remain unchanged. */
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-page,.gs-wishlist-page,.gs-profile-page) {
+  min-inline-size: 0;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-title,.gs-wishlist-title) {
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-title,.gs-wishlist-title) > svg {
+  color: var(--gs-accent-dark,#302720) !important;
+  flex-shrink: 0;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-empty {
+  padding: clamp(24px,5vw,48px) 16px !important;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-item-media {
+  max-width: 100%;
+  aspect-ratio: 1;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-layout .gs-cart-item .gs-cart-quantity-controls button {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  flex: 0 0 44px;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-totals > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-totals > div > :last-child {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-card--actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-main {
+  width: 100%;
+  min-width: 0;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-image { flex-shrink: 0; }
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 44px !important;
+  align-items: stretch;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions .gs-wishlist-add {
+  min-width: 0;
+  padding-inline: 8px !important;
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions .gs-wishlist-remove { padding-inline: 0 !important; }
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-identity > div {
+  box-sizing: border-box;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-order-summary {
+  align-items: center;
+  gap: 8px;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-security :is(button,a):focus-visible {
+  outline: 2px solid var(--gs-accent-dark,#302720);
+  outline-offset: 2px;
+}
+@media (max-width:640px) {
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-page,.gs-wishlist-page,.gs-profile-page) > * + * { margin-top: 14px !important; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-item-media { width: 100% !important; height: auto !important; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-summary { min-width: 0; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-identity { grid-template-columns: minmax(0,1fr) !important; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-profile-card > .gs-video-profile-identity > div { min-height: 0 !important; padding: 10px 12px !important; }
+}
+
+
+/* Signature video follow-up 09 — accessible footer actions and balanced wrapping. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .gs-video-footer-support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .gs-video-footer-support > svg { flex-shrink: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links > span[aria-hidden="true"] { display: none !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links > button {
+  box-sizing: border-box;
+  justify-content: center;
+  text-align: center;
+  word-break: normal !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer > p {
+  border-top: 1px solid var(--gs-line,#e2d9ce);
+  padding-top: 12px;
+  margin-inline: auto !important;
+  max-width: var(--gs-content-width,1440px);
+}
+@media (max-width:640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .gs-video-footer-support { width: min(100%,320px); }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links { gap: 6px !important; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-site-footer .gs-video-footer-support { width: min(100%,320px); }

@@ -1,5 +1,5 @@
 // src/components/Header.jsx - Unified, compact and responsive GEOSTORE navigation
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera,
   Sparkles, Scale, PackageCheck, Bell, Shirt, Globe, MessageCircle,
@@ -16,7 +16,7 @@ export function SignatureMobileNav({currentLang='ka',activeTab='store',menuOpen=
   })[currentLang] || ['მთავარი','კატეგორიები','ფავორიტები','პროფილი','მობილური ნავიგაცია'];
   return <nav className="gs-signature-mobile-nav" aria-label={labels[4]}>
     <button type="button" onClick={onHome} aria-current={activeTab==='store'&&!menuOpen?'page':undefined}><Home aria-hidden="true"/><span>{labels[0]}</span></button>
-    <button type="button" onClick={onCategories} aria-expanded={menuOpen}><LayoutGrid aria-hidden="true"/><span>{labels[1]}</span></button>
+    <button type="button" onClick={onCategories} aria-expanded={menuOpen} aria-controls={menuOpen ? "geostore-main-menu" : undefined}><LayoutGrid aria-hidden="true"/><span>{labels[1]}</span></button>
     <button type="button" onClick={onWishlist} aria-current={activeTab==='wishlist'?'page':undefined} aria-label={wishlistCount>0?labels[2]+' ('+wishlistCount+')':labels[2]}><Heart aria-hidden="true"/><span>{labels[2]}</span>{wishlistCount>0&&<small aria-hidden="true">{wishlistCount}</small>}</button>
     <button type="button" onClick={onProfile} aria-current={activeTab==='profile'?'page':undefined}><User aria-hidden="true"/><span>{labels[3]}</span></button>
   </nav>;
@@ -61,6 +61,7 @@ export default function Header({
   const headerRef = useRef(null);
   const menuToggleRef = useRef(null);
   const searchInputRef = useRef(null);
+  const restoreSearchFocus = useRef(false);
   const t = translations[currentLang] || translations.ka;
 
   const closeMenu = () => setMenuOpen(false);
@@ -108,6 +109,13 @@ export default function Header({
   useEffect(() => {
     if (signature && searchOpen && activeTab === 'store') searchInputRef.current?.focus();
   }, [signature, searchOpen, activeTab]);
+
+  // Restore after React removes the clear button and commits the empty query.
+  useLayoutEffect(() => {
+    if (!restoreSearchFocus.current || searchQuery || activeTab !== 'store') return;
+    restoreSearchFocus.current = false;
+    searchInputRef.current?.focus();
+  }, [searchQuery, activeTab, signature, searchOpen]);
 
   const linkClass = (tab) =>
     `gs-menu-link${activeTab === tab ? ' is-active' : ''}`;
@@ -204,6 +212,7 @@ export default function Header({
               style={visualStyle('header.search.input')}
               value={searchQuery || ''}
               onChange={(event) => setSearchQuery?.(event.target.value)}
+              onFocus={() => setSearchOpen(true)}
               placeholder={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
               aria-label={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
             />
@@ -212,7 +221,7 @@ export default function Header({
             <button
               type="button"
               className="gs-header-search-clear"
-              onClick={() => { setSearchQuery?.(''); searchInputRef.current?.focus(); }}
+              onClick={() => { restoreSearchFocus.current = true; setSearchOpen(true); setSearchQuery?.(''); searchInputRef.current?.focus(); }}
               aria-label={currentLang === 'en' ? 'Clear product search' : currentLang === 'ru' ? 'Очистить поиск товаров' : 'პროდუქტის ძებნის გასუფთავება'}
               title={currentLang === 'en' ? 'Clear search' : currentLang === 'ru' ? 'Очистить поиск' : 'ძებნის გასუფთავება'}
             ><X aria-hidden="true" /></button>

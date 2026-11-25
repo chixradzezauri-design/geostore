@@ -68,14 +68,17 @@ try {
         'Anonymous visitor must not see the administrator shortcut at ' + width + 'px');
       assert.equal(await page.locator('.admin-dashboard-pro').count(), 0,
         'Anonymous visitor must not mount private administrator content at ' + width + 'px');
-      const allCategoryCard = page.locator('.gs-category-card--all');
-       assert.equal(await allCategoryCard.getAttribute('role'), 'button', 'All-category is keyboard operable');
+      // Published Signature settings can hydrate after the legacy shell renders.
+      // Both controls implement the same all-category action.
+      const allCategorySelector = '.gs-signature-all-categories, .gs-category-card--all';
+      const allCategoryCard = page.locator(allCategorySelector).first();
+       assert.ok(await allCategoryCard.evaluate(el => el.tagName === 'BUTTON' || el.getAttribute('role') === 'button'), 'All-category is keyboard operable');
        await allCategoryCard.focus();
        await page.keyboard.press('Space');
        // React's category selection commits after the keyboard event. A
        // one-shot attribute read can race the state render on slower CI hosts.
        await page.waitForFunction(() =>
-         document.querySelector('.gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
+         document.querySelector('.gs-signature-all-categories, .gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
          null, { timeout: 5000 });
        const firstCategoryCard = page.locator('.gs-category-card:not(.gs-category-card--all)').first();
        if (await firstCategoryCard.count()) {
@@ -126,7 +129,7 @@ try {
          await allCategoryCard.focus();
          await page.keyboard.press('Space');
          await page.waitForFunction(() =>
-           document.querySelector('.gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
+           document.querySelector('.gs-signature-all-categories, .gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
            null, { timeout: 5000 });
        }
        const firstProduct = page.locator('.gs-catalog-product-card').first();
@@ -140,6 +143,10 @@ try {
       
       // Stage 39 — integrated client-side search and filter recovery.
       const search = page.locator('.gs-header-search input[type="search"]');
+      if (!(await search.isVisible())) {
+        await page.locator('.gs-signature-actions button').first().click();
+        await search.waitFor({state:'visible'});
+      }
       await search.fill('stage39-no-results');
       const searchClear = page.locator('.gs-header-search-clear');
       await searchClear.waitFor({ state: 'visible', timeout: 10000 });
@@ -147,6 +154,7 @@ try {
         'Search clear target at ' + width + 'px');
       await searchClear.click();
       assert.equal(await search.inputValue(), '', 'Search clear resets query at ' + width + 'px');
+      await page.waitForFunction(() => document.activeElement === document.querySelector('.gs-header-search input[type="search"]'), null, {timeout:5000});
       assert.ok(await search.evaluate(node => document.activeElement === node),
         'Search clear restores focus at ' + width + 'px');
       const priceMin = page.locator('.gs-price-input').first();
