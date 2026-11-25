@@ -1131,6 +1131,43 @@
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
 .gs-visual-preview-frame--tablet.geostore-fashion-store .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {grid-template-columns:repeat(3,minmax(0,1fr))!important;}
 
+
+/* Signature 2026 stage 6 — actual customer services, existing published campaigns. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-strip {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;
+  border:1px solid var(--gs-line,#e2d9ce);border-radius:var(--gs-card-radius,12px);
+  background:var(--gs-surface,#fffdfa);padding:8px;min-width:0;
+  margin-top:0!important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link {
+  display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;min-height:60px;
+  padding:10px;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--gs-ink,#201c19);
+  text-align:start;cursor:pointer;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link + .gs-signature-service-link {border-inline-start:1px solid var(--gs-line,#e2d9ce);}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link svg {flex:0 0 24px;color:var(--gs-accent-dark,#302720);}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link span {min-width:0;display:grid;gap:4px;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link strong {font-size:13px;font-weight:650;line-height:1.3;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link small {font-size:11px;color:var(--gs-muted,#62574d);line-height:1.4;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link:focus-visible {outline:2px solid var(--gs-accent,#a38450);outline-offset:-2px;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) {grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-card {min-height:var(--gs-banner-height,220px)!important;border-radius:var(--gs-card-radius,12px)!important;box-shadow:none!important;isolation:isolate;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-shade {background:linear-gradient(90deg,rgba(22,18,15,.88),rgba(22,18,15,.72) 48%,rgba(22,18,15,.15))!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) .gs-signature-banner-copy {min-height:var(--gs-banner-height,220px)!important;max-width:75%;padding:clamp(18px,2.5vw,34px)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) h2 {font-size:var(--gs-video-banner-title-fontSize,clamp(18px,2.2vw,30px))!important;color:var(--gs-video-banner-title-color,#fffdfa)!important;line-height:1.3!important;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) p {font-size:var(--gs-video-banner-description-fontSize,13px)!important;color:var(--gs-video-banner-description-color,#fffdfa)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) [data-visual-editor-target="banner.button"] {align-self:flex-start;padding:8px 10px;background:var(--gs-surface,#fffdfa);color:var(--gs-video-banner-button-color,var(--gs-ink,#201c19))!important;border-radius:var(--gs-button-radius,8px);font-size:11px!important;letter-spacing:0!important;}
+@media(max-width:767px){
+ :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-strip {grid-template-columns:repeat(2,minmax(0,1fr));}
+ :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link:nth-child(odd) {border-inline-start:0;}
+ :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-signature-service-link:nth-child(n+3) {border-top:1px solid var(--gs-line,#e2d9ce);}
+ :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) {grid-template-columns:minmax(0,1fr)!important;}
+}
+.gs-visual-preview-frame--mobile .gs-signature-service-strip {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+.gs-visual-preview-frame--mobile .gs-signature-service-link:nth-child(odd) {border-inline-start:0!important;}
+.gs-visual-preview-frame--mobile .gs-signature-service-link:nth-child(n+3) {border-top:1px solid var(--gs-line,#e2d9ce);}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) {grid-template-columns:minmax(0,1fr)!important;}
+
 /* Batch 10 — explicit editor values beat visual defaults in both live and internal preview.
    Attribute guards prevent inherited values from accidentally styling another element. */
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) [data-visual-editor-target][style*="--gs-video-explicit-color:"] { color:var(--gs-video-explicit-color)!important; }

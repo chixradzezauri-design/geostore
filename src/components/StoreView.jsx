@@ -11,7 +11,7 @@ import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountd
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight, ChevronLeft, ChevronRight 
+  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight, ChevronLeft, ChevronRight, Truck, RotateCcw, MessageCircle 
 } from 'lucide-react';
 
 
@@ -63,7 +63,11 @@ export default function StoreView({
   catalogueRoute=null,
   catalogueReady=false,
   catalogueProducts=[],
-  onCatalogueNavigate
+  onCatalogueNavigate,
+  onOpenTracker,
+  onOpenTerms,
+  onOpenPrivacy,
+  onOpenSupport
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -87,6 +91,17 @@ export default function StoreView({
 
   const visualCopy = siteSettings?.visualDesign?.copy || {};
   const signatureHero = siteSettings?.visualDesign?.signature2026 === true;
+  const serviceLabels = ({
+    ka: [['მიწოდება','შეკვეთის სტატუსი'],['დაბრუნების პირობები','წესები და პირობები'],['კონფიდენციალურობა','მონაცემთა დაცვის პოლიტიკა'],['მხარდაჭერა','დაგვიკავშირდი']],
+    en: [['Delivery','Track your order'],['Returns','Terms and conditions'],['Privacy','Data protection policy'],['Support','Contact us']],
+    ru: [['Доставка','Статус заказа'],['Возврат','Условия и правила'],['Конфиденциальность','Политика защиты данных'],['Поддержка','Связаться с нами']]
+  })[currentLang] || [['მიწოდება','შეკვეთის სტატუსი'],['დაბრუნების პირობები','წესები და პირობები'],['კონფიდენციალურობა','მონაცემთა დაცვის პოლიტიკა'],['მხარდაჭერა','დაგვიკავშირდი']];
+  const signatureServices = [
+    {Icon:Truck, action:onOpenTracker},
+    {Icon:RotateCcw, action:onOpenTerms},
+    {Icon:ShieldCheck, action:onOpenPrivacy},
+    {Icon:MessageCircle, action:onOpenSupport}
+  ].map((service,index)=>({...service, labels:serviceLabels[index]})).filter(service=>typeof service.action==='function');
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const campaignSlides = useMemo(() => signatureHero && siteSettings?.visualDesign?.sections?.banners !== false ? getSignatureCampaignSlides(banners) : [], [signatureHero, banners, siteSettings?.visualDesign?.sections?.banners]);
   const heroSlideCount = 1 + campaignSlides.length;
@@ -627,9 +642,16 @@ export default function StoreView({
       {renderCustomSections('after-hero')}
     </>,
     banners: <>
+      {signatureHero && signatureServices.length > 0 && (
+        <section className="gs-signature-service-strip" aria-label={currentLang === 'en' ? 'Customer services' : currentLang === 'ru' ? 'Сервисы для покупателей' : 'მომხმარებლის სერვისები'}>
+          {signatureServices.map(({Icon,action,labels}) => <button key={labels[0]} type="button" onClick={action} className="gs-signature-service-link">
+            <Icon aria-hidden="true" size={24}/><span><strong>{labels[0]}</strong><small>{labels[1]}</small></span>
+          </button>)}
+        </section>
+      )}
 
       {Array.isArray(banners) && banners.length > 0 && (
-        <section data-visual-editor-target="banner" {...sectionGeometryProps('banners',videoElementStyle('banner'))} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
+        <section data-visual-editor-target="banner" {...sectionGeometryProps('banners',videoElementStyle('banner'))} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" data-signature-banners={signatureHero ? "true" : undefined} aria-label="GEOSTORE featured collections">
           {banners.slice(0, 4).map((banner) => {
             const imageUrl = String(banner?.image || '').trim();
             const targetUrl = String(banner?.link || '').trim();
@@ -639,12 +661,12 @@ export default function StoreView({
               if (['https:', 'http:'].includes(parsed.protocol)) safeTarget = parsed.href;
             } catch {}
             const content = (
-              <div data-visual-editor-target="banner.card" style={videoElementStyle('banner.card')} className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
+              <div data-visual-editor-target="banner.card" style={videoElementStyle('banner.card')} className="gs-signature-banner-card relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
                 {imageUrl && (
                   <img data-visual-editor-target="banner.image" style={videoElementStyle('banner.image')} src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
-                <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
+                <div className="gs-signature-banner-shade absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
+                <div className="gs-signature-banner-copy relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
                   <h2 data-visual-editor-target="banner.title" style={videoElementStyle('banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
                   {banner?.subtitle && <p data-visual-editor-target="banner.description" style={videoElementStyle('banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
                   {safeTarget && <span data-visual-editor-target="banner.button" style={videoElementStyle('banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}

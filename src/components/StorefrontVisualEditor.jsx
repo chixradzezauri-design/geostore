@@ -1505,6 +1505,10 @@ export default function StorefrontVisualEditor({
             />
             <div className="gs-visual-preview-content">
               <StoreView
+                onOpenTracker={NOOP}
+                onOpenTerms={NOOP}
+                onOpenPrivacy={NOOP}
+                onOpenSupport={NOOP}
                 onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
                 siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}

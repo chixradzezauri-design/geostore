@@ -3795,6 +3795,10 @@ export default function App() {
             )}
           >
           <StoreView
+            onOpenTracker={() => setIsTrackerOpen(true)}
+            onOpenTerms={() => setIsTermsOpen(true)}
+            onOpenPrivacy={() => setActiveTab('privacy')}
+            onOpenSupport={() => { setSupportSubmission(null); setSupportOpen(true); }}
             currentLang={currentLang}
             siteSettings={siteSettings}
             banners={bannersList || []}
