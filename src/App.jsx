@@ -63,6 +63,7 @@ import { matchesProductSearch } from './utils/productSearch.js';
 import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
 import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath, catalogueMetadata } from './utils/catalogueSeo.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
+import {flashSaleMetadataChanged,FLASH_SALE_METADATA_QUERY} from './utils/flashSaleMetadataRefresh.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => Promise.all([import('./components/AdminDashboardPro'),loadAdminCss()]).then(([module])=>module));
@@ -719,6 +720,10 @@ export default function App() {
 
   // Serialize catalogue refreshes and discard results from a previous access set.
   const productsFetchLock = useRef(false);
+  const flashMetadataProductsRef = useRef(products);
+  flashMetadataProductsRef.current = products;
+  const flashMetadataVerifiedRef = useRef(catalogueVerifiedEpoch);
+  flashMetadataVerifiedRef.current = catalogueVerifiedEpoch;
   const productsFetchQueued = useRef(false);
   const productsAccessEpoch = useRef(0);
   const adminAccessRef = useRef(adminAccess);
@@ -2247,6 +2252,33 @@ export default function App() {
       }
     }
   };
+
+  // Small public metadata reads detect scheduled starts and server-side expiry
+  // while a customer leaves the page open. Never poll the full image catalogue.
+  const flashMetadataRefreshRef = useRef(fetchProductsFromDatabase);
+  flashMetadataRefreshRef.current = fetchProductsFromDatabase;
+  useEffect(()=>{
+    let disposed=false,busy=false;
+    const controller=new AbortController();
+    const check=async()=>{
+      const epoch=productsAccessEpoch.current;
+      if(disposed||busy||document.visibilityState!=='visible'||productsFetchLock.current||flashMetadataVerifiedRef.current!==epoch)return;
+      busy=true;
+      try{
+        const response=await fetch(SUPABASE_URL+'/rest/v1/products?'+FLASH_SALE_METADATA_QUERY,{
+          headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY},
+          cache:'no-store',signal:controller.signal
+        });
+        if(!response.ok)return;
+        const rows=await response.json();
+        if(disposed||document.visibilityState!=='visible'||epoch!==productsAccessEpoch.current||productsFetchLock.current||flashMetadataVerifiedRef.current!==epoch)return;
+        if(flashSaleMetadataChanged(flashMetadataProductsRef.current,rows))void flashMetadataRefreshRef.current();
+      }catch(error){/* Normal catalogue refresh on visibility remains the recovery path. */}
+      finally{busy=false;}
+    };
+    const interval=window.setInterval(()=>void check(),60000);
+    return ()=>{disposed=true;controller.abort();window.clearInterval(interval);};
+  },[]);
 
   const lookupOrderForTracking = async (orderId, phone) => {
     const normalized = normalizeTrackingLookup(orderId, phone);
