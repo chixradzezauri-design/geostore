@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter} from '../utils/characterStudio.js';
 import './characterStudio.css';
 
 let seenInMemory=false;
@@ -50,8 +50,8 @@ export function CharacterArt({character,emotion='happy',season='none'}){
   </svg>;
 }
 export function CharacterScene({character,settings,lang='ka',preview=false,onClose}){
-  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={settings.behavior}>
-    <div className="gs-character-figure"><CharacterArt character={character} emotion={settings.emotion} season={settings.season}/></div>
+  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
+    <div className="gs-character-figure"><CharacterArt character={styledCharacter(character,settings)} emotion={settings.emotion} season={settings.season}/></div>
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span>{characterMessage(settings,character,lang)}</span>
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
@@ -61,7 +61,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
 // Contextual characters are in-flow decorations, not additional floating popups.
 export function CharacterContextCard({scenario,lang='ka'}){
   if(!scenario)return null;
-  return <div className="gs-character-context">
+  return <div className="gs-character-context" style={characterAppearanceStyle(scenario.appearance)}>
     <div className="gs-character-context-art"><CharacterArt character={scenario.character} emotion={scenario.emotion} season={scenario.season}/></div>
     <div className="gs-character-context-copy"><strong>{scenario.character.name}</strong><span>{scenario.message||scenario.lines[lang]||scenario.lines.ka}</span></div>
   </div>;

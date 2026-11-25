@@ -22,6 +22,34 @@ function normalizeScenarios(raw){
     return [key,{enabled:value.enabled===true,character:pick(value.character,CHARACTERS.map(c=>c.id),preset.character),message:typeof value.message==='string'?value.message.trim().slice(0,120):''}];
   }));
 }
+const hexColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():fallback;
+export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13});
+export function normalizeCharacterAppearance(raw){
+  const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  return {desktopSize:bounded(v.desktopSize,80,144,116),mobileSize:bounded(v.mobileSize,56,100,76),
+    lift:bounded(v.lift,0,48,0),bubbleColor:hexColor(v.bubbleColor,'#fffdf7'),
+    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13)};
+}
+export function normalizeCharacterPalette(raw){
+  const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  return Object.fromEntries(CHARACTERS.map(c=>[c.id,hexColor(v[c.id],c.color)]));
+}
+export function styledCharacter(character,settings){
+  return {...character,color:normalizeCharacterPalette(settings?.palette)[character.id]||character.color};
+}
+// WCAG relative luminance: choose the stronger of black/white text contrast.
+export function characterBubbleInk(value){
+  const hex=hexColor(value,'#fffdf7');
+  const [r,g,b]=[1,3,5].map(i=>{const c=parseInt(hex.slice(i,i+2),16)/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;});
+  return .2126*r+.7152*g+.0722*b>.179?'#000000':'#ffffff';
+}
+export function characterAppearanceStyle(raw){
+  const a=normalizeCharacterAppearance(raw);
+  return {'--gs-mascot-desktop':a.desktopSize+'px','--gs-mascot-mobile':a.mobileSize+'px','--gs-mascot-lift':a.lift+'px',
+    '--gs-mascot-bubble':a.bubbleColor,'--gs-mascot-ink':characterBubbleInk(a.bubbleColor),
+    '--gs-mascot-radius':{rounded:'16px',pill:'28px',square:'6px'}[a.bubbleShape],
+    '--gs-mascot-font':a.fontSize+'px'};
+}
 export const DEFAULT_CHARACTER_SETTINGS=Object.freeze({
   enabled:false, character:'fox', rotation:'fixed', behavior:'run-wave', side:'left',
   delay:2, duration:6, frequency:'session', pages:'home', mobile:true, desktop:true, message:''
@@ -40,7 +68,7 @@ export function normalizeCharacterSettings(raw){
     pages:pick(s.pages,['home','catalogue'],'home'),
     mobile:s.mobile!==false, desktop:s.desktop!==false,
     message:typeof s.message==='string'?s.message.trim().slice(0,120):'',
-    scenarios:normalizeScenarios(s.scenarios)
+    scenarios:normalizeScenarios(s.scenarios),appearance:normalizeCharacterAppearance(s.appearance),palette:normalizeCharacterPalette(s.palette)
   };
 }
 export function selectCharacter(settings,date=new Date(),random=Math.random){
@@ -49,7 +77,7 @@ export function selectCharacter(settings,date=new Date(),random=Math.random){
   if(s.rotation==='random') id=CHARACTERS[Math.max(0,Math.min(CHARACTERS.length-1,Math.floor(random()*CHARACTERS.length)))].id;
   if(s.rotation==='daypart') id=date.getHours()<12?'fox':date.getHours()<18?'rabbit':'panda';
   if(s.rotation==='seasonal') id=[ 'panda','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','panda' ][date.getMonth()];
-  return CHARACTERS.find(c=>c.id===id)||CHARACTERS[0];
+  return styledCharacter(CHARACTERS.find(c=>c.id===id)||CHARACTERS[0],s);
 }
 export function resolveCharacterSeason(value,date=new Date()){
   const season=pick(value,['none','auto','winter','hearts','summer','autumn'],'none');
@@ -74,7 +102,7 @@ export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
 export function getCharacterScenario(settings,key,{mobile=false,eligible=false}={}){
   const s=normalizeCharacterSettings(settings);
   if(!Object.hasOwn(CHARACTER_SCENARIOS,key)||!s.enabled||!eligible||!(mobile?s.mobile:s.desktop)||!s.scenarios[key].enabled)return null;
-  return {character:CHARACTERS.find(c=>c.id===s.scenarios[key].character),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines,emotion:s.emotion,season:s.season};
+  return {character:styledCharacter(CHARACTERS.find(c=>c.id===s.scenarios[key].character),s),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines,emotion:s.emotion,season:s.season,appearance:s.appearance};
 }
 export const CHARACTER_SESSION_KEY='geostore_character_seen_v1';
 export function characterAlreadySeen(value,frequency,now=Date.now()){

@@ -48,3 +48,17 @@
 .gs-character-reaction-copy{min-width:0;overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){.gs-character-reaction-art{animation:none!important}}
 @media(max-width:360px){.gs-character-reaction-art{width:27px;flex-basis:27px}}
+
+/* Only the decorative character surface receives custom styles; no site theme overrides. */
+.gs-character-scene .gs-character-figure{width:var(--gs-mascot-mobile,76px);flex:0 0 var(--gs-mascot-mobile,76px)}
+.gs-character-scene:not(.gs-character-preview-scene){bottom:calc(92px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px))}
+.gs-character-scene .gs-character-bubble,.gs-character-context{background:var(--gs-mascot-bubble,#fffdf7);color:var(--gs-mascot-ink,#17233b);border-radius:var(--gs-mascot-radius,16px);font-size:var(--gs-mascot-font,13px)}
+.gs-character-scene .gs-character-bubble strong,.gs-character-context-copy strong,.gs-character-dismiss{color:inherit}
+.gs-character-dismiss{width:28px;height:28px}
+.gs-character-scene .gs-character-bubble{padding-right:34px;min-width:0;max-height:min(150px,30vh)}
+.gs-character-preview-scene{bottom:calc(12px + var(--gs-mascot-lift,0px))}
+.gs-character-scene[data-motion="still"] .gs-character-hand,.gs-character-scene[data-motion="still"] .gs-character-bubble{animation:none}
+.gs-character-preview[data-device="desktop"] .gs-character-figure{width:var(--gs-mascot-desktop,116px);flex-basis:var(--gs-mascot-desktop,116px)}
+.gs-character-preview[data-device="mobile"] .gs-character-figure{width:var(--gs-mascot-mobile,76px);flex-basis:var(--gs-mascot-mobile,76px)}
+@media(min-width:768px){.gs-character-scene:not(.gs-character-preview-scene){bottom:calc(24px + var(--gs-mascot-lift,0px))}.gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{width:var(--gs-mascot-desktop,116px);flex-basis:var(--gs-mascot-desktop,116px)}}
+@media(max-height:480px){.gs-character-scene:not(.gs-character-preview-scene){bottom:calc(74px + env(safe-area-inset-bottom,0px));max-width:260px}.gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{width:56px;flex-basis:56px}}

@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
@@ -29,6 +29,8 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
     setPreview(null);
     setSiteSettings(previous=>({...previous,characterStudio:normalizeCharacterSettings({...previous?.characterStudio,...patch})}));
   };
+  const updateAppearance=(patch)=>update({appearance:{...s.appearance,...patch}});
+  const updatePalette=(color)=>update({palette:{...s.palette,[s.character]:color}});
   useEffect(()=>{
     if(!preview)return;
     const id=setTimeout(()=>setPreview(null),(preview.settings.delay+preview.settings.duration)*1000);
@@ -41,7 +43,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-      {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="mx-auto w-16 max-w-full"><CharacterArt character={c} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
+      {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="mx-auto w-16 max-w-full"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {choose('rotation','პერსონაჟის შერჩევა')}{choose('behavior','მოძრაობა')}{choose('emotion','ემოცია')}{choose('season','სეზონური აქსესუარი')}{choose('side','გამოსვლის მხარე')}{choose('frequency','გამოჩენის სიხშირე')}{choose('pages','გვერდები')}
@@ -50,8 +52,20 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
     </div>
     <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),message}}));}}/></label>
+    <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-appearance>
+      <summary className="cursor-pointer text-sm font-bold text-white">ვიზუალური დიზაინი — ზომები და ფერები</summary>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        {[[ 'desktopSize','კომპიუტერზე ზომა',80,144 ],['mobileSize','ტელეფონზე ზომა',56,100],['lift','დამატებითი სიმაღლე ქვედა კიდიდან',0,48],['fontSize','ტექსტის ზომა',12,15]].map(([key,label,min,max])=><label key={key} className="block space-y-1 text-xs text-slate-300">{label}: {s.appearance[key]} px<input aria-label={label} className="w-full" type="range" min={min} max={max} value={s.appearance[key]} disabled={busy} onChange={e=>updateAppearance({[key]:Number(e.target.value)})}/></label>)}
+        <label className="block space-y-1 text-xs text-slate-300">არჩეული პერსონაჟის ფერი<input aria-label="პერსონაჟის ფერი" type="color" className="block h-10 w-full rounded-lg border border-slate-600 bg-slate-950" value={s.palette[s.character]} disabled={busy} onChange={e=>updatePalette(e.target.value)}/></label>
+        <label className="block space-y-1 text-xs text-slate-300">მისალმების ფონი<input aria-label="მისალმების ფონი" type="color" className="block h-10 w-full rounded-lg border border-slate-600 bg-slate-950" value={s.appearance.bubbleColor} disabled={busy} onChange={e=>updateAppearance({bubbleColor:e.target.value})}/></label>
+        <label className="block space-y-1 text-xs text-slate-300">ბუშტის ფორმა<select className={field} value={s.appearance.bubbleShape} disabled={busy} onChange={e=>updateAppearance({bubbleShape:e.target.value})}><option value="rounded">მომრგვალებული</option><option value="pill">ოვალური</option><option value="square">კუთხეებიანი</option></select></label>
+        <button type="button" disabled={busy} className="self-end rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-100" onClick={()=>update({appearance:DEFAULT_CHARACTER_APPEARANCE,palette:{}})}>ვიზუალური პარამეტრების აღდგენა</button>
+      </div>
+      <p className="text-xs text-slate-400">თითოეულ პერსონაჟს დამოუკიდებელი ფერი აქვს. ტექსტის კონტრასტი ავტომატურად შეირჩევა. ზომები შეზღუდულია, რათა არ დაიფაროს მნიშვნელოვანი ღილაკები.</p>
+      <div className="gs-character-preview p-3" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}><CharacterScene character={styledCharacter(CHARACTERS.find(c=>c.id===s.character),s)} settings={{...s,behavior:'still'}} lang={lang} preview/></div>
+    </details>
     <div className="flex flex-wrap gap-2 items-center"><button type="button" aria-pressed={!previewMobile} onClick={()=>{setPreviewMobile(false);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">კომპიუტერი</button><button type="button" aria-pressed={previewMobile} onClick={()=>{setPreviewMobile(true);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">ტელეფონი</button><button type="button" onClick={()=>setPreview({settings:s,character:selectCharacter(s),key:Date.now()})} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">ანიმაციის გაშვება</button></div>
-    <div className="gs-character-preview mx-auto w-full" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined}}>
+    <div data-character-playback className="gs-character-preview mx-auto w-full" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined}}>
       <span className="text-sm">GEOSTORE · გადახედვა</span>
       {preview&&<PreviewPlayback key={preview.key} preview={preview} lang={lang}/>}
     </div>

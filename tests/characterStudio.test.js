@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CHARACTERS,normalizeCharacterSettings,selectCharacter,characterMessage,canDisplayCharacter,characterAlreadySeen,getCharacterScenario,resolveCharacterSeason,canShowCharacterReaction} from '../src/utils/characterStudio.js';
+import {CHARACTERS,normalizeCharacterSettings,selectCharacter,characterMessage,canDisplayCharacter,characterAlreadySeen,getCharacterScenario,resolveCharacterSeason,canShowCharacterReaction,normalizeCharacterAppearance,characterBubbleInk,characterAppearanceStyle,styledCharacter} from '../src/utils/characterStudio.js';
 test('mascot is opt-in and strict boolean',()=>{
   assert.equal(normalizeCharacterSettings(null).enabled,false);
   assert.equal(normalizeCharacterSettings({enabled:'true'}).enabled,false);
@@ -79,4 +79,19 @@ test('successful commerce reactions are opt-in and rate limited',()=>{
   assert.equal(canShowCharacterReaction(null,100),true);
   assert.equal(canShowCharacterReaction(100,15099),false);
   assert.equal(canShowCharacterReaction(100,15100),true);
+});
+
+test('custom mascot appearance clamps geometry and rejects unsafe CSS',()=>{
+  const a=normalizeCharacterAppearance({desktopSize:900,mobileSize:-10,lift:999,fontSize:30,bubbleColor:'url(https://example.test)',bubbleShape:'invalid'});
+  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded'});
+  assert.equal(characterAppearanceStyle({bubbleColor:'#000000',bubbleShape:'pill'})['--gs-mascot-radius'],'28px');
+  assert.equal(characterBubbleInk('#000000'),'#ffffff');
+  assert.equal(characterBubbleInk('#ffffff'),'#000000');
+  assert.equal(characterBubbleInk('#777777'),'#000000');
+});
+test('individual character colors survive selection and contextual scenes',()=>{
+  const s={enabled:true,character:'fox',palette:{fox:'#123456',cat:'bad',robot:'#aabbcc'},scenarios:{cart:{enabled:true}}};
+  assert.equal(selectCharacter(s).color,'#123456');
+  assert.equal(styledCharacter(CHARACTERS.find(c=>c.id==='cat'),s).color,'#f472b6');
+  assert.equal(getCharacterScenario(s,'cart',{eligible:true}).character.color,'#aabbcc');
 });

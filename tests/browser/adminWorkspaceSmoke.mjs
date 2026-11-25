@@ -122,10 +122,10 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
-          await studio.locator('.gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
-          assert.match(await studio.locator('.gs-character-preview-scene').innerText(),/Mini Robot/);
+          await studio.locator('[data-character-playback] .gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
+          assert.match(await studio.locator('[data-character-playback] .gs-character-preview-scene').innerText(),/Mini Robot/);
           assert.equal(await page.locator('.gs-character-scene:not(.gs-character-preview-scene)').count(),0,'Admin preview does not start public mascot');
-          const box=await studio.locator('.gs-character-preview').first().boundingBox();
+          const box=await studio.locator('[data-character-playback]').boundingBox();
           assert.ok(box.width<=321,'Phone preview is constrained to phone width');
           const scenarios=studio.locator('[data-character-scenarios]');
           await scenarios.getByLabel('სცენარი',{exact:true}).selectOption('cart');
