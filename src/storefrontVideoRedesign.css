@@ -1807,3 +1807,7 @@
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section[data-flash-button-style]:not([data-flash-button-style="inherit"]) .gs-video-flash-add:focus-visible {outline:2px solid currentColor;outline-offset:2px;}
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section[data-flash-button-style]:not([data-flash-button-style="inherit"]) .gs-video-flash-add:disabled {opacity:.45!important;cursor:not-allowed;}
 @media(prefers-reduced-motion:reduce){:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section[data-flash-card-style]:not([data-flash-card-style="inherit"]) .gs-flash-sale-card,:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section[data-flash-card-style]:not([data-flash-card-style="inherit"]) .gs-video-flash-image{transition:none!important;}}
+
+/* Keep uploaded artwork inside the section regardless of device size. */
+.gs-flash-campaign-banner{box-sizing:border-box;max-width:100%;min-width:0;}
+.gs-flash-campaign-banner[hidden]{display:none!important;}

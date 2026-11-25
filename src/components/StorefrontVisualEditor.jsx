@@ -1,4 +1,4 @@
-import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner, FLASH_TIMER_STYLES, FLASH_PRODUCT_APPEARANCE } from '../utils/flashCampaignThemes.js';
+import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner, FLASH_TIMER_STYLES, FLASH_PRODUCT_APPEARANCE, FLASH_BANNER_MAX_BYTES } from '../utils/flashCampaignThemes.js';
 import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
 import { FLASH_CAMPAIGN_COPY_PRESETS, applyFlashCampaignCopyPreset } from '../utils/flashCampaignCopy.js';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
@@ -634,6 +634,31 @@ export default function StorefrontVisualEditor({
     setSelectedElement(null);
   };
 
+  const handleFlashBannerFileChange = event => {
+    const file=event.target.files?.[0];
+    event.target.value='';
+    if(!file||heroImagePendingRef.current||draftSaveInFlightRef.current||publishInFlightRef.current||storefrontDraftBusy||storefrontPublishBusy||versionRestoreBusy)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size<=0||file.size>FLASH_BANNER_MAX_BYTES){
+      setSaveMessage('ბანერისთვის აირჩიეთ JPG, PNG ან WEBP, მაქსიმუმ 1 MB.');return;
+    }
+    const requestId=++heroImageReadRequestRef.current;
+    const revision=localEditRevisionRef.current;
+    const initialDesign=designRef.current;
+    heroImagePendingRef.current=true;setHeroImagePending(true);
+    const finish=(value)=>{
+      if(requestId!==heroImageReadRequestRef.current)return;
+      heroImagePendingRef.current=false;setHeroImagePending(false);
+      if(localEditRevisionRef.current!==revision||designRef.current!==initialDesign){setSaveMessage('დიზაინი შეიცვალა ფოტოს წაკითხვისას. აირჩიეთ ფოტო ხელახლა.');return;}
+      const image=normalizeFlashCampaignBanner(value);
+      if(!image||!image.startsWith('data:'+file.type+';base64,')){setSaveMessage('ბანერის ფოტო ვერ წაიკითხა.');return;}
+      commitDesign({...designRef.current,flashCampaignBanner:image});
+    };
+    const reader=new FileReader();
+    reader.onload=()=>finish(reader.result);
+    reader.onerror=reader.onabort=()=>finish('');
+    try{reader.readAsDataURL(file);}catch{finish('');}
+  };
+
   const handleHeroFileChange = event => {
     const requestId = ++heroImageReadRequestRef.current;
     const file = event.target.files?.[0];
@@ -1266,14 +1291,25 @@ export default function StorefrontVisualEditor({
               <div className="border-t border-slate-700 pt-3">
                 <h4 className="mb-2 text-xs font-bold text-white">სარეკლამო ბანერი და განლაგება</h4>
                 <label className="block space-y-1 text-xs font-semibold text-slate-300">აქციის ფოტოს HTTPS ბმული
-                  <input key={design.flashCampaignBanner || 'empty-banner'} type="url" maxLength={2048} defaultValue={design.flashCampaignBanner || ''} placeholder="https://…" onBlur={event=>{
+                  <input key={design.flashCampaignBanner || 'empty-banner'} disabled={heroImagePending} type="url" maxLength={2048} defaultValue={design.flashCampaignBanner?.startsWith('https:')?design.flashCampaignBanner:''} placeholder="https://…" onBlur={event=>{
                     const raw=event.currentTarget.value.trim();
                     const value=normalizeFlashCampaignBanner(raw);
                     if(raw && !value){setSaveMessage('ფოტოსთვის გამოიყენეთ უსაფრთხო HTTPS ბმული.');event.currentTarget.value=designRef.current.flashCampaignBanner || '';return;}
-                    if(value!==(designRef.current.flashCampaignBanner || ''))commitDesign({...designRef.current,flashCampaignBanner:value});
+                    if(value&&value!==(designRef.current.flashCampaignBanner || ''))commitDesign({...designRef.current,flashCampaignBanner:value});
                   }} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
                 </label>
-                <button type="button" disabled={!design.flashCampaignBanner} onClick={()=>commitDesign({...designRef.current,flashCampaignBanner:''})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-200 disabled:opacity-40">ბანერის მოცილება</button>
+                <button type="button" disabled={heroImagePending||!design.flashCampaignBanner} onClick={()=>commitDesign({...designRef.current,flashCampaignBanner:''})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-200 disabled:opacity-40">ბანერის მოცილება</button>
+                <label className="mt-2 block text-xs font-semibold text-slate-300">ფოტოს ატვირთვა (JPG, PNG, WEBP · მაქს. 1 MB)
+                  <input type="file" accept="image/jpeg,image/png,image/webp" disabled={heroImagePending||storefrontDraftBusy||storefrontPublishBusy||versionRestoreBusy} onChange={handleFlashBannerFileChange} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-300"/>
+                </label>
+                {design.flashCampaignBanner&&<img key={design.flashCampaignBanner} src={design.flashCampaignBanner} alt="აქციის ბანერის წინასწარი ნახვა" referrerPolicy="no-referrer" className="mt-2 max-h-28 w-full rounded-lg object-contain" onError={event=>{event.currentTarget.hidden=true;}}/>}
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[['desktopHeight','კომპიუტერის სიმაღლე',80,360],['tabletHeight','ტაბლეტის სიმაღლე',80,360],['mobileHeight','მობილურის სიმაღლე',80,360],['positionX','ჰორიზონტალური პოზიცია (%)',0,100],['positionY','ვერტიკალური პოზიცია (%)',0,100],['radius','კუთხეების მომრგვალება',0,32]].map(([key,label,min,max])=><label key={key} className="min-w-0 text-xs text-slate-300">{label}
+                    <input type="number" min={min} max={max} step="1" value={design.flashBannerAppearance?.[key]??''} placeholder="ავტომატური" onChange={event=>{const next={...designRef.current.flashBannerAppearance};if(event.target.value==='')delete next[key];else next[key]=Number(event.target.value);commitDesign({...designRef.current,flashBannerAppearance:next});}} className="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-white"/>
+                  </label>)}
+                  {[['fit','ფოტოს მორგება',[['cover','შევსება'],['contain','სრულად ჩვენება']]],['placement','ბანერის ადგილი',[['above','სათაურის ზემოთ'],['below','სათაურის ქვემოთ']]]].map(([key,label,options])=><label key={key} className="text-xs text-slate-300">{label}<select value={design.flashBannerAppearance?.[key]??''} onChange={event=>commitDesign({...designRef.current,flashBannerAppearance:{...designRef.current.flashBannerAppearance,[key]:event.target.value}})} className="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-white"><option value="">ნაგულისხმევი</option>{options.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>)}
+                </div>
+                <button type="button" onClick={()=>commitDesign({...designRef.current,flashBannerAppearance:{}})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-300">ბანერის ზომების აღდგენა</button>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[['inherit','არსებული'],['grid','ბარათები'],['compact','კომპაქტური']].map(([id,label])=><button key={id} type="button" aria-pressed={(design.flashCampaignLayout || 'inherit')===id} onClick={()=>commitDesign({...designRef.current,flashCampaignLayout:id})} className="min-h-11 rounded-lg border border-slate-600 px-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
                 </div>

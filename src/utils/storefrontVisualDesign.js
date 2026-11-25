@@ -1,4 +1,4 @@
-import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion, FLASH_PRODUCT_APPEARANCE, normalizeFlashProductAppearance } from './flashCampaignThemes.js';
+import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion, FLASH_PRODUCT_APPEARANCE, normalizeFlashProductAppearance, normalizeFlashBannerAppearance } from './flashCampaignThemes.js';
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
 const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
 export function getStorefrontSectionOrder(raw,viewport='desktop'){
@@ -279,6 +279,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     ...(normalizeFlashCampaignTheme(raw.flashCampaignTheme) !== 'inherit' ? { flashCampaignTheme: normalizeFlashCampaignTheme(raw.flashCampaignTheme) } : {}),
     ...(normalizeFlashCampaignLayout(raw.flashCampaignLayout) !== 'inherit' ? { flashCampaignLayout: normalizeFlashCampaignLayout(raw.flashCampaignLayout) } : {}),
     ...(normalizeFlashCampaignBanner(raw.flashCampaignBanner) ? { flashCampaignBanner: normalizeFlashCampaignBanner(raw.flashCampaignBanner) } : {}),
+    ...(Object.keys(normalizeFlashBannerAppearance(raw.flashBannerAppearance)).length?{flashBannerAppearance:normalizeFlashBannerAppearance(raw.flashBannerAppearance)}:{}),
     ...(normalizeFlashTimerStyle(raw.flashTimerStyle)!=='inherit'?{flashTimerStyle:normalizeFlashTimerStyle(raw.flashTimerStyle)}:{}),
     ...(normalizeFlashTimerMotion(raw.flashTimerMotion)!=='none'?{flashTimerMotion:normalizeFlashTimerMotion(raw.flashTimerMotion)}:{}),
     ...Object.fromEntries(FLASH_PRODUCT_APPEARANCE.map(({key})=>[key,normalizeFlashProductAppearance(key,raw[key])]).filter(([,value])=>value!=='inherit')),

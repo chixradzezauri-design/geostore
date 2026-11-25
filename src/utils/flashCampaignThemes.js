@@ -16,7 +16,9 @@ export function normalizeFlashCampaignLayout(value) {
   return ['grid','compact'].includes(value) ? value : 'inherit';
 }
 export function normalizeFlashCampaignBanner(value) {
-  if (typeof value !== 'string' || value.length > 2048) return '';
+  if (typeof value !== 'string' || value.length > 1400000) return '';
+  if (/^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/]+={0,2}$/i.test(value)) return value;
+  if (value.length > 2048) return '';
   try { const url = new URL(value.trim()); return url.protocol === 'https:' && !url.username && !url.password ? url.href : ''; } catch { return ''; }
 }
 
@@ -41,4 +43,24 @@ export const FLASH_PRODUCT_APPEARANCE=Object.freeze([
 export function normalizeFlashProductAppearance(key,value){
  const group=FLASH_PRODUCT_APPEARANCE.find(group=>group.key===key);
  return group?.options.some(([id])=>id===value)?value:'inherit';
+}
+
+export const FLASH_BANNER_MAX_BYTES=1024*1024;
+export function normalizeFlashBannerAppearance(value){
+ const raw=value&&typeof value==='object'?value:{};
+ const result={};
+ for(const key of ['desktopHeight','tabletHeight','mobileHeight','positionX','positionY','radius']){
+  const limits=key.endsWith('Height')?[80,360]:key==='radius'?[0,32]:[0,100];
+  if(typeof raw[key]==='number'&&Number.isFinite(raw[key]))result[key]=Math.round(Math.max(limits[0],Math.min(limits[1],raw[key])));
+ }
+ if(['cover','contain'].includes(raw.fit))result.fit=raw.fit;
+ if(['above','below'].includes(raw.placement))result.placement=raw.placement;
+ return result;
+}
+export function flashBannerStyle(value,viewport){
+ const a=normalizeFlashBannerAppearance(value);
+ const h=viewport==='mobile'?a.mobileHeight??a.desktopHeight:viewport==='tablet'?a.tabletHeight??a.desktopHeight:a.desktopHeight;
+ return {...(h!=null?{height:h+'px'}:{}),...(a.fit?{objectFit:a.fit}:{}),
+  ...(a.positionX!=null||a.positionY!=null?{objectPosition:(a.positionX??50)+'% '+(a.positionY??50)+'%'}:{}),
+  ...(a.radius!=null?{borderRadius:a.radius+'px'}:{})};
 }

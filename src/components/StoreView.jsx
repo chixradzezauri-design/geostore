@@ -1,6 +1,6 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion, normalizeFlashProductAppearance } from '../utils/flashCampaignThemes.js';
+import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion, normalizeFlashProductAppearance, normalizeFlashBannerAppearance, flashBannerStyle } from '../utils/flashCampaignThemes.js';
 import { getSignatureCampaignSlides, signatureSlideIndex } from '../utils/signatureHero.js';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
@@ -92,6 +92,8 @@ export default function StoreView({
 
   const visualCopy = siteSettings?.visualDesign?.copy || {};
   const flashCampaignBanner = normalizeFlashCampaignBanner(siteSettings?.visualDesign?.flashCampaignBanner);
+  const flashBannerAppearance = normalizeFlashBannerAppearance(siteSettings?.visualDesign?.flashBannerAppearance);
+  const flashBannerNode = flashCampaignBanner ? <img key={flashCampaignBanner} src={flashCampaignBanner} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" style={flashBannerStyle(flashBannerAppearance,visualEditorViewport||liveSectionViewport)} className="gs-flash-campaign-banner" onError={event=>{event.currentTarget.hidden=true;}} /> : null;
   const signatureHero = siteSettings?.visualDesign?.signature2026 === true;
   const serviceLabels = ({
     ka: [['მიწოდება','შეკვეთის სტატუსი'],['დაბრუნების პირობები','წესები და პირობები'],['კონფიდენციალურობა','მონაცემთა დაცვის პოლიტიკა'],['მხარდაჭერა','დაგვიკავშირდი']],
@@ -689,6 +691,7 @@ export default function StoreView({
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
         <div data-visual-editor-target="flashSale" data-flash-card-style={normalizeFlashProductAppearance('flashCardStyle',siteSettings?.visualDesign?.flashCardStyle)} data-flash-discount-style={normalizeFlashProductAppearance('flashDiscountStyle',siteSettings?.visualDesign?.flashDiscountStyle)} data-flash-button-style={normalizeFlashProductAppearance('flashButtonStyle',siteSettings?.visualDesign?.flashButtonStyle)} data-flash-campaign-theme={normalizeFlashCampaignTheme(siteSettings?.visualDesign?.flashCampaignTheme)} data-flash-campaign-layout={normalizeFlashCampaignLayout(siteSettings?.visualDesign?.flashCampaignLayout)} {...sectionGeometryProps('flashSale',videoElementStyle('flashSale'))} className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
+          {flashBannerAppearance.placement==='above'&&flashBannerNode}
           <div className="gs-video-flash-heading flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="gs-video-flash-icon bg-amber-400 p-3 rounded-2xl text-slate-950">
@@ -725,7 +728,7 @@ export default function StoreView({
             </div>
           </div>
 
-          {flashCampaignBanner && <img key={flashCampaignBanner} src={flashCampaignBanner} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="gs-flash-campaign-banner" onError={event=>{event.currentTarget.hidden=true;}} />}
+          {flashBannerAppearance.placement!=="above"&&flashBannerNode}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {flashSaleProducts.map(prod => {
               const originalPrice = Number(prod.oldPriceGEL);
