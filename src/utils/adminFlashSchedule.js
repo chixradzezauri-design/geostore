@@ -25,3 +25,22 @@ export function flashScheduleStatus(row,now=Date.now()){
  if(row.status==='pending')return Date.parse(row.starts_at)<=now?'გაშვების მოლოდინში':'დაგეგმილი';
  return row.status==='cancelled'?'გაუქმებული':'გამოტოვებული';
 }
+
+// Counts describe only returned schedule records, never sales or revenue attribution.
+export function summarizeFlashSchedule(rows,now=Date.now()){
+ const totals={pending:0,active:0,ended:0,cancelled:0,skipped:0,productUpdates:0};
+ for(const row of rows){
+  if(row.status==='started'){
+   totals[Date.parse(row.ends_at)<=now?'ended':'active']++;
+   totals.productUpdates+=row.updated_count;
+  }else if(['pending','cancelled','skipped'].includes(row.status))totals[row.status]++;
+ }
+ return totals;
+}
+export function filterFlashSchedule(rows,filter='all',query='',now=Date.now()){
+ const needle=String(query).trim().toLocaleLowerCase('ka-GE');
+ return rows.filter(row=>{
+  const status=row.status==='started'?(Date.parse(row.ends_at)<=now?'ended':'active'):row.status;
+  return (filter==='all'||filter===status)&&(needle===''||row.category.toLocaleLowerCase('ka-GE').includes(needle));
+ });
+}

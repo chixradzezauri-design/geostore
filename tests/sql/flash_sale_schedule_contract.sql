@@ -33,7 +33,8 @@ DO $$ BEGIN
 END $$;
 UPDATE private.flash_sale_schedule SET starts_at=now()-interval '1 minute', ends_at=now()+interval '59 minutes';
 DO $$ BEGIN
- IF private.run_due_flash_sale_schedule()<>1 OR (SELECT price_gel FROM public.products WHERE id='base')<>80 THEN RAISE EXCEPTION 'activation failed'; END IF;
+ IF private.run_due_flash_sale_schedule()<>1 THEN RAISE EXCEPTION 'activation count failed'; END IF;
+ IF (SELECT price_gel FROM public.products WHERE id='base')<>80 THEN RAISE EXCEPTION 'activation price failed'; END IF;
  IF (SELECT updated_count FROM private.flash_sale_schedule)<>1 OR (SELECT old_price_gel FROM public.products WHERE id='base')<>100 THEN RAISE EXCEPTION 'incorrect scope'; END IF;
  IF private.run_due_flash_sale_schedule()<>0 THEN RAISE EXCEPTION 'duplicate activation'; END IF;
  IF EXISTS(SELECT 1 FROM public.products WHERE id IN ('variant','other','legacy') AND price_gel<>100) OR (SELECT price_gel FROM public.products WHERE id='markdown')<>80 THEN RAISE EXCEPTION 'unsafe price change'; END IF;
@@ -45,6 +46,7 @@ SELECT public.admin_cancel_flash_sale_schedule((public.admin_list_flash_sale_sch
 RESET ROLE;
 INSERT INTO private.flash_sale_schedule(category,discount_percent,starts_at,ends_at,created_by) VALUES('shoes',20,now()-interval '2 hours',now()-interval '1 hour','1060de3d-d28a-45f8-9a64-5e0368cffc4b');
 DO $$ BEGIN
- IF private.run_due_flash_sale_schedule()<>1 OR (SELECT price_gel FROM public.products WHERE id='other')<>100 THEN RAISE EXCEPTION 'missed schedule changed price'; END IF;
+ IF private.run_due_flash_sale_schedule()<>1 THEN RAISE EXCEPTION 'missed schedule count failed'; END IF;
+ IF (SELECT price_gel FROM public.products WHERE id='other')<>100 THEN RAISE EXCEPTION 'missed schedule changed price'; END IF;
  IF NOT EXISTS(SELECT 1 FROM private.flash_sale_schedule WHERE status='cancelled') OR NOT EXISTS(SELECT 1 FROM private.flash_sale_schedule WHERE outcome='missed_window') THEN RAISE EXCEPTION 'terminal state missing'; END IF;
 END $$;
