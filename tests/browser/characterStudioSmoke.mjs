@@ -5,8 +5,8 @@ const fixtureContextOptions=width=>({viewport:{width,height:850},serviceWorkers:
 async function installCharacterFixture(context,readState){
   await context.route(backend+'/**',async route=>{
     const path=new URL(route.request().url()).pathname;
-    const {enabled,activeSale,character='cat',appearance={}}=readState();
-    const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character,appearance,behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'},product:{enabled:true,message:'Product guide fixture'},searchEmpty:{enabled:true,message:'Search helper fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
+    const {enabled,activeSale,character='cat',appearance={},extra={},saleEndsAt}=readState();
+    const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character,appearance,behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'},product:{enabled:true,message:'Product guide fixture'},searchEmpty:{enabled:true,message:'Search helper fixture'}},...extra}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?(saleEndsAt&&p.flash_sale_ends_at?{...p,flash_sale_ends_at:saleEndsAt}:p):{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
     if(!['GET','HEAD','OPTIONS'].includes(route.request().method()))return route.fulfill({status:403,contentType:'application/json',body:'{}'});
     return route.fulfill({status:200,contentType:'application/json',headers:{'cache-control':'no-store'},body:JSON.stringify(data)});
   });
@@ -198,4 +198,59 @@ export async function runFlagship3DSmoke(browser,host){
       console.log('PASS 3D mascot '+character+' '+mode);
     }finally{await context.close();}
   }
+}
+
+/** The concierge interacts with the real SPA and an isolated published catalogue. */
+export async function runConciergeV3Smoke(browser,host){
+  const context=await browser.newContext(fixtureContextOptions(390));
+  try{
+    await installCharacterFixture(context,()=>({enabled:true,activeSale:false,appearance:{renderMode:'vector'},extra:{frequency:'repeat',repeatInterval:30,repeatLimit:3,rotation:'sequence',side:'alternate',placement:'roam',guideLinks:true,recommendProducts:true,recommendationMode:'variety',interactiveGuide:true,advice:{enabled:true,topic:'style'}}}));
+    const page=await context.newPage(),errors=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    await page.clock.install();
+    await page.goto(host,{waitUntil:'domcontentloaded'});
+    const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
+    const product=scene.locator('[data-character-product]');
+    await product.waitFor({state:'visible',timeout:15000});
+    assert.equal(await scene.getAttribute('data-side'),'left');
+    const initial=await product.getAttribute('data-character-product');
+    await scene.locator('[data-character-next-tip]').click();
+    assert.ok(await scene.locator('[data-character-advice]').innerText());
+    await scene.locator('[data-character-next-product]').click();
+    assert.notEqual(await product.getAttribute('data-character-product'),initial);
+    const bounds=await scene.boundingBox();
+    assert.ok(bounds.x>=0&&bounds.x+bounds.width<=391&&bounds.y>=0&&bounds.y+bounds.height<=851);
+    await scene.locator('.gs-character-dismiss').click();
+    await scene.waitFor({state:'detached'});
+    await page.clock.fastForward(45000);
+    await scene.waitFor({state:'visible',timeout:10000});
+    assert.equal(await scene.getAttribute('data-side'),'right');
+    assert.match(await scene.innerText(),/Tech Panda/);
+    await scene.locator('.gs-character-mute').click();
+    await scene.waitFor({state:'detached'});
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
+    await page.clock.fastForward(60000);
+    assert.equal(await scene.count(),0,'Mute persists after reload and cooldown');
+    assert.deepEqual(errors,[]);
+  }finally{await context.close();}
+  const sales=await browser.newContext(fixtureContextOptions(390));
+  try{
+    const end=new Date(Date.now()+120000).toISOString();
+    await installCharacterFixture(sales,()=>({enabled:true,activeSale:true,saleEndsAt:end,appearance:{renderMode:'vector'},extra:{saleGuide:true,saleGuidePriority:'always',character:'deal',guideLinks:true}}));
+    const page=await sales.newPage(),errors=[];
+    page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(host,{waitUntil:'domcontentloaded'});
+    const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
+    const offer=scene.locator('[data-character-sale="true"]');
+    await offer.waitFor({state:'visible',timeout:15000});
+    assert.match(await offer.innerText(),/Stage46 Everyday Wallet/);
+    assert.match(await offer.innerText(),/35.*45.*10/s);
+    await offer.locator('[data-character-product]').click();
+    const dialog=page.locator('.gs-product-dialog');
+    await dialog.waitFor({state:'visible'});
+    assert.match(await dialog.locator('.gs-product-detail-title').innerText(),/Stage46 Everyday Wallet/);
+    assert.deepEqual(errors,[]);
+  }finally{await sales.close();}
+  console.log('PASS Concierge V3 repeat rotation, mute, interactive tips and verified sale navigation');
 }

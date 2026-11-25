@@ -36,9 +36,10 @@ export function conciergeSaleProducts(products,ready,now=Date.now()){
  if(!ready||!Number.isFinite(now)||!Array.isArray(products))return [];
  const publicRows=products.filter(p=>p&&p.isPublished!==false&&p.is_published!==false&&(!Array.isArray(p.variants)||!p.variants.length));
  const available=conciergeProducts(publicRows,true);
- const eligible=publicRows.filter(p=>available.some(a=>a.id===String(p.id)));
+ const byId=new Map(available.map(p=>[p.id,p]));
+ const eligible=publicRows.filter(p=>byId.has(String(p.id)));
  return getActiveFlashSaleProducts(eligible,now).flatMap(p=>{
-  const item=available.find(a=>a.id===String(p.id));
+  const item=byId.get(String(p.id));
   const price=Number(p.priceGEL??p.price_gel),old=Number(p.oldPriceGEL??p.old_price_gel);
   const raw=p.flashSaleEndsAt??p.flash_sale_ends_at;
   const endsAt=typeof raw==='number'?raw:Date.parse(String(raw));

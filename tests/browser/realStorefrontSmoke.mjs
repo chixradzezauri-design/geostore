@@ -7,7 +7,7 @@ import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
 import {runCatalogueSeoHttpSmoke} from './catalogueSeoHttpSmoke.mjs';
 import {runPwaOfflineSmoke} from './pwaOfflineSmoke.mjs';
 import {runSignatureStorefrontSmoke} from './signatureStorefrontSmoke.mjs';
-import {runCharacterStudioSmoke,runFlagship3DSmoke} from './characterStudioSmoke.mjs';
+import {runCharacterStudioSmoke,runFlagship3DSmoke,runConciergeV3Smoke} from './characterStudioSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -267,6 +267,7 @@ try {
   await runStage49AccountSwitchScenario(browser, host);
   await runAdminWorkspaceSmoke(browser, host);
   await runCharacterStudioSmoke(browser,host,[320,1440]);
+  await runConciergeV3Smoke(browser,host);
   await runPwaOfflineSmoke(browser);
   const gpuBrowser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   try{await runFlagship3DSmoke(gpuBrowser,host);}finally{await gpuBrowser.close();}

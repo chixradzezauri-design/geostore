@@ -193,6 +193,7 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
   const catalogueRef=useRef(null);
   catalogueRef.current={products,ready:catalogueReady,category,onOpenProduct};
   const lastRecommendedId=useRef(null);
+  const closeAtRef=useRef(0);
   const settingsKey=JSON.stringify(s);
   useEffect(()=>{
     setPresentation(null);
@@ -202,6 +203,7 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
     let forced=forceReplay!=null&&forceReplay!==lastForcedReplay;
     if(!current.enabled||(!repeat&&!forced&&seen(current.frequency,revision)))return;
     let showTimer,closeTimer,disposed=false;
+    const readyDeadline=Date.now()+current.delay*1000+8000;
     const clear=()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
     const schedule=()=>{
       if(disposed)return;
@@ -211,8 +213,13 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
     };
     const close=(mute=false)=>{
       clear();setPresentation(null);
-      if(repeat&&mute){saveRepeat({...readRepeat(revision),muted:true});return;}
-      if(repeat)schedule();
+      if(repeat){
+        const record=readRepeat(revision);
+        if(record.count&&shownAtRef.current&&record.at===shownAtRef.current){saveRepeat({...record,at:Math.max(record.at,Date.now()-current.duration*1000),muted:mute||record.muted});}
+        else if(mute)saveRepeat({...record,muted:true});
+        if(mute)return;
+        schedule();
+      }
     };
     dismissRef.current=close;
     extendRef.current=()=>{
@@ -221,12 +228,15 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       if(wait===null||wait<=0)return false;
       actionsRef.current=next;
       clearTimeout(closeTimer);
-      closeTimer=setTimeout(()=>close(false),wait);
+      const nextClose=Math.max(closeAtRef.current,Date.now()+wait);
+      closeAtRef.current=nextClose;
+      closeTimer=setTimeout(()=>close(false),Math.max(0,nextClose-Date.now()));
       return true;
     };
     function show(){
       if(disposed)return;
       if(visitorBusy()){showTimer=setTimeout(show,5000);return;}
+      if((current.recommendProducts||current.saleGuide||current.guideLinks)&&!catalogueRef.current.ready&&Date.now()<readyDeadline){showTimer=setTimeout(show,250);return;}
       if(forced&&lastForcedReplay===forceReplay){forced=false;return;}
       const record=readRepeat(revision);
       if(!forced&&repeat){
@@ -258,6 +268,7 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       actionsRef.current=0;shownAtRef.current=now.getTime();
       setPresentation({character,settings:{...effective,...placement},guideTarget,recommendationId:recommendation?.id,sale:!!sale,advice,key:now.getTime(),actionCount:0});
       setSaleClock(now.getTime());
+      closeAtRef.current=now.getTime()+current.duration*1000;
       closeTimer=setTimeout(()=>close(false),current.duration*1000);
     }
     schedule();
@@ -268,9 +279,9 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
   const recommendation=presentation?.recommendationId?(presentation.sale?conciergeSaleProducts(products,catalogueReady,saleClock):conciergeProducts(products,catalogueReady)).find(p=>p.id===presentation.recommendationId)||null:null;
   useEffect(()=>{
     if(!recommendation?.sale)return;
-    const timer=setTimeout(()=>setSaleClock(Date.now()),Math.max(0,recommendation.endsAt-Date.now()+1));
+    const timer=setTimeout(()=>setSaleClock(Date.now()),Math.min(24000,Math.max(0,recommendation.endsAt-Date.now()+1)));
     return()=>clearTimeout(timer);
-  },[recommendation?.sale,recommendation?.endsAt]);
+  },[recommendation?.sale,recommendation?.endsAt,saleClock]);
   const act=(type)=>{
     if(!presentation||!presentation.settings.interactiveGuide||!extendRef.current?.())return;
     const current=catalogueRef.current;
