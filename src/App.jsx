@@ -3841,6 +3841,9 @@ export default function App() {
             <AIDigitalWardrobe
               key={currentUser?.id ? 'user:'+currentUser.id : 'guest'}
               wardrobeOwnerId={currentUser?.id || null}
+              syncClient={supabase}
+              getSyncScope={()=>wishlistSyncScopeRef.current}
+              syncLang={currentLang}
               products={products}
               addToCart={addToCart}
               formatPrice={formatPrice}

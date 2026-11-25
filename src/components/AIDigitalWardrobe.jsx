@@ -1,5 +1,7 @@
 // src/components/AIDigitalWardrobe.jsx - Full AI Digital Wardrobe & Personal Stylist
 import React, { useState, useEffect, useRef } from 'react';
+import {WARDROBE_SYNC_ENABLED} from '../utils/wardrobeAccountReview.js';
+const WardrobeAccountPanel=React.lazy(()=>import('./WardrobeAccountPanel.jsx'));
 import {readCurrentWardrobe,writeWardrobe} from '../utils/wardrobeStorage.js';
 import { validateImageFile, isSafeImageUrl, isValidImageDataUrl } from '../utils/imageSafety';
 import { 
@@ -7,7 +9,7 @@ import {
   Calendar, Check, ShoppingBag, Eye, RefreshCw, Tag, Heart, ArrowRight, Layers
 } from 'lucide-react';
 
-export default function AIDigitalWardrobe({ products = [], addToCart, formatPrice, wardrobeOwnerId = null }) {
+export default function AIDigitalWardrobe({ products = [], addToCart, formatPrice, wardrobeOwnerId = null, syncClient, getSyncScope, syncLang='ka' }) {
   // 🌟 მომხმარებლის გარდერობის სახელმწიფო (Local Storage ინტეგრაციით)
   const [wardrobe, setWardrobe] = useState(() => readCurrentWardrobe(wardrobeOwnerId));
   const initialWardrobe=useRef(wardrobe);
@@ -142,6 +144,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
     <div className="gs-digital-wardrobe space-y-8 w-full pb-16 animate-in fade-in duration-500 text-white">
       
       {storageError && <p role="alert" className="text-sm text-amber-300">გარდერობის ცვლილება მოწყობილობაზე ვერ შეინახა. შეამოწმეთ თავისუფალი მეხსიერება.</p>}
+      {WARDROBE_SYNC_ENABLED&&wardrobeOwnerId&&syncClient&&getSyncScope&&<React.Suspense fallback={null}><WardrobeAccountPanel key={wardrobeOwnerId} client={syncClient} getScope={getSyncScope} ownerId={wardrobeOwnerId} lang={syncLang}/></React.Suspense>}
       {/* 🌟 HERO BANNER */}
       <div className="gs-wardrobe-hero relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-xl text-center md:text-left z-10">
