@@ -143,6 +143,10 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           const gradientIds=await studio.locator('svg.gs-character-art defs [id]').evaluateAll(nodes=>nodes.map(n=>n.id));
           assert.equal(new Set(gradientIds).size,gradientIds.length,'Every character preview has independent lighting definitions');
           assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),9);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="metal"]').count(),1);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="feathers"]').count(),1);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="fur"]').count(),7);
+          assert.equal(await studio.locator('button[aria-pressed] .gs-character-head').count(),9);
           await appearance.getByRole('button',{name:'ვიზუალური პარამეტრების აღდგენა'}).click();
           assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'76px');
           const greetings=studio.locator('[data-character-greetings]');

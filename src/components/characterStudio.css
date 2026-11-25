@@ -183,3 +183,17 @@
 .gs-character-product-context .gs-character-context-art{width:42px;flex:0 0 42px}
 .gs-character-search-context .gs-character-context-art{width:48px;flex:0 0 48px}
 @media(max-width:420px){.gs-character-product-context .gs-character-context{font-size:12px}.gs-character-product-context .gs-character-context-art{width:34px;flex-basis:34px}}
+
+/* Subtle secondary articulation makes the silhouette feel alive without extra assets. */
+.gs-character-tail,.gs-character-head,.gs-character-arm-free{transform-box:fill-box}
+.gs-character-tail{transform-origin:12% 85%}
+.gs-character-head{transform-origin:50% 88%}
+.gs-character-arm-free{transform-origin:80% 8%}
+.gs-character-scene:not([data-motion="still"]) .gs-character-tail{animation:gs-v2-tail 1.1s ease-in-out 3}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-arm-free{animation:gs-v2-arm var(--gs-step) ease-in-out var(--gs-step-count) reverse}
+.gs-character-scene[data-motion="look-around"] .gs-character-head{animation:gs-v2-head-turn 2s ease-in-out 1}
+.gs-character-scene:is([data-motion="wave"],[data-motion="point"]) .gs-character-head{animation:gs-v2-nod 1.5s ease-in-out 2}
+@keyframes gs-v2-tail{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(9deg)}}
+@keyframes gs-v2-head-turn{0%,100%{transform:none}30%{transform:rotate(-8deg) translateX(-2px) scaleX(.96)}68%{transform:rotate(8deg) translateX(2px) scaleX(.96)}}
+@keyframes gs-v2-nod{0%,100%{transform:none}50%{transform:rotate(3deg) translateY(1.5px)}}
+@media(prefers-reduced-motion:reduce){.gs-character-scene .gs-character-tail,.gs-character-scene .gs-character-head,.gs-character-scene .gs-character-arm-free{animation:none!important;transform:none!important}}

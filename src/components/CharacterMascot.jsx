@@ -13,19 +13,23 @@ function markSeen(frequency,revision){
   lastSeen[frequency]=record;
   try{(frequency==='daily'?localStorage:sessionStorage).setItem(CHARACTER_SESSION_KEY,JSON.stringify(record));}catch{/* in-memory fallback */}
 }
-// Original toy-like dimensional vector figures. No WebGL or external assets.
+// Original articulated dimensional vector figures; species-specific silhouette and material details. No WebGL or external assets.
 export function CharacterArt({character,emotion='happy',season='none'}){
   const uid=React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
   const {id,color}=character;
   const robot=id==='robot',panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',fox=id==='fox',monkey=id==='monkey',bear=id==='bear',owl=id==='owl',cheetah=id==='cheetah';
   const g=n=>'url(#'+uid+'-'+n+')';
   const theme=resolveCharacterSeason(season);
-  const eye=(x,y,wink=false)=><g transform={'translate('+x+' '+y+')'}>
+  const bodyWidth=bear?40:panda?39:owl?34:cheetah?26:monkey?27:32;
+  const eyeSize=owl?1.32:bear?.88:cheetah?.85:fox?.94:1;
+  const muzzle=fox||cheetah||bear||cat;
+  const textureStroke=panda?'#675b5a':color;
+  const eye=(x,y,wink=false)=><g transform={'translate('+x+' '+y+') scale('+eyeSize+')'}>
     {wink?<path d="M-8 0Q0-8 8 0" fill="none" stroke={robot?'#99f6ff':'#35283b'} strokeWidth="3.8" strokeLinecap="round"/>:robot?
       <><rect x="-7" y="-9" width="14" height="18" rx="6" fill={g('cyan')}/><rect x="-4" y="-6" width="3" height="5" rx="1.5" fill="#fff" opacity=".75"/></>:
       <><ellipse rx={emotion==='surprise'?10:9} ry={emotion==='surprise'?13:11.5} fill={g('ivory')}/><ellipse cx="1" cy="1" rx="6.4" ry="8.4" fill={g('eye')}/><ellipse cx="-1.2" cy="-2.5" rx="2.7" ry="3.3" fill="#fff"/><circle cx="4" cy="5" r="1.2" fill="#fff" opacity=".8"/></>}
   </g>;
-  return <svg className="gs-character-art" data-character-model={id} data-character-render="dimensional" viewBox="0 0 160 176" aria-hidden="true" focusable="false">
+  return <svg className="gs-character-art" data-character-model={id} data-character-render="dimensional" data-character-material={robot?'metal':owl?'feathers':'fur'} viewBox="0 0 160 176" aria-hidden="true" focusable="false">
     <defs>
       {[
         ['body','#fff4db',color,'#34283a'],['fur','#fff2d7',color,'#423039'],['ivory','#fff','#fff9e9','#cdbbad'],
@@ -34,20 +38,22 @@ export function CharacterArt({character,emotion='happy',season='none'}){
         ['cyan','#e3ffff','#67e8f9','#0891b2'],['gold','#fff4a1','#eab54d','#a65e21']
       ].map(([name,light,mid,dark])=><radialGradient key={name} id={uid+'-'+name} cx="30%" cy="18%" r="95%"><stop offset="0" stopColor={light}/><stop offset=".48" stopColor={mid}/><stop offset="1" stopColor={dark}/></radialGradient>)}
       <radialGradient id={uid+'-shadow'}><stop stopColor="#1f2937" stopOpacity=".38"/><stop offset="1" stopColor="#1f2937" stopOpacity="0"/></radialGradient>
+      <linearGradient id={uid+'-metal'} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff"/><stop offset=".22" stopColor={color}/><stop offset=".55" stopColor="#617188"/><stop offset=".72" stopColor={color}/><stop offset="1" stopColor="#202b3d"/></linearGradient>
+      <radialGradient id={uid+'-muzzle'} cx="38%" cy="25%" r="76%"><stop stopColor="#fffaf1"/><stop offset=".65" stopColor="#e7d3b5"/><stop offset="1" stopColor="#a79079"/></radialGradient>
     </defs>
     <ellipse className="gs-character-ground" cx="80" cy="163" rx="53" ry="9" fill={g('shadow')}/>
-    {fox&&<g><path d="M54 143C10 153 0 116 16 95C20 115 54 104 64 128Q69 140 54 143" fill={g('fur')}/><path d="M16 95C9 110 11 122 21 131Q23 117 38 116Q20 110 16 95" fill={g('ivory')}/></g>}
-    {cat&&<path d="M104 139Q149 146 140 112Q137 103 132 109" fill="none" stroke={g('body')} strokeWidth="13" strokeLinecap="round"/>}
+    {fox&&<g className="gs-character-tail"><path d="M54 143C10 153 0 116 16 95C20 115 54 104 64 128Q69 140 54 143" fill={g('fur')}/><path d="M16 95C9 110 11 122 21 131Q23 117 38 116Q20 110 16 95" fill={g('ivory')}/></g>}
+    {cat&&<path className="gs-character-tail" d="M104 139Q149 146 140 112Q137 103 132 109" fill="none" stroke={g('body')} strokeWidth="13" strokeLinecap="round"/>}
     {rabbit&&<circle cx="105" cy="135" r="15" fill={g('ivory')}/>}
-    {monkey&&<path d="M108 143C151 158 155 113 137 112C123 110 122 130 135 128" fill="none" stroke={g('fur')} strokeWidth="11" strokeLinecap="round"/>}
-    {cheetah&&<g><path d="M105 141Q147 145 145 112" stroke={g('fur')} strokeWidth="11" strokeLinecap="round" fill="none"/><path d="M145 112l-1 7" stroke="#48342a" strokeWidth="10" strokeLinecap="round"/></g>}
+    {monkey&&<path className="gs-character-tail" d="M108 143C151 158 155 113 137 112C123 110 122 130 135 128" fill="none" stroke={g('fur')} strokeWidth="11" strokeLinecap="round"/>}
+    {cheetah&&<g className="gs-character-tail"><path d="M105 141Q147 145 145 112" stroke={g('fur')} strokeWidth="11" strokeLinecap="round" fill="none"/><path d="M145 112l-1 7" stroke="#48342a" strokeWidth="10" strokeLinecap="round"/></g>}
     <g className="gs-character-leg gs-character-leg-left"><ellipse cx="61" cy="150" rx={rabbit?19:16} ry="11" fill={g(panda||robot?'dark':'body')}/><ellipse cx="57" cy="147" rx="9" ry="3.2" fill="#fff" opacity=".2"/></g>
     <g className="gs-character-leg gs-character-leg-right"><ellipse cx="98" cy="150" rx={rabbit?19:16} ry="11" fill={g(panda||robot?'dark':'body')}/><ellipse cx="94" cy="147" rx="9" ry="3.2" fill="#fff" opacity=".2"/></g>
     {robot?<><rect x="47" y="99" width="66" height="46" rx="18" fill={g('body')}/><rect x="60" y="111" width="40" height="23" rx="8" fill={g('visor')}/><path d="M72 123h5l4-6 4 10 4-4h5" stroke="#8cf9ff" strokeWidth="2" fill="none" strokeLinecap="round"/></>:
-      <><ellipse cx="80" cy="122" rx={panda?39:32} ry="30" fill={g(panda?'dark':'body')}/><ellipse cx="80" cy="128" rx={panda?29:19} ry="19" fill={g('ivory')}/></>}
-    <path d="M49 112Q33 123 37 136" stroke={g(panda?'dark':'body')} strokeWidth="16" strokeLinecap="round" fill="none"/>
-    <ellipse cx="36" cy="137" rx="9" ry="8" fill={g(panda?'dark':'ivory')}/>
+      <><ellipse cx="80" cy="122" rx={bodyWidth} ry={cheetah||monkey?32:30} fill={g(panda?'dark':'body')}/><ellipse cx="80" cy="128" rx={panda?29:19} ry="19" fill={g('ivory')}/></>}
+    <g className="gs-character-arm-free">{owl?<path d="M51 108Q24 117 30 142Q47 135 56 117Z" fill={g('fur')}/>:<><path d="M49 112Q33 123 37 136" stroke={g(robot?'metal':panda?'dark':'body')} strokeWidth={monkey?11:16} strokeLinecap="round" fill="none"/><ellipse cx="36" cy="137" rx="9" ry="8" fill={g(panda?'dark':'ivory')}/></>}</g>
     <g className="gs-character-hand"><path d="M108 115Q133 110 132 86" fill="none" stroke={g(panda?'dark':'body')} strokeWidth="17" strokeLinecap="round"/><ellipse cx="132" cy="82" rx="11" ry="12" transform="rotate(18 132 82)" fill={g(panda?'dark':'ivory')}/><path d="M126 79l-1-6m6 4 1-6m5 9 3-5" stroke={panda?'#9da4b3':'#ae8d7c'} strokeWidth="1.6" strokeLinecap="round" opacity=".65"/></g>
+    <g className="gs-character-head">
     {fox&&<><path d="M37 54Q23 29 28 9Q43 10 64 35M97 36Q115 10 132 12Q134 38 119 56" fill={g('fur')}/><path d="M36 42L35 22Q46 26 52 38M109 40l15-16-2 22" fill={g('pink')}/></>}
     {cat&&<><path d="M30 56L26 22Q26 15 34 19L66 40M94 40l31-21q8-4 8 4l-3 34" fill={g('fur')}/><path d="M35 43l-1-13 20 12M106 42l19-12-2 16" fill={g('pink')}/></>}
     {rabbit&&<><g transform="rotate(-13 57 37)"><rect x="43" y="3" width="26" height="61" rx="15" fill={g('fur')}/><rect x="51" y="11" width="11" height="42" rx="6" fill={g('pink')}/></g><g transform="rotate(13 102 37)"><rect x="89" y="3" width="26" height="61" rx="15" fill={g('fur')}/><rect x="96" y="11" width="11" height="42" rx="6" fill={g('pink')}/></g></>}
@@ -65,10 +71,16 @@ export function CharacterArt({character,emotion='happy',season='none'}){
       {cheetah&&<g fill="#493427" opacity=".83">{[[44,49,3],[56,42,2.5],[76,39,3],[94,44,2.6],[116,51,3],[36,63,2.7],[124,63,2.7],[44,79,2],[116,79,2]].map(([x,y,r],j)=><circle key={j} cx={x} cy={y} r={r}/>)}<path d="M52 75q1 13 9 18l-3-13M108 75q-1 13-9 18l3-13"/></g>}
       {!panda&&!owl&&!cheetah&&<><ellipse cx="47" cy="88" rx="9" ry="4" fill="#ef83a1" opacity=".42"/><ellipse cx="113" cy="88" rx="9" ry="4" fill="#ef83a1" opacity=".42"/></>}
       <path d="M42 53Q55 37 75 37" fill="none" stroke="#fff" strokeWidth="3.5" strokeOpacity=".36" strokeLinecap="round"/></>}
+    {muzzle&&<g className="gs-character-muzzle"><ellipse cx="70" cy="88" rx={fox?17:13} ry="11" fill={g('muzzle')}/><ellipse cx="90" cy="88" rx={fox?17:13} ry="11" fill={g('muzzle')}/></g>}
+    {!robot&&!owl&&<g fill="none" stroke={textureStroke} strokeWidth=".8" opacity=".42" strokeLinecap="round">{Array.from({length:10},(_,i)=><path key={i} d={'M'+(42+i*8)+' '+(47+Math.abs(4.5-i)*2.3)+'q-2 -3 1 -7'}/>)}</g>}
+    {robot&&<g stroke="#7e95ac" strokeWidth="1.2" opacity=".7"><path d="M32 49l8-9M120 43l8 9M32 91l9 8M119 99l9-8"/><circle cx="32" cy="72" r="2" fill="#c9dae5"/><circle cx="128" cy="72" r="2" fill="#c9dae5"/></g>}
     <g className="gs-character-eyes">{eye(60,robot?66:69)}{eye(100,robot?66:69,emotion==='wink')}</g>
     {!robot&&(owl?<path d="M73 81Q80 76 87 81L80 95Z" fill={g('gold')}/>:<path d="M72 83Q80 78 88 83Q88 89 80 91Q72 89 72 83" fill={g('dark')}/>)}
     {emotion==='surprise'?<ellipse cx="80" cy={robot?84:99} rx="5.5" ry="7" fill={robot?'#92f9ff':'#543344'}/>:robot?<path d="M71 83Q80 92 89 83" fill="none" stroke="#8ef7ff" strokeWidth="3.4" strokeLinecap="round"/>:<g><path d="M71 95Q80 110 89 95Q80 100 71 95" fill="#60354a"/><path d="M76 102Q80 99 84 102L80 105Z" fill="#f7a5ad"/>{rabbit&&<rect x="77" y="95" width="6" height="4" rx="1" fill="#fff"/>}</g>}
     {cat&&<path d="M43 88l-14-4m15 9-15 2m88-7 14-4m-15 9 15 2" stroke="#633949" strokeWidth="1.4" strokeLinecap="round" opacity=".65"/>}
+    {(fox||cheetah)&&<g fill="#6b5243" opacity=".75">{[[62,89],[67,91],[62,94],[98,89],[93,91],[98,94]].map(([x,y],i)=><circle key={i} cx={x} cy={y} r=".9"/>)}</g>}
+    </g>
+    {!robot&&!owl&&<g stroke={textureStroke} strokeWidth=".8" fill="none" opacity=".35" strokeLinecap="round">{Array.from({length:7},(_,i)=><path key={i} d={'M'+(52+i*9)+' 137l2 4'}/>)}</g>}
     {fox&&<path d="M74 115l12 3-6 8z" fill={g('gold')}/>}
     {cat&&<g fill={g('gold')}><path d="M70 117l10 6 10-6v12l-10-5-10 5z"/><circle cx="80" cy="123" r="3"/></g>}
     {owl&&<g stroke="#806651" strokeWidth="2" strokeLinecap="round" fill="none" opacity=".75">{[0,1,2].map(j=><path key={j} d={'M'+(67+j*3)+' '+(118+j*8)+'q10 10 20 0'}/>)}</g>}
