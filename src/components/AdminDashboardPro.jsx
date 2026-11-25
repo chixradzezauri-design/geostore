@@ -9,6 +9,9 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { EMPTY_ADMIN_ACCESS, hasAdminPermission, hasAnyAdminAccess } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
+import { ADMIN_MFA_ROLLOUT_ENABLED } from '../utils/adminAuthCoordinator.js';
+import { listReactivationTotpFactors, verifyReactivationTotp } from '../utils/adminOrderReactivationMfa.js';
+import { normalizeMfaCode } from '../utils/adminMfaView.js';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { optimizeProductImage, readImageDataUrl } from '../utils/optimizeProductImage.js';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
@@ -1285,6 +1288,11 @@ export default function AdminDashboardPro({
   const [isSavingOrderNote, setIsSavingOrderNote] = useState(false);
   const [reactivationOrder, setReactivationOrder] = useState(null);
   const [reactivationPassword, setReactivationPassword] = useState('');
+  const [reactivationCode,setReactivationCode]=useState('');
+  const [reactivationFactors,setReactivationFactors]=useState([]);
+  const [reactivationFactorId,setReactivationFactorId]=useState('');
+  const [reactivationFactorsLoading,setReactivationFactorsLoading]=useState(false);
+  const reactivationSubmitRef=useRef(false);
   const [reactivationError, setReactivationError] = useState('');
   const [isReactivatingOrder, setIsReactivatingOrder] = useState(false);
 
@@ -4733,6 +4741,31 @@ export default function AdminDashboardPro({
     }
   };
 
+  useEffect(()=>{
+    if(!ADMIN_MFA_ROLLOUT_ENABLED||!reactivationOrder||!isOwner)return undefined;
+    let active=true;
+    const version=adminSessionVersion.current;
+    setReactivationCode('');
+    setReactivationFactors([]);
+    setReactivationFactorId('');
+    setReactivationFactorsLoading(true);
+    void (async()=>{
+      try {
+        const user=await supabase.auth.getUser();
+        if(!active||!isCurrentAdminSession(version))return;
+        if(user.error||user.data?.user?.id!=='1060de3d-d28a-45f8-9a64-5e0368cffc4b')throw Error('სესია ვერ დადასტურდა.');
+        const factors=await listReactivationTotpFactors(supabase);
+        if(!active||!isCurrentAdminSession(version))return;
+        setReactivationFactors(factors);
+        setReactivationFactorId(factors.length===1?factors[0].id:'');
+        if(!factors.length)setReactivationError('არ მოიძებნა დადასტურებული ავტორიზაციის მოწყობილობა.');
+      }catch{
+        if(active&&isCurrentAdminSession(version))setReactivationError('ავტორიზაციის მოწყობილობების შემოწმება ვერ მოხერხდა.');
+      }finally{if(active&&isCurrentAdminSession(version))setReactivationFactorsLoading(false);}
+    })();
+    return ()=>{active=false;};
+  },[reactivationOrder?.id,isOwner]);
+
   const handleConfirmOrderReactivation = async (event) => {
     event.preventDefault();
     if (!isOwner) {
@@ -4741,7 +4774,10 @@ export default function AdminDashboardPro({
     }
     const requestSessionVersion = adminSessionVersion.current;
     if (!isCurrentAdminSession(requestSessionVersion)) return;
-    if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
+    if (!reactivationOrder || !reactivationPassword || isReactivatingOrder || reactivationSubmitRef.current) return;
+    if (ADMIN_MFA_ROLLOUT_ENABLED && (!reactivationFactorId || reactivationCode.length!==6 || reactivationFactorsLoading)) return;
+    reactivationSubmitRef.current=true;
+    let isolatedMfaClient=null;
 
     setIsReactivatingOrder(true);
     setReactivationError('');
@@ -4762,9 +4798,11 @@ export default function AdminDashboardPro({
         auth: {
           persistSession: false,
           autoRefreshToken: false,
-          detectSessionInUrl: false
+          detectSessionInUrl: false,
+          ...(ADMIN_MFA_ROLLOUT_ENABLED?{storageKey:'geostore-order-reauth-'+crypto.randomUUID() }:{})
         }
       });
+      if(ADMIN_MFA_ROLLOUT_ENABLED)isolatedMfaClient=reauthClient;
       const { data: reauthData, error: passwordError } = await reauthClient.auth.signInWithPassword({
         email: userData.user.email,
         password: reactivationPassword
@@ -4787,11 +4825,15 @@ export default function AdminDashboardPro({
       }
 
       if (!isCurrentAdminSession(requestSessionVersion)) return;
+      const verifiedToken=ADMIN_MFA_ROLLOUT_ENABLED
+        ? await verifyReactivationTotp({client:reauthClient,ownerId:userData.user.id,factorId:reactivationFactorId,code:reactivationCode,isCurrent:()=>isCurrentAdminSession(requestSessionVersion)})
+        : reauthSession.access_token;
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${reactivationRpc}`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${reauthSession.access_token}`,
+          Authorization: `Bearer ${verifiedToken}`,
           'Content-Type': 'application/json',
           Prefer: 'return=representation'
         },
@@ -4841,7 +4883,14 @@ export default function AdminDashboardPro({
     } catch (error) {
       if (isCurrentAdminSession(requestSessionVersion)) setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
     } finally {
-      if (isCurrentAdminSession(requestSessionVersion)) setIsReactivatingOrder(false);
+      if(isolatedMfaClient){
+        try{await isolatedMfaClient.auth.signOut({scope:'local'});}catch{/* Token expires; no global sign-out or retry. */}
+      }
+      reactivationSubmitRef.current=false;
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        setIsReactivatingOrder(false);
+        if(ADMIN_MFA_ROLLOUT_ENABLED){setReactivationPassword('');setReactivationCode('');}
+      }
     }
   };
 
@@ -8220,10 +8269,19 @@ export default function AdminDashboardPro({
               className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 p-3.5 rounded-xl text-white outline-none"
               placeholder="შეიყვანეთ პაროლი"
             />
+            {ADMIN_MFA_ROLLOUT_ENABLED && <div className="space-y-2">
+              <label htmlFor="reactivation-factor" className="block text-xs font-bold text-slate-300">ავტორიზაციის მოწყობილობა</label>
+              <select id="reactivation-factor" value={reactivationFactorId} disabled={isReactivatingOrder||reactivationFactorsLoading} onChange={event=>{setReactivationFactorId(event.target.value);setReactivationCode('');}} required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white">
+                <option value="">{reactivationFactorsLoading?'იტვირთება...':'აირჩიეთ მოწყობილობა'}</option>
+                {reactivationFactors.map((factor,i)=><option key={factor.id} value={factor.id}>{factor.label||'მოწყობილობა '+(i+1)}</option>)}
+              </select>
+              <label htmlFor="reactivation-code" className="block text-xs font-bold text-slate-300">ექვსნიშნა უსაფრთხოების კოდი</label>
+              <input id="reactivation-code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={reactivationCode} disabled={isReactivatingOrder} onChange={event=>setReactivationCode(normalizeMfaCode(event.target.value))} required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white"/>
+            </div>}
             {reactivationError && <p role="alert" className="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/30 rounded-xl p-3">{reactivationError}</p>}
             <div className="flex justify-end gap-2">
-              <button type="button" disabled={isReactivatingOrder} onClick={() => { setReactivationOrder(null); setReactivationPassword(''); setReactivationError(''); }} className="px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold disabled:opacity-50">გაუქმება</button>
-              <button type="submit" disabled={isReactivatingOrder || !reactivationPassword} className="px-4 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-50">
+              <button type="button" disabled={isReactivatingOrder} onClick={() => { setReactivationOrder(null); setReactivationPassword(''); setReactivationCode(''); setReactivationError(''); }} className="px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold disabled:opacity-50">გაუქმება</button>
+              <button type="submit" disabled={isReactivatingOrder || !reactivationPassword || (ADMIN_MFA_ROLLOUT_ENABLED && (!reactivationFactorId || reactivationCode.length!==6 || reactivationFactorsLoading))} className="px-4 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-50">
                 {isReactivatingOrder ? 'მოწმდება...' : 'დადასტურება და გააქტიურება'}
               </button>
             </div>
