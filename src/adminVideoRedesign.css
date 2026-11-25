@@ -1181,3 +1181,9 @@
 /* Advanced analytics: compact, responsive, inherits existing workspace colors. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison { min-width:0; max-width:100%; overflow-wrap:anywhere; }
 @media(max-width:640px) { .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison select { font-size:16px; width:100%; } }
+
+/* Flash Studio: keep the two existing editing surfaces mutually visible without remounting the draft. */
+[data-gs-flash-pricing][hidden], [data-gs-flash-design][hidden], [data-gs-flash-editor] [hidden] {display:none!important;}
+[data-gs-flash-workspace] button {white-space:normal;overflow-wrap:anywhere;}
+[data-gs-flash-editor] .gs-visual-preview-content .geostore-storefront {padding-bottom:12px!important;}
+[data-gs-flash-editor] .gs-visual-editor-controls,[data-gs-flash-editor] .gs-visual-editor-preview-column {min-width:0;max-width:100%;}

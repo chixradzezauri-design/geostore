@@ -215,6 +215,38 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.ok(moduleRequests.has('AdminMarketingSegments'),'Marketing module loads on entering users');
           assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
         }
+        if(tab==='discounts'){
+          const workspace=shell.locator('[data-gs-flash-workspace="true"]');
+          const pricing=shell.locator('[data-gs-flash-pricing="true"]');
+          const design=shell.locator('[data-gs-flash-design="true"]');
+          await workspace.getByRole('button',{name:'სახელი და დიზაინი',exact:true}).click();
+          const editor=design.locator('[data-gs-flash-editor="true"]');
+          await editor.waitFor({state:'visible',timeout:20000});
+          assert.equal(await pricing.isVisible(),false);
+          const controls=editor.locator('[data-gs-campaign-controls="true"]');
+          const name=controls.getByPlaceholder('მაგ. შავი პარასკევი');
+          await name.waitFor({state:'visible'});
+          const initialName=await name.inputValue();
+          await controls.getByRole('button',{name:'შავი პარასკევი',exact:true}).click();
+          assert.equal(await name.inputValue(),'შავი პარასკევი');
+          await controls.getByRole('button',{name:'Black Friday',exact:true}).click();
+          const preview=editor.locator('.gs-visual-preview-frame');
+          await preview.locator('.gs-flash-sale-section[data-flash-campaign-theme="black-friday"]').waitFor({state:'visible',timeout:20000});
+          assert.equal(await preview.locator('#gs-video-collections').count(),0,'Focused preview contains only campaign');
+          assert.equal(await editor.locator('input[type="file"][accept="image/jpeg,image/png,image/webp"]').isVisible(),true);
+          await workspace.getByRole('button',{name:'ფასები და განრიგი',exact:true}).click();
+          assert.equal(await pricing.isVisible(),true);
+          assert.equal(await design.isVisible(),false);
+          await workspace.getByRole('button',{name:'სახელი და დიზაინი',exact:true}).click();
+          assert.equal(await name.inputValue(),'შავი პარასკევი','Switching workspace tabs retains draft edits');
+          await editor.getByRole('button',{name:'გაუქმება',exact:true}).click();
+          await editor.getByRole('button',{name:'გაუქმება',exact:true}).click();
+          assert.equal(await name.inputValue(),initialName);
+          assert.ok(await editor.evaluate(el=>el.scrollWidth<=el.clientWidth+2),'Focused editor does not overflow at '+width);
+          await workspace.getByRole('button',{name:'ფასები და განრიგი',exact:true}).click();
+          assert.deepEqual(writes,[],'Flash editor preview and subtab switching do not publish or change prices');
+          console.log('PASS focused Flash Studio at '+width+'px');
+        }
         if (tab === 'visual_editor') {
           const editor=shell.locator('.gs-storefront-visual-editor');
           const frame=editor.locator('.gs-visual-preview-frame');
