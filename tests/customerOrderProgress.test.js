@@ -1,0 +1,5 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {customerOrderProgress,customerOrderStatusTime} from '../src/utils/customerOrderProgress.js';
+test('customer progress recognizes existing Georgian English and Russian status aliases',()=>{for(const [index,values] of [['new','ახალი','новый'],['processing','მუშავდება','в обработке'],['shipped','გზაშია','отправлен'],['completed','ჩაბარებულია','доставлен']].entries())for(const value of values)assert.deepEqual(customerOrderProgress(value),{kind:'active',index});assert.deepEqual(customerOrderProgress('cancelled'),{kind:'cancelled',index:-1});assert.deepEqual(customerOrderProgress('unexpected'),{kind:'unknown',index:-1});assert.deepEqual(customerOrderProgress(null),{kind:'unknown',index:-1});});
+test('status timestamp uses verified valid date only',()=>{assert.equal(customerOrderStatusTime(null),null);assert.equal(customerOrderStatusTime('invalid'),null);assert.match(customerOrderStatusTime('2026-11-25T20:15:00Z','en'),/26 Nov 2026.*00:15/);});

@@ -1,3 +1,4 @@
+import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import {captureCheckoutCart,planConfirmedLocalCartCleanup,checkoutCartUnchanged} from './utils/checkoutCartCleanup.js';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
@@ -4413,7 +4414,7 @@ export default function App() {
                   myOrders.map((order) => (
                       <div
                         key={order.id}
-                        className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
+                        className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner flex-wrap"
                       >
                         <div className="gs-video-profile-order-info space-y-1">
                           <div className="flex items-center gap-2">
@@ -4443,6 +4444,7 @@ export default function App() {
                             {localizeOrderStatus(order.status || 'New', currentLang)}
                           </span>
                         </div>
+                        <CustomerOrderProgress order={order} lang={currentLang}/>
                       </div>
                     ))
                 )}
