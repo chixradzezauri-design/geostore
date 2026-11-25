@@ -211,3 +211,9 @@
 
 .gs-character-mute{display:block;pointer-events:auto;border:0;background:transparent;color:inherit;font:600 11px/1.4 system-ui,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:2px;min-height:44px;padding:5px 0;max-width:100%;text-align:left}.gs-character-mute:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
 .gs-character-scene:has(.gs-character-mute) .gs-character-bubble{max-height:min(200px,42vh)}
+
+/* Alternate safe side lanes; on phones keep clear of the header and navigation. */
+@media(min-width:1024px) and (min-height:650px){.gs-character-scene[data-placement="middle"]:not(.gs-character-preview-scene){bottom:calc(36vh + var(--gs-mascot-lift,0px));max-width:min(410px,calc(100vw - 48px))}.gs-character-scene[data-placement="middle"][data-side="right"]:not(.gs-character-preview-scene){right:24px;max-width:min(410px,calc(100vw - 48px))}}
+.gs-character-preview[data-device="desktop"] .gs-character-preview-scene[data-placement="middle"]{bottom:30%}
+.gs-character-guide-action{pointer-events:auto;display:flex;align-items:center;gap:6px;min-height:44px;max-width:100%;margin-top:6px;padding:6px 9px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;font-size:12px;line-height:1.3;font-weight:750;text-align:left;cursor:pointer;overflow-wrap:anywhere}.gs-character-guide-action>span{display:inline;flex-shrink:0}.gs-character-guide-action:focus-visible{outline:2px solid #2563eb;outline-offset:2px}.gs-character-scene:has(.gs-character-guide-action) .gs-character-bubble{max-height:min(220px,43vh)}
+#gs-video-collections,#gs-catalog-products,[data-visual-editor-target="flashSale"]{scroll-margin-top:110px}

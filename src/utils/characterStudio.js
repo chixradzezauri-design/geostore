@@ -164,7 +164,8 @@ export function normalizeCharacterSettings(raw){
     interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
-    side:pick(s.side,['left','right'],'left'),
+    side:pick(s.side,['left','right','alternate'],'left'),
+    placement:pick(s.placement,['bottom','middle','roam'],'bottom'),guideLinks:s.guideLinks===true,
     delay:bounded(s.delay,0,10,2), duration:bounded(s.duration,3,12,6),
     frequency:pick(s.frequency,['session','daily','repeat'],'session'),
     repeatInterval:bounded(s.repeatInterval,30,180,45),repeatLimit:bounded(s.repeatLimit,2,8,5),
@@ -295,4 +296,22 @@ export function nextConciergeCharacter(settings,record,date=new Date(),random=Ma
   const value=random();
   const i=Number.isFinite(value)?Math.max(0,Math.min(available.length-1,Math.floor(value*available.length))):0;
   return styledCharacter(available[i],s);
+}
+
+// Fixed placements and section identifiers never accept arbitrary selectors or URLs.
+export const CHARACTER_GUIDE_TARGETS=Object.freeze({
+ categories:Object.freeze({selector:'#gs-video-collections',copy:{ka:'კატეგორიების ნახვა',en:'Explore categories',ru:'Смотреть категории'}}),
+ products:Object.freeze({selector:'#gs-catalog-products',copy:{ka:'პროდუქტების ნახვა',en:'Explore products',ru:'Смотреть товары'}}),
+ flash:Object.freeze({selector:'[data-visual-editor-target="flashSale"]',copy:{ka:'მიმდინარე აქციები',en:'Current offers',ru:'Текущие акции'}})
+});
+export function conciergePlacement(settings,index=0){
+ const s=normalizeCharacterSettings(settings),n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ return {side:s.side==='alternate'?(n%2?'right':'left'):s.side,
+   placement:s.placement==='roam'?(n%3===1?'middle':'bottom'):s.placement};
+}
+export function chooseConciergeTarget(available,index=0){
+ const allowed=['categories','products','flash'].filter(key=>available.includes(key));
+ if(!allowed.length)return null;
+ const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ return allowed[n%allowed.length];
 }

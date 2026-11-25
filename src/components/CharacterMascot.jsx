@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS} from '../utils/characterStudio.js';
 import './characterStudio.css';
 import {MASCOT_3D_IDS} from '../utils/mascot3DModels.js';
 const FlagshipFox3D=React.lazy(()=>import('./FlagshipFox3D.jsx'));
@@ -18,6 +18,18 @@ function readRepeat(revision){
   return characterRepeatRecord(repeatMemory,revision);
 }
 function saveRepeat(record){repeatMemory=record;try{sessionStorage.setItem(CHARACTER_REPEAT_KEY,JSON.stringify(record));}catch{}}
+function visibleGuideTarget(key){
+  const entry=Object.hasOwn(CHARACTER_GUIDE_TARGETS,key)?CHARACTER_GUIDE_TARGETS[key]:null;
+  if(!entry)return null;
+  const node=document.querySelector('.geostore-storefront '+entry.selector);
+  return node&&node.getClientRects().length&&node.offsetWidth>0&&node.offsetHeight>0&&getComputedStyle(node).visibility!=='hidden'?node:null;
+}
+function guideToSection(key){
+  const node=visibleGuideTarget(key);if(!node)return false;
+  node.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
+  const focus=node.querySelector('button:not([disabled]),a[href]');if(focus)focus.focus({preventScroll:true});
+  return true;
+}
 function visitorBusy(){const el=document.activeElement;return document.visibilityState!=='visible'||Boolean(el?.matches?.('input,textarea,select,[contenteditable="true"]'));}
 function seen(frequency,revision){
   if(characterRevisionSeen(lastSeen[frequency],frequency,revision))return true;
@@ -116,21 +128,24 @@ function CharacterEffects({effect}){
   if(!['sparkles','hearts','confetti'].includes(effect))return null;
   return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:5},(_,i)=><span key={i} style={{'--gs-effect-i':i}}>{effect==='hearts'?'♥':effect==='sparkles'?'✦':'●'}</span>)}</span>;
 }
-export function CharacterScene({character,settings,lang='ka',preview=false,onClose,onMute}){
+export function CharacterScene({character,settings,lang='ka',preview=false,onClose,onMute,guideTarget=null,onGuide}){
   const [variant]=useState(()=>Math.random());
   const [greetingDate]=useState(()=>new Date());
   const [waved,setWaved]=useState(false);
   const wave=characterInteractionCopy(settings.interaction,lang);
+  const target=Object.hasOwn(CHARACTER_GUIDE_TARGETS,guideTarget)?CHARACTER_GUIDE_TARGETS[guideTarget]:null;
+  const location=conciergePlacement(settings,0);
   const interactive=settings.waveBack&&settings.behavior!=='still';
   const artCharacter=styledCharacter(character,settings);
   const artEmotion=waved?'happy':settings.emotion;
   const fallback=<CharacterArt character={artCharacter} emotion={artEmotion} season={settings.season}/>;
   const use3D=MASCOT_3D_IDS.includes(character.id)&&settings.behavior!=='still'&&settings.appearance?.renderMode!=='vector'&&['none','winter'].includes(resolveCharacterSeason(settings.season));
-  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-prominence={settings.appearance?.prominence||'enhanced'} data-side={settings.side} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
+  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-prominence={settings.appearance?.prominence||'enhanced'} data-side={location.side} data-placement={location.placement} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
     <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig">{use3D?<Mascot3DBoundary fallback={fallback}><React.Suspense fallback={fallback}><FlagshipFox3D characterId={character.id} color={artCharacter.color} emotion={artEmotion} behavior={waved?wave.motion:settings.behavior} season={resolveCharacterSeason(settings.season)} lighting={settings.appearance?.lighting} fallback={fallback}/></React.Suspense></Mascot3DBoundary>:fallback}</div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?wave.effect:settings.effect}/>}</div>
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} {wave.emoji}</button>}
+      {!preview&&target&&onGuide&&<button type="button" className="gs-character-guide-action" data-character-guide={guideTarget} onClick={onGuide}><span aria-hidden="true">↗</span>{target.copy[lang]||target.copy.ka}</button>}
       {!preview&&onMute&&<button type="button" className="gs-character-mute" onClick={onMute}>{lang==='en'?'Hide for this visit':lang==='ru'?'Скрыть на этот визит':'ამ ვიზიტზე დამალვა'}</button>}
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
     </div>
@@ -197,7 +212,9 @@ export default function CharacterMascot({settings,lang,forceReplay=null}){
       if(repeat){
         if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id});
       }else markSeen(current.frequency,revision);
-      setPresentation({character,settings:effective,key:now.getTime()});
+      const placement=conciergePlacement(effective,repeat?record.count:0);
+      const guideTarget=effective.guideLinks?chooseConciergeTarget(Object.keys(CHARACTER_GUIDE_TARGETS).filter(key=>visibleGuideTarget(key)),repeat?record.count:0):null;
+      setPresentation({character,settings:{...effective,...placement},guideTarget,key:now.getTime()});
       closeTimer=setTimeout(()=>close(false),current.duration*1000);
     }
     schedule();
@@ -205,5 +222,5 @@ export default function CharacterMascot({settings,lang,forceReplay=null}){
     document.addEventListener('visibilitychange',visibility);
     return()=>{disposed=true;clear();dismissRef.current=null;document.removeEventListener('visibilitychange',visibility);};
   },[settingsKey,lang,forceReplay]);
-  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
+  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} guideTarget={presentation.guideTarget} onGuide={()=>{if(guideToSection(presentation.guideTarget))dismissRef.current?.(false);}} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
 }
