@@ -604,6 +604,13 @@ export default function Modals({
                   className="mt-3 inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >{copy.copyCode}</button>
               </div>
+              {orderConfirmation.cartReviewRequired === true && (
+                <p role="status" className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">
+                  {currentLang === 'en' ? 'Your order is confirmed. Your cart was preserved because its contents could not be safely cleared. Review the cart before placing another order.'
+                    : currentLang === 'ru' ? 'Заказ подтверждён. Корзина сохранена, так как её нельзя было безопасно очистить. Проверьте корзину перед новым заказом.'
+                    : 'შეკვეთა დადასტურებულია. კალათა შენარჩუნებულია, რადგან მისი უსაფრთხოდ გასუფთავება ვერ დადასტურდა. ახალი შეკვეთის გაფორმებამდე გადაამოწმეთ კალათა.'}
+                </p>
+              )}
               {orderConfirmation.email && (
                 <p className="mt-4 break-all text-[10px] text-neutral-500">{copy.emailLabel} {orderConfirmation.email}</p>
               )}
