@@ -31,3 +31,8 @@ test('banner controls retain independent viewport heights and reject unsafe CSS'
  assert.deepEqual(normalizeFlashBannerAppearance({mobileHeight:-1,fit:'url(evil)',radius:90,positionX:'20'}),{mobileHeight:80,radius:32});
  assert.deepEqual(flashBannerStyle({},'mobile'),{});
 });
+
+test('canonical URL stays within the normalization limit',()=>{
+ const long='https://example.com/'+ 'ა'.repeat(500);
+ assert.equal(normalizeFlashCampaignBanner(long),'');
+});

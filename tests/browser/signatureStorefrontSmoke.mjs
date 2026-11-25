@@ -13,6 +13,15 @@ const config={is_published:true,published_config:{
 }};
 export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,768,1440]){
  for(const width of widths){
+  // Exercise the optional campaign settings within the existing browser matrix.
+  const layout=width<=390?'compact':width<=768?'grid':'inherit';
+  const timer=width<=390?'pills':width<=768?'outline':'digital';
+  const bannerHeight=width<=640?104:width<=1023?144:208;
+  const published={...config,published_config:{...config.published_config,siteSettings:{...config.published_config.siteSettings,visualDesign:{
+    ...config.published_config.siteSettings.visualDesign,flashCampaignTheme:'black-friday',flashCampaignLayout:layout,
+    flashTimerStyle:timer,flashTimerMotion:'reveal',flashCardStyle:'soft',flashDiscountStyle:'gold',flashButtonStyle:'outline',
+    flashCampaignBanner:image,flashBannerAppearance:{desktopHeight:208,tabletHeight:144,mobileHeight:104,fit:'contain',placement:'above'}
+  }}}};
   const context=await browser.newContext({serviceWorkers:'block',viewport:{width,height:850},reducedMotion:'reduce'});
   const page=await context.newPage(),errors=[],writes=[];
   page.on('pageerror',error=>errors.push(String(error.message||error)));
@@ -20,7 +29,7 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await context.route('https://example.test/**',route=>route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jkN0AAAAASUVORK5CYII=','base64')}));
    await context.route(supabaseOrigin+'/**',route=>{
     const req=route.request(),path=new URL(req.url()).pathname;
-    if(req.method()==='GET'&&path==='/rest/v1/storefront_config')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([config])});
+    if(req.method()==='GET'&&path==='/rest/v1/storefront_config')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([published])});
     if(req.method()==='GET'&&path==='/rest/v1/products')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(stage49FixtureProductRows)});
     if(req.method()!=='GET'&&!/^\/rest\/v1\/rpc\/(?:get_|list_|lookup_)/.test(path)){writes.push(req.method()+' '+path);return route.fulfill({status:403,contentType:'application/json',body:'{}'});}
     return route.fulfill({status:200,contentType:'application/json',body:'[]'});
@@ -30,6 +39,36 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    assert.equal(response?.status(),200);
    await page.locator('.gs-signature-header').waitFor({state:'visible',timeout:30000});
    await page.locator('[data-signature-products="true"] .gs-catalog-product-card').first().waitFor({state:'visible',timeout:20000});
+   const flash=page.locator('.gs-flash-sale-section[data-flash-campaign-theme="black-friday"]');
+   await flash.waitFor({state:'visible',timeout:20000});
+   assert.equal(await flash.getAttribute('data-flash-campaign-layout'),layout);
+   assert.equal(await flash.locator('.gs-flash-sale-countdown').getAttribute('data-flash-timer-style'),timer);
+   assert.equal(await flash.locator('.gs-flash-sale-card').count(),1,'Active fixture product only');
+   assert.equal(await flash.locator('.gs-flash-sale-timer').count(),3);
+   assert.equal(await flash.locator('.gs-flash-sale-countdown').evaluate(el=>getComputedStyle(el).animationName),'none','Reduced motion respected');
+   const banner=flash.locator('.gs-flash-campaign-banner');
+   await banner.scrollIntoViewIfNeeded();
+   await page.waitForFunction(()=>{const img=document.querySelector('.gs-flash-campaign-banner');return img?.complete&&img.naturalWidth>0;});
+   const geometry=await flash.evaluate(el=>{
+    const outer=el.getBoundingClientRect(),banner=el.querySelector('.gs-flash-campaign-banner'),heading=el.querySelector('.gs-video-flash-heading');
+    const b=banner.getBoundingClientRect(),card=el.querySelector('.gs-flash-sale-card'),box=card.getBoundingClientRect();
+    const action=card.querySelector('.gs-video-flash-add').getBoundingClientRect();
+    const inside=(r,b)=>r.left>=b.left-2&&r.right<=b.right+2;
+    return {bannerHeight:b.height,fit:getComputedStyle(banner).objectFit,above:b.bottom<=heading.getBoundingClientRect().top+2,
+     contained:inside(b,outer)&&inside(box,outer)&&inside(action,box)&&action.height>=43,
+     timerFits:[...el.querySelectorAll('.gs-flash-sale-timer')].every(t=>inside(t.getBoundingClientRect(),outer)),
+     overflow:el.scrollWidth>el.clientWidth+2};
+   });
+   assert.ok(Math.abs(geometry.bannerHeight-bannerHeight)<=2&&geometry.fit==='contain'&&geometry.above&&geometry.contained&&geometry.timerFits&&!geometry.overflow,'Campaign geometry at '+width+': '+JSON.stringify(geometry));
+   const saleCard=flash.locator('.gs-flash-sale-card');
+   assert.ok((await saleCard.innerText()).includes('Stage46 Everyday Wallet'));
+   assert.ok((await saleCard.locator('.gs-flash-sale-discount').innerText()).includes('22%'));
+   await saleCard.locator('.gs-flash-sale-media').click();
+   await page.locator('.gs-product-dialog .gs-product-detail-title').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
+   await page.locator('.gs-product-modal-close').click();
+   await page.locator('.gs-product-dialog').waitFor({state:'detached'});
+   assert.equal(await saleCard.locator('.gs-video-flash-add').isEnabled(),true);
+   await saleCard.locator('.gs-video-flash-add').click();
    assert.equal(await page.locator('[data-signature-categories="true"] .gs-category-card').count(),4);
    assert.equal(await page.locator('.gs-signature-service-link').count(),4);
    const campaignBounds=await page.locator('[data-signature-banners="true"]').evaluate(grid=>{

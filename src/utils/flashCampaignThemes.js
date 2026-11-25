@@ -19,7 +19,7 @@ export function normalizeFlashCampaignBanner(value) {
   if (typeof value !== 'string' || value.length > 1400000) return '';
   if (/^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/]+={0,2}$/i.test(value)) return value;
   if (value.length > 2048) return '';
-  try { const url = new URL(value.trim()); return url.protocol === 'https:' && !url.username && !url.password ? url.href : ''; } catch { return ''; }
+  try { const url = new URL(value.trim()); return url.protocol === 'https:' && !url.username && !url.password && url.href.length <= 2048 ? url.href : ''; } catch { return ''; }
 }
 
 export const FLASH_TIMER_STYLES=Object.freeze([

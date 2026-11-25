@@ -1811,3 +1811,9 @@
 /* Keep uploaded artwork inside the section regardless of device size. */
 .gs-flash-campaign-banner{box-sizing:border-box;max-width:100%;min-width:0;}
 .gs-flash-campaign-banner[hidden]{display:none!important;}
+
+/* Compact promotional artwork: keep the discount readable inside narrow image cells. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section[data-flash-campaign-layout="compact"] .gs-flash-sale-media .gs-flash-sale-discount {
+ left:4px!important;top:4px!important;max-width:calc(100% - 8px);box-sizing:border-box;white-space:normal;overflow-wrap:anywhere;
+ padding:var(--gs-video-flashSale-discount-padding,2px 4px)!important;
+}
