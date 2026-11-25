@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import RootErrorBoundary from './components/RootErrorBoundary.jsx'
 import {installBrowserDiagnostics} from './utils/systemMonitor.js'
+import {registerOfflineWorker} from './utils/registerOfflineWorker.js'
 import './index.css'
 // Exact legacy tail extracted in its original stylesheet position.
 import './responsiveCompatibility.css'
@@ -26,3 +27,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <RootErrorBoundary><App /></RootErrorBoundary>
   </React.StrictMode>,
 )
+
+// Start after initial load; no development registration or forced reload.
+if (import.meta.env.PROD) {
+  const register = () => { void registerOfflineWorker({production:true}) }
+  if (document.readyState === 'complete') register()
+  else window.addEventListener('load', register, {once:true})
+}
