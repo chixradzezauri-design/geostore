@@ -1,3 +1,5 @@
+import InstallAppDialog from './components/InstallAppDialog.jsx';
+import {getInstallPlatform,isStandaloneApp} from './utils/pwaInstall.js';
 // src/App.jsx
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
@@ -1144,8 +1146,11 @@ export default function App() {
     if (isAiAssistantOpen) setHasLoadedAiAssistant(true);
   }, [isAiAssistantOpen]);
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const deferredPromptRef = useRef(null);
+  const installBusyRef = useRef(false);
+  const [appInstalled,setAppInstalled]=useState(()=>isStandaloneApp(window));
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const installPlatform=getInstallPlatform(window.navigator);
 
   // Supabase Auth: სესიის აღდგენა და ცვლილებების მოსმენა.
   useEffect(() => {
@@ -1405,39 +1410,24 @@ export default function App() {
 
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener(
-      'beforeinstallprompt',
-      handleBeforeInstallPrompt
-    );
-
-    return () =>
-      window.removeEventListener(
-        'beforeinstallprompt',
-        handleBeforeInstallPrompt
-      );
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-
-        const { outcome } = await deferredPrompt.userChoice;
-
-        if (outcome === 'accepted') {
-          setDeferredPrompt(null);
-        }
-      } catch {
-        setShowInstallModal(true);
-      }
-    } else {
-      setShowInstallModal(true);
-    }
+    const media=window.matchMedia('(display-mode: standalone)');
+    const sync=()=>setAppInstalled(isStandaloneApp(window));
+    const onPrompt=e=>{e.preventDefault();deferredPromptRef.current=e;};
+    const onInstalled=()=>{deferredPromptRef.current=null;setAppInstalled(true);setShowInstallModal(false);};
+    window.addEventListener('beforeinstallprompt',onPrompt);
+    window.addEventListener('appinstalled',onInstalled);
+    media.addEventListener?.('change',sync);
+    return ()=>{window.removeEventListener('beforeinstallprompt',onPrompt);window.removeEventListener('appinstalled',onInstalled);media.removeEventListener?.('change',sync);};
+  },[]);
+  const handleInstallClick=async()=>{
+    if(installBusyRef.current)return;
+    if(appInstalled||isStandaloneApp(window)){setShowInstallModal(true);return;}
+    const prompt=deferredPromptRef.current;
+    deferredPromptRef.current=null;
+    if(!prompt){setShowInstallModal(true);return;}
+    installBusyRef.current=true;
+    try{await prompt.prompt();await prompt.userChoice;}catch{setShowInstallModal(true);}
+    finally{installBusyRef.current=false;}
   };
 
   const [toastMessage, setToastMessage] = useState('');
@@ -4993,41 +4983,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {showInstallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1"
-            >
-              ✕
-            </button>
-
-            <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
-              <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
-                <Smartphone className="w-6 h-6 text-amber-400" />
-              </div>
-
-              <div>
-                <h3 className="font-black text-sm text-white">
-                  App Installation
-                </h3>
-
-                <p className="text-[11px] text-slate-400">
-                  Follow simple instructions:
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
+      {showInstallModal && <InstallAppDialog platform={installPlatform} installed={appInstalled} lang={currentLang} onClose={()=>setShowInstallModal(false)}/>}
 
       <StorefrontFooter
         siteSettings={siteSettings}
