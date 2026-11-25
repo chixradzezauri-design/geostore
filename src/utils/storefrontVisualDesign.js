@@ -1,4 +1,4 @@
-import { normalizeFlashCampaignTheme } from './flashCampaignThemes.js';
+import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner } from './flashCampaignThemes.js';
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
 const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
 export function getStorefrontSectionOrder(raw,viewport='desktop'){
@@ -277,6 +277,8 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     version: 1,
     ...(raw.signature2026 === true ? { signature2026: true } : {}),
     ...(normalizeFlashCampaignTheme(raw.flashCampaignTheme) !== 'inherit' ? { flashCampaignTheme: normalizeFlashCampaignTheme(raw.flashCampaignTheme) } : {}),
+    ...(normalizeFlashCampaignLayout(raw.flashCampaignLayout) !== 'inherit' ? { flashCampaignLayout: normalizeFlashCampaignLayout(raw.flashCampaignLayout) } : {}),
+    ...(normalizeFlashCampaignBanner(raw.flashCampaignBanner) ? { flashCampaignBanner: normalizeFlashCampaignBanner(raw.flashCampaignBanner) } : {}),
     theme: {
       canvas: safeColor(theme.canvas, defaults.theme.canvas),
       surface: safeColor(theme.surface, defaults.theme.surface),

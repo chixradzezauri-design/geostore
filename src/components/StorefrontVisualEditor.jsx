@@ -1,4 +1,4 @@
-import { FLASH_CAMPAIGN_THEMES } from '../utils/flashCampaignThemes.js';
+import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner } from '../utils/flashCampaignThemes.js';
 import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
 import { FLASH_CAMPAIGN_COPY_PRESETS, applyFlashCampaignCopyPreset } from '../utils/flashCampaignCopy.js';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
@@ -1264,6 +1264,22 @@ export default function StorefrontVisualEditor({
                 <p className="mt-2 text-[11px] leading-5 text-slate-400">თემა არ ცვლის ფასებს, ვადებს, სათაურსა და ინდივიდუალურად დაყენებულ ფერებს. მოქმედებს ყველა მოწყობილობაზე გამოქვეყნების შემდეგ.</p>
               </div>
               <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">სარეკლამო ბანერი და განლაგება</h4>
+                <label className="block space-y-1 text-xs font-semibold text-slate-300">აქციის ფოტოს HTTPS ბმული
+                  <input key={design.flashCampaignBanner || 'empty-banner'} type="url" maxLength={2048} defaultValue={design.flashCampaignBanner || ''} placeholder="https://…" onBlur={event=>{
+                    const raw=event.currentTarget.value.trim();
+                    const value=normalizeFlashCampaignBanner(raw);
+                    if(raw && !value){setSaveMessage('ფოტოსთვის გამოიყენეთ უსაფრთხო HTTPS ბმული.');event.currentTarget.value=designRef.current.flashCampaignBanner || '';return;}
+                    if(value!==(designRef.current.flashCampaignBanner || ''))commitDesign({...designRef.current,flashCampaignBanner:value});
+                  }} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                </label>
+                <button type="button" disabled={!design.flashCampaignBanner} onClick={()=>commitDesign({...designRef.current,flashCampaignBanner:''})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-200 disabled:opacity-40">ბანერის მოცილება</button>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[['inherit','არსებული'],['grid','ბარათები'],['compact','კომპაქტური']].map(([id,label])=><button key={id} type="button" aria-pressed={(design.flashCampaignLayout || 'inherit')===id} onClick={()=>commitDesign({...designRef.current,flashCampaignLayout:id})} className="min-h-11 rounded-lg border border-slate-600 px-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400">ბანერი მხოლოდ აქტიური აქციის დროს გამოჩნდება. განლაგება პროდუქტებს არ ცვლის.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
                 <h4 className="mb-2 text-xs font-bold text-white">აქციის ელემენტების დეტალური გაფორმება</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {['flashSale','flashSale.title','flashSale.badge','flashSale.description','flashSale.card','flashSale.image','flashSale.timer','flashSale.discount','flashSale.button'].map(id=>(
@@ -1482,6 +1498,11 @@ export default function StorefrontVisualEditor({
             .gs-visual-preview-frame[data-visual-editor-selected="flashSale.title"] [data-visual-editor-target="flashSale.title"],
             .gs-visual-preview-frame[data-visual-editor-selected="flashSale.badge"] [data-visual-editor-target="flashSale.badge"],
             .gs-visual-preview-frame[data-visual-editor-selected="flashSale.description"] [data-visual-editor-target="flashSale.description"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.card"] [data-visual-editor-target="flashSale.card"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.image"] [data-visual-editor-target="flashSale.image"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.timer"] [data-visual-editor-target="flashSale.timer"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.discount"] [data-visual-editor-target="flashSale.discount"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.button"] [data-visual-editor-target="flashSale.button"],
             .gs-visual-preview-frame[data-visual-editor-selected="categories"] [data-visual-editor-target="categories"],
             .gs-visual-preview-frame[data-visual-editor-selected="categories.title"] [data-visual-editor-target="categories.title"],
             .gs-visual-preview-frame[data-visual-editor-selected="categories.description"] [data-visual-editor-target="categories.description"],

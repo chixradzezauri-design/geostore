@@ -11,3 +11,11 @@ export const FLASH_CAMPAIGN_THEMES = Object.freeze([
 export function normalizeFlashCampaignTheme(value) {
   return FLASH_CAMPAIGN_THEMES.some(theme=>theme.id===value) ? value : 'inherit';
 }
+
+export function normalizeFlashCampaignLayout(value) {
+  return ['grid','compact'].includes(value) ? value : 'inherit';
+}
+export function normalizeFlashCampaignBanner(value) {
+  if (typeof value !== 'string' || value.length > 2048) return '';
+  try { const url = new URL(value.trim()); return url.protocol === 'https:' && !url.username && !url.password ? url.href : ''; } catch { return ''; }
+}
