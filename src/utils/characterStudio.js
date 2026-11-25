@@ -168,7 +168,7 @@ export function normalizeCharacterSettings(raw){
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right','alternate'],'left'),
     placement:pick(s.placement,['bottom','middle','roam'],'bottom'),guideLinks:s.guideLinks===true,
-    advice:normalizeConciergeAdvice(s.advice),saleGuide:s.saleGuide===true,saleGuidePriority:pick(s.saleGuidePriority,['alternate','always','deal-only'],'alternate'),recommendProducts:s.recommendProducts===true,recommendationMode:pick(s.recommendationMode,['featured','category','variety'],'featured'),
+    advice:normalizeConciergeAdvice(s.advice),saleGuide:s.saleGuide===true,saleGuidePriority:pick(s.saleGuidePriority,['alternate','always','deal-only'],'alternate'),recommendProducts:s.recommendProducts===true,recommendationMode:pick(s.recommendationMode,['featured','category','variety','context'],'featured'),recommendationBudget:bounded(s.recommendationBudget,0,10000,0),
     delay:bounded(s.delay,0,10,2), duration:bounded(s.duration,3,12,6),
     frequency:pick(s.frequency,['session','daily','repeat'],'session'),
     repeatInterval:bounded(s.repeatInterval,30,180,45),repeatLimit:bounded(s.repeatLimit,2,8,5),
@@ -381,7 +381,7 @@ export function normalizeCharacterProfiles(raw){
    side:pick(p.side,['inherit','left','right','alternate'],'inherit'),
    placement:pick(p.placement,['inherit','bottom','middle','roam'],'inherit'),
    target:pick(p.target,['inherit','categories','products','flash'],'inherit'),
-   recommendationMode:pick(p.recommendationMode,['inherit','featured','category','variety'],'inherit'),
+   recommendationMode:pick(p.recommendationMode,['inherit','featured','category','variety','context'],'inherit'),
    tips:p.tips!==false,products:p.products!==false,sales:p.sales!==false,guides:p.guides!==false,interactions:p.interactions!==false,
    messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof p.messages?.[lang]==='string'?p.messages[lang].trim().slice(0,120):'']))}]];
  }));

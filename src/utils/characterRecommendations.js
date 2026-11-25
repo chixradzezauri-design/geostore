@@ -12,13 +12,18 @@ export function conciergeProducts(products,ready){
   const price=getProductStartingPrice(p);
   if(!Number.isFinite(price)||price<=0||!(getProductAvailableStock(p)>0))return [];
   seen.add(id);
-  return [{id,name:p.name.trim().slice(0,100),featured:p.isFeatured===true,category:typeof p.category==='string'?p.category:'',path:productPath(p.id)}];
+  return [{id,name:p.name.trim().slice(0,100),price,featured:p.isFeatured===true,category:typeof p.category==='string'?p.category:'',path:productPath(p.id)}];
  });
 }
-export function chooseConciergeProduct(products,{ready=false,mode='featured',category='',index=0,excludeId=null}={}){
- const available=conciergeProducts(products,ready);
+export function conciergeRecommendationPool(available,{mode='featured',category='',budget=0}={}){
+ const eligible=Number.isFinite(budget)&&budget>0?available.filter(p=>p.price<=budget):available;
+ const selected=typeof category==='string'&&category.trim()&&!['ყველა','all'].includes(category.trim().toLowerCase());
+ return mode==='context'&&selected?eligible.filter(p=>p.category===category):eligible;
+}
+export function chooseConciergeProduct(products,{ready=false,mode='featured',category='',budget=0,index=0,excludeId=null,allowRepeat=true}={}){
+ const available=conciergeRecommendationPool(conciergeProducts(products,ready),{mode,category,budget});
  const others=available.filter(p=>p.id!==String(excludeId));
- const pool=others.length?others:available;
+ const pool=others.length?others:allowRepeat?available:[];
  const local=category&&category!=='ყველა'?pool.filter(p=>p.category===category):[];
  const candidates=mode==='category'&&local.length?local:mode==='featured'&&pool.some(p=>p.featured)?pool.filter(p=>p.featured):pool;
  const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
@@ -48,10 +53,10 @@ export function conciergeSaleProducts(products,ready,now=Date.now()){
   return [{...item,price,oldPrice:old,savings,endsAt,sale:true}];
  });
 }
-export function chooseConciergeSale(products,{ready=false,now=Date.now(),index=0,excludeId=null}={}){
- const list=conciergeSaleProducts(products,ready,now);
+export function chooseConciergeSale(products,{ready=false,now=Date.now(),index=0,excludeId=null,mode='featured',category='',budget=0,allowRepeat=true}={}){
+ const list=conciergeRecommendationPool(conciergeSaleProducts(products,ready,now),{mode,category,budget});
  const others=list.filter(p=>p.id!==String(excludeId));
- const pool=others.length?others:list;
+ const pool=others.length?others:allowRepeat?list:[];
  const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
  return pool.length?pool[n%pool.length]:null;
 }
