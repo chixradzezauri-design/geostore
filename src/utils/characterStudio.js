@@ -1,3 +1,4 @@
+import {normalizeConciergeAdvice} from './characterAdvice.js';
 // Shared, bounded configuration; unconfigured storefronts remain unchanged.
 export const CHARACTERS = Object.freeze([
   { id:'fox', name:'GeoFox', label:'მელა', color:'#f59e0b', lines:{ka:'გამარჯობა! დღეს რა მაგარს ვიპოვით?',en:'Hi! Let’s find something great today!',ru:'Привет! Найдём что-нибудь классное?'} },
@@ -166,7 +167,7 @@ export function normalizeCharacterSettings(raw){
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right','alternate'],'left'),
     placement:pick(s.placement,['bottom','middle','roam'],'bottom'),guideLinks:s.guideLinks===true,
-    recommendProducts:s.recommendProducts===true,recommendationMode:pick(s.recommendationMode,['featured','category','variety'],'featured'),
+    advice:normalizeConciergeAdvice(s.advice),recommendProducts:s.recommendProducts===true,recommendationMode:pick(s.recommendationMode,['featured','category','variety'],'featured'),
     delay:bounded(s.delay,0,10,2), duration:bounded(s.duration,3,12,6),
     frequency:pick(s.frequency,['session','daily','repeat'],'session'),
     repeatInterval:bounded(s.repeatInterval,30,180,45),repeatLimit:bounded(s.repeatLimit,2,8,5),

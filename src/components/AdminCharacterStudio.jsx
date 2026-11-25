@@ -1,4 +1,5 @@
 import React,{useEffect,useState} from 'react';
+import {CONCIERGE_ADVICE,chooseConciergeAdvice} from '../utils/characterAdvice.js';
 import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
@@ -22,6 +23,8 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
   const [libraryLang,setLibraryLang]=useState('ka');
+  const [adviceLang,setAdviceLang]=useState('ka');
+  const [adviceTopic,setAdviceTopic]=useState('style');
   const [eventId,setEventId]=useState(null);
   const [eventPreview,setEventPreview]=useState(null);
   const today=characterCalendarDay();
@@ -94,6 +97,15 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">ხანგრძლივობა: {s.duration} წმ</span><input className="w-full" type="range" min="3" max="12" value={s.duration} disabled={busy} onChange={e=>update({duration:Number(e.target.value)})}/></label>
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
       </div>
+    </details>
+    <details className="gs-character-admin-section" data-character-advice-settings>
+      <summary>რჩევები და საჩუქრების იდეები</summary>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.advice.enabled} disabled={busy} onChange={e=>update({advice:{...s.advice,enabled:e.target.checked}})}/> რჩევების ჩართვა</label>
+      <label className="block text-xs text-slate-300">რჩევების მიმართულება<select aria-label="რჩევების მიმართულება" className={field} value={s.advice.topic} disabled={busy} onChange={e=>update({advice:{...s.advice,topic:e.target.value}})}><option value="auto">ავტომატურად — პერსონაჟისა და სიტუაციის მიხედვით</option>{Object.entries(CONCIERGE_ADVICE).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><label className="block text-xs text-slate-300">რჩევის თემა<select aria-label="რჩევის თემა" className={field} value={adviceTopic} onChange={e=>setAdviceTopic(e.target.value)}>{Object.entries(CONCIERGE_ADVICE).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label><label className="block text-xs text-slate-300">რჩევის ენა<select aria-label="რჩევის ენა" className={field} value={adviceLang} onChange={e=>setAdviceLang(e.target.value)}>{CHARACTER_GREETING_LANGS.map(code=><option key={code} value={code}>{({ka:'ქართული',en:'English',ru:'Русский'})[code]}</option>)}</select></label></div>
+      <label className="block text-xs text-slate-300">ჩემი რჩევა (ცარიელი = მზა ტექსტები)<textarea aria-label="ჩემი რჩევა" className={field} rows={2} maxLength={120} disabled={busy} value={siteSettings?.characterStudio?.advice?.custom?.[adviceTopic]?.[adviceLang]??''} onChange={e=>{const value=e.target.value;setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);return {...previous,characterStudio:{...previous?.characterStudio,advice:{...current.advice,custom:{...current.advice.custom,...previous?.characterStudio?.advice?.custom,[adviceTopic]:{...current.advice.custom[adviceTopic],...previous?.characterStudio?.advice?.custom?.[adviceTopic],[adviceLang]:value}}}}};});}}/></label>
+      <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200"><strong>რჩევის მაგალითი</strong><p className="mt-1">{chooseConciergeAdvice({...s.advice,enabled:true,topic:adviceTopic},{lang:adviceLang})?.text}</p></div>
+      <p className="text-xs text-slate-300">განმეორებით რეჟიმში პირველი გამოჩენა მისალმებაა, შემდეგი — რჩევები. კალენდრის აქტიური ღონისძიების ტექსტს უპირატესობა აქვს.</p>
     </details>
     <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary,message}}));}}/></label>
     <details className="gs-character-admin-section" data-character-greetings>
