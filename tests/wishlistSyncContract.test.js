@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {projectWishlistIds,validateWishlistSnapshot,applyWishlistIntent,acceptWishlistResponse} from '../src/utils/wishlistSyncContract.js';
+import {projectWishlistIds,validateWishlistSnapshot,applyWishlistIntent,acceptWishlistResponse,applyVersionedWishlistIntent} from '../src/utils/wishlistSyncContract.js';
 test('projection transfers only IDs and refuses truncation or malformed entries',()=>{
  assert.deepEqual(projectWishlistIds([{id:'p1',priceGEL:1,purchase_cost:5,image:'private'},{id:'p1'},{id:'p2'}]),['p1','p2']);
  assert.throws(()=>projectWishlistIds([{id:' '}]),/Invalid/);
@@ -27,4 +27,13 @@ test('old responses and account-switch responses are ignored',()=>{
  assert.equal(acceptWishlistResponse({...input,activeOwnerId:'B'}),null);
  assert.equal(acceptWishlistResponse({...input,activeEpoch:4}),null);
  assert.equal(acceptWishlistResponse({...input,snapshot:{revision:7,ids:[]}}),null);
+});
+
+test('stale replay cannot overwrite a later removal and accepted no-op consumes revision',()=>{
+ const start={revision:7,ids:['a']};
+ const noOp=applyVersionedWishlistIntent(start,7,{productId:'a',present:true});
+ assert.equal(noOp.snapshot.revision,8);
+ const removal=applyVersionedWishlistIntent(noOp.snapshot,8,{productId:'a',present:false});
+ assert.deepEqual(removal.snapshot,{revision:9,ids:[]});
+ assert.deepEqual(applyVersionedWishlistIntent(removal.snapshot,7,{productId:'a',present:true}),{status:'conflict',snapshot:removal.snapshot});
 });

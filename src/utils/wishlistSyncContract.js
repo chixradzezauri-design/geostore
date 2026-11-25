@@ -27,7 +27,10 @@ export function applyWishlistIntent(snapshot,intent){
   const current=validateWishlistSnapshot(snapshot);
   if(!intent||!isId(intent.productId)||typeof intent.present!=='boolean')throw new TypeError('Invalid wishlist intent');
   const exists=current.ids.includes(intent.productId);
-  if(exists===intent.present)return {status:'unchanged',snapshot:current};
+  if(exists===intent.present){
+    if(current.revision===Number.MAX_SAFE_INTEGER)throw new RangeError('Revision exhausted');
+    return {status:'unchanged',snapshot:{revision:current.revision+1,ids:current.ids}};
+  }
   if(intent.present&&current.ids.length>=MAX_SYNC_FAVORITES)return {status:'limit',snapshot:current};
   if(current.revision===Number.MAX_SAFE_INTEGER)throw new RangeError('Revision exhausted');
   const ids=intent.present?[...current.ids,intent.productId]:current.ids.filter(id=>id!==intent.productId);
@@ -40,4 +43,12 @@ export function acceptWishlistResponse({requestOwnerId,activeOwnerId,requestEpoc
   if(!validRevision(knownRevision))throw new TypeError('Invalid known revision');
   const next=validateWishlistSnapshot(snapshot);
   return next.revision<knownRevision?null:next;
+}
+
+// A compare-and-set write never silently retries at a newer revision.
+export function applyVersionedWishlistIntent(snapshot,expectedRevision,intent){
+ const current=validateWishlistSnapshot(snapshot);
+ if(!validRevision(expectedRevision))throw new TypeError('Invalid expected revision');
+ if(current.revision!==expectedRevision)return {status:'conflict',snapshot:current};
+ return applyWishlistIntent(current,intent);
 }
