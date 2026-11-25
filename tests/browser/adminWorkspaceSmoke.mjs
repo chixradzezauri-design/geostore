@@ -118,7 +118,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});
-          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),11,'nine character cards and two viewport buttons');
+          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),14,'twelve character cards and two viewport buttons');
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
@@ -142,13 +142,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await live.locator('svg[data-character-render="dimensional"][data-character-model="robot"]').count(),1);
           const gradientIds=await studio.locator('svg.gs-character-art defs [id]').evaluateAll(nodes=>nodes.map(n=>n.id));
           assert.equal(new Set(gradientIds).size,gradientIds.length,'Every character preview has independent lighting definitions');
-          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),9);
-          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="metal"]').count(),1);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),12);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="metal"]').count(),2);
           assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="feathers"]').count(),1);
           assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="fur"]').count(),7);
-          assert.equal(await studio.locator('button[aria-pressed] .gs-character-head').count(),9);
+          assert.equal(await studio.locator('button[aria-pressed] .gs-character-head').count(),12);
           await appearance.getByRole('button',{name:'ვიზუალური პარამეტრების აღდგენა'}).click();
-          assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'76px');
+          assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'92px');
           const greetings=studio.locator('[data-character-greetings]');
           await greetings.locator('summary').click();
           await greetings.getByLabel('მისალმების რეჟიმი').selectOption('library');
@@ -189,6 +189,14 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await scenarios.getByLabel('სცენარი',{exact:true}).selectOption('cart');
           await scenarios.getByLabel('სცენარის პერსონაჟი').selectOption('panda');
           await scenarios.getByLabel('სცენარის ტექსტი').fill('Fixture cart scene');
+          assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
+          const presets=studio.locator('[data-character-presets]');
+          await presets.getByLabel('მზა რეჟიმი').selectOption('active');
+          await presets.locator('[data-character-apply-preset]').click();
+          await presets.locator('[data-character-undo-preset]').waitFor({state:'visible'});
+          assert.equal(await presets.locator('.gs-concierge-summary [data-enabled="true"]').count(),5);
+          await presets.locator('[data-character-undo-preset]').click();
+          assert.equal(await presets.locator('[data-character-undo-preset]').count(),0);
           assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
         }
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');

@@ -1,10 +1,11 @@
 import {mascotLimb} from './mascot3DGeometry.js';
 // Eight additional original procedural models, sharing the bounded sphere mesh.
 // Each part has a real position, scale, orientation and material in three dimensions.
-export const MASCOT_3D_IDS=Object.freeze(['fox','panda','rabbit','robot','cat','monkey','bear','owl','cheetah']);
+export const MASCOT_3D_IDS=Object.freeze(['fox','panda','rabbit','robot','cat','monkey','bear','owl','cheetah','santa','snowman','deal']);
 export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false,season='none'}={}){
   const ivory=[.96,.91,.81],black=[.09,.08,.09],pink=[.83,.48,.44],gold=[.94,.66,.19],white=[.99,.98,.95],iris=[.29,.15,.065],metal=[.29,.35,.43],cyan=[.19,.87,.98];
-  const robot=id==='robot',owl=id==='owl',panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',monkey=id==='monkey',bear=id==='bear',cheetah=id==='cheetah';
+  const santa=id==='santa',snow=id==='snowman',deal=id==='deal';
+  const robot=id==='robot'||deal,owl=id==='owl',panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',monkey=id==='monkey',bear=id==='bear'||santa||snow,cheetah=id==='cheetah';
   const body=panda?ivory:base,limb=panda?black:robot?metal:base;
   const broad=bear||panda?.65:cheetah||monkey?.43:.52;
   const material=robot?.75:.12,fur=robot?0:1;
@@ -42,7 +43,7 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     part(right.tip,[.17,.19,.17],limb,right.tilt);
     if(robot)for(const sign of [-1,1])part([sign*.55,-.39,.02],[.20,.16,.20],cyan,0,.8,0);
   }
-  if(panda||bear||monkey||cheetah){
+  if((panda||bear||monkey||cheetah)&&!santa&&!snow){
     for(const sign of [-1,1]){
       const ey=monkey?.72:1.10,ex=monkey?.77:.60,r=cheetah?.20:monkey?.26:.28;
       part([sign*ex,ey,-.08],[r,r,r*.75],panda?black:base);
@@ -98,6 +99,28 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     }
     if(cat)for(const sign of [-1,1])for(let i=0;i<3;i++)part([sign*.47,hy-.28+i*.055,.48],[.15,.012,.02],ivory,sign*(i-1)*.20,.10,0);
     if(bear){part([-.16,-.15,.40],[.18,.10,.09],gold,.35,.4,0);part([.16,-.15,.40],[.18,.10,.09],gold,-.35,.4,0);part([0,-.15,.49],[.075,.075,.075],gold,0,.65,0);}
+  }
+  if(santa){
+    const red=[.78,.07,.12];
+    part([0,1.18,0],[.63,.15,.48],ivory);
+    part([.09,1.43,-.01],[.48,.39,.40],red,.35);
+    part([.48,1.58,.03],[.15,.15,.15],ivory);
+    part([0,.14,.57],[.48,.35,.24],ivory);
+    part([0,-.64,.34],[.55,.10,.14],black,0,.4,0);
+    part([0,-.64,.49],[.12,.12,.055],gold,0,.8,0);
+  }
+  if(snow){
+    part([0,1.14,0],[.65,.09,.48],black,0,.25,0);
+    part([0,1.39,0],[.40,.33,.34],black,0,.25,0);
+    part([0,1.20,.15],[.41,.09,.27],[.72,.06,.14]);
+    part([0,.34,.82],[.08,.08,.20],[1,.47,.08],0,.15,0);
+    for(const y of [-.34,-.61,-.85])part([0,y,.49],[.055,.055,.035],black,0,.45,0);
+  }
+  if(deal){
+    part([.42,-.45,.52],[.26,.32,.06],gold,-.32,.65,0);
+    part([.34,-.39,.59],[.055,.055,.027],black,0,.4,0);
+    part([.52,-.53,.59],[.055,.055,.027],black,0,.4,0);
+    part([.43,-.46,.59],[.035,.14,.025],black,-.65,.4,0);
   }
   if(season==='winter')part([0,-.02,.07],[.53,.13,.43],[.65,.05,.12],0,.1,0);
 }

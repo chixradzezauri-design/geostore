@@ -1,6 +1,8 @@
-import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen} from '../utils/characterStudio.js';
+import React,{useEffect,useRef,useState} from 'react';
+import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS} from '../utils/characterStudio.js';
 import './characterStudio.css';
+import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeInteractionDeadline} from '../utils/characterAdvice.js';
+import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY,conciergeSaleProducts,chooseConciergeSale,CONCIERGE_SALE_COPY} from '../utils/characterRecommendations.js';
 import {MASCOT_3D_IDS} from '../utils/mascot3DModels.js';
 const FlagshipFox3D=React.lazy(()=>import('./FlagshipFox3D.jsx'));
 class Mascot3DBoundary extends React.Component{
@@ -12,6 +14,25 @@ class Mascot3DBoundary extends React.Component{
 
 const lastSeen={session:null,daily:null};
 let lastForcedReplay=null;
+let repeatMemory=null;
+function readRepeat(revision){
+  try{const stored=sessionStorage.getItem(CHARACTER_REPEAT_KEY);if(stored)return characterRepeatRecord(stored,revision);}catch{}
+  return characterRepeatRecord(repeatMemory,revision);
+}
+function saveRepeat(record){repeatMemory=record;try{sessionStorage.setItem(CHARACTER_REPEAT_KEY,JSON.stringify(record));}catch{}}
+function visibleGuideTarget(key){
+  const entry=Object.hasOwn(CHARACTER_GUIDE_TARGETS,key)?CHARACTER_GUIDE_TARGETS[key]:null;
+  if(!entry)return null;
+  const node=document.querySelector('.geostore-storefront '+entry.selector);
+  return node&&node.getClientRects().length&&node.offsetWidth>0&&node.offsetHeight>0&&getComputedStyle(node).visibility!=='hidden'?node:null;
+}
+function guideToSection(key){
+  const node=visibleGuideTarget(key);if(!node)return false;
+  node.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
+  const focus=node.querySelector('button:not([disabled]),a[href]');if(focus)focus.focus({preventScroll:true});
+  return true;
+}
+function visitorBusy(){const el=document.activeElement;return document.visibilityState!=='visible'||Boolean(el?.matches?.('input,textarea,select,[contenteditable="true"]'));}
 function seen(frequency,revision){
   if(characterRevisionSeen(lastSeen[frequency],frequency,revision))return true;
   try{return characterRevisionSeen((frequency==='daily'?localStorage:sessionStorage).getItem(CHARACTER_SESSION_KEY),frequency,revision);}catch{return false;}
@@ -25,7 +46,8 @@ function markSeen(frequency,revision){
 export function CharacterArt({character,emotion='happy',season='none'}){
   const uid=React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
   const {id,color}=character;
-  const robot=id==='robot',panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',fox=id==='fox',monkey=id==='monkey',bear=id==='bear',owl=id==='owl',cheetah=id==='cheetah';
+  const santa=id==='santa',snow=id==='snowman',deal=id==='deal';
+  const robot=id==='robot'||deal,panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',fox=id==='fox',monkey=id==='monkey',bear=id==='bear'||santa||snow,owl=id==='owl',cheetah=id==='cheetah';
   const g=n=>'url(#'+uid+'-'+n+')';
   const theme=resolveCharacterSeason(season);
   const bodyWidth=bear?40:panda?39:owl?34:cheetah?26:monkey?27:32;
@@ -37,7 +59,7 @@ export function CharacterArt({character,emotion='happy',season='none'}){
       <><rect x="-7" y="-9" width="14" height="18" rx="6" fill={g('cyan')}/><rect x="-4" y="-6" width="3" height="5" rx="1.5" fill="#fff" opacity=".75"/></>:
       <><ellipse rx={emotion==='surprise'?10:9} ry={emotion==='surprise'?13:11.5} fill={g('ivory')}/><ellipse cx="1" cy="1" rx="6.4" ry="8.4" fill={g('eye')}/><ellipse cx="-1.2" cy="-2.5" rx="2.7" ry="3.3" fill="#fff"/><circle cx="4" cy="5" r="1.2" fill="#fff" opacity=".8"/></>}
   </g>;
-  return <svg className="gs-character-art" data-character-model={id} data-character-render="dimensional" data-character-material={robot?'metal':owl?'feathers':'fur'} viewBox="0 0 160 176" aria-hidden="true" focusable="false">
+  return <svg className="gs-character-art" data-character-model={id} data-character-render="dimensional" data-character-material={robot?'metal':owl?'feathers':snow?'snow':santa?'fabric':'fur'} viewBox="0 0 160 176" aria-hidden="true" focusable="false">
     <defs>
       {[
         ['body','#fff4db',color,'#34283a'],['fur','#fff2d7',color,'#423039'],['ivory','#fff','#fff9e9','#cdbbad'],
@@ -66,7 +88,7 @@ export function CharacterArt({character,emotion='happy',season='none'}){
     {cat&&<><path d="M30 56L26 22Q26 15 34 19L66 40M94 40l31-21q8-4 8 4l-3 34" fill={g('fur')}/><path d="M35 43l-1-13 20 12M106 42l19-12-2 16" fill={g('pink')}/></>}
     {rabbit&&<><g transform="rotate(-13 57 37)"><rect x="43" y="3" width="26" height="61" rx="15" fill={g('fur')}/><rect x="51" y="11" width="11" height="42" rx="6" fill={g('pink')}/></g><g transform="rotate(13 102 37)"><rect x="89" y="3" width="26" height="61" rx="15" fill={g('fur')}/><rect x="96" y="11" width="11" height="42" rx="6" fill={g('pink')}/></g></>}
     {panda&&<><circle cx="37" cy="43" r="23" fill={g('dark')}/><circle cx="123" cy="43" r="23" fill={g('dark')}/><circle cx="37" cy="42" r="12" fill={color} opacity=".48"/><circle cx="123" cy="42" r="12" fill={color} opacity=".48"/></>}
-    {(bear||monkey||cheetah)&&<g>{[37,123].map(x=><g key={x}><circle cx={x} cy={monkey?72:43} r={monkey?21:bear?20:15} fill={g('fur')}/><circle cx={x} cy={monkey?72:43} r={monkey?12:bear?11:8} fill={g('pink')} opacity=".7"/></g>)}</g>}
+    {(bear||monkey||cheetah)&&!santa&&!snow&&<g>{[37,123].map(x=><g key={x}><circle cx={x} cy={monkey?72:43} r={monkey?21:bear?20:15} fill={g('fur')}/><circle cx={x} cy={monkey?72:43} r={monkey?12:bear?11:8} fill={g('pink')} opacity=".7"/></g>)}</g>}
     {owl&&<g fill={g('fur')}><path d="M31 55L34 19 65 40Z"/><path d="M95 40l31-21 3 36Z"/></g>}
     {robot&&<><path d="M81 33V14" stroke={g('dark')} strokeWidth="6" strokeLinecap="round"/><circle cx="81" cy="12" r="10" fill={g('gold')}/><rect x="15" y="59" width="22" height="34" rx="10" fill={g('dark')}/><rect x="123" y="59" width="22" height="34" rx="10" fill={g('dark')}/></>}
     {robot?<><rect x="27" y="30" width="106" height="78" rx="30" fill={g('body')}/><rect x="36" y="39" width="88" height="59" rx="24" fill={g('visor')}/><path d="M43 58Q47 46 68 46H100" stroke="#fff" strokeOpacity=".23" strokeWidth="3" strokeLinecap="round" fill="none"/></>:
@@ -95,6 +117,9 @@ export function CharacterArt({character,emotion='happy',season='none'}){
     {bear&&<g fill={g('gold')}><path d="M61 112l19 9 19-9-7 15H68Z"/><circle cx="80" cy="123" r="5"/></g>}
     {cheetah&&<g fill="#493427" opacity=".8">{[[52,118],[58,134],[105,116],[103,139],[74,149],[96,151]].map(([x,y],j)=><circle key={j} cx={x} cy={y} r="2.6"/>)}</g>}
     {!robot&&!cat&&!fox&&!bear&&!owl&&<g><circle cx="80" cy="128" r="8" fill={g('gold')}/><text x="80" y="131.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="#563719">G</text></g>}
+    {santa&&<g><path d="M40 47Q45 4 88 8Q125 9 126 44L111 39Q104 17 95 30L95 45Z" fill="#c82438"/><path d="M39 43Q78 36 120 43L120 54Q78 48 39 55Z" fill={g('ivory')}/><circle cx="126" cy="45" r="9" fill={g('ivory')}/><path d="M42 88Q51 122 80 119Q110 122 118 88Q100 101 91 94Q80 108 69 94Q56 101 42 88" fill={g('ivory')}/><path d="M50 126h60v8H50z" fill="#20232d"/><rect x="74" y="124" width="13" height="12" rx="2" fill={g('gold')}/></g>}
+    {snow&&<g><path d="M43 43h74v8H43z" fill="#283344"/><rect x="56" y="15" width="48" height="32" rx="6" fill={g('dark')}/><path d="M56 38h48v7H56z" fill="#c72839"/><path d="M78 83l27 7-27 6z" fill="#f39a2d"/><circle cx="80" cy="122" r="3" fill="#293040"/><circle cx="80" cy="139" r="3" fill="#293040"/></g>}
+    {deal&&<g><path d="M92 112l30-12 17 14-17 28-30-11z" fill="#e5b74c"/><circle cx="124" cy="111" r="3" fill="#25242a"/><text x="113" y="127" fontSize="19" fontWeight="900" textAnchor="middle" fill="#25242a">%</text></g>}
     {theme==='winter'&&<g><path d="M45 108Q80 120 115 108L111 119Q80 130 49 119Z" fill="#be123c"/><path d="M99 119l-3 22 12 3 5-23" fill="#be123c"/><path d="M97 137l12 3" stroke="#fff" strokeWidth="3"/></g>}
     {theme==='hearts'&&<path d="M15 23C2 10-3 31 15 39C33 31 28 10 15 23Z" fill={g('pink')}/>}
     {theme==='summer'&&<g fill={g('gold')}><circle cx="145" cy="20" r="9"/><path d="M145 5v5m0 20v5M130 20h5m20 0h5M134 9l4 4m14 14 4 4M134 31l4-4m14-14 4-4" stroke="#d79a22" strokeWidth="2" strokeLinecap="round"/></g>}
@@ -102,24 +127,42 @@ export function CharacterArt({character,emotion='happy',season='none'}){
   </svg>;
 }
 function CharacterEffects({effect}){
-  if(!['sparkles','hearts','confetti'].includes(effect))return null;
-  return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:5},(_,i)=><span key={i} style={{'--gs-effect-i':i}}>{effect==='hearts'?'♥':effect==='sparkles'?'✦':'●'}</span>)}</span>;
+  const symbols={sparkles:['✦'],hearts:['♥'],confetti:['●'],snow:['❄','·','❅'],festive:['✦','✧','●']};
+  if(!Object.hasOwn(symbols,effect))return null;
+  const seasonal=effect==='snow'||effect==='festive';
+  return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:seasonal?8:5},(_,i)=><span key={i} style={{'--gs-effect-i':i,'--gs-effect-x':(i*37)%93+'%','--gs-effect-delay':(i%4)*.22+'s'}}>{symbols[effect][i%symbols[effect].length]}</span>)}</span>;
 }
-export function CharacterScene({character,settings,lang='ka',preview=false,onClose}){
+export function CharacterScene({character,settings,lang='ka',preview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,interactionNotice='',actionCount=0}){
   const [variant]=useState(()=>Math.random());
   const [greetingDate]=useState(()=>new Date());
   const [waved,setWaved]=useState(false);
+  const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
+  const hasGuideActions=!preview&&settings.interactiveGuide&&actionCount<4;
   const wave=characterInteractionCopy(settings.interaction,lang);
+  const target=Object.hasOwn(CHARACTER_GUIDE_TARGETS,guideTarget)?CHARACTER_GUIDE_TARGETS[guideTarget]:null;
+  const location=conciergePlacement(settings,0);
+  const productCopy=CONCIERGE_PRODUCT_COPY[lang]||CONCIERGE_PRODUCT_COPY.ka;
+  const saleCopy=CONCIERGE_SALE_COPY[lang]||CONCIERGE_SALE_COPY.ka;
+  const money=value=>new Intl.NumberFormat(lang==='ka'?'ka-GE':lang==='ru'?'ru-RU':'en-US',{maximumFractionDigits:2}).format(value)+' ₾';
   const interactive=settings.waveBack&&settings.behavior!=='still';
   const artCharacter=styledCharacter(character,settings);
   const artEmotion=waved?'happy':settings.emotion;
   const fallback=<CharacterArt character={artCharacter} emotion={artEmotion} season={settings.season}/>;
   const use3D=MASCOT_3D_IDS.includes(character.id)&&settings.behavior!=='still'&&settings.appearance?.renderMode!=='vector'&&['none','winter'].includes(resolveCharacterSeason(settings.season));
-  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
+  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-prominence={settings.appearance?.prominence||'enhanced'} data-side={location.side} data-placement={location.placement} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
     <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig">{use3D?<Mascot3DBoundary fallback={fallback}><React.Suspense fallback={fallback}><FlagshipFox3D characterId={character.id} color={artCharacter.color} emotion={artEmotion} behavior={waved?wave.motion:settings.behavior} season={resolveCharacterSeason(settings.season)} lighting={settings.appearance?.lighting} fallback={fallback}/></React.Suspense></Mascot3DBoundary>:fallback}</div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?wave.effect:settings.effect}/>}</div>
     <div className="gs-character-bubble">
-      <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>
-      {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} {wave.emoji}</button>}
+      <strong>{character.name}</strong>{!waved&&advice&&<small className="gs-character-advice-label">{CONCIERGE_ADVICE_LABEL[lang]||CONCIERGE_ADVICE_LABEL.ka}</small>}<span aria-live={interactive?'polite':undefined} data-character-advice={waved?undefined:advice?.topic}>{waved?wave.reply:advice?.text||characterMessage(settings,character,lang,variant,greetingDate)}</span>
+      {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>{setWaved(true);onActivity?.();}}>{wave.button} {wave.emoji}</button>}
+      {!preview&&recommendation&&onRecommend&&<div className="gs-character-recommendation" data-character-sale={recommendation.sale?'true':undefined}><span>{recommendation.sale?saleCopy.intro:productCopy.intro}</span><strong>{recommendation.name}</strong>{recommendation.sale&&<div className="gs-character-sale-prices"><b>{money(recommendation.price)}</b><del>{money(recommendation.oldPrice)}</del><small>{saleCopy.saving}: {money(recommendation.savings)}</small></div>}<button type="button" className="gs-character-guide-action" data-character-product={recommendation.id} onClick={onRecommend}>{recommendation.sale?saleCopy.action:productCopy.action} <span aria-hidden="true">↗</span></button></div>}
+      {!preview&&!recommendation&&target&&onGuide&&<button type="button" className="gs-character-guide-action" data-character-guide={guideTarget} onClick={onGuide}><span aria-hidden="true">↗</span>{target.copy[lang]||target.copy.ka}</button>}
+      {hasGuideActions&&<div className="gs-character-quick-actions" aria-label={lang==='en'?'Assistant actions':lang==='ru'?'Действия помощника':'დამხმარის მოქმედებები'}>
+        {settings.advice?.enabled&&onNextTip&&<button type="button" data-character-next-tip onClick={()=>{setWaved(false);onNextTip();}}>{copy.tip}</button>}
+        {(settings.recommendProducts||settings.saleGuide)&&onNextProduct&&<button type="button" data-character-next-product onClick={()=>{setWaved(false);onNextProduct();}}>{recommendation?.sale?copy.offer:copy.product}</button>}
+        {onThanks&&<button type="button" data-character-thanks onClick={onThanks}>{copy.thanks}</button>}
+      </div>}
+      {interactionNotice&&<small className="gs-character-interaction-notice" role="status">{interactionNotice}</small>}
+      {!preview&&onMute&&<button type="button" className="gs-character-mute" onClick={onMute}>{lang==='en'?'Hide for this visit':lang==='ru'?'Скрыть на этот визит':'ამ ვიზიტზე დამალვა'}</button>}
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
     </div>
   </div>;
@@ -139,27 +182,125 @@ export function CharacterReaction({scenario,lang='ka'}){
     <span className="gs-character-reaction-copy">{scenario.message||scenario.lines[lang]||scenario.lines.ka}</span>
   </span>;
 }
-export default function CharacterMascot({settings,lang,forceReplay=null}){
+export default function CharacterMascot({settings,lang,forceReplay=null,products=[],catalogueReady=false,category='',onOpenProduct}){
   const s=normalizeCharacterSettings(settings);
   const [presentation,setPresentation]=useState(null);
+  const [saleClock,setSaleClock]=useState(()=>Date.now());
+  const dismissRef=useRef(null);
+  const extendRef=useRef(null);
+  const actionsRef=useRef(0);
+  const shownAtRef=useRef(0);
+  const catalogueRef=useRef(null);
+  catalogueRef.current={products,ready:catalogueReady,category,onOpenProduct};
+  const lastRecommendedId=useRef(null);
+  const closeAtRef=useRef(0);
   const settingsKey=JSON.stringify(s);
   useEffect(()=>{
     setPresentation(null);
     const current=JSON.parse(settingsKey);
     const revision=characterSettingsRevision(current);
-    const forced=forceReplay!=null&&forceReplay!==lastForcedReplay;
-    if(!current.enabled||(!forced&&seen(current.frequency,revision)))return;
-    let closeTimer;
-    const showTimer=setTimeout(()=>{
-      if(!forced&&seen(current.frequency,revision))return;
-      if(forced){if(lastForcedReplay===forceReplay)return;lastForcedReplay=forceReplay;}
-      markSeen(current.frequency,revision);
+    const repeat=current.frequency==='repeat';
+    let forced=forceReplay!=null&&forceReplay!==lastForcedReplay;
+    if(!current.enabled||(!repeat&&!forced&&seen(current.frequency,revision)))return;
+    let showTimer,closeTimer,disposed=false;
+    const readyDeadline=Date.now()+current.delay*1000+8000;
+    const clear=()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
+    const schedule=()=>{
+      if(disposed)return;
+      clear();
+      const wait=forced?current.delay*1000:repeat?characterRepeatDelay(current,readRepeat(revision)):current.delay*1000;
+      if(wait!==null)showTimer=setTimeout(show,wait);
+    };
+    const close=(mute=false)=>{
+      clear();setPresentation(null);
+      if(repeat){
+        const record=readRepeat(revision);
+        if(record.count&&shownAtRef.current&&record.at===shownAtRef.current){saveRepeat({...record,at:Math.max(record.at,Date.now()-current.duration*1000),muted:mute||record.muted});}
+        else if(mute)saveRepeat({...record,muted:true});
+        if(mute)return;
+        schedule();
+      }
+    };
+    dismissRef.current=close;
+    extendRef.current=()=>{
+      const next=actionsRef.current+1;
+      const wait=conciergeInteractionDeadline(shownAtRef.current,Date.now(),next);
+      if(wait===null||wait<=0)return false;
+      actionsRef.current=next;
+      clearTimeout(closeTimer);
+      const nextClose=Math.max(closeAtRef.current,Date.now()+wait);
+      closeAtRef.current=nextClose;
+      closeTimer=setTimeout(()=>close(false),Math.max(0,nextClose-Date.now()));
+      return true;
+    };
+    function show(){
+      if(disposed)return;
+      if(visitorBusy()){showTimer=setTimeout(show,5000);return;}
+      if((current.recommendProducts||current.saleGuide||current.guideLinks)&&!catalogueRef.current.ready&&Date.now()<readyDeadline){showTimer=setTimeout(show,250);return;}
+      if(forced&&lastForcedReplay===forceReplay){forced=false;return;}
+      const record=readRepeat(revision);
+      if(!forced&&repeat){
+        const wait=characterRepeatDelay(current,record);
+        if(wait===null)return;
+        // First delay was already observed; subsequent appearances must respect persisted cooldown.
+        if(record.count>0&&wait>0){showTimer=setTimeout(show,wait);return;}
+      }
+      if(!forced&&!repeat&&seen(current.frequency,revision))return;
+      const wasForced=forced;
+      if(forced){lastForcedReplay=forceReplay;forced=false;}
       const now=new Date();
-      const effective=applyCharacterEvent(current,activeCharacterEvent(current,now),lang);
-      setPresentation({character:selectCharacter(effective,now),settings:effective});
-      closeTimer=setTimeout(()=>setPresentation(null),current.duration*1000);
-    },current.delay*1000);
-    return()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
+      const event=activeCharacterEvent(current,now);
+      const winter=winterConciergePresentation(current,{now,index:repeat?record.count:0,lang,event});
+      const effective=winter||applyCharacterEvent(current,event,lang);
+      let character=repeat?nextConciergeCharacter(effective,record,now):selectCharacter(effective,now);
+      const catalogue=catalogueRef.current;
+      const saleEligible=effective.saleGuide&&typeof catalogue.onOpenProduct==='function'&&(effective.saleGuidePriority==='always'||character.id==='deal'||(effective.saleGuidePriority==='alternate'&&repeat&&record.count%2===1));
+      const sale=saleEligible?chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current}):null;
+      if(sale&&!event&&!winter)character=selectCharacter({...effective,rotation:'fixed',character:'deal'},now);
+      if(repeat){
+        if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id});
+      }else markSeen(current.frequency,revision);
+      const placement=conciergePlacement(effective,repeat?record.count:0);
+      const guideTarget=effective.guideLinks?chooseConciergeTarget(Object.keys(CHARACTER_GUIDE_TARGETS).filter(key=>visibleGuideTarget(key)),repeat?record.count:0):null;
+      const recommendation=sale||(effective.recommendProducts&&typeof catalogue.onOpenProduct==='function'?chooseConciergeProduct(catalogue.products,{ready:catalogue.ready,mode:effective.recommendationMode,category:catalogue.category,index:repeat?record.count:0,excludeId:lastRecommendedId.current}):null);
+      if(recommendation)lastRecommendedId.current=recommendation.id;
+      const advice=!event&&!winter&&(!repeat||record.count>0)?chooseConciergeAdvice(effective.advice,{characterId:character.id,target:guideTarget,index:record.count,lang,hasProduct:!!recommendation}):null;
+      actionsRef.current=0;shownAtRef.current=now.getTime();
+      setPresentation({character,settings:{...effective,...placement},guideTarget,recommendationId:recommendation?.id,sale:!!sale,advice,key:now.getTime(),actionCount:0});
+      setSaleClock(now.getTime());
+      closeAtRef.current=now.getTime()+current.duration*1000;
+      closeTimer=setTimeout(()=>close(false),current.duration*1000);
+    }
+    schedule();
+    const visibility=()=>{if(document.visibilityState==='hidden'&&repeat){close(false);}};
+    document.addEventListener('visibilitychange',visibility);
+    return()=>{disposed=true;clear();dismissRef.current=null;extendRef.current=null;document.removeEventListener('visibilitychange',visibility);};
   },[settingsKey,lang,forceReplay]);
-  return presentation?<CharacterScene character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>setPresentation(null)}/>:null;
+  const recommendation=presentation?.recommendationId?(presentation.sale?conciergeSaleProducts(products,catalogueReady,saleClock):conciergeProducts(products,catalogueReady)).find(p=>p.id===presentation.recommendationId)||null:null;
+  useEffect(()=>{
+    if(!recommendation?.sale)return;
+    const timer=setTimeout(()=>setSaleClock(Date.now()),Math.min(24000,Math.max(0,recommendation.endsAt-Date.now()+1)));
+    return()=>clearTimeout(timer);
+  },[recommendation?.sale,recommendation?.endsAt,saleClock]);
+  const act=(type)=>{
+    if(!presentation||!presentation.settings.interactiveGuide||!extendRef.current?.())return;
+    const current=catalogueRef.current;
+    const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
+    const actionCount=actionsRef.current;
+    if(type==='tip'){
+      const tip=nextConciergeAdvice(presentation.settings.advice,presentation.advice,{lang,index:actionCount});
+      setPresentation(previous=>previous?{...previous,advice:tip||previous.advice,interactionNotice:'',actionCount}:previous);
+    }else if(type==='product'){
+      const now=Date.now();
+      const saleOnly=presentation.sale||(!presentation.settings.recommendProducts&&presentation.settings.saleGuide);
+      const available=saleOnly?conciergeSaleProducts(current.products,current.ready,now):conciergeProducts(current.products,current.ready);
+      const alternatives=available.filter(p=>p.id!==presentation.recommendationId);
+      const next=alternatives.length?alternatives[(actionCount-1)%alternatives.length]:null;
+      if(next){lastRecommendedId.current=next.id;setSaleClock(now);}
+      setPresentation(previous=>previous?{...previous,...(next?{recommendationId:next.id,sale:!!next.sale}:{}),interactionNotice:next?'':copy.noMore,actionCount}:previous);
+    }else{
+      setPresentation(previous=>previous?{...previous,interactionNotice:type==='thanks'?copy.reply:'',actionCount}:previous);
+    }
+  };
+  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} advice={presentation.advice} recommendation={recommendation} actionCount={presentation.actionCount} interactionNotice={presentation.interactionNotice} onNextTip={()=>act('tip')} onNextProduct={()=>act('product')} onThanks={()=>act('thanks')} onActivity={()=>act('gesture')} onRecommend={()=>{const current=catalogueRef.current;const product=(presentation.sale?conciergeSaleProducts(current.products,current.ready,Date.now()):conciergeProducts(current.products,current.ready)).find(p=>p.id===presentation.recommendationId);if(product&&current.onOpenProduct?.(product.path))dismissRef.current?.(false);}} guideTarget={presentation.guideTarget} onGuide={()=>{if(guideToSection(presentation.guideTarget))dismissRef.current?.(false);}} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
 }

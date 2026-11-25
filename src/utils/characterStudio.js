@@ -1,3 +1,4 @@
+import {normalizeConciergeAdvice} from './characterAdvice.js';
 // Shared, bounded configuration; unconfigured storefronts remain unchanged.
 export const CHARACTERS = Object.freeze([
   { id:'fox', name:'GeoFox', label:'მელა', color:'#f59e0b', lines:{ka:'გამარჯობა! დღეს რა მაგარს ვიპოვით?',en:'Hi! Let’s find something great today!',ru:'Привет! Найдём что-нибудь классное?'} },
@@ -9,6 +10,10 @@ export const CHARACTERS = Object.freeze([
   { id:'bear', name:'Luxury Bear', label:'დათვი', color:'#926b48', lines:{ka:'კეთილი იყოს შენი მობრძანება. საუკეთესო არჩევანს დრო სჭირდება.',en:'Welcome. Take your time finding your favourite.',ru:'Добро пожаловать. Выбирай с удовольствием.'} },
   { id:'owl', name:'Smart Owl', label:'ბუ', color:'#8c735e', lines:{ka:'გამარჯობა! კარგი აღმოჩენა პატარა დეტალით იწყება.',en:'Hello! Great finds start with the little details.',ru:'Привет! Отличные находки начинаются с мелочей.'} },
   { id:'cheetah', name:'Speed Cheetah', label:'გეპარდი', color:'#dca94f', lines:{ka:'მოვირბინე, რომ სასიამოვნო აღმოჩენები გისურვო!',en:'I dashed over to wish you happy browsing!',ru:'Прибежал пожелать приятных находок!'} },
+  {id:'santa',name:'Geo Santa',label:'სანტა',color:'#c72839',special:'winter',lines:{ka:'სადღესასწაულო საჩუქარს ეძებ? მოდი, ერთად შევარჩიოთ!',en:'Looking for a festive gift? Let’s find one!',ru:'Ищешь праздничный подарок? Давай выберем!'}},
+  {id:'snowman',name:'Snowy',label:'თოვლის კაცი',color:'#e0edf5',special:'winter',lines:{ka:'თოვლიანი განწყობა მოგიტანე! აღმოაჩინე საჩუქრის იდეები.',en:'A little winter magic! Discover gift ideas.',ru:'Немного зимнего волшебства! Открой идеи подарков.'}},
+  {id:'deal',name:'Deal Hunter',label:'შავი პარასკევის დამხმარე',color:'#33333d',special:'sale',lines:{ka:'შეადარე მიმდინარე ფასები და დაათვალიერე ხელმისაწვდომი შეთავაზებები.',en:'Compare current prices and explore available offers.',ru:'Сравни текущие цены и доступные предложения.'}},
+
 ]);
 export const CHARACTER_MOTIONS=Object.freeze(['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak','walk-wave','look-around','point','patrol']);
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
@@ -30,12 +35,12 @@ function normalizeScenarios(raw){
   }));
 }
 const hexColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():fallback;
-export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13,renderMode:'auto',lighting:'studio'});
+export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13,renderMode:'auto',lighting:'studio',prominence:'enhanced'});
 export function normalizeCharacterAppearance(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return {desktopSize:bounded(v.desktopSize,80,144,116),mobileSize:bounded(v.mobileSize,56,100,76),
     lift:bounded(v.lift,0,48,0),bubbleColor:hexColor(v.bubbleColor,'#fffdf7'),
-    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13),renderMode:pick(v.renderMode,['auto','vector'],'auto'),lighting:pick(v.lighting,['studio','daylight','cinematic'],'studio')};
+    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13),renderMode:pick(v.renderMode,['auto','vector'],'auto'),lighting:pick(v.lighting,['studio','daylight','cinematic'],'studio'),prominence:pick(v.prominence,['enhanced','compact'],'enhanced')};
 }
 export function normalizeCharacterPalette(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -52,7 +57,8 @@ export function characterBubbleInk(value){
 }
 export function characterAppearanceStyle(raw){
   const a=normalizeCharacterAppearance(raw);
-  return {'--gs-mascot-desktop':a.desktopSize+'px','--gs-mascot-mobile':a.mobileSize+'px','--gs-mascot-lift':a.lift+'px',
+  const enhanced=a.prominence==='enhanced';
+  return {'--gs-mascot-desktop':(enhanced?Math.max(140,a.desktopSize):a.desktopSize)+'px','--gs-mascot-mobile':(enhanced?Math.max(92,a.mobileSize):a.mobileSize)+'px','--gs-mascot-lift':a.lift+'px',
     '--gs-mascot-bubble':a.bubbleColor,'--gs-mascot-ink':characterBubbleInk(a.bubbleColor),
     '--gs-mascot-radius':{rounded:'16px',pill:'28px',square:'6px'}[a.bubbleShape],
     '--gs-mascot-font':a.fontSize+'px'};
@@ -95,6 +101,9 @@ export const CHARACTER_EVENT_LIMIT=12;
 export const CHARACTER_EVENT_THEMES=Object.freeze({
   custom:{label:'ინდივიდუალური',character:'fox',season:'none',effect:'none',behavior:'wave',lines:{}},
   newyear:{label:'ახალი წელი',character:'panda',season:'winter',effect:'confetti',behavior:'celebrate',lines:{ka:'გილოცავ ახალ წელს!',en:'Happy New Year!',ru:'С Новым годом!'}},
+  santa:{label:'სანტას სადღესასწაულო მისალმება',character:'santa',season:'winter',effect:'festive',behavior:'wave',lines:{ka:'სადღესასწაულო საჩუქრის იდეებს გაეცანი!',en:'Explore festive gift ideas!',ru:'Открой идеи праздничных подарков!'}},
+  snowman:{label:'თოვლის კაცის მისალმება',character:'snowman',season:'winter',effect:'snow',behavior:'jump',lines:{ka:'ზამთრის ჯადოსნურ განწყობას გისურვებ!',en:'Wishing you a magical winter!',ru:'Желаю волшебной зимы!'}},
+  blackfriday:{label:'შავი პარასკევი',character:'deal',season:'none',effect:'sparkles',behavior:'point',lines:{ka:'დაათვალიერე მიმდინარე ფასები და შეარჩიე სასურველი ნივთი.',en:'Explore current prices and find your favourite.',ru:'Посмотри текущие цены и выбери любимый товар.'}},
   valentine:{label:'ვალენტინობა',character:'cat',season:'hearts',effect:'hearts',behavior:'wave',lines:{ka:'სიყვარულით, GEOSTORE!',en:'With love, GEOSTORE!',ru:'С любовью, GEOSTORE!'}},
   summer:{label:'ზაფხული',character:'rabbit',season:'summer',effect:'sparkles',behavior:'dance',lines:{ka:'მზიანი განწყობა გელოდება!',en:'Sunny vibes await!',ru:'Солнечное настроение ждёт!'}},
   celebration:{label:'სადღესასწაულო დღე',character:'robot',season:'none',effect:'confetti',behavior:'celebrate',lines:{ka:'დღეს განსაკუთრებული დღეა!',en:'Today is a special day!',ru:'Сегодня особенный день!'}}
@@ -122,7 +131,7 @@ export function normalizeCharacterEvents(raw){
     return [{id,title:typeof event.title==='string'?event.title.trim().slice(0,60):'',enabled:event.enabled===true,start,end,theme,
       character:pick(event.character,CHARACTERS.map(c=>c.id),preset.character),
       season:pick(event.season,['none','auto','winter','hearts','summer','autumn'],preset.season),
-      effect:pick(event.effect,['none','sparkles','hearts','confetti'],preset.effect),
+      effect:pick(event.effect,['none','sparkles','hearts','confetti','snow','festive'],preset.effect),
       behavior:pick(event.behavior,CHARACTER_MOTIONS,preset.behavior),
       messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof event.messages?.[lang]==='string'?event.messages[lang].trim().slice(0,120):'']))}];
   });
@@ -147,18 +156,22 @@ export function normalizeCharacterSettings(raw){
   const s=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return {
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
-    rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
+    rotation:pick(s.rotation,['fixed','random','daypart','seasonal','sequence'],'fixed'),
     behavior:pick(s.behavior,CHARACTER_MOTIONS,'run-wave'),
     greetingMode:pick(s.greetingMode,['character','funny','time','library',...Object.keys(CHARACTER_GREETING_TONES)],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
-    effect:pick(s.effect,['none','sparkles','hearts','confetti'],'none'),waveBack:s.waveBack===true,
-    interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),
+    winterCelebration:s.winterCelebration===true,winterStyle:pick(s.winterStyle,['alternate','santa','snowman'],'alternate'),winterEffects:s.winterEffects!==false,
+    effect:pick(s.effect,['none','sparkles','hearts','confetti','snow','festive'],'none'),waveBack:s.waveBack===true,
+    interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),interactiveGuide:s.interactiveGuide===true,
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
-    side:pick(s.side,['left','right'],'left'),
+    side:pick(s.side,['left','right','alternate'],'left'),
+    placement:pick(s.placement,['bottom','middle','roam'],'bottom'),guideLinks:s.guideLinks===true,
+    advice:normalizeConciergeAdvice(s.advice),saleGuide:s.saleGuide===true,saleGuidePriority:pick(s.saleGuidePriority,['alternate','always','deal-only'],'alternate'),recommendProducts:s.recommendProducts===true,recommendationMode:pick(s.recommendationMode,['featured','category','variety'],'featured'),
     delay:bounded(s.delay,0,10,2), duration:bounded(s.duration,3,12,6),
-    frequency:pick(s.frequency,['session','daily'],'session'),
+    frequency:pick(s.frequency,['session','daily','repeat'],'session'),
+    repeatInterval:bounded(s.repeatInterval,30,180,45),repeatLimit:bounded(s.repeatLimit,2,8,5),
     pages:pick(s.pages,['home','catalogue'],'home'),
     mobile:s.mobile!==false, desktop:s.desktop!==false,
     message:typeof s.message==='string'?s.message.trim().slice(0,120):'',
@@ -168,9 +181,10 @@ export function normalizeCharacterSettings(raw){
 export function selectCharacter(settings,date=new Date(),random=Math.random){
   const s=normalizeCharacterSettings(settings);
   let id=s.character;
-  if(s.rotation==='random') id=CHARACTERS[Math.max(0,Math.min(CHARACTERS.length-1,Math.floor(random()*CHARACTERS.length)))].id;
+  if(s.rotation==='random'){const pool=CHARACTERS.filter(c=>!c.special);id=pool[Math.max(0,Math.min(pool.length-1,Math.floor(random()*pool.length)))].id;}
+  if(s.rotation==='sequence')id=CHARACTERS.filter(c=>!c.special)[0].id;
   if(s.rotation==='daypart') id=date.getHours()<12?'fox':date.getHours()<18?'rabbit':'panda';
-  if(s.rotation==='seasonal') id=[ 'panda','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','panda' ][date.getMonth()];
+  if(s.rotation==='seasonal') id=[ 'snowman','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','santa' ][date.getMonth()];
   return styledCharacter(CHARACTERS.find(c=>c.id===id)||CHARACTERS[0],s);
 }
 export function resolveCharacterSeason(value,date=new Date()){
@@ -255,4 +269,89 @@ export function characterAlreadySeen(value,frequency,now=Date.now()){
   if(frequency==='session') return value==='1';
   const stamp=Number(value);
   return value!=null&&value!==''&&Number.isFinite(stamp)&&stamp>0&&stamp<=now&&now-stamp<86400000;
+}
+
+// Repeated concierge appearances are bounded per browser session and publication.
+export const CHARACTER_REPEAT_KEY='geostore_character_repeat_v1';
+export function characterRepeatRecord(raw,revision){
+  try{
+    const r=typeof raw==='string'?JSON.parse(raw):raw;
+    if(r?.revision===revision&&Number.isInteger(r.count)&&r.count>=0&&r.count<=8&&Number.isFinite(r.at)&&r.at>=0){
+      return {revision,count:r.count,at:r.at,lastId:pick(r.lastId,CHARACTERS.map(c=>c.id),null),muted:r.muted===true};
+    }
+  }catch{}
+  return {revision,count:0,at:0,lastId:null,muted:false};
+}
+export function characterRepeatDelay(settings,record,now=Date.now()){
+  const s=normalizeCharacterSettings(settings);
+  if(!s.enabled||record.muted||record.count>=s.repeatLimit)return null;
+  if(!record.count)return s.delay*1000;
+  const elapsed=record.at<=now?now-record.at:0;
+  return Math.max(0,(s.duration+s.repeatInterval)*1000-elapsed);
+}
+export function nextConciergeCharacter(settings,record,date=new Date(),random=Math.random){
+  const s=normalizeCharacterSettings(settings);
+  if(s.rotation!=='sequence'&&s.rotation!=='random')return selectCharacter(s,date,random);
+  const pool=CHARACTERS.filter(c=>!c.special);
+  const previous=pool.findIndex(c=>c.id===record.lastId);
+  if(s.rotation==='sequence')return styledCharacter(pool[(previous+1)%pool.length],s);
+  const available=pool.filter(c=>c.id!==record.lastId);
+  const value=random();
+  const i=Number.isFinite(value)?Math.max(0,Math.min(available.length-1,Math.floor(value*available.length))):0;
+  return styledCharacter(available[i],s);
+}
+
+// Fixed placements and section identifiers never accept arbitrary selectors or URLs.
+export const CHARACTER_GUIDE_TARGETS=Object.freeze({
+ categories:Object.freeze({selector:'#gs-video-collections',copy:{ka:'კატეგორიების ნახვა',en:'Explore categories',ru:'Смотреть категории'}}),
+ products:Object.freeze({selector:'#gs-catalog-products',copy:{ka:'პროდუქტების ნახვა',en:'Explore products',ru:'Смотреть товары'}}),
+ flash:Object.freeze({selector:'[data-visual-editor-target="flashSale"]',copy:{ka:'მიმდინარე აქციები',en:'Current offers',ru:'Текущие акции'}})
+});
+export function conciergePlacement(settings,index=0){
+ const s=normalizeCharacterSettings(settings),n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ return {side:s.side==='alternate'?(n%2?'right':'left'):s.side,
+   placement:s.placement==='roam'?(n%3===1?'middle':'bottom'):s.placement};
+}
+export function chooseConciergeTarget(available,index=0){
+ const allowed=['categories','products','flash'].filter(key=>available.includes(key));
+ if(!allowed.length)return null;
+ const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ return allowed[n%allowed.length];
+}
+
+// Recurring winter celebration uses the store's calendar, not a visitor's timezone.
+// Explicit calendar events always have higher priority.
+export function winterConciergePresentation(settings,{now=new Date(),index=0,lang='ka',event=null}={}){
+ const s=normalizeCharacterSettings(settings);
+ const day=characterCalendarDay(now);
+ if(!s.enabled||!s.winterCelebration||event||!day)return null;
+ const mmdd=day.slice(5);
+ if(!(mmdd>='12-01'||mmdd<='01-14'))return null;
+ const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ const id=s.winterStyle==='alternate'?(n%2?'snowman':'santa'):s.winterStyle;
+ const preset=CHARACTER_EVENT_THEMES[id];
+ const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+ return {...s,character:id,rotation:'fixed',season:'winter',effect:s.winterEffects?preset.effect:'none',behavior:preset.behavior,message:preset.lines[locale]};
+}
+
+export const CONCIERGE_PRESETS=Object.freeze({
+  balanced:{label:'დაბალანსებული',description:'რჩევები, პროდუქტები და მონაცვლეობა — ყოველდღიური რეჟიმი.'},
+  active:{label:'აქტიური დამხმარე',description:'უფრო ხშირი გამოჩენა, სხვადასხვა პოზიცია და ინტერაქცია.'},
+  quiet:{label:'მინიმალისტური',description:'ერთი მშვიდი მისალმება, დამატებითი შეთავაზებების გარეშე.'},
+  winter:{label:'საახალწლო',description:'Santa და Snowy ზამთრის განრიგით, საჩუქრების იდეებით.'},
+  sale:{label:'აქციების დამხმარე',description:'Deal Hunter და მხოლოდ მოქმედი შეთავაზებები.'}
+});
+export function applyConciergePreset(raw,key){
+ const s=normalizeCharacterSettings(raw);
+ if(!Object.hasOwn(CONCIERGE_PRESETS,key))return s;
+ const common={rotation:'sequence',frequency:'repeat',repeatInterval:60,repeatLimit:4,pages:'catalogue',side:'alternate',placement:'bottom',behavior:'walk-wave',delay:2,duration:10,guideLinks:true,recommendProducts:true,recommendationMode:'featured',saleGuide:true,saleGuidePriority:'alternate',interactiveGuide:true,waveBack:true,interaction:'wave',winterCelebration:false,season:'none',effect:'sparkles'};
+ const modes={
+  balanced:{},
+  active:{repeatInterval:30,repeatLimit:8,duration:12,placement:'roam',behavior:'patrol',recommendationMode:'variety'},
+  quiet:{rotation:'fixed',frequency:'session',pages:'home',side:'left',behavior:'bow',delay:3,duration:6,guideLinks:false,recommendProducts:false,saleGuide:false,interactiveGuide:false,waveBack:false,effect:'none'},
+  winter:{winterCelebration:true,winterStyle:'alternate',winterEffects:true,repeatInterval:45,repeatLimit:6,saleGuide:false,effect:'sparkles',recommendationMode:'variety'},
+  sale:{character:'deal',rotation:'fixed',behavior:'point',saleGuide:true,saleGuidePriority:'always',recommendProducts:false,repeatInterval:60,repeatLimit:4}
+ };
+ const scenarioUpdates=Object.fromEntries(Object.entries(s.scenarios).map(([k,v])=>[k,{...v,enabled:key==='quiet'?false:key==='sale'?k==='flash':true}]));
+ return normalizeCharacterSettings({...s,...common,...modes[key],enabled:s.enabled,mobile:s.mobile,desktop:s.desktop,advice:{...s.advice,enabled:key!=='quiet',topic:key==='sale'?'prices':key==='winter'?'gifts':'auto'},scenarios:scenarioUpdates,appearance:{...s.appearance,prominence:key==='quiet'?'compact':'enhanced'}});
 }

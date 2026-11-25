@@ -3794,7 +3794,7 @@ export default function App() {
   return (
     <div data-signature-commerce={activeTab !== 'admin' && siteSettings?.visualDesign?.signature2026 === true ? "true" : undefined} className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
       {!authLoading && activeTab === 'store' && !searchQuery && canDisplayCharacter(publishedCharacterSettings, { route: catalogueRoute?.kind, mobile: characterMobile, blocked: Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal) }) && (
-        <Suspense fallback={null}><CharacterMascot settings={publishedCharacterSettings} lang={currentLang} forceReplay={activeCharacterTest}/></Suspense>
+        <Suspense fallback={null}><CharacterMascot settings={publishedCharacterSettings} lang={currentLang} forceReplay={activeCharacterTest} products={filteredProducts} catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current} category={selectedCategory} onOpenProduct={navigateCatalogue}/></Suspense>
       )}
       {activeTab === 'admin' && hasSettingsAccess && storefrontRemoteConflict && (
         <div role="alert" className="fixed top-2 left-2 right-2 z-[60] mx-auto max-h-[35vh] max-w-2xl overflow-y-auto rounded-xl border border-amber-400 bg-amber-950 px-3 py-2 text-xs leading-relaxed text-amber-50 shadow-xl sm:top-3 sm:left-3 sm:right-3 sm:px-4 sm:py-3 sm:text-sm" aria-live="assertive">

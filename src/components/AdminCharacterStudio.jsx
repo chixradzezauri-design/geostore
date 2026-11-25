@@ -1,26 +1,32 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason} from '../utils/characterStudio.js';
+import {CONCIERGE_ADVICE,chooseConciergeAdvice} from '../utils/characterAdvice.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason,CONCIERGE_PRESETS,applyConciergePreset} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
 const choices={
-  rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური']],
+  rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური'],['sequence','მონაცვლეობით — სხვადასხვა პერსონაჟი']],
   behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა'],['walk-wave','მოსეირნება და მისალმება'],['look-around','დათვალიერება'],['point','მინიშნება'],['patrol','გადაადგილება, გაჩერება და მისალმება']],
   greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა'],['friendly','მეგობრული'],['premium','დახვეწილი / პრემიუმ'],['minimal','მოკლე და მინიმალისტური']],
   interaction:[['wave','საპასუხო მისალმება'],['high-five','ხუთიანი'],['cheer','გამხნევება']],
-  effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი']],
+  effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი'],['snow','მსუბუქი თოვა'],['festive','სადღესასწაულო ნათება']],
   emotion:[['happy','ღიმილი'],['wink','თვალის ჩაკვრა'],['surprise','გაკვირვება']],
   season:[['none','გამორთული'],['auto','ავტომატურად სეზონის მიხედვით'],['winter','ზამთარი'],['hearts','გულები'],['summer','ზაფხული'],['autumn','შემოდგომა']],
-  side:[['left','მარცხნიდან'],['right','მარჯვნიდან']],
-  frequency:[['session','ერთხელ სესიაში'],['daily','ერთხელ 24 საათში']],
+  side:[['left','მარცხნიდან'],['right','მარჯვნიდან'],['alternate','მხარეების მონაცვლეობა']],
+  placement:[['bottom','ქვედა კუთხე'],['middle','ეკრანის შუა მხარე (კომპიუტერზე)'],['roam','სხვადასხვა პოზიცია']],
+  frequency:[['session','ერთხელ სესიაში'],['daily','ერთხელ 24 საათში'],['repeat','განმეორებით — ინტერვალით']],
   pages:[['home','მხოლოდ მთავარი გვერდი'],['catalogue','მთავარი და კატეგორიები']]
 };
 export default function AdminCharacterStudio({siteSettings,publishedSettings=null,onTestPublishedCharacter,actualMobile=false,setSiteSettings,busy=false,lang='ka'}){
   const s=normalizeCharacterSettings(siteSettings?.characterStudio);
   const [preview,setPreview]=useState(null);
+  const [presetKey,setPresetKey]=useState('balanced');
+  const [presetUndo,setPresetUndo]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
   const [libraryLang,setLibraryLang]=useState('ka');
+  const [adviceLang,setAdviceLang]=useState('ka');
+  const [adviceTopic,setAdviceTopic]=useState('style');
   const [eventId,setEventId]=useState(null);
   const [eventPreview,setEventPreview]=useState(null);
   const today=characterCalendarDay();
@@ -48,6 +54,17 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     setPreview(null);setEventPreview(null);
     setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings({...previous?.characterStudio,...patch}),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary}}));
   };
+  const applyPreset=()=>{
+    setPreview(null);setEventPreview(null);
+    const previous=siteSettings?.characterStudio;
+    const next=applyConciergePreset(previous,presetKey);
+    setPresetUndo({previous,applied:JSON.stringify(next)});
+    setSiteSettings(value=>({...value,characterStudio:next}));
+  };
+  const undoPreset=()=>{
+    if(!presetUndo||JSON.stringify(s)!==presetUndo.applied)return;
+    setSiteSettings(value=>({...value,characterStudio:presetUndo.previous}));setPresetUndo(null);setPreview(null);setEventPreview(null);
+  };
   const updateAppearance=(patch)=>update({appearance:{...s.appearance,...patch}});
   const updatePalette=(color)=>update({palette:{...s.palette,[s.character]:color}});
   useEffect(()=>{
@@ -59,7 +76,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const choose=(key,title)=><label className="min-w-0 space-y-1 block"><span className="text-xs font-semibold text-slate-300">{title}</span><select aria-label={title} className={field} value={s[key]} disabled={busy} onChange={e=>update({[key]:e.target.value})}>{choices[key].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>;
   return <section data-character-studio className="gs-character-admin rounded-2xl border border-emerald-500/30 bg-slate-900 p-3 sm:p-4 space-y-3 min-w-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">GEOSTORE-ის მოცულობითი პერსონაჟები და მისალმება</p></div>
+      <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">12 პერსონაჟი · რჩევები · შეთავაზებები</p></div>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
     </div>
     <div data-character-publish-status role="status" className="rounded-lg border border-slate-600 bg-slate-950 p-3 text-xs text-slate-200 space-y-1">
@@ -77,6 +94,17 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div><span>დაგეგმილი ღონისძიებები</span><strong>{s.calendarEnabled?enabledEvents:'გამორთული'}</strong></div>
     </div>
     {s.enabled&&!s.mobile&&!s.desktop&&<p role="status" className="rounded-lg border border-amber-500/50 bg-amber-950/40 p-2 text-xs text-amber-200">პერსონაჟი არ გამოჩნდება: ჩართეთ მინიმუმ ერთი ტიპის მოწყობილობა.</p>}
+    <div className="gs-concierge-presets" data-character-presets>
+      <div><h4>მზა მართვის რეჟიმები</h4><p>აირჩიე რეჟიმი და გამოიყენე მონახაზზე. გამოქვეყნება ცალკე მოქმედებაა.</p></div>
+      <div className="gs-concierge-preset-controls">
+        <label className="block text-xs text-slate-300">რეჟიმი<select aria-label="მზა რეჟიმი" className={field} value={presetKey} disabled={busy} onChange={e=>setPresetKey(e.target.value)}>{Object.entries(CONCIERGE_PRESETS).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
+        <button type="button" data-character-apply-preset disabled={busy} onClick={applyPreset} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">რეჟიმის გამოყენება</button>
+      </div>
+      <p>{CONCIERGE_PRESETS[presetKey].description}</p>
+      {presetUndo&&JSON.stringify(s)===presetUndo.applied&&<div role="status" className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-200"><span>რეჟიმი გამოყენებულია მონახაზზე.</span><button type="button" data-character-undo-preset disabled={busy} onClick={undoPreset} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">გაუქმება</button></div>}
+      <div className="gs-concierge-summary" aria-label="აქტიური ფუნქციები">{[['რჩევები',s.advice.enabled],['პროდუქტები',s.recommendProducts],['აქციები',s.saleGuide],['ინტერაქცია',s.interactiveGuide],['საახალწლო',s.winterCelebration],['მინიშნებები',s.guideLinks]].map(([label,on])=><span key={label} data-enabled={on?'true':'false'}>{on?'✓':'–'} {label}</span>)}</div>
+      <p>რეჟიმები არ ცვლის საიტზე ჩართვის ღილაკს, მოწყობილობების არჩევანს, შენს ტექსტებს, ფერებს ან ინდივიდუალურ კალენდარს.</p>
+    </div>
     <h4 className="text-sm font-bold text-white">პერსონაჟის არჩევა</h4>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="mx-auto w-20 max-w-full"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
@@ -84,11 +112,37 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     <details className="gs-character-admin-section" data-character-motion>
       <summary>მოძრაობა, დრო და მოწყობილობები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-      {choose('rotation','პერსონაჟის შერჩევა')}{choose('behavior','მოძრაობა')}{choose('emotion','ემოცია')}{choose('season','სეზონური აქსესუარი')}{choose('side','გამოსვლის მხარე')}{choose('frequency','გამოჩენის სიხშირე')}{choose('pages','გვერდები')}
+      {choose('rotation','პერსონაჟის შერჩევა')}{choose('behavior','მოძრაობა')}{choose('emotion','ემოცია')}{choose('season','სეზონური აქსესუარი')}{choose('side','გამოსვლის მხარე')}{choose('placement','გამოჩენის პოზიცია')}{choose('frequency','გამოჩენის სიხშირე')}{choose('pages','გვერდები')}
+      {s.frequency==='repeat'&&<><label className="space-y-1 block text-xs text-slate-300">შუალედი გამოჩენებს შორის: {s.repeatInterval} წმ<input aria-label="გამოჩენებს შორის შუალედი" type="range" className="w-full" min="30" max="180" step="15" value={s.repeatInterval} disabled={busy} onChange={e=>update({repeatInterval:Number(e.target.value)})}/></label><label className="space-y-1 block text-xs text-slate-300">მაქსიმუმ ერთ ვიზიტზე: {s.repeatLimit}<input aria-label="გამოჩენის ლიმიტი" type="range" className="w-full" min="2" max="8" value={s.repeatLimit} disabled={busy} onChange={e=>update({repeatLimit:Number(e.target.value)})}/></label><p className="text-xs text-slate-300 sm:col-span-2">მონაცვლეობითი რეჟიმი თითო ჯერზე სხვა პერსონაჟს აჩვენებს. დახურვა აჩერებს მიმდინარე მისალმებას, ხოლო ამ ვიზიტზე დამალვა — ყველა შემდგომ გამოჩენას.</p></>}
+      <label className="flex items-center gap-2 text-sm text-slate-100 sm:col-span-2"><input type="checkbox" checked={s.guideLinks} disabled={busy} onChange={e=>update({guideLinks:e.target.checked})}/> კატეგორიებზე, პროდუქტებსა და მიმდინარე აქციებზე გადასვლის მინიშნებები</label>
+      <label className="flex items-center gap-2 text-sm text-slate-100 sm:col-span-2"><input type="checkbox" checked={s.recommendProducts} disabled={busy} onChange={e=>update({recommendProducts:e.target.checked})}/> პერსონაჟმა შემომთავაზოს ხელმისაწვდომი პროდუქტები</label>
+      {s.recommendProducts&&<label className="space-y-1 block text-xs text-slate-300">რეკომენდაციის ტიპი<select aria-label="რეკომენდაციის ტიპი" className={field} value={s.recommendationMode} disabled={busy} onChange={e=>update({recommendationMode:e.target.value})}><option value="featured">გამორჩეული პროდუქტები</option><option value="category">დათვალიერებული კატეგორიის მიხედვით</option><option value="variety">მრავალფეროვანი არჩევანი</option></select></label>}
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">დაყოვნება: {s.delay} წმ</span><input className="w-full" type="range" min="0" max="10" value={s.delay} disabled={busy} onChange={e=>update({delay:Number(e.target.value)})}/></label>
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">ხანგრძლივობა: {s.duration} წმ</span><input className="w-full" type="range" min="3" max="12" value={s.duration} disabled={busy} onChange={e=>update({duration:Number(e.target.value)})}/></label>
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
       </div>
+    </details>
+    <details className="gs-character-admin-section" data-character-winter-settings>
+      <summary>საახალწლო განწყობა — Santa & Snowy</summary>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterCelebration} disabled={busy} onChange={e=>update({winterCelebration:e.target.checked})}/> ყოველწლიური საახალწლო რეჟიმი (1 დეკემბერი – 14 იანვარი)</label>
+      <label className="block text-xs text-slate-300">საახალწლო პერსონაჟი<select aria-label="საახალწლო პერსონაჟი" className={field} value={s.winterStyle} disabled={busy} onChange={e=>update({winterStyle:e.target.value})}><option value="alternate">Santa და Snowy მონაცვლეობით</option><option value="santa">მხოლოდ Santa</option><option value="snowman">მხოლოდ Snowy</option></select></label>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterEffects} disabled={busy} onChange={e=>update({winterEffects:e.target.checked})}/> თოვლისა და სადღესასწაულო ნათების ეფექტები</label>
+      <p className="text-xs text-slate-300">თბილისის დროით მოქმედებს. ინდივიდუალური კალენდრის ღონისძიებას უპირატესობა აქვს. ეფექტები მხოლოდ პერსონაჟთან ჩნდება და შემცირებული მოძრაობის რეჟიმში არ მუშაობს.</p>
+    </details>
+    <details className="gs-character-admin-section" data-character-sale-settings>
+      <summary>Deal Hunter — აქციების დამხმარე</summary>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.saleGuide} disabled={busy} onChange={e=>update({saleGuide:e.target.checked})}/> მოქმედი აქციების შეთავაზება</label>
+      <label className="block text-xs text-slate-300">აქციების გამოჩენა<select aria-label="აქციების გამოჩენა" className={field} value={s.saleGuidePriority} disabled={busy} onChange={e=>update({saleGuidePriority:e.target.value})}><option value="alternate">სხვა რჩევებთან მონაცვლეობით</option><option value="always">მოქმედ აქციას უპირატესობა</option><option value="deal-only">მხოლოდ Deal Hunter-ის გამოჩენისას</option></select></label>
+      <p className="text-xs text-slate-300">აჩვენებს მხოლოდ გადამოწმებულ, მარაგში არსებულ მოქმედ აქციას და ფასთა ნამდვილ სხვაობას. ვადის გასვლისთანავე შეთავაზება ქრება. ვარიანტიანი პროდუქტები, რომელთა ფასებიც შეიძლება განსხვავდებოდეს, არ გამოიყენება ამ ფასის მინიშნებაში.</p>
+    </details>
+    <details className="gs-character-admin-section" data-character-advice-settings>
+      <summary>რჩევები და საჩუქრების იდეები</summary>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.advice.enabled} disabled={busy} onChange={e=>update({advice:{...s.advice,enabled:e.target.checked}})}/> რჩევების ჩართვა</label>
+      <label className="block text-xs text-slate-300">რჩევების მიმართულება<select aria-label="რჩევების მიმართულება" className={field} value={s.advice.topic} disabled={busy} onChange={e=>update({advice:{...s.advice,topic:e.target.value}})}><option value="auto">ავტომატურად — პერსონაჟისა და სიტუაციის მიხედვით</option>{Object.entries(CONCIERGE_ADVICE).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><label className="block text-xs text-slate-300">რჩევის თემა<select aria-label="რჩევის თემა" className={field} value={adviceTopic} onChange={e=>setAdviceTopic(e.target.value)}>{Object.entries(CONCIERGE_ADVICE).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label><label className="block text-xs text-slate-300">რჩევის ენა<select aria-label="რჩევის ენა" className={field} value={adviceLang} onChange={e=>setAdviceLang(e.target.value)}>{CHARACTER_GREETING_LANGS.map(code=><option key={code} value={code}>{({ka:'ქართული',en:'English',ru:'Русский'})[code]}</option>)}</select></label></div>
+      <label className="block text-xs text-slate-300">ჩემი რჩევა (ცარიელი = მზა ტექსტები)<textarea aria-label="ჩემი რჩევა" className={field} rows={2} maxLength={120} disabled={busy} value={siteSettings?.characterStudio?.advice?.custom?.[adviceTopic]?.[adviceLang]??''} onChange={e=>{const value=e.target.value;setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);return {...previous,characterStudio:{...previous?.characterStudio,advice:{...current.advice,custom:{...current.advice.custom,...previous?.characterStudio?.advice?.custom,[adviceTopic]:{...current.advice.custom[adviceTopic],...previous?.characterStudio?.advice?.custom?.[adviceTopic],[adviceLang]:value}}}}};});}}/></label>
+      <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200"><strong>რჩევის მაგალითი</strong><p className="mt-1">{chooseConciergeAdvice({...s.advice,enabled:true,topic:adviceTopic},{lang:adviceLang})?.text}</p></div>
+      <p className="text-xs text-slate-300">განმეორებით რეჟიმში პირველი გამოჩენა მისალმებაა, შემდეგი — რჩევები. კალენდრის აქტიური ღონისძიების ტექსტს უპირატესობა აქვს.</p>
     </details>
     <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary,message}}));}}/></label>
     <details className="gs-character-admin-section" data-character-greetings>
@@ -97,6 +151,8 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
         {choose('greetingMode','მისალმების რეჟიმი')}{choose('effect','ვიზუალური ეფექტი')}
         <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.waveBack} disabled={busy} onChange={e=>update({waveBack:e.target.checked})}/> მომხმარებელს შეუძლია საპასუხოდ ხელი დაუქნიოს ან სხვა ჟესტი აირჩიოს</label>
         {s.waveBack&&choose('interaction','საპასუხო ჟესტი')}
+        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.interactiveGuide} disabled={busy} onChange={e=>update({interactiveGuide:e.target.checked})}/> ინტერაქტიული დამხმარე — სხვა რჩევა, სხვა ნივთი, მადლობა</label>
+        <p className="text-xs text-slate-300">ღილაკები მუშაობს მხოლოდ ჩართული რჩევებისა და რეკომენდაციების ფარგლებში. თითო გამოჩენაზე მაქსიმუმ 4 მოქმედება და 24 წამი.</p>
       </div>
       {s.message&&<p className="text-xs text-amber-300">ზემოთ ჩაწერილი ინდივიდუალური ტექსტი უპირატესია ყველა რეჟიმზე. ბიბლიოთეკის გამოსაყენებლად გაასუფთავეთ ის ველი.</p>}
       {s.greetingMode==='funny'&&<div className="space-y-1 text-xs text-slate-300">{FUNNY_GREETINGS.map((line,i)=><p key={i}>{line[lang]||line.ka}</p>)}</div>}
@@ -116,7 +172,8 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         {[[ 'desktopSize','კომპიუტერზე ზომა',80,144 ],['mobileSize','ტელეფონზე ზომა',56,100],['lift','დამატებითი სიმაღლე ქვედა კიდიდან',0,48],['fontSize','ტექსტის ზომა',12,15]].map(([key,label,min,max])=><label key={key} className="block space-y-1 text-xs text-slate-300">{label}: {s.appearance[key]} px<input aria-label={label} className="w-full" type="range" min={min} max={max} value={s.appearance[key]} disabled={busy} onChange={e=>updateAppearance({[key]:Number(e.target.value)})}/></label>)}
         <label className="block space-y-1 text-xs text-slate-300">არჩეული პერსონაჟის ფერი<input aria-label="პერსონაჟის ფერი" type="color" className="block h-10 w-full rounded-lg border border-slate-600 bg-slate-950" value={s.palette[s.character]} disabled={busy} onChange={e=>updatePalette(e.target.value)}/></label>
-        <label className="block space-y-1 text-xs text-slate-300">პერსონაჟების ვიზუალი<select aria-label="პერსონაჟების ვიზუალი" className={field} value={s.appearance.renderMode} disabled={busy} onChange={e=>updateAppearance({renderMode:e.target.value})}><option value="auto">მსუბუქი 3D (ავტომატური)</option><option value="vector">ვექტორული სარეზერვო მოდელი</option></select><span className="block text-slate-400">ცხრავე პერსონაჟის 3D მუშაობს მისალმების ანიმაციაში; შეუთავსებელ მოწყობილობაზე და ზოგი სეზონური აქსესუარისას ავტომატურად გამოიყენება ვექტორული მოდელი.</span></label>
+        <label className="block space-y-1 text-xs text-slate-300">პერსონაჟების ვიზუალი<select aria-label="პერსონაჟების ვიზუალი" className={field} value={s.appearance.renderMode} disabled={busy} onChange={e=>updateAppearance({renderMode:e.target.value})}><option value="auto">მსუბუქი 3D (ავტომატური)</option><option value="vector">ვექტორული სარეზერვო მოდელი</option></select><span className="block text-slate-400">თორმეტივე პერსონაჟის 3D მუშაობს მისალმების ანიმაციაში; შეუთავსებელ მოწყობილობაზე და ზოგი სეზონური აქსესუარისას ავტომატურად გამოიყენება ვექტორული მოდელი.</span></label>
+        <label className="block space-y-1 text-xs text-slate-300">ხილვადობა<select aria-label="ხილვადობა" className={field} value={s.appearance.prominence} disabled={busy} onChange={e=>updateAppearance({prominence:e.target.value})}><option value="enhanced">გამოკვეთილი — უფრო დიდი და შესამჩნევი</option><option value="compact">კომპაქტური — მითითებული ზომა</option></select></label>
         <label className="block space-y-1 text-xs text-slate-300">3D განათება<select aria-label="3D განათება" className={field} value={s.appearance.lighting} disabled={busy} onChange={e=>updateAppearance({lighting:e.target.value})}><option value="studio">სტუდიური — რბილი მოცულობა</option><option value="daylight">დღის განათება — ნათელი</option><option value="cinematic">კინემატოგრაფიული — თბილი და კონტრასტული</option></select></label>
         <label className="block space-y-1 text-xs text-slate-300">მისალმების ფონი<input aria-label="მისალმების ფონი" type="color" className="block h-10 w-full rounded-lg border border-slate-600 bg-slate-950" value={s.appearance.bubbleColor} disabled={busy} onChange={e=>updateAppearance({bubbleColor:e.target.value})}/></label>
         <label className="block space-y-1 text-xs text-slate-300">ბუშტის ფორმა<select className={field} value={s.appearance.bubbleShape} disabled={busy} onChange={e=>updateAppearance({bubbleShape:e.target.value})}><option value="rounded">მომრგვალებული</option><option value="pill">ოვალური</option><option value="square">კუთხეებიანი</option></select></label>
