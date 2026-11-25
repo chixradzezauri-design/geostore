@@ -3720,6 +3720,7 @@ export default function App() {
 
       <div className="w-full max-w-full overflow-visible">
         <Header
+          mobileNavBlocked={Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal)}
           siteSettings={siteSettings}
           visualDesign={activeTab !== 'admin' ? siteSettings?.visualDesign : null}
           setActiveTab={setActiveTab}

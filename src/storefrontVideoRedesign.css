@@ -1168,6 +1168,41 @@
 .gs-visual-preview-frame--mobile .gs-signature-service-link:nth-child(n+3) {border-top:1px solid var(--gs-line,#e2d9ce);}
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) {grid-template-columns:minmax(0,1fr)!important;}
 
+
+/* Signature 2026 stage 7 — safe-area-aware mobile navigation and compact header. */
+.gs-signature-mobile-nav {display:none;}
+@media(max-width:640px){
+  .geostore-shell.geostore-fashion-store .gs-signature-mobile-nav {
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:fixed;
+    inset:auto 0 0;z-index:81;gap:0;
+    background:var(--gs-surface,#fffdfa);border-top:1px solid var(--gs-line,#e2d9ce);
+    padding:4px max(8px,env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+    box-shadow:0 -4px 18px rgba(32,28,25,.08);
+  }
+  .geostore-shell.geostore-fashion-store:has(.gs-signature-header) {padding-bottom:calc(76px + env(safe-area-inset-bottom))!important;}
+  .geostore-shell.geostore-fashion-store:has(.gs-signature-mobile-nav) :is(.gs-floating-ai,.gs-floating-support):not(.gs-video-support-open) {display:none!important;}
+  .geostore-shell.geostore-fashion-store:has(.gs-product-modal) .gs-signature-mobile-nav {display:none!important;}
+  .geostore-shell.geostore-fashion-store:has(.gs-signature-header) .gs-site-header .gs-brand-name {max-width:100%;overflow-wrap:anywhere;}
+  .geostore-shell.geostore-fashion-store:has(.gs-signature-header) .gs-site-header .gs-brand-button {flex:1 1 auto;min-width:0!important;}
+  .geostore-shell.geostore-fashion-store:has(.gs-signature-header) .gs-site-header .gs-menu-toggle {flex-shrink:0;min-width:44px!important;min-height:44px!important;}
+  .geostore-shell.geostore-fashion-store:has(.gs-signature-header) .gs-main-menu {max-height:calc(100dvh - 160px - env(safe-area-inset-bottom))!important;}
+}
+.gs-visual-preview-frame--mobile .gs-signature-mobile-nav {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:relative;
+  padding:4px 6px;background:var(--gs-surface,#fffdfa);border-top:1px solid var(--gs-line,#e2d9ce);
+}
+.gs-signature-mobile-nav button {
+  position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  gap:4px;min-width:0;min-height:52px;padding:4px 2px;border:0;border-radius:8px;
+  color:var(--gs-muted,#62574d);background:transparent;box-shadow:none;font-size:11px;line-height:1.2;cursor:pointer;
+}
+.gs-signature-mobile-nav button svg {width:21px;height:21px;flex-shrink:0;}
+.gs-signature-mobile-nav button span {max-width:100%;overflow-wrap:anywhere;text-align:center;}
+.gs-signature-mobile-nav button[aria-current="page"],.gs-signature-mobile-nav button[aria-expanded="true"] {color:var(--gs-ink,#201c19);font-weight:700;background:var(--gs-surface-soft,#ebe5dd);}
+.gs-signature-mobile-nav button small {position:absolute;top:0;left:calc(50% + 8px);font-size:10px;min-width:16px;height:16px;padding:0 3px;border-radius:10px;background:var(--gs-ink,#201c19);color:var(--gs-surface,#fffdfa);line-height:16px;}
+.gs-signature-mobile-nav button:focus-visible {outline:2px solid var(--gs-accent,#a38450);outline-offset:-2px;}
+@media(max-width:359px){.gs-signature-mobile-nav button{font-size:10px;}}
+
 /* Batch 10 — explicit editor values beat visual defaults in both live and internal preview.
    Attribute guards prevent inherited values from accidentally styling another element. */
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) [data-visual-editor-target][style*="--gs-video-explicit-color:"] { color:var(--gs-video-explicit-color)!important; }
