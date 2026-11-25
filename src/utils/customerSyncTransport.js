@@ -1,7 +1,7 @@
 // Staged transport only. No calls until explicitly enabled and mounted by a
 // future release-approved UI. Errors never erase the local cart or wishlist.
-import {validateWishlistSnapshot,projectWishlistIds} from './wishlistSyncContract.js';
-import {validateCartSyncSnapshot,normalizeCartIntentLine} from './cartSyncContract.js';
+import {validateWishlistSnapshot,projectWishlistIds,applyVersionedWishlistIntent} from './wishlistSyncContract.js';
+import {validateCartSyncSnapshot,normalizeCartIntentLine,applyCartSyncIntent} from './cartSyncContract.js';
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const validEpoch=n=>Number.isSafeInteger(n)&&n>=0;
@@ -16,7 +16,7 @@ export function createCustomerSyncTransport({client,enabled=false,getContext}={}
   if(enabled!==true)return {status:'disabled'};
   const contract=contracts[kind];
   if(!contract||!client||typeof client.rpc!=='function'||typeof getContext!=='function')return {status:'invalid'};
-  let ctx,known,args;
+  let ctx,known,args,predicted;
   try{
    ctx=getContext(kind);
    if(!ctx||ctx.authLoading!==false||typeof ctx.ownerId!=='string'||!uuid.test(ctx.ownerId)||!validEpoch(ctx.epoch))return {status:'inactive'};
@@ -30,10 +30,12 @@ export function createCustomerSyncTransport({client,enabled=false,getContext}={}
      if(typeof intent?.present!=='boolean')return {status:'invalid'};
      args.p_product_id=projectWishlistIds([{id:intent.productId}])[0];
      args.p_present=intent.present;
+     predicted=applyVersionedWishlistIntent(known,known.revision,{productId:args.p_product_id,present:args.p_present});
     }else{
      if(!['set','remove'].includes(intent?.type))return {status:'invalid'};
      args.p_action=intent.type;
      args.p_line=normalizeCartIntentLine(intent.line);
+     predicted=applyCartSyncIntent(known,known.revision,{type:args.p_action,line:args.p_line});
     }
    }
   }catch{return {status:'invalid'};}
@@ -67,7 +69,8 @@ export function createCustomerSyncTransport({client,enabled=false,getContext}={}
     const snapshot=contract.validate(operation==='read'?result.data:result.data.snapshot);
     if(operation==='change'){
      const rev=known.revision;
-     if(accepted&&snapshot.revision!==rev+1)return {status:'invalid-response'};
+     // A new revision alone is not proof that the intended mutation occurred.
+     if(accepted&&(status!==predicted.status||!same(snapshot,predicted.snapshot)))return {status:'invalid-response'};
      if(status==='conflict'&&snapshot.revision<=rev)return {status:'invalid-response'};
      if(['limit','unavailable'].includes(status)&&(!same(snapshot,known)))return {status:'invalid-response'};
     }

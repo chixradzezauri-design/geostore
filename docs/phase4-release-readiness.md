@@ -14,3 +14,6 @@ Previous PR head 1b7f92f48e28287aaa9d68825f816e7be60a24fb passed build, dependen
 
 ## Publication decision
 Do not label the whole phase production-ready. A reviewed application-only release could include fully tested non-gated changes if release owner explicitly chooses that scope; do not silently activate or apply incomplete server features. Require complete head CI, diff audit, hosted rollout plan and rollback plan; no additional paid environment or preview created.
+
+## 4BH — synchronization acknowledgement review
+Wishlist and cart SQL RPC arguments/statuses reviewed against the staged contracts. Transport now independently computes the exact expected snapshot and accepted status before sending, rejecting a matching revision with wrong membership, order, quantity or extra lines. No automatic local overwrite or journal clearing on ambiguous acknowledgement. Added unit regressions. This fixes a candidate transport validation gap; it does not mount cross-device synchronization or authorize a database release. Full owner-context hydration, conflict UX, checkout reconciliation and real Auth still required.

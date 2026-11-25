@@ -57,3 +57,23 @@ test('concurrent requests blocked and stale snapshots rejected',async()=>{
  f.context.snapshot={revision:5,ids:['new']};
  finish({data:{revision:3,ids:[]}});assert.deepEqual(await p,{status:'stale'});
 });
+
+test('accepted wishlist response must match exact predicted membership and status',async()=>{
+ for(const data of [
+  {status:'changed',snapshot:{revision:3,ids:['p1','wrong']}},
+  {status:'unchanged',snapshot:{revision:3,ids:['p1','p2']}},
+  {status:'changed',snapshot:{revision:3,ids:['p2','p1']}}
+ ]){
+  const f=fixture(async()=>({data}));
+  assert.deepEqual(await f.transport.changeWishlist({productId:'p2',present:true}),{status:'invalid-response'});
+  assert.deepEqual(f.context.snapshot,{revision:2,ids:['p1']});
+ }
+});
+test('accepted cart response cannot silently change quantity or another line',async()=>{
+ const line={productId:'p1',size:null,color:null,variantId:null,giftWrap:false,vipWarranty:false,quantity:2};
+ for(const lines of [[{...line,quantity:1}],[line,{...line,productId:'wrong'}]]){
+  const f=fixture(async()=>({data:{status:'accepted',snapshot:{revision:3,lines}}}));
+  f.context.snapshot={revision:2,lines:[]};
+  assert.deepEqual(await f.transport.changeCart({type:'set',line}),{status:'invalid-response'});
+ }
+});
