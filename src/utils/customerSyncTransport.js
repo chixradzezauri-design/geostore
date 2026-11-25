@@ -12,7 +12,7 @@ const contracts={
 };
 export function createCustomerSyncTransport({client,enabled=false,getContext}={}){
  let busy=false;
- async function request(kind,operation,intent){
+ async function request(kind,operation,intent,guard=null){
   if(enabled!==true)return {status:'disabled'};
   const contract=contracts[kind];
   if(!contract||!client||typeof client.rpc!=='function'||typeof getContext!=='function')return {status:'invalid'};
@@ -24,6 +24,7 @@ export function createCustomerSyncTransport({client,enabled=false,getContext}={}
    args={p_expected_owner:ctx.ownerId};
    if(operation==='change'){
     if(!known)return {status:'not-ready'};
+    if(guard&&(guard.ownerId!==ctx.ownerId||guard.epoch!==ctx.epoch||!same(contract.validate(guard.base),known)))return {status:'review'};
     args.p_expected_revision=known.revision;
     if(kind==='wishlist'){
      if(typeof intent?.present!=='boolean')return {status:'invalid'};
@@ -47,7 +48,12 @@ export function createCustomerSyncTransport({client,enabled=false,getContext}={}
   };
   busy=true;
   try{
-   if(!active())return {status:'inactive'};
+   const beforeSend=active();
+   if(!beforeSend)return {status:'inactive'};
+   if(guard&&operation==='change'){
+    try{if(!same(contract.validate(beforeSend.snapshot),known))return {status:'review'};}
+    catch{return {status:'review'};}
+   }
    let result;
    try{result=await client.rpc('customer_'+kind+'_'+operation,args);}
    catch{return {status:active()?'uncertain':'inactive'};}
@@ -74,8 +80,8 @@ export function createCustomerSyncTransport({client,enabled=false,getContext}={}
  }
  return {
   readWishlist:()=>request('wishlist','read'),
-  changeWishlist:intent=>request('wishlist','change',intent),
+  changeWishlist:(intent,guard)=>request('wishlist','change',intent,guard),
   readCart:()=>request('cart','read'),
-  changeCart:intent=>request('cart','change',intent)
+  changeCart:(intent,guard)=>request('cart','change',intent,guard)
  };
 }
