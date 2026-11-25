@@ -34,3 +34,25 @@ export function chooseConciergeAdvice(raw,{characterId='',target=null,index=0,la
  return {topic,text:s.custom[topic][locale]||lines[Math.floor(n/topics.length)%lines.length][locale]};
 }
 export const CONCIERGE_ADVICE_LABEL={ka:'პატარა რჩევა',en:'A little tip',ru:'Небольшой совет'};
+
+export function nextConciergeAdvice(raw,previous,{lang='ka',index=0}={}){
+ const s=normalizeConciergeAdvice(raw);
+ if(!s.enabled)return null;
+ const locale=langs.includes(lang)?lang:'ka';
+ const allowed=s.topic==='auto'?topics:[s.topic];
+ const options=allowed.flatMap(topic=>{
+  const custom=s.custom[topic][locale];
+  return [...new Set([custom,...CONCIERGE_ADVICE[topic].lines.map(line=>line[locale])].filter(Boolean))].map(text=>({topic,text}));
+ }).filter(item=>item.text!==previous?.text);
+ const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ return options.length?options[n%options.length]:null;
+}
+export const CONCIERGE_INTERACTIVE_COPY=Object.freeze({
+ ka:{tip:'სხვა რჩევა',product:'სხვა ნივთი',offer:'სხვა აქცია',thanks:'მადლობა!',reply:'სასიამოვნოა შენი დახმარება!',noMore:'სხვა ხელმისაწვდომი შეთავაზება ჯერ არ არის.'},
+ en:{tip:'Another tip',product:'Another item',offer:'Another offer',thanks:'Thanks!',reply:'Happy to help!',noMore:'No other available offer right now.'},
+ ru:{tip:'Другой совет',product:'Другой товар',offer:'Другая акция',thanks:'Спасибо!',reply:'Рад помочь!',noMore:'Других доступных предложений пока нет.'}
+});
+export function conciergeInteractionDeadline(start,now,actions){
+ if(!Number.isFinite(start)||!Number.isFinite(now)||now<start||!Number.isInteger(actions)||actions<1||actions>4)return null;
+ return Math.max(0,Math.min(24000-(now-start),9000));
+}

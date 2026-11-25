@@ -232,3 +232,5 @@
 @keyframes gs-character-snow{0%{opacity:0;transform:translate3d(-4px,-16px,0) rotate(0)}20%{opacity:.9}80%{opacity:.8}100%{opacity:0;transform:translate3d(10px,56px,0) rotate(65deg)}}
 @keyframes gs-character-festive{0%{opacity:0;transform:translateY(4px) scale(.5)}30%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-32px) scale(.7)}}
 @media(prefers-reduced-motion:reduce){.gs-character-effects{display:none!important}}
+
+.gs-character-quick-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;pointer-events:auto}.gs-character-quick-actions button{border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;min-height:44px;padding:5px 8px;font:650 11px/1.25 system-ui,sans-serif;cursor:pointer}.gs-character-quick-actions button:focus-visible{outline:2px solid #2563eb;outline-offset:2px}.gs-character-interaction-notice{display:block;margin-top:5px;font-size:11px;font-weight:600}.gs-character-scene:has(.gs-character-quick-actions) .gs-character-bubble{max-height:min(300px,48vh);pointer-events:auto}

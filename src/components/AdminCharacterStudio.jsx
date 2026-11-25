@@ -127,6 +127,8 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
         {choose('greetingMode','მისალმების რეჟიმი')}{choose('effect','ვიზუალური ეფექტი')}
         <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.waveBack} disabled={busy} onChange={e=>update({waveBack:e.target.checked})}/> მომხმარებელს შეუძლია საპასუხოდ ხელი დაუქნიოს ან სხვა ჟესტი აირჩიოს</label>
         {s.waveBack&&choose('interaction','საპასუხო ჟესტი')}
+        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.interactiveGuide} disabled={busy} onChange={e=>update({interactiveGuide:e.target.checked})}/> ინტერაქტიული დამხმარე — სხვა რჩევა, სხვა ნივთი, მადლობა</label>
+        <p className="text-xs text-slate-300">ღილაკები მუშაობს მხოლოდ ჩართული რჩევებისა და რეკომენდაციების ფარგლებში. თითო გამოჩენაზე მაქსიმუმ 4 მოქმედება და 24 წამი.</p>
       </div>
       {s.message&&<p className="text-xs text-amber-300">ზემოთ ჩაწერილი ინდივიდუალური ტექსტი უპირატესია ყველა რეჟიმზე. ბიბლიოთეკის გამოსაყენებლად გაასუფთავეთ ის ველი.</p>}
       {s.greetingMode==='funny'&&<div className="space-y-1 text-xs text-slate-300">{FUNNY_GREETINGS.map((line,i)=><p key={i}>{line[lang]||line.ka}</p>)}</div>}
