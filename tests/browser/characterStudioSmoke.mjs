@@ -16,7 +16,8 @@ async function installCharacterFixture(context,readState){
 async function verifyDisabledPublishedConfig(browser,host,width){
   const context=await browser.newContext(fixtureContextOptions(width));
   try{
-    await installCharacterFixture(context,()=>({enabled:false,activeSale:false}));
+    let enabled=false;
+    await installCharacterFixture(context,()=>({enabled,activeSale:false,appearance:{renderMode:'vector'}}));
     await context.addInitScript(()=>{
       localStorage.setItem('geostore_site_settings',JSON.stringify({characterStudio:{enabled:true,delay:0,message:'Unpublished fixture'}}));
       sessionStorage.removeItem('geostore_character_seen_v1');
@@ -31,7 +32,29 @@ async function verifyDisabledPublishedConfig(browser,host,width){
     assert.equal(rows[0].published_config.siteSettings.characterStudio.enabled,false,'Disabled published fixture actually delivered');
     await page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
     await page.waitForTimeout(800);
-    assert.equal(await page.locator('.gs-character-scene:not(.gs-character-preview-scene)').count(),0,'Unpublished local configuration cannot enable mascot');
+    const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
+    assert.equal(await scene.count(),0,'Unpublished local configuration cannot enable mascot');
+    // A newly published configuration must appear in an already open browser.
+    const refresh=async()=>{
+      const [response]=await Promise.all([
+        page.waitForResponse(r=>r.url().includes('/rest/v1/storefront_config')&&r.request().method()==='GET'&&r.ok()),
+        page.evaluate(()=>window.dispatchEvent(new Event('focus')))
+      ]);
+      return response.json();
+    };
+    enabled=true;
+    assert.equal((await refresh())[0].published_config.siteSettings.characterStudio.enabled,true);
+    await scene.waitFor({state:'visible',timeout:10000});
+    assert.match(await scene.innerText(),/Character fixture/);
+    await scene.locator('.gs-character-dismiss').click();
+    await scene.waitFor({state:'detached'});
+    await refresh();
+    await page.waitForTimeout(500);
+    assert.equal(await scene.count(),0,'Refreshing unchanged publication cannot replay greeting');
+    enabled=false;
+    assert.equal((await refresh())[0].published_config.siteSettings.characterStudio.enabled,false);
+    await page.waitForTimeout(300);
+    assert.equal(await scene.count(),0);
     assert.deepEqual(errors,[]);
   }finally{await context.close();}
 }
