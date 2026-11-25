@@ -1018,6 +1018,8 @@ export default function AdminDashboardPro({
   setDeliveryFees
 }) {
   const [adminTab, setAdminTab] = useState('command');
+  const [flashWorkspaceTab,setFlashWorkspaceTab]=useState('pricing');
+  const [flashDesignOpened,setFlashDesignOpened]=useState(false);
   const [adminVisualPreviewTab, setAdminVisualPreviewTab] = useState('orders');
   const adminSessionVersion = useRef(0);
   const adminSessionActiveRef = useRef(Boolean(adminLoggedIn));
@@ -7455,6 +7457,14 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
             </h3>
+            {visibleAdminTab==='discounts'&&isOwner&&<div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-3" data-gs-flash-workspace="true">
+              <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wide text-amber-300">FLASH STUDIO</p><h4 className="text-sm font-black text-white break-words">{siteSettings?.visualDesign?.copy?.flashSaleTitle||'ფლეშ აქციის მართვა'}</h4><p className="text-xs text-slate-300">სახელი, დიზაინი, პროდუქტები და განრიგი ერთ განყოფილებაში.</p></div>
+              <div className="grid grid-cols-2 gap-2" role="group" aria-label="აქციის სამუშაო სივრცე">
+                <button type="button" aria-pressed={flashWorkspaceTab==='pricing'} onClick={()=>setFlashWorkspaceTab('pricing')} className="min-h-11 rounded-lg border border-slate-600 px-2 py-2 text-xs font-bold text-slate-200 aria-pressed:bg-emerald-400 aria-pressed:text-slate-950">ფასები და განრიგი</button>
+                <button type="button" aria-pressed={flashWorkspaceTab==='design'} onClick={()=>{setFlashDesignOpened(true);setFlashWorkspaceTab('design');}} className="min-h-11 rounded-lg border border-slate-600 px-2 py-2 text-xs font-bold text-slate-200 aria-pressed:bg-amber-300 aria-pressed:text-slate-950">სახელი და დიზაინი</button>
+              </div>
+            </div>}
+            <div data-gs-flash-pricing="true" hidden={visibleAdminTab==='discounts'&&isOwner&&flashWorkspaceTab==='design'} className="space-y-4">
             {flashSaleAdminSummary.count > 0 && (
               <div className="gs-admin-flash-sale-active" aria-live="polite">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -7526,6 +7536,16 @@ export default function AdminDashboardPro({
               </p>
             </form>
             {isOwner && <AdminFlashSchedule client={supabase} form={flashSaleForm} products={products} plannedStart={flashSalePlannedStart} immediateBusy={isApplyingFlashSale} sessionVersion={adminSessionVersion.current} isCurrentSession={isCurrentAdminSession} onScheduled={()=>setFlashSalePlannedStart('')} />}
+            </div>
+            {visibleAdminTab==='discounts'&&isOwner&&flashDesignOpened&&<div hidden={flashWorkspaceTab!=='design'} data-gs-flash-design="true" className="min-w-0">
+              <React.Suspense fallback={<AdminSectionLoading/>}>
+                <StorefrontVisualEditor campaignOnly key={'flash-design-'+adminUserId}
+                  siteSettings={siteSettings} setSiteSettings={setSiteSettings}
+                  categoriesList={safeCategories} bannersList={bannersList||[]} products={products||[]} formatPrice={formatPrice}
+                  isOwner={isOwner} onSaveStorefrontDraft={onSaveStorefrontDraft} onRestoreStorefrontVersion={onRestoreStorefrontVersion}
+                  storefrontDraftBusy={storefrontDraftBusy} onPublishStorefront={onPublishStorefront} storefrontPublishBusy={storefrontPublishBusy}/>
+              </React.Suspense>
+            </div>}
           </div>
         )}
 
