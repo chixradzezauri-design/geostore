@@ -1,4 +1,5 @@
 import InstallAppDialog from './components/InstallAppDialog.jsx';
+import PwaStatusNotice from './components/PwaStatusNotice.jsx';
 import {getInstallPlatform,isStandaloneApp} from './utils/pwaInstall.js';
 // src/App.jsx
 // GEOSTORE — Supabase Auth integration
@@ -3687,6 +3688,8 @@ export default function App() {
           setCurrLang={setCurrLang}
         />
       </div>
+
+      <PwaStatusNotice lang={currentLang}/>
 
       {adminLoggedIn && !authLoading && (
         <div className="geostore-admin-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 flex justify-end box-border">

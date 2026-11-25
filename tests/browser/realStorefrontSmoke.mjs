@@ -5,6 +5,7 @@ import { runStage46ProductPurchaseScenarios } from './stage46PurchaseScenarios.m
 import { runStage49AccountSwitchScenario } from './stage49AccountSwitchScenarios.mjs';
 import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
 import {runCatalogueSeoHttpSmoke} from './catalogueSeoHttpSmoke.mjs';
+import {runPwaOfflineSmoke} from './pwaOfflineSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -243,6 +244,7 @@ try {
   await runStage46ProductPurchaseScenarios(browser, host);
   await runStage49AccountSwitchScenario(browser, host);
   await runAdminWorkspaceSmoke(browser, host);
+  await runPwaOfflineSmoke(browser);
 
   // Stage 48: exercise Safari's WebKit engine with the exact same fully
   // intercepted catalogue. This is not a native iPhone Safari test.
