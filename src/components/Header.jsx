@@ -58,6 +58,7 @@ export default function Header({
     if (typeof setIsAuthOpen === 'function') setIsAuthOpen(true);
     closeMenu();
   };
+  const openProfile = () => currentUser ? goTo('profile') : openAuth('login');
   const runAction = (action) => {
     if (typeof action === 'function') action(true);
     closeMenu();
@@ -172,13 +173,13 @@ export default function Header({
         {signature && <div className="gs-signature-actions">
           <button type="button" aria-label={searchLabel} aria-expanded={activeTab === 'store' && searchVisible} aria-controls={activeTab === 'store' ? searchId : undefined} onClick={openSearch}><Search aria-hidden="true" /></button>
           <button type="button" aria-label={`${t.wishlist || 'ფავორიტები'} (${wishlistCount})`} onClick={() => goTo('wishlist')}><Heart aria-hidden="true" />{wishlistCount > 0 && <span aria-hidden="true">{wishlistCount}</span>}</button>
-          <button type="button" aria-label={t.profile || 'პროფილი'} onClick={() => currentUser ? goTo('profile') : openAuth('login')}><User aria-hidden="true" /></button>
+          <button type="button" aria-label={t.profile || 'პროფილი'} onClick={openProfile}><User aria-hidden="true" /></button>
           <button type="button" aria-label={`${t.cart || 'კალათა'} (${cartCount})`} onClick={() => goTo('cart')}><ShoppingBag aria-hidden="true" />{cartCount > 0 && <span aria-hidden="true">{cartCount}</span>}</button>
         </div>}
       </div>
 
       {activeTab === 'store' && (
-        <div data-visual-editor-target="header.search" style={visualStyle('header.search')} className={`gs-header-search-row${signature && !searchVisible ? ' gs-signature-search-closed' : ''}`} id={searchId} role="search">
+        <div data-visual-editor-target="header.search" style={visualStyle('header.search')} className="gs-header-search-row" data-signature-search-closed={signature && !searchVisible ? 'true' : undefined} id={searchId} role="search">
           <label className="gs-header-search">
             <Search aria-hidden="true" />
             <input
@@ -222,7 +223,7 @@ export default function Header({
               <span>{currentUser ? (currentUser.name || currentUser.email || t.profile) : mainMenuLabel}</span>
             </div>
             {currentUser ? (
-              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-account" aria-current={activeTab === 'profile' ? 'page' : undefined} onClick={() => goTo('profile')}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-account" aria-current={activeTab === 'profile' ? 'page' : undefined} onClick={openProfile}>
                 <User aria-hidden="true" />
                 <span>{t.profile || 'პროფილი'}</span>
               </button>

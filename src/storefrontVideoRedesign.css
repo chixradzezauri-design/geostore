@@ -1022,7 +1022,7 @@
 .gs-signature-actions svg,.gs-signature-search-dismiss svg {width:20px;height:20px;flex-shrink:0;}
 .gs-signature-actions button span {position:absolute;top:2px;right:0;min-width:16px;height:16px;padding:0 3px;border-radius:20px;background:var(--gs-ink,#201c19);color:var(--gs-surface,#fffdfa);font-size:10px;line-height:16px;}
 .gs-signature-header :is(.gs-signature-category-nav button,.gs-signature-actions button,.gs-signature-search-dismiss):focus-visible {outline:2px solid var(--gs-accent,#a38450);outline-offset:2px;}
-:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-signature-search-closed {display:none!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-header-search-row[data-signature-search-closed="true"] {display:none!important;}
 @media(max-width:1023px) {
   .gs-signature-category-nav {display:none;}
   :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header:where(.gs-signature-header) .gs-menu-toggle {order:-1;}
