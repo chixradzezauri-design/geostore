@@ -33,7 +33,9 @@ test('responsive layout values are clamped and invalid values are ignored', () =
   });
 
   assert.equal(design.responsive.mobile.layout.heroHeight, 680);
-  assert.equal(design.responsive.mobile.layout.productColumns, 5);
+  assert.equal(design.responsive.mobile.layout.productColumns, 6);
+  assert.equal(normalizeStorefrontVisualDesign({ responsive: { mobile: { layout: { productColumns: 1 } } } }).responsive.mobile.layout.productColumns, 2);
+  assert.equal(normalizeStorefrontVisualDesign({ responsive: { mobile: { layout: { productColumns: 2 } } } }).responsive.mobile.layout.productColumns, 2);
   assert.equal(Object.hasOwn(design.responsive.mobile.layout, 'contentWidth'), false);
 });
 
