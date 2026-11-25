@@ -10,6 +10,10 @@ test('dedicated admin modules use section-local lazy imports',()=>{
  assert.ok(source.includes("visibleAdminTab === 'admin_visual_editor' && isOwner && ("));
  assert.ok(source.includes('adminVisualDesignReady ? ('));
  for(const [tab,name] of [['vendors','AdminSupplierWorkspace'],['vendors','AdminPurchaseWorkspace'],['users','AdminMarketingSegments']]){
-  assert.ok(source.includes("isOwner && visibleAdminTab === '"+tab+"' && <React.Suspense fallback={<AdminSectionLoading />}><"+name));
+  const prefix="isOwner && visibleAdminTab === '"+tab+"' && <React.Suspense fallback={<AdminSectionLoading />}><"+name;
+  const block=source.split('\n').find(line=>line.includes(prefix));
+  assert.ok(block,name+' is owner/tab guarded');
+  assert.ok(block.trim().endsWith('/></React.Suspense>}'),name+' closes the child before Suspense');
+  assert.ok(!block.includes('fallback={<AdminSectionLoading /></React.Suspense>'),name+' has a valid fallback');
  }
 });

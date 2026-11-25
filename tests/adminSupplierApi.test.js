@@ -46,7 +46,8 @@ test('supplier API rejects a response parsed after session invalidation',async()
 test('server workspace remains separate from local storage and requires explicit import',()=>{
  const component=readFileSync(new URL('../src/components/AdminSupplierWorkspace.jsx',import.meta.url),'utf8');
  const dashboard=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',import.meta.url),'utf8');
- assert.ok(dashboard.includes("isOwner && visibleAdminTab === 'vendors' && <AdminSupplierWorkspace"));
+ assert.ok(dashboard.includes("isOwner && visibleAdminTab === 'vendors' && <React.Suspense fallback={<AdminSectionLoading />}><AdminSupplierWorkspace"));
+ assert.match(dashboard,/isOwner && visibleAdminTab === 'vendors' && <React\.Suspense fallback=\{<AdminSectionLoading \/>\}><AdminSupplierWorkspace[^\n]*\/>\s*<\/React\.Suspense>\}/);
  assert.ok(component.includes('planLegacySupplierImport(localRows,rows)'));
  assert.ok(component.includes('window.confirm('));
  assert.ok(component.includes("void run('saving',api=>api.create(candidate))"));
