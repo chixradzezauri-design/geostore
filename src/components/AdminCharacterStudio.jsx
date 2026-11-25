@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
@@ -20,6 +20,13 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
   const [libraryLang,setLibraryLang]=useState('ka');
+  const [eventId,setEventId]=useState(null);
+  const [eventPreview,setEventPreview]=useState(null);
+  const today=characterCalendarDay();
+  const event=s.events.find(item=>item.id===eventId)||s.events[0];
+  const activeEvent=activeCharacterEvent(s);
+  const updateEvent=(patch)=>{setPreview(null);setEventPreview(null);setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);return {...previous,characterStudio:{...current,greetingLibrary:previous?.characterStudio?.greetingLibrary??current.greetingLibrary,events:current.events.map(item=>item.id===event?.id?{...item,...previous?.characterStudio?.events?.find(raw=>raw.id===item.id),...patch}:item)}};});};
+  const addEvent=()=>{if(s.events.length>=CHARACTER_EVENT_LIMIT)return;const id='event-'+Date.now().toString(36);update({events:[...s.events,{id,title:'ახალი ღონისძიება',enabled:false,start:today,end:today,theme:'custom'}]});setEventId(id);};
   const scenario=s.scenarios[scenarioKey];
   const updateScenario=(patch)=>{
     setSiteSettings(previous=>{
@@ -29,7 +36,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   };
   const scenarioPreview=getCharacterScenario({...s,enabled:true,mobile:true,desktop:true,scenarios:{...s.scenarios,[scenarioKey]:{...scenario,enabled:true}}},scenarioKey,{mobile:previewMobile,eligible:true});
   const update=(patch)=>{
-    setPreview(null);
+    setPreview(null);setEventPreview(null);
     setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings({...previous?.characterStudio,...patch}),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary}}));
   };
   const updateAppearance=(patch)=>update({appearance:{...s.appearance,...patch}});
@@ -39,6 +46,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
     const id=setTimeout(()=>setPreview(null),(preview.settings.delay+preview.settings.duration)*1000);
     return()=>clearTimeout(id);
   },[preview]);
+  useEffect(()=>{if(!eventPreview)return;const id=setTimeout(()=>setEventPreview(null),(eventPreview.settings.delay+eventPreview.settings.duration)*1000);return()=>clearTimeout(id);},[eventPreview]);
   const choose=(key,title)=><label className="min-w-0 space-y-1 block"><span className="text-xs font-semibold text-slate-300">{title}</span><select className={field} value={s[key]} disabled={busy} onChange={e=>update({[key]:e.target.value})}>{choices[key].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>;
   return <section data-character-studio className="rounded-2xl border border-emerald-500/30 bg-slate-900 p-4 space-y-4 min-w-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -90,6 +98,34 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       <span className="text-sm">GEOSTORE · გადახედვა</span>
       {preview&&<PreviewPlayback key={preview.key} preview={preview} lang={lang}/>}
     </div>
+    <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-calendar>
+      <summary className="cursor-pointer text-sm font-bold text-white">ღონისძიებების კალენდარი</summary>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.calendarEnabled} disabled={busy} onChange={e=>update({calendarEnabled:e.target.checked})}/> კალენდრის ჩართვა</label>
+        <span className="text-xs text-slate-300">თბილისის დრო · {today} · {s.events.length}/{CHARACTER_EVENT_LIMIT}</span>
+        <button type="button" disabled={busy||s.events.length>=CHARACTER_EVENT_LIMIT} onClick={addEvent} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">ღონისძიების დამატება</button>
+      </div>
+      <p className="text-xs text-slate-300">{activeEvent?'მოქმედი: '+(activeEvent.title||activeEvent.start):'დღეს სპეციალური ღონისძიება არ მოქმედებს.'} პერიოდები მოიცავს ორივე თარიღს. გადაფარვისას ზედა ჩანაწერს აქვს უპირატესობა; სხვა დროს მოქმედებს ჩვეულებრივი მისალმება. სიხშირისა და მოწყობილობის წესები უცვლელია.</p>
+      {s.events.length>0&&<div className="space-y-3">
+        <label className="block text-xs text-slate-300">ღონისძიება<select className={field} value={event.id} onChange={e=>setEventId(e.target.value)}>{s.events.map(item=><option key={item.id} value={item.id}>{item.title||'ღონისძიება'} · {item.start||'—'} – {item.end||'—'}{item.enabled?' · ჩართული':''}</option>)}</select></label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="block text-xs text-slate-300">სახელი<input className={field} maxLength={60} value={siteSettings?.characterStudio?.events?.find(item=>item.id===event.id)?.title??event.title} disabled={busy} onChange={e=>updateEvent({title:e.target.value})}/></label>
+          <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={event.enabled} disabled={busy||!event.start||!event.end||event.start>event.end} onChange={e=>updateEvent({enabled:e.target.checked})}/> ღონისძიება ჩართულია</label>
+          {['start','end'].map(key=><label key={key} className="block text-xs text-slate-300">{key==='start'?'დაწყების თარიღი':'დასრულების თარიღი'}<input className={field} type="date" min="2000-01-01" max="2099-12-31" value={event[key]} disabled={busy} onChange={e=>updateEvent({[key]:e.target.value,enabled:false})}/></label>)}
+          <label className="block text-xs text-slate-300">თემა<select className={field} value={event.theme} disabled={busy} onChange={e=>{const theme=e.target.value,p=CHARACTER_EVENT_THEMES[theme];updateEvent({theme,character:p.character,season:p.season,effect:p.effect,behavior:p.behavior});}}>{Object.entries(CHARACTER_EVENT_THEMES).map(([key,preset])=><option key={key} value={key}>{preset.label}</option>)}</select></label>
+          <label className="block text-xs text-slate-300">პერსონაჟი<select className={field} value={event.character} disabled={busy} onChange={e=>updateEvent({character:e.target.value})}>{CHARACTERS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          {['behavior','effect','season'].map(key=><label className="block text-xs text-slate-300" key={key}>{({behavior:'ანიმაცია',effect:'ეფექტი',season:'აქსესუარი'})[key]}<select className={field} value={event[key]} disabled={busy} onChange={e=>updateEvent({[key]:e.target.value})}>{choices[key].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>)}
+        </div>
+        {event.start&&event.end&&event.start>event.end&&<p role="alert" className="text-xs text-rose-300">დასრულება დაწყებამდე ვერ იქნება.</p>}
+        {CHARACTER_GREETING_LANGS.map(code=><label key={code} className="block text-xs text-slate-300">მისალმება ({code})<input className={field} maxLength={120} value={siteSettings?.characterStudio?.events?.find(item=>item.id===event.id)?.messages?.[code]??event.messages[code]} disabled={busy} onChange={e=>updateEvent({messages:{...event.messages,[code]:e.target.value}})}/></label>)}
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950" onClick={()=>{const settings=applyCharacterEvent(s,event,lang);setEventPreview({settings,character:selectCharacter(settings),key:Date.now()});}}>ღონისძიების ანიმაციის ნახვა</button>
+          <button type="button" className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white" disabled={busy||s.events[0].id===event.id} onClick={()=>update({events:[event,...s.events.filter(item=>item.id!==event.id)]})}>უმაღლესი პრიორიტეტი</button>
+          <button type="button" className="rounded-lg border border-rose-500/50 px-3 py-2 text-xs text-rose-200" disabled={busy} onClick={()=>{update({events:s.events.filter(item=>item.id!==event.id)});setEventId(null);}}>ღონისძიების წაშლა</button>
+        </div>
+        {eventPreview&&<div className="gs-character-preview" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}><PreviewPlayback key={eventPreview.key} preview={eventPreview} lang={lang}/></div>}
+      </div>}
+    </details>
     <div className="border-t border-slate-700 pt-4 space-y-3" data-character-scenarios>
       <h4 className="text-sm font-bold text-white">პერსონაჟების სპეციალური სცენარები</h4>
       <label className="block space-y-1 text-xs text-slate-300">სცენარი<select className={field} value={scenarioKey} onChange={e=>setScenarioKey(e.target.value)}>{Object.entries(CHARACTER_SCENARIOS).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>

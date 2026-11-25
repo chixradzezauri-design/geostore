@@ -114,3 +114,29 @@ test('interaction and effects are opt-in and validated',()=>{
   assert.equal(normalizeCharacterSettings({waveBack:true,effect:'hearts',behavior:'celebrate'}).waveBack,true);
   assert.equal(normalizeCharacterSettings({behavior:'sneak'}).behavior,'sneak');
 });
+
+import {characterCalendarDay,normalizeCharacterEvents,activeCharacterEvent,applyCharacterEvent} from '../src/utils/characterStudio.js';
+test('calendar uses Tbilisi day and inclusive event periods, first match wins',()=>{
+  const now=new Date('2026-12-31T20:00:00Z');
+  assert.equal(characterCalendarDay(now),'2027-01-01');
+  const events=[{id:'first',enabled:true,start:'2027-01-01',end:'2027-01-01',theme:'newyear'},{id:'second',enabled:true,start:'2026-12-30',end:'2027-01-03',theme:'summer'}];
+  const s={enabled:true,calendarEnabled:true,events,frequency:'daily',message:'normal'};
+  const event=activeCharacterEvent(s,now);
+  assert.equal(event.id,'first');
+  const effective=applyCharacterEvent(s,event,'en');
+  assert.equal(effective.message,'Happy New Year!');
+  assert.equal(effective.character,'panda');
+  assert.equal(effective.frequency,'daily');
+  assert.equal(activeCharacterEvent({...s,calendarEnabled:false},now),null);
+  assert.equal(activeCharacterEvent({...s,enabled:false},now),null);
+  assert.equal(activeCharacterEvent(s,new Date('2027-01-04T12:00:00Z')),null);
+});
+test('invalid dates and disabled events cannot activate; limits and localized override hold',()=>{
+  const entries=normalizeCharacterEvents([{id:'bad',enabled:true,start:'2026-02-30',end:'2027-01-01'},{id:'bad',enabled:true},{id:'off',enabled:false,start:'2027-01-01',end:'2027-01-01'}]);
+  assert.equal(entries.length,2);assert.equal(entries[0].start,'');
+  assert.equal(activeCharacterEvent({enabled:true,calendarEnabled:true,events:entries},new Date('2027-01-01T12:00:00Z')),null);
+  assert.equal(normalizeCharacterEvents(Array.from({length:20},(_,i)=>({id:'e'+i}))).length,12);
+  const event=normalizeCharacterEvents([{theme:'valentine',messages:{ka:'ჩემი ტექსტი',en:'x'.repeat(200)}}])[0];
+  assert.equal(applyCharacterEvent({},event,'ka').message,'ჩემი ტექსტი');
+  assert.equal(event.messages.en.length,120);
+});

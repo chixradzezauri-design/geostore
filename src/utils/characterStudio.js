@@ -63,6 +63,54 @@ function normalizeGreetingLibrary(raw){
   const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,Array.isArray(source[lang])?[...new Set(source[lang].slice(0,8).filter(x=>typeof x==='string').map(x=>x.trim().slice(0,120)).filter(Boolean))]:[]]));
 }
+export const CHARACTER_EVENT_LIMIT=12;
+export const CHARACTER_EVENT_THEMES=Object.freeze({
+  custom:{label:'ინდივიდუალური',character:'fox',season:'none',effect:'none',behavior:'wave',lines:{}},
+  newyear:{label:'ახალი წელი',character:'panda',season:'winter',effect:'confetti',behavior:'celebrate',lines:{ka:'გილოცავ ახალ წელს!',en:'Happy New Year!',ru:'С Новым годом!'}},
+  valentine:{label:'ვალენტინობა',character:'cat',season:'hearts',effect:'hearts',behavior:'wave',lines:{ka:'სიყვარულით, GEOSTORE!',en:'With love, GEOSTORE!',ru:'С любовью, GEOSTORE!'}},
+  summer:{label:'ზაფხული',character:'rabbit',season:'summer',effect:'sparkles',behavior:'dance',lines:{ka:'მზიანი განწყობა გელოდება!',en:'Sunny vibes await!',ru:'Солнечное настроение ждёт!'}},
+  celebration:{label:'სადღესასწაულო დღე',character:'robot',season:'none',effect:'confetti',behavior:'celebrate',lines:{ka:'დღეს განსაკუთრებული დღეა!',en:'Today is a special day!',ru:'Сегодня особенный день!'}}
+});
+function validEventDate(value){
+  if(typeof value!=='string'||!/^20\d\d-\d\d-\d\d$/.test(value))return '';
+  const date=new Date(value+'T00:00:00Z');
+  return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value?value:'';
+}
+export function characterCalendarDay(now=new Date()){
+  try{
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tbilisi',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+    const get=type=>parts.find(p=>p.type===type)?.value;
+    return get('year')+'-'+get('month')+'-'+get('day');
+  }catch{return '';}
+}
+export function normalizeCharacterEvents(raw){
+  if(!Array.isArray(raw))return [];
+  const used=new Set();
+  return raw.slice(0,CHARACTER_EVENT_LIMIT).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).flatMap((event,i)=>{
+    const id=typeof event.id==='string'&&/^[a-zA-Z0-9_-]{1,48}$/.test(event.id)?event.id:'event-'+i;
+    if(used.has(id))return [];used.add(id);
+    const theme=pick(event.theme,Object.keys(CHARACTER_EVENT_THEMES),'custom'),preset=CHARACTER_EVENT_THEMES[theme];
+    const start=validEventDate(event.start),end=validEventDate(event.end);
+    return [{id,title:typeof event.title==='string'?event.title.trim().slice(0,60):'',enabled:event.enabled===true,start,end,theme,
+      character:pick(event.character,CHARACTERS.map(c=>c.id),preset.character),
+      season:pick(event.season,['none','auto','winter','hearts','summer','autumn'],preset.season),
+      effect:pick(event.effect,['none','sparkles','hearts','confetti'],preset.effect),
+      behavior:pick(event.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],preset.behavior),
+      messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof event.messages?.[lang]==='string'?event.messages[lang].trim().slice(0,120):'']))}];
+  });
+}
+export function activeCharacterEvent(settings,now=new Date()){
+  const day=characterCalendarDay(now);
+  if(!day||settings?.calendarEnabled!==true||settings?.enabled!==true)return null;
+  return normalizeCharacterEvents(settings.events).find(event=>event.enabled&&event.start&&event.end&&event.start<=day&&day<=event.end)||null;
+}
+export function applyCharacterEvent(settings,event,lang='ka'){
+  const s=normalizeCharacterSettings(settings);
+  if(!event)return s;
+  const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+  const message=event.messages?.[locale]||CHARACTER_EVENT_THEMES[event.theme]?.lines?.[locale]||s.message;
+  return {...s,character:event.character,rotation:'fixed',season:event.season,effect:event.effect,behavior:event.behavior,message};
+}
 export const DEFAULT_CHARACTER_SETTINGS=Object.freeze({
   enabled:false, character:'fox', rotation:'fixed', behavior:'run-wave', side:'left',
   delay:2, duration:6, frequency:'session', pages:'home', mobile:true, desktop:true, message:''
@@ -75,6 +123,7 @@ export function normalizeCharacterSettings(raw){
     behavior:pick(s.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],'run-wave'),
     greetingMode:pick(s.greetingMode,['character','funny','time','library'],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
+    calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
     effect:pick(s.effect,['none','sparkles','hearts','confetti'],'none'),waveBack:s.waveBack===true,
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),

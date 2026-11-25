@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterWaveCopy} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterWaveCopy,activeCharacterEvent,applyCharacterEvent} from '../utils/characterStudio.js';
 import './characterStudio.css';
 
 let seenInMemory=false;
@@ -110,18 +110,20 @@ export function CharacterReaction({scenario,lang='ka'}){
 }
 export default function CharacterMascot({settings,lang}){
   const s=normalizeCharacterSettings(settings);
-  const [character,setCharacter]=useState(null);
+  const [presentation,setPresentation]=useState(null);
   useEffect(()=>{
-    setCharacter(null);
+    setPresentation(null);
     if(!s.enabled||seen(s.frequency))return;
     let closeTimer;
     const showTimer=setTimeout(()=>{
       if(seen(s.frequency))return;
       markSeen(s.frequency);
-      setCharacter(selectCharacter(s));
-      closeTimer=setTimeout(()=>setCharacter(null),s.duration*1000);
+      const now=new Date();
+      const effective=applyCharacterEvent(s,activeCharacterEvent(s,now),lang);
+      setPresentation({character:selectCharacter(effective,now),settings:effective});
+      closeTimer=setTimeout(()=>setPresentation(null),s.duration*1000);
     },s.delay*1000);
     return()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
-  },[s.enabled,s.character,s.rotation,s.behavior,s.side,s.delay,s.duration,s.frequency,s.message]);
-  return character?<CharacterScene character={character} settings={s} lang={lang} onClose={()=>setCharacter(null)}/>:null;
+  },[s.enabled,s.character,s.rotation,s.behavior,s.side,s.delay,s.duration,s.frequency,s.message,s.calendarEnabled,JSON.stringify(s.events),lang]);
+  return presentation?<CharacterScene character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>setPresentation(null)}/>:null;
 }
