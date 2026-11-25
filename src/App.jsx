@@ -857,6 +857,29 @@ export default function App() {
     setSupportThreadLoading(false);
   }, [currentUser?.id]);
   const supportCreateRequestRef = useRef(null);
+  const supportCreateLockRef = useRef(null);
+  const customerPrivateEpochRef = useRef(0);
+  const markNotificationsLockRef = useRef(null);
+  const clearSupportPrivateState = () => {
+    customerPrivateEpochRef.current += 1;
+    supportCreateRequestRef.current = null;
+    supportCreateLockRef.current = null;
+    markNotificationsLockRef.current = null;
+    setIsSubmittingSupport(false);
+    setSupportSubmission(null);
+    setOrderRequestDraft(null);
+    setSupportOpen(false);
+    setSupportLookupTicketId('');
+    setSupportLookupAccessToken('');
+    setSupportThreadMessages([]);
+    setSupportTicketStatus(null);
+    setSupportThreadLoaded(false);
+    setSupportThreadError('');
+    beginSupportThreadSession();
+    supportHistorySessionRef.current += 1;
+    supportHistoryOwnerRef.current = null;
+    setMySupportTickets([]);
+  };
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
@@ -1247,6 +1270,7 @@ export default function App() {
       if (activeOwner.initialized && String(activeOwner.userId ?? '') === String(nextOwnerId ?? '')) return;
       if (String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
         clearPrivateCheckout();
+        clearSupportPrivateState();
       }
       try {
         const switched = switchCartStorageOwner({
@@ -1293,6 +1317,7 @@ export default function App() {
       } catch (error) {
         // Storage failures must not leave private checkout details visible.
         clearPrivateCheckout();
+        clearSupportPrivateState();
         // Fail closed: never persist the outgoing owner's cart under a new account.
         console.error('Cart owner switch failed:', error);
         cartRef.current = [];
@@ -1521,13 +1546,21 @@ export default function App() {
   const markAllNotificationsAsRead = async () => {
     const requestOwnerId = currentUser?.id;
     if (!requestOwnerId || String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId) ||
-        notificationsLoading || !notifications.some((n) => !n.read)) return;
+        notificationsLoading || notificationsError || markNotificationsLockRef.current || !notifications.some((n) => !n.read)) return;
+    const epoch = customerPrivateEpochRef.current;
+    const lock = {};
+    markNotificationsLockRef.current = lock;
+    const snapshotIds = new Set(notifications.filter(n=>!n.read).map(n=>n.id));
+    const stillCurrent = () => customerPrivateEpochRef.current === epoch && String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
     try {
+      const {data:{session},error:sessionError}=await supabase.auth.getSession();
+      if (!stillCurrent()) return;
+      if (sessionError || !session?.access_token || session.user?.id !== requestOwnerId) throw new Error('Notification session changed');
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/mark_my_order_notifications_read`,
         {
           method: 'POST',
-          headers: await getSupabaseHeaders({ authenticated: true }),
+          headers: {apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},
           body: JSON.stringify({})
         }
       );
@@ -1535,13 +1568,15 @@ export default function App() {
         const errorBody = await response.text().catch(() => '');
         throw new Error(errorBody || 'შეტყობინებების განახლება ვერ მოხერხდა.');
       }
-      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      if (!stillCurrent()) return;
+      setNotifications((prev) => prev.map((n) => snapshotIds.has(n.id) ? { ...n, read: true } : n));
       showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
     } catch (error) {
-      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
+      if (!stillCurrent()) return;
       console.error('Mark notifications read failed:', error);
       showToast(currentLang === 'en' ? 'Could not update notifications.' : currentLang === 'ru' ? 'Не удалось обновить уведомления.' : 'შეტყობინებების განახლება ვერ მოხერხდა.');
+    } finally {
+      if (markNotificationsLockRef.current === lock) markNotificationsLockRef.current = null;
     }
   };
 
@@ -1893,6 +1928,7 @@ export default function App() {
               ? validDate.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
               : '',
             totalGEL: normalizeOrderTotal(o.total_gel),
+            totalVerified: (typeof o.total_gel === 'number' || (typeof o.total_gel === 'string' && o.total_gel.trim() !== '')) && Number.isFinite(Number(o.total_gel)) && Number(o.total_gel) >= 0,
             status: typeof o.status === 'string' && o.status.trim() ? o.status : 'ახალი',
             items: normalizeOrderItems(o.items),
             status_changed_at: o.status_changed_at || null
@@ -4551,7 +4587,11 @@ export default function App() {
               key={JSON.stringify([currentUser?.id ?? null, activeOrderRequestDraft?.subject ?? null])}
               onSubmit={async (e) => {
                 e.preventDefault();
-                if (isSubmittingSupport) return;
+                if (isSubmittingSupport || supportCreateLockRef.current || authLoading) return;
+                const requestOwnerId = currentUser?.id ?? null;
+                const epoch = customerPrivateEpochRef.current;
+                const stillCurrent = () => customerPrivateEpochRef.current === epoch && (activeCartOwnerRef.current.userId ?? null) === requestOwnerId;
+                if (!stillCurrent()) return;
 
                 const name = e.target.cname.value.trim();
                 const email = e.target.cemail.value.trim();
@@ -4559,9 +4599,14 @@ export default function App() {
                 const message = e.target.cmessage.value.trim();
 
                 if (!name || !message || name.length > 100 || message.length > 4000 || subject.length > 150 || email.length > 254) return;
+                const lock = {};
+                supportCreateLockRef.current = lock;
                 setIsSubmittingSupport(true);
 
                 try {
+                  const {data:{session},error:sessionError} = await supabase.auth.getSession();
+                  if (!stillCurrent()) return;
+                  if (sessionError || (session?.user?.id ?? null) !== requestOwnerId || (requestOwnerId && !session?.access_token)) throw new Error(currentLang === 'en' ? 'Session changed. Please reopen support.' : currentLang === 'ru' ? 'Сессия изменилась. Откройте поддержку снова.' : 'სესია შეიცვალა. ხელახლა გახსენი მხარდაჭერა.');
                   if (!window.crypto?.getRandomValues) {
                     throw new Error(currentLang === 'en'
                       ? 'Secure ticket creation is unavailable in this browser.'
@@ -4599,7 +4644,7 @@ export default function App() {
                     `${SUPABASE_URL}/rest/v1/rpc/create_support_ticket_idempotent`,
                     {
                       method: 'POST',
-                      headers: await getSupabaseHeaders({ authenticated: true }),
+                      headers: {apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,'Content-Type':'application/json'},
                       body: JSON.stringify({
                         p_id: ticketId,
                         p_customer_name: name,
@@ -4636,11 +4681,13 @@ export default function App() {
                         : 'სერვერის პასუხის გადამოწმება ვერ მოხერხდა. ხელახლა სცადე.');
                   }
 
+                  if (!stillCurrent()) return;
                   supportCreateRequestRef.current = null;
                   setSupportSubmission({ ticketId, accessToken });
                   setOrderRequestDraft(null);
                   e.target.reset();
                 } catch (error) {
+                  if (!stillCurrent()) return;
                   console.error('Support ticket error:', error);
                   alert(
                     error.message || (currentLang === 'en'
@@ -4650,7 +4697,10 @@ export default function App() {
                         : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.')
                   );
                 } finally {
-                  setIsSubmittingSupport(false);
+                  if (supportCreateLockRef.current === lock) {
+                    supportCreateLockRef.current = null;
+                    setIsSubmittingSupport(false);
+                  }
                 }
               }}
               className="gs-support-form"

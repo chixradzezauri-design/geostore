@@ -20,7 +20,8 @@ export default function CustomerPurchaseStatistics({orders,loading,error,lang='k
    {error&&<p role="status">{words.partial}</p>}
    <label>{words.period}<select value={period} onChange={e=>setPeriod(e.target.value)}><option value="all">{words.all}</option><option value="month">{words.month}</option><option value="six">{words.six}</option></select></label>
    <div className="gs-purchase-statistics-totals">{['total','completed','pending','cancelled','unknown'].filter(k=>k!=='unknown'||result.unknown>0).map(k=><div key={k}><small>{words[k]}</small><strong>{result[k]}</strong></div>)}</div>
-   <div className="gs-purchase-statistics-values"><div><small>{words.value}</small><strong>{formatPrice(result.totalGEL)}</strong></div><div><small>{words.average}</small><strong>{result.averageGEL===null?'—':formatPrice(result.averageGEL)}</strong></div></div>
+   <div className="gs-purchase-statistics-values"><div><small>{words.value}</small><strong>{result.completed>0&&result.pricedCompleted===0?'—':formatPrice(result.totalGEL)}</strong></div><div><small>{words.average}</small><strong>{result.averageGEL===null?'—':formatPrice(result.averageGEL)}</strong></div></div>
+   {result.pricedCompleted<result.completed&&<p role="status">{lang==='en'?'Some order amounts are unavailable. The total is incomplete.':lang==='ru'?'Суммы некоторых заказов недоступны. Итог неполный.':'ზოგი შეკვეთის თანხა მიუწვდომელია. ჯამი არასრულია.'}</p>}
    {!result.total&&<p>{words.empty}</p>}
    <h4>{words.chart}</h4>
    <ul className="gs-purchase-statistics-chart">{result.months.map(m=><li key={m.key}><span>{monthLabel(m.key)}</span><div aria-hidden="true"><i style={{width:(m.totalGEL/max*100)+'%'}}/></div><strong>{formatPrice(m.totalGEL)}</strong></li>)}</ul>

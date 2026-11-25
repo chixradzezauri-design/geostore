@@ -26,7 +26,7 @@ export function customerPurchaseStatistics(orders,{period='all',now=Date.now()}=
   const status=customerOrderProgress(order.status);
   const kind=status.kind==='cancelled'?'cancelled':status.kind!=='active'?'unknown':status.index===3?'completed':'pending';
   const price=typeof order.totalGEL==='number'?Math.round(order.totalGEL*100):NaN;
-  const validPrice=Number.isSafeInteger(price)&&price>=0;
+  const validPrice=order.totalVerified!==false&&Number.isSafeInteger(price)&&price>=0;
   if(kind==='completed'&&bins.has(month)){
    const bin=bins.get(month);
    bin.count++;

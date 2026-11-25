@@ -9,7 +9,26 @@ const copy={
 };
 export default function CustomerPersonalOffers({products,wishlist,ready,lang='ka',formatPrice,onOpenProduct}){
  const [now,setNow]=useState(()=>Date.now());
- useEffect(()=>{const refresh=()=>setNow(Date.now());const timer=setInterval(refresh,1000);document.addEventListener('visibilitychange',refresh);return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',refresh);};},[]);
+ useEffect(()=>{
+  let timer;
+  const refresh=()=>{
+   clearTimeout(timer);
+   if(document.visibilityState==='hidden')return;
+   const current=Date.now();setNow(current);
+   if(!ready)return;
+   let next=60000;
+   for(const product of Array.isArray(products)?products:[]){
+    for(const value of [product?.flashSaleStartedAt,product?.flashSaleEndsAt,product?.flash_sale_started_at,product?.flash_sale_ends_at]){
+     const time=typeof value==='number'?value:Date.parse(String(value));
+     if(Number.isFinite(time)&&time>current)next=Math.min(next,time-current);
+    }
+   }
+   timer=setTimeout(refresh,Math.max(1,next));
+  };
+  refresh();
+  document.addEventListener('visibilitychange',refresh);
+  return()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',refresh);};
+ },[products,ready]);
  const words=Object.hasOwn(copy,lang)?copy[lang]:copy.ka;
  const {personal,sales}=customerPersonalOffers(products,wishlist,{ready,now});
  const card=(p,sale=false)=><li key={p.id}><div className="gs-personal-offer-meta"><strong>{p.name}</strong>{!sale&&<small>{words[p.reason]}</small>}<span>{sale&&<del>{formatPrice(p.oldPrice)}</del>} {formatPrice(p.price)}</span></div><button type="button" aria-label={words.open+': '+p.name} onClick={()=>onOpenProduct({id:p.id})}>{words.open}</button></li>;
