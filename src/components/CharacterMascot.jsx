@@ -25,7 +25,8 @@ function markSeen(frequency,revision){
 export function CharacterArt({character,emotion='happy',season='none'}){
   const uid=React.useId().replace(/[^a-zA-Z0-9_-]/g,'');
   const {id,color}=character;
-  const robot=id==='robot',panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',fox=id==='fox',monkey=id==='monkey',bear=id==='bear',owl=id==='owl',cheetah=id==='cheetah';
+  const santa=id==='santa',snow=id==='snowman',deal=id==='deal';
+  const robot=id==='robot'||deal,panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',fox=id==='fox',monkey=id==='monkey',bear=id==='bear'||santa||snow,owl=id==='owl',cheetah=id==='cheetah';
   const g=n=>'url(#'+uid+'-'+n+')';
   const theme=resolveCharacterSeason(season);
   const bodyWidth=bear?40:panda?39:owl?34:cheetah?26:monkey?27:32;
@@ -37,7 +38,7 @@ export function CharacterArt({character,emotion='happy',season='none'}){
       <><rect x="-7" y="-9" width="14" height="18" rx="6" fill={g('cyan')}/><rect x="-4" y="-6" width="3" height="5" rx="1.5" fill="#fff" opacity=".75"/></>:
       <><ellipse rx={emotion==='surprise'?10:9} ry={emotion==='surprise'?13:11.5} fill={g('ivory')}/><ellipse cx="1" cy="1" rx="6.4" ry="8.4" fill={g('eye')}/><ellipse cx="-1.2" cy="-2.5" rx="2.7" ry="3.3" fill="#fff"/><circle cx="4" cy="5" r="1.2" fill="#fff" opacity=".8"/></>}
   </g>;
-  return <svg className="gs-character-art" data-character-model={id} data-character-render="dimensional" data-character-material={robot?'metal':owl?'feathers':'fur'} viewBox="0 0 160 176" aria-hidden="true" focusable="false">
+  return <svg className="gs-character-art" data-character-model={id} data-character-render="dimensional" data-character-material={robot?'metal':owl?'feathers':snow?'snow':santa?'fabric':'fur'} viewBox="0 0 160 176" aria-hidden="true" focusable="false">
     <defs>
       {[
         ['body','#fff4db',color,'#34283a'],['fur','#fff2d7',color,'#423039'],['ivory','#fff','#fff9e9','#cdbbad'],
@@ -66,7 +67,7 @@ export function CharacterArt({character,emotion='happy',season='none'}){
     {cat&&<><path d="M30 56L26 22Q26 15 34 19L66 40M94 40l31-21q8-4 8 4l-3 34" fill={g('fur')}/><path d="M35 43l-1-13 20 12M106 42l19-12-2 16" fill={g('pink')}/></>}
     {rabbit&&<><g transform="rotate(-13 57 37)"><rect x="43" y="3" width="26" height="61" rx="15" fill={g('fur')}/><rect x="51" y="11" width="11" height="42" rx="6" fill={g('pink')}/></g><g transform="rotate(13 102 37)"><rect x="89" y="3" width="26" height="61" rx="15" fill={g('fur')}/><rect x="96" y="11" width="11" height="42" rx="6" fill={g('pink')}/></g></>}
     {panda&&<><circle cx="37" cy="43" r="23" fill={g('dark')}/><circle cx="123" cy="43" r="23" fill={g('dark')}/><circle cx="37" cy="42" r="12" fill={color} opacity=".48"/><circle cx="123" cy="42" r="12" fill={color} opacity=".48"/></>}
-    {(bear||monkey||cheetah)&&<g>{[37,123].map(x=><g key={x}><circle cx={x} cy={monkey?72:43} r={monkey?21:bear?20:15} fill={g('fur')}/><circle cx={x} cy={monkey?72:43} r={monkey?12:bear?11:8} fill={g('pink')} opacity=".7"/></g>)}</g>}
+    {(bear||monkey||cheetah)&&!santa&&!snow&&<g>{[37,123].map(x=><g key={x}><circle cx={x} cy={monkey?72:43} r={monkey?21:bear?20:15} fill={g('fur')}/><circle cx={x} cy={monkey?72:43} r={monkey?12:bear?11:8} fill={g('pink')} opacity=".7"/></g>)}</g>}
     {owl&&<g fill={g('fur')}><path d="M31 55L34 19 65 40Z"/><path d="M95 40l31-21 3 36Z"/></g>}
     {robot&&<><path d="M81 33V14" stroke={g('dark')} strokeWidth="6" strokeLinecap="round"/><circle cx="81" cy="12" r="10" fill={g('gold')}/><rect x="15" y="59" width="22" height="34" rx="10" fill={g('dark')}/><rect x="123" y="59" width="22" height="34" rx="10" fill={g('dark')}/></>}
     {robot?<><rect x="27" y="30" width="106" height="78" rx="30" fill={g('body')}/><rect x="36" y="39" width="88" height="59" rx="24" fill={g('visor')}/><path d="M43 58Q47 46 68 46H100" stroke="#fff" strokeOpacity=".23" strokeWidth="3" strokeLinecap="round" fill="none"/></>:
@@ -95,6 +96,9 @@ export function CharacterArt({character,emotion='happy',season='none'}){
     {bear&&<g fill={g('gold')}><path d="M61 112l19 9 19-9-7 15H68Z"/><circle cx="80" cy="123" r="5"/></g>}
     {cheetah&&<g fill="#493427" opacity=".8">{[[52,118],[58,134],[105,116],[103,139],[74,149],[96,151]].map(([x,y],j)=><circle key={j} cx={x} cy={y} r="2.6"/>)}</g>}
     {!robot&&!cat&&!fox&&!bear&&!owl&&<g><circle cx="80" cy="128" r="8" fill={g('gold')}/><text x="80" y="131.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="#563719">G</text></g>}
+    {santa&&<g><path d="M40 47Q45 4 88 8Q125 9 126 44L111 39Q104 17 95 30L95 45Z" fill="#c82438"/><path d="M39 43Q78 36 120 43L120 54Q78 48 39 55Z" fill={g('ivory')}/><circle cx="126" cy="45" r="9" fill={g('ivory')}/><path d="M42 88Q51 122 80 119Q110 122 118 88Q100 101 91 94Q80 108 69 94Q56 101 42 88" fill={g('ivory')}/><path d="M50 126h60v8H50z" fill="#20232d"/><rect x="74" y="124" width="13" height="12" rx="2" fill={g('gold')}/></g>}
+    {snow&&<g><path d="M43 43h74v8H43z" fill="#283344"/><rect x="56" y="15" width="48" height="32" rx="6" fill={g('dark')}/><path d="M56 38h48v7H56z" fill="#c72839"/><path d="M78 83l27 7-27 6z" fill="#f39a2d"/><circle cx="80" cy="122" r="3" fill="#293040"/><circle cx="80" cy="139" r="3" fill="#293040"/></g>}
+    {deal&&<g><path d="M92 112l30-12 17 14-17 28-30-11z" fill="#e5b74c"/><circle cx="124" cy="111" r="3" fill="#25242a"/><text x="113" y="127" fontSize="19" fontWeight="900" textAnchor="middle" fill="#25242a">%</text></g>}
     {theme==='winter'&&<g><path d="M45 108Q80 120 115 108L111 119Q80 130 49 119Z" fill="#be123c"/><path d="M99 119l-3 22 12 3 5-23" fill="#be123c"/><path d="M97 137l12 3" stroke="#fff" strokeWidth="3"/></g>}
     {theme==='hearts'&&<path d="M15 23C2 10-3 31 15 39C33 31 28 10 15 23Z" fill={g('pink')}/>}
     {theme==='summer'&&<g fill={g('gold')}><circle cx="145" cy="20" r="9"/><path d="M145 5v5m0 20v5M130 20h5m20 0h5M134 9l4 4m14 14 4 4M134 31l4-4m14-14 4-4" stroke="#d79a22" strokeWidth="2" strokeLinecap="round"/></g>}
@@ -115,7 +119,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
   const artEmotion=waved?'happy':settings.emotion;
   const fallback=<CharacterArt character={artCharacter} emotion={artEmotion} season={settings.season}/>;
   const use3D=MASCOT_3D_IDS.includes(character.id)&&settings.behavior!=='still'&&settings.appearance?.renderMode!=='vector'&&['none','winter'].includes(resolveCharacterSeason(settings.season));
-  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
+  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-prominence={settings.appearance?.prominence||'enhanced'} data-side={settings.side} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
     <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig">{use3D?<Mascot3DBoundary fallback={fallback}><React.Suspense fallback={fallback}><FlagshipFox3D characterId={character.id} color={artCharacter.color} emotion={artEmotion} behavior={waved?wave.motion:settings.behavior} season={resolveCharacterSeason(settings.season)} lighting={settings.appearance?.lighting} fallback={fallback}/></React.Suspense></Mascot3DBoundary>:fallback}</div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?wave.effect:settings.effect}/>}</div>
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>

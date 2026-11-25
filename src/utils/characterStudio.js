@@ -9,6 +9,10 @@ export const CHARACTERS = Object.freeze([
   { id:'bear', name:'Luxury Bear', label:'დათვი', color:'#926b48', lines:{ka:'კეთილი იყოს შენი მობრძანება. საუკეთესო არჩევანს დრო სჭირდება.',en:'Welcome. Take your time finding your favourite.',ru:'Добро пожаловать. Выбирай с удовольствием.'} },
   { id:'owl', name:'Smart Owl', label:'ბუ', color:'#8c735e', lines:{ka:'გამარჯობა! კარგი აღმოჩენა პატარა დეტალით იწყება.',en:'Hello! Great finds start with the little details.',ru:'Привет! Отличные находки начинаются с мелочей.'} },
   { id:'cheetah', name:'Speed Cheetah', label:'გეპარდი', color:'#dca94f', lines:{ka:'მოვირბინე, რომ სასიამოვნო აღმოჩენები გისურვო!',en:'I dashed over to wish you happy browsing!',ru:'Прибежал пожелать приятных находок!'} },
+  {id:'santa',name:'Geo Santa',label:'სანტა',color:'#c72839',special:'winter',lines:{ka:'სადღესასწაულო საჩუქარს ეძებ? მოდი, ერთად შევარჩიოთ!',en:'Looking for a festive gift? Let’s find one!',ru:'Ищешь праздничный подарок? Давай выберем!'}},
+  {id:'snowman',name:'Snowy',label:'თოვლის კაცი',color:'#e0edf5',special:'winter',lines:{ka:'თოვლიანი განწყობა მოგიტანე! აღმოაჩინე საჩუქრის იდეები.',en:'A little winter magic! Discover gift ideas.',ru:'Немного зимнего волшебства! Открой идеи подарков.'}},
+  {id:'deal',name:'Deal Hunter',label:'შავი პარასკევის დამხმარე',color:'#33333d',special:'sale',lines:{ka:'შეადარე მიმდინარე ფასები და დაათვალიერე ხელმისაწვდომი შეთავაზებები.',en:'Compare current prices and explore available offers.',ru:'Сравни текущие цены и доступные предложения.'}},
+
 ]);
 export const CHARACTER_MOTIONS=Object.freeze(['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak','walk-wave','look-around','point','patrol']);
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
@@ -30,12 +34,12 @@ function normalizeScenarios(raw){
   }));
 }
 const hexColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():fallback;
-export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13,renderMode:'auto',lighting:'studio'});
+export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13,renderMode:'auto',lighting:'studio',prominence:'enhanced'});
 export function normalizeCharacterAppearance(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return {desktopSize:bounded(v.desktopSize,80,144,116),mobileSize:bounded(v.mobileSize,56,100,76),
     lift:bounded(v.lift,0,48,0),bubbleColor:hexColor(v.bubbleColor,'#fffdf7'),
-    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13),renderMode:pick(v.renderMode,['auto','vector'],'auto'),lighting:pick(v.lighting,['studio','daylight','cinematic'],'studio')};
+    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13),renderMode:pick(v.renderMode,['auto','vector'],'auto'),lighting:pick(v.lighting,['studio','daylight','cinematic'],'studio'),prominence:pick(v.prominence,['enhanced','compact'],'enhanced')};
 }
 export function normalizeCharacterPalette(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -52,7 +56,8 @@ export function characterBubbleInk(value){
 }
 export function characterAppearanceStyle(raw){
   const a=normalizeCharacterAppearance(raw);
-  return {'--gs-mascot-desktop':a.desktopSize+'px','--gs-mascot-mobile':a.mobileSize+'px','--gs-mascot-lift':a.lift+'px',
+  const enhanced=a.prominence==='enhanced';
+  return {'--gs-mascot-desktop':(enhanced?Math.max(140,a.desktopSize):a.desktopSize)+'px','--gs-mascot-mobile':(enhanced?Math.max(92,a.mobileSize):a.mobileSize)+'px','--gs-mascot-lift':a.lift+'px',
     '--gs-mascot-bubble':a.bubbleColor,'--gs-mascot-ink':characterBubbleInk(a.bubbleColor),
     '--gs-mascot-radius':{rounded:'16px',pill:'28px',square:'6px'}[a.bubbleShape],
     '--gs-mascot-font':a.fontSize+'px'};
@@ -95,6 +100,9 @@ export const CHARACTER_EVENT_LIMIT=12;
 export const CHARACTER_EVENT_THEMES=Object.freeze({
   custom:{label:'ინდივიდუალური',character:'fox',season:'none',effect:'none',behavior:'wave',lines:{}},
   newyear:{label:'ახალი წელი',character:'panda',season:'winter',effect:'confetti',behavior:'celebrate',lines:{ka:'გილოცავ ახალ წელს!',en:'Happy New Year!',ru:'С Новым годом!'}},
+  santa:{label:'სანტას სადღესასწაულო მისალმება',character:'santa',season:'winter',effect:'sparkles',behavior:'wave',lines:{ka:'სადღესასწაულო საჩუქრის იდეებს გაეცანი!',en:'Explore festive gift ideas!',ru:'Открой идеи праздничных подарков!'}},
+  snowman:{label:'თოვლის კაცის მისალმება',character:'snowman',season:'winter',effect:'sparkles',behavior:'jump',lines:{ka:'ზამთრის ჯადოსნურ განწყობას გისურვებ!',en:'Wishing you a magical winter!',ru:'Желаю волшебной зимы!'}},
+  blackfriday:{label:'შავი პარასკევი',character:'deal',season:'none',effect:'sparkles',behavior:'point',lines:{ka:'დაათვალიერე მიმდინარე ფასები და შეარჩიე სასურველი ნივთი.',en:'Explore current prices and find your favourite.',ru:'Посмотри текущие цены и выбери любимый товар.'}},
   valentine:{label:'ვალენტინობა',character:'cat',season:'hearts',effect:'hearts',behavior:'wave',lines:{ka:'სიყვარულით, GEOSTORE!',en:'With love, GEOSTORE!',ru:'С любовью, GEOSTORE!'}},
   summer:{label:'ზაფხული',character:'rabbit',season:'summer',effect:'sparkles',behavior:'dance',lines:{ka:'მზიანი განწყობა გელოდება!',en:'Sunny vibes await!',ru:'Солнечное настроение ждёт!'}},
   celebration:{label:'სადღესასწაულო დღე',character:'robot',season:'none',effect:'confetti',behavior:'celebrate',lines:{ka:'დღეს განსაკუთრებული დღეა!',en:'Today is a special day!',ru:'Сегодня особенный день!'}}
@@ -168,9 +176,9 @@ export function normalizeCharacterSettings(raw){
 export function selectCharacter(settings,date=new Date(),random=Math.random){
   const s=normalizeCharacterSettings(settings);
   let id=s.character;
-  if(s.rotation==='random') id=CHARACTERS[Math.max(0,Math.min(CHARACTERS.length-1,Math.floor(random()*CHARACTERS.length)))].id;
+  if(s.rotation==='random'){const pool=CHARACTERS.filter(c=>!c.special);id=pool[Math.max(0,Math.min(pool.length-1,Math.floor(random()*pool.length)))].id;}
   if(s.rotation==='daypart') id=date.getHours()<12?'fox':date.getHours()<18?'rabbit':'panda';
-  if(s.rotation==='seasonal') id=[ 'panda','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','panda' ][date.getMonth()];
+  if(s.rotation==='seasonal') id=[ 'snowman','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','santa' ][date.getMonth()];
   return styledCharacter(CHARACTERS.find(c=>c.id===id)||CHARACTERS[0],s);
 }
 export function resolveCharacterSeason(value,date=new Date()){

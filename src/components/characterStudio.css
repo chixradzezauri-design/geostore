@@ -201,3 +201,10 @@
 .gs-character-3d{position:relative;width:100%;aspect-ratio:160/176}.gs-character-3d-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}.gs-character-3d[data-character-3d='ready']{filter:drop-shadow(0 5px 4px #17233b30)}
 
 .gs-character-3d[data-character-3d='ready']::before{content:'';position:absolute;bottom:7%;left:18%;width:64%;height:7%;border-radius:50%;background:radial-gradient(ellipse,#18233345 0%,#18233318 45%,transparent 75%);pointer-events:none}.gs-character-3d[data-character-3d='ready']{filter:none}.gs-character-3d[data-character-3d='ready'] canvas{filter:drop-shadow(0 2px 2px #17233b20)}
+
+/* Concierge V3: stronger hierarchy without raising the interactive overlay layer. */
+.gs-character-scene[data-prominence="enhanced"] .gs-character-bubble{box-shadow:0 10px 28px #17233b38,0 0 0 1px #b99b6438;border-color:#c9a76a;padding-top:11px;padding-bottom:11px}
+.gs-character-scene[data-prominence="enhanced"] .gs-character-bubble strong{font-size:12px;letter-spacing:.01em;font-weight:850}
+.gs-character-scene[data-prominence="enhanced"] .gs-character-bubble>span{font-size:max(13px,var(--gs-mascot-font,13px));line-height:1.4}
+@media(min-width:768px){.gs-character-scene[data-prominence="enhanced"]:not(.gs-character-preview-scene){max-width:min(410px,calc(100vw - 48px))}.gs-character-scene[data-prominence="enhanced"][data-side="right"]:not(.gs-character-preview-scene){max-width:min(410px,calc(100vw - 282px - env(safe-area-inset-right,0px)))}}
+@media(max-height:480px){.gs-character-scene[data-prominence="enhanced"]:not(.gs-character-preview-scene) .gs-character-figure{width:56px;flex-basis:56px}}

@@ -118,7 +118,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});
-          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),11,'nine character cards and two viewport buttons');
+          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),14,'twelve character cards and two viewport buttons');
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
@@ -142,13 +142,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await live.locator('svg[data-character-render="dimensional"][data-character-model="robot"]').count(),1);
           const gradientIds=await studio.locator('svg.gs-character-art defs [id]').evaluateAll(nodes=>nodes.map(n=>n.id));
           assert.equal(new Set(gradientIds).size,gradientIds.length,'Every character preview has independent lighting definitions');
-          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),9);
-          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="metal"]').count(),1);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),12);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="metal"]').count(),2);
           assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="feathers"]').count(),1);
           assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="fur"]').count(),7);
-          assert.equal(await studio.locator('button[aria-pressed] .gs-character-head').count(),9);
+          assert.equal(await studio.locator('button[aria-pressed] .gs-character-head').count(),12);
           await appearance.getByRole('button',{name:'ვიზუალური პარამეტრების აღდგენა'}).click();
-          assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'76px');
+          assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'92px');
           const greetings=studio.locator('[data-character-greetings]');
           await greetings.locator('summary').click();
           await greetings.getByLabel('მისალმების რეჟიმი').selectOption('library');

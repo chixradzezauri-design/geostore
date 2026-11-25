@@ -131,7 +131,7 @@ export async function runCharacterStudioSmoke(browser,host,widths){
 /** Exercise actual WebGL rendering and explicit fallback on the built storefront.
  * Software ANGLE is intentionally allowed in this isolated CI browser only. */
 export async function runFlagship3DSmoke(browser,host){
-  for(const [mode,character] of [['webgl','fox'],['webgl','panda'],['webgl','rabbit'],['webgl','robot'],['webgl','cat'],['webgl','monkey'],['webgl','bear'],['webgl','owl'],['webgl','cheetah'],['unavailable','fox'],['vector','fox']]){
+  for(const [mode,character] of [['webgl','fox'],['webgl','panda'],['webgl','rabbit'],['webgl','robot'],['webgl','cat'],['webgl','monkey'],['webgl','bear'],['webgl','owl'],['webgl','cheetah'],['webgl','santa'],['webgl','snowman'],['webgl','deal'],['unavailable','fox'],['vector','fox']]){
     const context=await browser.newContext(fixtureContextOptions(390));
     try{
       await installCharacterFixture(context,()=>({enabled:true,activeSale:false,character,appearance:{renderMode:mode==='vector'?'vector':'auto'}}));

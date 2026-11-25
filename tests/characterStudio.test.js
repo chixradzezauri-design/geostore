@@ -11,11 +11,11 @@ test('invalid settings are constrained and unknown properties dropped',()=>{
   assert.equal(s.character,'fox');assert.equal(s.behavior,'run-wave');assert.equal(s.side,'left');assert.equal(s.delay,0);assert.equal(s.duration,12);assert.equal(s.message.length,120);assert.equal(s.unknown,undefined);
 });
 test('rotation selects only the five original characters',()=>{
-  assert.equal(new Set(CHARACTERS.map(c=>c.id)).size,9);
-  for(let i=0;i<CHARACTERS.length;i++)assert.equal(selectCharacter({rotation:'random'},new Date(),()=>(i+.5)/CHARACTERS.length).id,CHARACTERS[i].id);
+  assert.equal(new Set(CHARACTERS.map(c=>c.id)).size,12);
+  const everyday=CHARACTERS.filter(c=>!c.special);for(let i=0;i<everyday.length;i++)assert.equal(selectCharacter({rotation:'random'},new Date(),()=>(i+.5)/everyday.length).id,everyday[i].id);
   assert.equal(selectCharacter({rotation:'fixed',character:'cat'}).id,'cat');
   assert.equal(selectCharacter({rotation:'daypart'},new Date(2026,5,1,9)).id,'fox');
-  assert.equal(selectCharacter({rotation:'seasonal'},new Date(2026,11,1)).id,'panda');
+  assert.equal(selectCharacter({rotation:'seasonal'},new Date(2026,11,1)).id,'santa');
 });
 test('custom greeting overrides localized preset',()=>{
   const character=CHARACTERS[0];assert.equal(characterMessage({message:'  Hi  '},character,'ka'),'Hi');assert.equal(characterMessage({},character,'en'),character.lines.en);
@@ -83,7 +83,7 @@ test('successful commerce reactions are opt-in and rate limited',()=>{
 
 test('custom mascot appearance clamps geometry and rejects unsafe CSS',()=>{
   const a=normalizeCharacterAppearance({desktopSize:900,mobileSize:-10,lift:999,fontSize:30,bubbleColor:'url(https://example.test)',bubbleShape:'invalid'});
-  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded',renderMode:'auto',lighting:'studio'});
+  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded',renderMode:'auto',lighting:'studio',prominence:'enhanced'});
   assert.equal(characterAppearanceStyle({bubbleColor:'#000000',bubbleShape:'pill'})['--gs-mascot-radius'],'28px');
   assert.equal(characterBubbleInk('#000000'),'#ffffff');
   assert.equal(characterBubbleInk('#ffffff'),'#000000');
@@ -173,10 +173,12 @@ import {sphereMesh,mascotRgb,foxPose} from '../src/utils/mascot3DGeometry.js';
 test('flagship mesh is bounded, depth-bearing and has valid triangle indices',()=>{const mesh=sphereMesh();assert.equal(mesh.positions.length,19*25*3);assert.equal(mesh.indices.length,18*24*6);assert.ok(mesh.indices.every(i=>i<mesh.positions.length/3));assert.ok(mesh.positions.some(x=>x<-.9)&&mesh.positions.some(x=>x>.9));assert.deepEqual(mascotRgb('#ff0000'),[1,0,0]);assert.deepEqual(foxPose(8,'wave',true),foxPose(0,'wave',true));assert.notDeepEqual(foxPose(.2,'run-wave'),foxPose(.8,'run-wave'));assert.equal(normalizeCharacterAppearance({renderMode:'unsafe'}).renderMode,'auto');assert.equal(normalizeCharacterAppearance({renderMode:'vector'}).renderMode,'vector');});
 
 import {MASCOT_3D_IDS,drawMascot3DModel} from '../src/utils/mascot3DModels.js';
-test('all nine characters have supported 3D identities and bounded distinct model geometry',()=>{assert.deepEqual(MASCOT_3D_IDS,CHARACTERS.map(c=>c.id));const signatures=new Set();for(const id of MASCOT_3D_IDS.filter(id=>id!=='fox')){const parts=[];drawMascot3DModel(id,(...args)=>parts.push(args),[.6,.4,.2],{step:.2,wave:.1,tail:.1,breath:.01},{emotion:'happy'});assert.ok(parts.length>=15&&parts.length<=65);for(const [center,scale,tint,tilt,gloss,fur] of parts){assert.ok(center.every(Number.isFinite));assert.ok(scale.every(v=>Number.isFinite(v)&&v>0));assert.ok(tint.every(v=>Number.isFinite(v)&&v>=0&&v<=1));assert.ok([tilt,gloss,fur].every(Number.isFinite));}signatures.add(JSON.stringify(parts));}assert.equal(signatures.size,8);});
+test('all twelve characters have supported 3D identities and bounded distinct model geometry',()=>{assert.deepEqual(MASCOT_3D_IDS,CHARACTERS.map(c=>c.id));const signatures=new Set();for(const id of MASCOT_3D_IDS.filter(id=>id!=='fox')){const parts=[];drawMascot3DModel(id,(...args)=>parts.push(args),[.6,.4,.2],{step:.2,wave:.1,tail:.1,breath:.01},{emotion:'happy'});assert.ok(parts.length>=15&&parts.length<=65);for(const [center,scale,tint,tilt,gloss,fur] of parts){assert.ok(center.every(Number.isFinite));assert.ok(scale.every(v=>Number.isFinite(v)&&v>0));assert.ok(tint.every(v=>Number.isFinite(v)&&v>=0&&v<=1));assert.ok([tilt,gloss,fur].every(Number.isFinite));}signatures.add(JSON.stringify(parts));}assert.equal(signatures.size,11);});
 
 import {mascotPose,mascotLimb} from '../src/utils/mascot3DGeometry.js';
 test('species-specific pose timing, finite gestures and connected limb pivots',()=>{for(const id of MASCOT_3D_IDS){const motions=new Set();for(const behavior of CHARACTER_MOTIONS){const pose=mascotPose(id,.61,behavior);assert.ok(Object.values(pose).every(Number.isFinite));assert.ok(pose.lift>=0&&pose.lift<=.20);assert.ok(Object.values(mascotPose(id,2,behavior,true)).every(v=>v===0));motions.add(JSON.stringify(pose));}assert.ok(motions.size>=10);assert.equal(mascotPose(id,4,'run-wave').step,0);}assert.notDeepEqual(mascotPose('rabbit',.6,'run-wave'),mascotPose('bear',.6,'run-wave'));const limb=mascotLimb([.4,.1,.2],.7,1.5);assert.ok(Math.abs(Math.hypot(...limb.tip.map((v,i)=>v-[.4,.1,.2][i]))-.7)<1e-8);assert.ok(limb.center.every((v,i)=>Math.abs(v-(limb.tip[i]+[.4,.1,.2][i])*.5)<1e-8));});
 
 import {MASCOT_LIGHTING,mascotLighting} from '../src/utils/mascot3DLighting.js';
 test('lighting presets are distinct, finite and restricted to known safe values',()=>{assert.equal(normalizeCharacterAppearance({lighting:'invalid'}).lighting,'studio');assert.equal(mascotLighting('__proto__'),MASCOT_LIGHTING.studio);const seen=new Set();for(const [name,light] of Object.entries(MASCOT_LIGHTING)){assert.equal(normalizeCharacterAppearance({lighting:name}).lighting,name);assert.equal(mascotLighting(name),light);assert.ok([light.ambient,...light.key,...light.fill,...light.rim,...light.strength].every(x=>Number.isFinite(x)&&x>=0&&x<=1));seen.add(JSON.stringify(light));}assert.equal(seen.size,3);});
+
+test('seasonal mascots are selectable without advertising fictitious discounts, with compact or enhanced sizes',()=>{for(const id of ['santa','snowman','deal'])assert.equal(selectCharacter({character:id}).id,id);assert.equal(selectCharacter({rotation:'seasonal'},new Date(2027,0,1)).id,'snowman');assert.equal(characterAppearanceStyle({mobileSize:76})['--gs-mascot-mobile'],'92px');assert.equal(characterAppearanceStyle({mobileSize:76,prominence:'compact'})['--gs-mascot-mobile'],'76px');assert.equal(normalizeCharacterAppearance({prominence:'bad'}).prominence,'enhanced');});
