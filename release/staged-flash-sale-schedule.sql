@@ -13,11 +13,13 @@ CREATE TABLE IF NOT EXISTS private.flash_sale_schedule (
   outcome text,
   processed_at timestamptz
 );
+ALTER TABLE private.flash_sale_schedule ADD COLUMN IF NOT EXISTS product_ids text[]
+ CHECK (product_ids IS NULL OR (array_ndims(product_ids)=1 AND cardinality(product_ids) BETWEEN 1 AND 500));
 ALTER TABLE private.flash_sale_schedule ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON private.flash_sale_schedule FROM PUBLIC, anon, authenticated;
 CREATE INDEX IF NOT EXISTS flash_sale_schedule_due_idx ON private.flash_sale_schedule(starts_at,id) WHERE status='pending';
 
-CREATE OR REPLACE FUNCTION private.admin_schedule_flash_sale(p_category text,p_discount_percent numeric,p_duration_hours integer,p_starts_at timestamptz)
+CREATE OR REPLACE FUNCTION private.create_flash_sale_schedule(p_category text,p_discount_percent numeric,p_duration_hours integer,p_starts_at timestamptz,p_product_ids text[])
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $fn$
 DECLARE v_row private.flash_sale_schedule%ROWTYPE;
 BEGIN
@@ -30,19 +32,56 @@ BEGIN
      OR coalesce(length(trim(p_category)),0) NOT BETWEEN 1 AND 200 THEN
     RAISE EXCEPTION 'Invalid flash-sale schedule' USING ERRCODE='22023';
   END IF;
+  IF p_product_ids IS NOT NULL AND (
+    cardinality(p_product_ids) NOT BETWEEN 1 AND 500 OR array_ndims(p_product_ids) IS DISTINCT FROM 1
+    OR EXISTS(SELECT 1 FROM unnest(p_product_ids) x(id) WHERE x.id IS NULL OR length(trim(x.id)) NOT BETWEEN 1 AND 200)
+    OR (SELECT count(DISTINCT x.id) FROM unnest(p_product_ids) x(id))<>cardinality(p_product_ids)
+  ) THEN RAISE EXCEPTION 'Invalid product selection' USING ERRCODE='22023'; END IF;
   PERFORM pg_advisory_xact_lock(20261125,701);
+  IF p_product_ids IS NOT NULL AND (SELECT count(*) FROM public.products p
+    WHERE p.id::text=ANY(p_product_ids) AND (trim(p_category)='ყველა' OR p.category=trim(p_category))
+    AND coalesce(p.variants,'[]'::jsonb)='[]'::jsonb
+    AND p.flash_sale_ends_at IS NULL AND (p.old_price_gel IS NULL OR p.old_price_gel<=p.price_gel)
+    AND p.price_gel>0 AND round(p.price_gel*(1-p_discount_percent/100),2)<p.price_gel
+    AND NOT EXISTS(SELECT 1 FROM public.flash_sale_items i WHERE i.product_id=p.id)
+  )<>cardinality(p_product_ids) THEN
+    RAISE EXCEPTION 'Selected products are no longer eligible' USING ERRCODE='22023';
+  END IF;
   IF EXISTS (SELECT 1 FROM private.flash_sale_schedule s WHERE s.status='pending'
       AND s.starts_at < p_starts_at+make_interval(hours=>p_duration_hours) AND s.ends_at > p_starts_at
-      AND (s.category=trim(p_category) OR s.category='ყველა' OR trim(p_category)='ყველა')) THEN
+      AND ((s.product_ids IS NOT NULL AND p_product_ids IS NOT NULL AND s.product_ids && p_product_ids)
+        OR ((s.product_ids IS NULL OR p_product_ids IS NULL) AND
+          (s.category=trim(p_category) OR s.category='ყველა' OR trim(p_category)='ყველა')))) THEN
     RAISE EXCEPTION 'An overlapping schedule already exists' USING ERRCODE='23505';
   END IF;
-  INSERT INTO private.flash_sale_schedule(category,discount_percent,starts_at,ends_at,created_by)
-    VALUES(trim(p_category),p_discount_percent,p_starts_at,p_starts_at+make_interval(hours=>p_duration_hours),auth.uid())
+  INSERT INTO private.flash_sale_schedule(category,discount_percent,starts_at,ends_at,created_by,product_ids)
+    VALUES(trim(p_category),p_discount_percent,p_starts_at,p_starts_at+make_interval(hours=>p_duration_hours),auth.uid(),p_product_ids)
     RETURNING * INTO v_row;
   RETURN to_jsonb(v_row)-'created_by';
 END;
 $fn$;
 
+CREATE OR REPLACE FUNCTION private.admin_schedule_flash_sale(p_category text,p_discount_percent numeric,p_duration_hours integer,p_starts_at timestamptz)
+RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $fn$
+ SELECT private.create_flash_sale_schedule(p_category,p_discount_percent,p_duration_hours,p_starts_at,NULL::text[]);
+$fn$;
+CREATE OR REPLACE FUNCTION private.admin_schedule_selected_flash_sale(p_category text,p_discount_percent numeric,p_duration_hours integer,p_starts_at timestamptz,p_product_ids text[])
+RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $fn$
+BEGIN
+ IF coalesce(cardinality(p_product_ids),0)=0 THEN RAISE EXCEPTION 'Selection required' USING ERRCODE='22023'; END IF;
+ RETURN private.create_flash_sale_schedule(p_category,p_discount_percent,p_duration_hours,p_starts_at,p_product_ids);
+END;
+$fn$;
+CREATE OR REPLACE FUNCTION public.admin_schedule_selected_flash_sale(p_category text,p_discount_percent numeric,p_duration_hours integer,p_starts_at timestamptz,p_product_ids text[])
+RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $fn$
+ SELECT private.admin_schedule_selected_flash_sale(p_category,p_discount_percent,p_duration_hours,p_starts_at,p_product_ids);
+$fn$;
+REVOKE ALL ON FUNCTION private.create_flash_sale_schedule(text,numeric,integer,timestamptz,text[]) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION private.create_flash_sale_schedule(text,numeric,integer,timestamptz,text[]) TO authenticated;
+REVOKE ALL ON FUNCTION private.admin_schedule_selected_flash_sale(text,numeric,integer,timestamptz,text[]) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION private.admin_schedule_selected_flash_sale(text,numeric,integer,timestamptz,text[]) TO authenticated;
+REVOKE ALL ON FUNCTION public.admin_schedule_selected_flash_sale(text,numeric,integer,timestamptz,text[]) FROM PUBLIC,anon,authenticated,service_role;
+GRANT EXECUTE ON FUNCTION public.admin_schedule_selected_flash_sale(text,numeric,integer,timestamptz,text[]) TO authenticated;
 CREATE OR REPLACE FUNCTION private.admin_list_flash_sale_schedule()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $fn$
 BEGIN
@@ -80,6 +119,7 @@ BEGIN
     ELSE
       -- Lock all existing eligible category rows; concurrent manual updates serialize.
       PERFORM p.id FROM public.products p WHERE (s.category='ყველა' OR p.category=s.category)
+        AND (s.product_ids IS NULL OR p.id::text=ANY(s.product_ids))
         ORDER BY p.id FOR UPDATE;
       -- Do not replace an existing promotion or change an already marked-down item.
       -- Product-level expiry remains the sole price restoration path.
@@ -87,6 +127,7 @@ BEGIN
         price_gel=round(p.price_gel*(1-s.discount_percent/100),2),
         flash_sale_started_at=s.starts_at,flash_sale_ends_at=s.ends_at,flash_sale_percent=s.discount_percent
         WHERE (s.category='ყველა' OR p.category=s.category)
+          AND (s.product_ids IS NULL OR p.id::text=ANY(s.product_ids))
           AND coalesce(p.variants,'[]'::jsonb)='[]'::jsonb
           AND p.flash_sale_ends_at IS NULL
           AND (p.old_price_gel IS NULL OR p.old_price_gel<=p.price_gel)

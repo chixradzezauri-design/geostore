@@ -1,10 +1,14 @@
 import {previewFlashSaleWindow} from './adminFlashSalePlanning.js';
-export function buildFlashScheduleRequest(form,plannedStart,now=Date.now()){
+import {previewFlashPrices,selectedFlashRows} from './adminFlashPricePreview.js';
+const validSelection=ids=>Array.isArray(ids)&&ids.length>=1&&ids.length<=500&&ids.every(id=>typeof id==='string'&&id.trim()&&id.length<=200)&&new Set(ids).size===ids.length;
+export function buildFlashScheduleRequest(form,plannedStart,now=Date.now(),products){
  const percent=Number(form?.discountPercent),category=String(form?.category??'').trim(),duration=Number(form?.durationHours);
  const window=previewFlashSaleWindow(duration,plannedStart,now);
- if(Array.isArray(form?.selectedIds)||!plannedStart||!window||window.startsAt<now+60000||window.startsAt>now+180*86400000||
+ if(!plannedStart||!window||window.startsAt<now+60000||window.startsAt>now+180*86400000||
  !/^\d+(?:\.\d{1,2})?$/.test(String(form?.discountPercent??'').trim())||!Number.isFinite(percent)||percent<=0||percent>=100||!category||category.length>200)return null;
- return {p_category:category,p_discount_percent:percent,p_duration_hours:duration,p_starts_at:new Date(window.startsAt).toISOString()};
+ const selected=Array.isArray(form?.selectedIds);
+ if(selected&&(!validSelection(form.selectedIds)||!selectedFlashRows(previewFlashPrices(products,form,true),form.selectedIds)))return null;
+ return {p_category:category,p_discount_percent:percent,p_duration_hours:duration,p_starts_at:new Date(window.startsAt).toISOString(),...(selected?{p_product_ids:[...form.selectedIds]}:{})};
 }
 export function validateFlashScheduleRows(data){
  if(!Array.isArray(data)||data.length>100)throw Error('აქციების სიის პასუხი არასწორია.');
@@ -14,7 +18,8 @@ export function validateFlashScheduleRows(data){
    !['pending','started','cancelled','skipped'].includes(row.status)||!Number.isFinite(Date.parse(row.starts_at))||
    !(Date.parse(row.ends_at)>Date.parse(row.starts_at))||!Number.isFinite(Number(row.discount_percent))||
    !(Number(row.discount_percent)>0&&Number(row.discount_percent)<100)||
-   !Number.isInteger(row.updated_count)||row.updated_count<0)throw Error('აქციის ჩანაწერი არასწორია.');
+   !Number.isInteger(row.updated_count)||row.updated_count<0||
+   (row.product_ids!=null&&(!validSelection(row.product_ids)||row.updated_count>row.product_ids.length)))throw Error('აქციის ჩანაწერი არასწორია.');
   ids.add(row.id);
  }
  return [...data].sort((a,b)=>Number(b.status==='pending')-Number(a.status==='pending')||

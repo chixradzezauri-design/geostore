@@ -71,3 +71,36 @@ DO $$ BEGIN
  IF NOT EXISTS(SELECT 1 FROM public.products WHERE id='selected' AND price_gel=80 AND old_price_gel=100 AND flash_sale_ends_at>now()) THEN RAISE EXCEPTION 'selected price/expiry wrong'; END IF;
  IF EXISTS(SELECT 1 FROM public.products WHERE id IN ('not-selected','variant','other','legacy') AND price_gel<>100) THEN RAISE EXCEPTION 'nonselected product changed'; END IF;
 END $$;
+
+-- Selected schedules never widen their scope at activation.
+INSERT INTO public.products(id,category,price_gel,variants) VALUES
+ ('schedule-a','schedule-bags',100,'[]'),('schedule-b','schedule-bags',100,'[]'),('schedule-c','schedule-bags',100,'[]'),('schedule-d','schedule-bags',100,'[]');
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+DO $$ BEGIN
+ BEGIN PERFORM public.admin_schedule_selected_flash_sale('schedule-bags',20,1,now()+interval '2 hours',ARRAY['schedule-a']); RAISE EXCEPTION 'nonowner allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SELECT set_config('request.jwt.claim.sub','1060de3d-d28a-45f8-9a64-5e0368cffc4b',false);
+DO $$ BEGIN
+ BEGIN PERFORM public.admin_schedule_selected_flash_sale('ყველა',20,1,now()+interval '2 hours',NULL); RAISE EXCEPTION 'null allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_schedule_selected_flash_sale('ყველა',20,1,now()+interval '2 hours',ARRAY[]::text[]); RAISE EXCEPTION 'empty allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_schedule_selected_flash_sale('schedule-bags',20,1,now()+interval '2 hours',ARRAY['missing']); RAISE EXCEPTION 'stale allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ IF public.admin_schedule_selected_flash_sale('schedule-bags',20,1,now()+interval '2 hours',ARRAY['schedule-a','schedule-d'])->'product_ids' <> '["schedule-a","schedule-d"]'::jsonb THEN RAISE EXCEPTION 'scope not saved'; END IF;
+ PERFORM public.admin_schedule_selected_flash_sale('schedule-bags',30,1,now()+interval '2 hours',ARRAY['schedule-b']);
+ BEGIN PERFORM public.admin_schedule_selected_flash_sale('ყველა',20,1,now()+interval '2 hours',ARRAY['schedule-a']); RAISE EXCEPTION 'duplicate overlap'; EXCEPTION WHEN unique_violation THEN NULL; END;
+ BEGIN PERFORM public.admin_schedule_flash_sale('schedule-bags',20,1,now()+interval '2 hours'); RAISE EXCEPTION 'category overlap'; EXCEPTION WHEN unique_violation THEN NULL; END;
+END $$;
+RESET ROLE;
+DO $$ BEGIN
+ IF has_function_privilege('anon','public.admin_schedule_selected_flash_sale(text,numeric,integer,timestamptz,text[])','EXECUTE') THEN RAISE EXCEPTION 'anon allowed'; END IF;
+ IF private.run_due_flash_sale_schedule()<>0 THEN RAISE EXCEPTION 'early activation'; END IF;
+END $$;
+UPDATE public.products SET old_price_gel=120 WHERE id='schedule-d';
+UPDATE private.flash_sale_schedule SET starts_at=now()-interval '1 minute',ends_at=now()+interval '59 minutes' WHERE category='schedule-bags' AND status='pending';
+DO $$ BEGIN
+ IF private.run_due_flash_sale_schedule()<>2 THEN RAISE EXCEPTION 'selected activation count'; END IF;
+ IF (SELECT price_gel FROM public.products WHERE id='schedule-a')<>80 OR (SELECT price_gel FROM public.products WHERE id='schedule-b')<>70 THEN RAISE EXCEPTION 'selected prices incorrect'; END IF;
+ IF EXISTS(SELECT 1 FROM public.products WHERE id IN ('schedule-c','schedule-d') AND price_gel<>100) THEN RAISE EXCEPTION 'unexpected price change'; END IF;
+ IF EXISTS(SELECT 1 FROM private.flash_sale_schedule WHERE category='schedule-bags' AND (status<>'started' OR updated_count<>1)) THEN RAISE EXCEPTION 'outcome incorrect'; END IF;
+ IF private.run_due_flash_sale_schedule()<>0 THEN RAISE EXCEPTION 'duplicate activation'; END IF;
+END $$;

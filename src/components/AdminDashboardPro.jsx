@@ -7525,7 +7525,7 @@ export default function AdminDashboardPro({
                 აქციის დასრულებისას სისტემა ავტომატურად დააბრუნებს პროდუქტების წინა ფასებს. დრო ბაზაში ინახება და გვერდის განახლება ათვლას აღარ გაანულებს.
               </p>
             </form>
-            {isOwner && <AdminFlashSchedule client={supabase} form={flashSaleForm} plannedStart={flashSalePlannedStart} immediateBusy={isApplyingFlashSale} sessionVersion={adminSessionVersion.current} isCurrentSession={isCurrentAdminSession} onScheduled={()=>setFlashSalePlannedStart('')} />}
+            {isOwner && <AdminFlashSchedule client={supabase} form={flashSaleForm} products={products} plannedStart={flashSalePlannedStart} immediateBusy={isApplyingFlashSale} sessionVersion={adminSessionVersion.current} isCurrentSession={isCurrentAdminSession} onScheduled={()=>setFlashSalePlannedStart('')} />}
           </div>
         )}
 

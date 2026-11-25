@@ -30,3 +30,11 @@ test('history metrics count only returned schedule rows and count product update
 test('individual scope cannot silently schedule an entire category',()=>{
  for(const selectedIds of [[],['a']])assert.equal(buildFlashScheduleRequest({...form,selectedIds},'2026-11-25T17:00',now),null);
 });
+
+test('selected schedules require eligible explicit IDs and preserve category payload',()=>{
+ const products=[{id:'a',category:'bags',priceGEL:100},{id:'b',category:'bags',priceGEL:80,oldPriceGEL:100},{id:'c',category:'shoes',priceGEL:100}];
+ const time='2026-11-25T17:00';
+ assert.deepEqual(buildFlashScheduleRequest({...form,selectedIds:['a']},time,now,products).p_product_ids,['a']);
+ for(const ids of [[],['a','a'],['b'],['c'],['missing']])assert.equal(buildFlashScheduleRequest({...form,selectedIds:ids},time,now,products),null);
+ assert.equal('p_product_ids' in buildFlashScheduleRequest(form,time,now,products),false);
+});

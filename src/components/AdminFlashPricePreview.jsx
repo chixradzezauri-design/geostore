@@ -18,7 +18,7 @@ export default function AdminFlashPricePreview({products,form,scheduled,disabled
    <legend className="px-1 font-bold">აქციის პროდუქტები</legend>
    <label className="flex items-center gap-2 min-h-11"><input type="radio" name="flash-product-scope" checked={!selected} onChange={()=>onSelectionChange(null)}/> მთელი არჩეული კატეგორია</label>
    <label className="flex items-center gap-2 min-h-11"><input type="radio" name="flash-product-scope" checked={selected} onChange={()=>onSelectionChange([])}/> მხოლოდ მონიშნული პროდუქტები</label>
-   {selected&&<><p className="text-slate-300">მონიშნულია {ids.length} / {MAX_FLASH_SELECTION}. მონიშვნები შენარჩუნდება ძიებისას. კონკრეტული პროდუქტების განრიგი ჯერ მიუწვდომელია.</p><button type="button" className="min-h-11 rounded-lg border border-slate-600 px-3" onClick={()=>onSelectionChange([])}>მონიშვნების გასუფთავება</button>{ids.length>0&&!chosen&&<p role="alert" className="text-amber-200">ზოგი მონიშნული პროდუქტი აღარ შეესაბამება პირობებს. გაასუფთავეთ არჩევანი და მონიშნეთ თავიდან.</p>}</>}
+   {selected&&<><p className="text-slate-300">მონიშნულია {ids.length} / {MAX_FLASH_SELECTION}. მონიშვნები შენარჩუნდება ძიებისას. განრიგშიც მხოლოდ მონიშნული პროდუქტები ჩაიწერება.</p><button type="button" className="min-h-11 rounded-lg border border-slate-600 px-3" onClick={()=>onSelectionChange([])}>მონიშვნების გასუფთავება</button>{ids.length>0&&!chosen&&<p role="alert" className="text-amber-200">ზოგი მონიშნული პროდუქტი აღარ შეესაბამება პირობებს. გაასუფთავეთ არჩევანი და მონიშნეთ თავიდან.</p>}</>}
   </fieldset>
   {!result?<p className="text-slate-400">შეიყვანეთ სწორი ფასდაკლების პროცენტი.</p>:<>
    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
