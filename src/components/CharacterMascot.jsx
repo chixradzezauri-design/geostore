@@ -195,9 +195,10 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
   catalogueRef.current={products,ready:catalogueReady,category,onOpenProduct};
   const lastRecommendedId=useRef(null);
   const closeAtRef=useRef(0);
+  const intervalRef=useRef(0);
   const settingsKey=JSON.stringify(s);
   useEffect(()=>{
-    setPresentation(null);
+    setPresentation(null);shownAtRef.current=0;
     const current=JSON.parse(settingsKey);
     const revision=characterSettingsRevision(current);
     const repeat=current.frequency==='repeat';
@@ -216,11 +217,12 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       clear();setPresentation(null);
       if(repeat){
         const record=readRepeat(revision);
-        if(record.count&&shownAtRef.current&&record.at===shownAtRef.current){saveRepeat({...record,at:Math.max(record.at,Date.now()-current.duration*1000),muted:mute||record.muted});}
+        if(record.count&&shownAtRef.current&&record.at===shownAtRef.current){saveRepeat({...record,cooldownUntil:Math.max(record.cooldownUntil||0,Date.now()+intervalRef.current),muted:mute||record.muted});}
         else if(mute)saveRepeat({...record,muted:true});
+        shownAtRef.current=0;
         if(mute)return;
         schedule();
-      }
+      }else shownAtRef.current=0;
     };
     dismissRef.current=close;
     extendRef.current=()=>{
@@ -231,6 +233,7 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       clearTimeout(closeTimer);
       const nextClose=Math.max(closeAtRef.current,Date.now()+wait);
       closeAtRef.current=nextClose;
+      if(repeat){const record=readRepeat(revision);if(record.at===shownAtRef.current)saveRepeat({...record,cooldownUntil:Math.max(record.cooldownUntil||0,nextClose+intervalRef.current)});}
       closeTimer=setTimeout(()=>close(false),Math.max(0,nextClose-Date.now()));
       return true;
     };
@@ -264,7 +267,7 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
         else sale=null;
       }
       if(repeat){
-        if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id,lastRegularId:CHARACTERS.find(c=>c.id===character.id)?.special?record.lastRegularId||(CHARACTERS.find(c=>c.id===record.lastId&&!c.special)?.id??null):character.id});
+        if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),cooldownUntil:now.getTime()+(effective.duration+effective.repeatInterval)*1000,lastId:character.id,lastRegularId:CHARACTERS.find(c=>c.id===character.id)?.special?record.lastRegularId||(CHARACTERS.find(c=>c.id===record.lastId&&!c.special)?.id??null):character.id});
       }else markSeen(current.frequency,revision);
       const placement=conciergePlacement(effective,repeat?record.count:0);
       const guideTarget=effective.guideLinks?chooseCharacterGuideTarget(effective,character.id,Object.keys(CHARACTER_GUIDE_TARGETS).filter(key=>visibleGuideTarget(key)),repeat?record.count:0):null;
@@ -275,13 +278,16 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       actionsRef.current=0;shownAtRef.current=now.getTime();
       setPresentation({character,settings:{...effective,...placement},guideTarget,recommendationId:recommendation?.id,sale:!!sale,advice,key:now.getTime(),actionCount:0});
       setSaleClock(now.getTime());
-      closeAtRef.current=now.getTime()+current.duration*1000;
-      closeTimer=setTimeout(()=>close(false),current.duration*1000);
+      intervalRef.current=effective.repeatInterval*1000;
+      closeAtRef.current=now.getTime()+effective.duration*1000;
+      closeTimer=setTimeout(()=>close(false),effective.duration*1000);
     }
     schedule();
     const visibility=()=>{if(document.visibilityState==='hidden'&&repeat){close(false);}};
+    const focus=()=>{if(shownAtRef.current&&visitorBusy())close(false);};
     document.addEventListener('visibilitychange',visibility);
-    return()=>{disposed=true;clear();dismissRef.current=null;extendRef.current=null;document.removeEventListener('visibilitychange',visibility);};
+    document.addEventListener('focusin',focus);
+    return()=>{disposed=true;clear();dismissRef.current=null;extendRef.current=null;document.removeEventListener('visibilitychange',visibility);document.removeEventListener('focusin',focus);};
   },[settingsKey,lang,forceReplay]);
   const recommendation=presentation?.recommendationId?conciergeRecommendationPool(presentation.sale?conciergeSaleProducts(products,catalogueReady,saleClock):conciergeProducts(products,catalogueReady),{mode:presentation.settings.recommendationMode,category,budget:presentation.settings.recommendationBudget}).find(p=>p.id===presentation.recommendationId)||null:null;
   useEffect(()=>{

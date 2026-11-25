@@ -277,7 +277,7 @@ export function characterRepeatRecord(raw,revision){
   try{
     const r=typeof raw==='string'?JSON.parse(raw):raw;
     if(r?.revision===revision&&Number.isInteger(r.count)&&r.count>=0&&r.count<=8&&Number.isFinite(r.at)&&r.at>=0){
-      return {revision,count:r.count,at:r.at,lastId:pick(r.lastId,CHARACTERS.map(c=>c.id),null),...(Object.hasOwn(r,'lastRegularId')?{lastRegularId:pick(r.lastRegularId,CHARACTERS.filter(c=>!c.special).map(c=>c.id),null)}:{}),muted:r.muted===true};
+      return {revision,count:r.count,at:r.at,lastId:pick(r.lastId,CHARACTERS.map(c=>c.id),null),...(Object.hasOwn(r,'lastRegularId')?{lastRegularId:pick(r.lastRegularId,CHARACTERS.filter(c=>!c.special).map(c=>c.id),null)}:{}),...(Number.isFinite(r.cooldownUntil)&&r.cooldownUntil>=r.at&&r.cooldownUntil-r.at<=204000?{cooldownUntil:r.cooldownUntil}:{}),muted:r.muted===true};
     }
   }catch{}
   return {revision,count:0,at:0,lastId:null,muted:false};
@@ -286,6 +286,7 @@ export function characterRepeatDelay(settings,record,now=Date.now()){
   const s=normalizeCharacterSettings(settings);
   if(!s.enabled||record.muted||record.count>=s.repeatLimit)return null;
   if(!record.count)return s.delay*1000;
+  if(Number.isFinite(record.cooldownUntil)&&record.at<=now)return Math.max(0,record.cooldownUntil-now);
   const elapsed=record.at<=now?now-record.at:0;
   return Math.max(0,(s.duration+s.repeatInterval)*1000-elapsed);
 }
@@ -383,6 +384,8 @@ export function normalizeCharacterProfiles(raw){
    side:pick(p.side,['inherit','left','right','alternate'],'inherit'),
    placement:pick(p.placement,['inherit','bottom','middle','roam'],'inherit'),
    target:pick(p.target,['inherit','categories','products','flash'],'inherit'),
+   duration:typeof p.duration==='number'&&Number.isFinite(p.duration)?bounded(p.duration,3,12,6):null,
+   repeatInterval:typeof p.repeatInterval==='number'&&Number.isFinite(p.repeatInterval)?bounded(p.repeatInterval,30,180,45):null,
    recommendationMode:pick(p.recommendationMode,['inherit','featured','category','variety','context'],'inherit'),
    tips:p.tips!==false,products:p.products!==false,sales:p.sales!==false,guides:p.guides!==false,interactions:p.interactions!==false,
    messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof p.messages?.[lang]==='string'?p.messages[lang].trim().slice(0,120):'']))}]];
@@ -392,7 +395,7 @@ export function applyCharacterProfile(settings,id,lang='ka',{preserveEvent=false
  const s=normalizeCharacterSettings(settings),p=s.profiles[id];
  if(!p?.enabled)return s;
  const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
- const next={...s,side:p.side==='inherit'?s.side:p.side,placement:p.placement==='inherit'?s.placement:p.placement,
+ const next={...s,duration:p.duration??s.duration,repeatInterval:p.repeatInterval??s.repeatInterval,side:p.side==='inherit'?s.side:p.side,placement:p.placement==='inherit'?s.placement:p.placement,
   recommendationMode:p.recommendationMode==='inherit'?s.recommendationMode:p.recommendationMode,
   advice:{...s.advice,enabled:s.advice.enabled&&p.tips,topic:p.topic==='inherit'?s.advice.topic:p.topic},
   recommendProducts:s.recommendProducts&&p.products,saleGuide:s.saleGuide&&p.sales,guideLinks:s.guideLinks&&p.guides,
