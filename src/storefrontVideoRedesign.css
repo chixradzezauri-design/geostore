@@ -1615,3 +1615,32 @@
   .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-identity { grid-template-columns: minmax(0,1fr) !important; }
   .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-profile-card > .gs-video-profile-identity > div { min-height: 0 !important; padding: 10px 12px !important; }
 }
+
+
+/* Signature video follow-up 09 — accessible footer actions and balanced wrapping. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .gs-video-footer-support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .gs-video-footer-support > svg { flex-shrink: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links > span[aria-hidden="true"] { display: none !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links > button {
+  box-sizing: border-box;
+  justify-content: center;
+  text-align: center;
+  word-break: normal !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer > p {
+  border-top: 1px solid var(--gs-line,#e2d9ce);
+  padding-top: 12px;
+  margin-inline: auto !important;
+  max-width: var(--gs-content-width,1440px);
+}
+@media (max-width:640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .gs-video-footer-support { width: min(100%,320px); }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links { gap: 6px !important; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-site-footer .gs-video-footer-support { width: min(100%,320px); }

@@ -134,6 +134,18 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
      });
    }),'Cart action targets remain contained at '+width);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Cart does not overflow at '+width);
+   const footer=page.locator('.geostore-site-footer');
+   assert.equal(await footer.locator('.geostore-footer-links > button').count(),3);
+   assert.ok(await footer.evaluate(el=>{
+     const outer=el.getBoundingClientRect();
+     return [...el.querySelectorAll('.geostore-footer-links button,.gs-video-footer-support')].every(button=>{
+       const r=button.getBoundingClientRect();
+       return r.height>=43 && r.left>=outer.left-1 && r.right<=outer.right+1;
+     });
+   }),'Footer controls remain contained and accessible at '+width);
+   await footer.locator('[data-visual-editor-target="footer.privacyLink"]').click();
+   await page.waitForFunction(()=>document.querySelector('[data-visual-editor-target="footer.privacyLink"]')?.getAttribute('aria-current')==='page');
+
    assert.deepEqual(writes,[],'No live or attempted write in isolated guest scenario');
    assert.deepEqual(errors,[],'No browser exceptions in active Signature layout');
    console.log('PASS active Signature storefront '+width+'px');
