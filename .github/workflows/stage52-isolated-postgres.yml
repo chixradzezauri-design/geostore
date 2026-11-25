@@ -117,6 +117,7 @@ on:
       - 'release/phase4-wardrobe-storage-draft.sql'
       - 'release/phase4-wardrobe-items-draft.sql'
       - 'release/phase4-wardrobe-reservations-draft.sql'
+      - 'release/phase4-wardrobe-erasure-worker-draft.sql'
       - 'tests/sql/phase4_wardrobe_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:

@@ -1,5 +1,6 @@
 -- 4AI: apply only after wardrobe metadata and storage policy drafts.
 -- Reservation records survive account deletion; each path is permanently unique.
+alter table private.customer_wardrobe_photo_erasure add column erased_at timestamptz;
 create table private.customer_wardrobe_photo_reservations (
  user_id uuid not null,
  photo_path text primary key,
@@ -32,9 +33,10 @@ begin
  if exists(select 1 from private.customer_wardrobe_photo_reservations where photo_path=p_path) then
   return jsonb_build_object('status','reserved');
  end if;
- -- Conservative cap: no slot released before a verified physical deletion
- -- worker is implemented. This is not yet suitable for general activation.
- select count(*) into v_count from private.customer_wardrobe_photo_reservations where user_id=v_owner;
+ -- Charge every reservation until the trusted worker confirms Storage removal.
+ select count(*) into v_count from private.customer_wardrobe_photo_reservations r
+ where r.user_id=v_owner and not exists(select 1 from private.customer_wardrobe_photo_erasure e
+ where e.photo_path=r.photo_path and e.erased_at is not null);
  if v_count>=20 then return jsonb_build_object('status','limit');end if;
  insert into private.customer_wardrobe_photo_reservations(user_id,photo_path) values(v_owner,p_path);
  return jsonb_build_object('status','reserved');

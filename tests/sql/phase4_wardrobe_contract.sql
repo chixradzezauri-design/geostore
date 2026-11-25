@@ -8,7 +8,7 @@ end $$;
 create schema private;
 create schema auth;
 create schema storage;
-grant usage on schema private to authenticated;
+grant usage on schema private to authenticated,service_role;
 grant usage on schema auth,storage to authenticated,anon;
 create table auth.users(id uuid primary key);
 create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,'{}'::jsonb) $$;
@@ -25,6 +25,7 @@ insert into storage.objects values('customer-wardrobe-private','00000000-0000-40
 \ir ../../release/phase4-wardrobe-storage-draft.sql
 \ir ../../release/phase4-wardrobe-items-draft.sql
 \ir ../../release/phase4-wardrobe-reservations-draft.sql
+\ir ../../release/phase4-wardrobe-erasure-worker-draft.sql
 set role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","is_anonymous":false}',false);
 do $test$
@@ -90,6 +91,33 @@ reset role;
 do $$ begin
  if has_table_privilege('authenticated','private.customer_wardrobe_state','SELECT') or has_function_privilege('anon','public.customer_wardrobe_read(uuid)','EXECUTE') then raise exception 'Unsafe ACL';end if;
 end $$;
+-- Worker roles are simulated; fixture deletion represents successful Storage API only.
+do $ begin
+ if has_function_privilege('authenticated','public.customer_wardrobe_erasure_batch(integer)','EXECUTE')
+ or has_function_privilege('authenticated','public.customer_wardrobe_confirm_erasure(text)','EXECUTE')
+ or has_function_privilege('anon','public.customer_wardrobe_confirm_erasure(text)','EXECUTE')
+ then raise exception 'Worker functions exposed';end if;
+end $;
+set role service_role;
+do $ declare p text:='00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000004.png';begin
+ if public.customer_wardrobe_erasure_batch(10) is distinct from jsonb_build_array(jsonb_build_object('path',p)) then raise exception 'Worker queue mismatch';end if;
+ if public.customer_wardrobe_confirm_erasure(p) is distinct from '{"status":"still-present"}'::jsonb then raise exception 'Premature completion';end if;
+end $;
+reset role;
+-- ONLY in disposable fixture; production must use Storage API.
+delete from storage.objects where bucket_id='customer-wardrobe-private' and name='00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000004.png';
+set role service_role;
+do $ declare p text:='00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000004.png';begin
+ if public.customer_wardrobe_confirm_erasure(p) is distinct from '{"status":"erased"}'::jsonb then raise exception 'Completion failed';end if;
+ if public.customer_wardrobe_erasure_batch(10) is distinct from '[]'::jsonb then raise exception 'Completed job requeued';end if;
+end $;
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","is_anonymous":false}',false);
+do $ begin
+ if public.customer_wardrobe_reserve_photo('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000999.png') is distinct from '{"status":"reserved"}'::jsonb then raise exception 'Verified erasure did not release quota';end if;
+end $;
+reset role;
 delete from auth.users where id='00000000-0000-4000-8000-000000000001';
 do $$ begin if exists(select 1 from private.customer_wardrobe_state where user_id='00000000-0000-4000-8000-000000000001') then raise exception 'Metadata cascade failed';end if;end $$;
 \echo 'PASS phase4 wardrobe isolated policy boundary, metadata CAS, reservations, quota and storefront compatibility'
