@@ -1203,6 +1203,42 @@
 .gs-signature-mobile-nav button:focus-visible {outline:2px solid var(--gs-accent,#a38450);outline-offset:-2px;}
 @media(max-width:359px){.gs-signature-mobile-nav button{font-size:10px;}}
 
+
+/* Signature 2026 stage 8 — commerce pages, account surfaces and product details. */
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-title,.gs-wishlist-title,.gs-profile-card h2,.gs-profile-orders h3) {font-family:var(--gs-heading-font-family,Georgia,serif)!important;font-weight:600!important;letter-spacing:0!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-item,.gs-cart-summary,.gs-wishlist-card,.gs-profile-card,.gs-profile-orders,.gs-cart-empty,.gs-video-wishlist-empty) {box-shadow:none!important;border-radius:var(--gs-card-radius,12px)!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-content-grid {gap:18px!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-summary {padding:clamp(14px,2vw,24px)!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-item {padding:12px!important;gap:12px!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-item-media,.gs-wishlist-image) {border-radius:var(--gs-card-radius,12px)!important;box-shadow:none!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-item-title,.gs-wishlist-detail-link) {font-weight:600!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-item-price,.gs-wishlist-product-price) {font-weight:700!important;font-variant-numeric:tabular-nums;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-card {padding:12px!important;gap:10px!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions {gap:6px!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-wishlist-share,.gs-wishlist-add,.gs-cart-checkout,.gs-video-continue-shopping) {box-shadow:none!important;font-weight:600!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-profile-card .gs-video-profile-identity > div {border-radius:var(--gs-card-radius,12px)!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-profile-orders .gs-profile-order-row {border-radius:var(--gs-card-radius,12px)!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-commerce-dialog,.gs-ai-dialog,.gs-support-panel) {border-radius:var(--gs-card-radius,12px)!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-commerce-dialog--checkout,.gs-commerce-dialog--account) :is(input:not([type="checkbox"]):not([type="radio"]),select) {border-radius:var(--gs-button-radius,8px)!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-checkout-heading h3 {font-family:var(--gs-heading-font-family,Georgia,serif)!important;font-weight:600!important;}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-checkout-submit-area button {box-shadow:none!important;border-radius:var(--gs-button-radius,8px)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog {border-radius:var(--gs-card-radius,12px)!important;box-shadow:0 16px 56px rgba(32,28,25,.16)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-modal-header {padding:10px 16px!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-modal-body {padding:clamp(12px,2vw,24px)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-gallery-thumb {border-radius:var(--gs-button-radius,8px)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-detail-title {font-weight:600!important;font-family:var(--gs-heading-font-family,Georgia,serif)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-price-panel {box-shadow:none!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog :is(.gs-product-detail-specs,.gs-product-option-card,.gs-product-description-panel,.gs-product-review-card,.gs-product-review-form) {border-radius:var(--gs-card-radius,12px)!important;box-shadow:none!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog :is(.gs-size-option,.gs-color-option,.gs-custom-variant-option) {border-radius:var(--gs-button-radius,8px)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-modal-add-to-cart {border-radius:var(--gs-button-radius,8px)!important;box-shadow:none!important;}
+@media(max-width:640px){
+ .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-grid {grid-template-columns:minmax(0,1fr)!important;}
+ .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-content-grid {gap:12px!important;}
+ .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-summary {padding:14px!important;}
+ :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-modal-body {padding:12px!important;}
+ :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-modal-header {padding:8px 12px!important;}
+}
+
 /* Batch 10 — explicit editor values beat visual defaults in both live and internal preview.
    Attribute guards prevent inherited values from accidentally styling another element. */
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) [data-visual-editor-target][style*="--gs-video-explicit-color:"] { color:var(--gs-video-explicit-color)!important; }
