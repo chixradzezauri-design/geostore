@@ -1,4 +1,5 @@
 import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
+import CustomerPersonalOffers from './components/CustomerPersonalOffers.jsx';
 import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
 import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
@@ -4399,6 +4400,7 @@ export default function App() {
               </button>
             </div>
 
+            {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && !adminLoggedIn && <CustomerPersonalOffers key={currentUser.id} products={products} wishlist={wishlist} ready={catalogueVerifiedEpoch===productsAccessEpoch.current} lang={currentLang} formatPrice={formatPrice} onOpenProduct={handleFindSavedProduct}/>}
             <div className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
