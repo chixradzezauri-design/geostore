@@ -9,6 +9,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { EMPTY_ADMIN_ACCESS, hasAdminPermission, hasAnyAdminAccess } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
+import { matchesCustomerOrderRequestFilter } from '../utils/customerOrderRequest.js';
 import { ADMIN_MFA_ROLLOUT_ENABLED } from '../utils/adminAuthCoordinator.js';
 import { createSystemHistoryReader, SYSTEM_HISTORY_ENABLED } from '../utils/systemHistory.js';
 const SystemMonitoringPanel = React.lazy(() => import('./SystemMonitoringPanel.jsx'));
@@ -2111,6 +2112,7 @@ export default function AdminDashboardPro({
   const [supportTicketsLoading, setSupportTicketsLoading] = useState(false);
   const [supportSearch, setSupportSearch] = useState('');
   const [supportStatusFilter, setSupportStatusFilter] = useState('all');
+  const [supportRequestFilter, setSupportRequestFilter] = useState('all');
   const [supportStatusBusy, setSupportStatusBusy] = useState({});
   const supportStatusInFlight = useRef(new Set());
   const [legacyMessageSearch, setLegacyMessageSearch] = useState('');
@@ -5338,6 +5340,7 @@ export default function AdminDashboardPro({
   const supportSearchTerm = supportSearch.trim().toLocaleLowerCase();
   const filteredSupportTickets = supportTickets.filter(ticket =>
     (supportStatusFilter === 'all' || ticket.status === supportStatusFilter) &&
+    matchesCustomerOrderRequestFilter(ticket.subject, supportRequestFilter) &&
     [ticket.id, ticket.subject, ticket.customerName, ticket.email, ticket.message].some(value =>
       String(value ?? '').toLocaleLowerCase().includes(supportSearchTerm))
   );
@@ -6859,7 +6862,9 @@ export default function AdminDashboardPro({
               <div className="min-w-0"><label htmlFor="admin-workspace-support-status" className="block text-xs text-slate-300 mb-1">სტატუსი</label><select id="admin-workspace-support-status" value={supportStatusFilter} onChange={e => { setSupportStatusFilter(e.target.value); setSelectedSupportTicketId(null); }} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs"><option value="all">ყველა</option><option value="ღია">ღია</option><option value="მუშავდება">მუშავდება</option><option value="მოგვარებული">მოგვარებული</option></select></div>
               <button type="button" disabled={supportTicketsLoading} onClick={() => void fetchTickets()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
             </div>
-            {(supportSearch || supportStatusFilter !== 'all') && <button type="button" onClick={() => { setSupportSearch(''); setSupportStatusFilter('all'); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">ფილტრების გასუფთავება</button>}
+            <div className="min-w-0"><label htmlFor="admin-workspace-support-type" className="block text-xs text-slate-300 mb-1">მოთხოვნის ტიპი</label><select id="admin-workspace-support-type" value={supportRequestFilter} onChange={e => { setSupportRequestFilter(e.target.value); setSelectedSupportTicketId(null); }} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white text-xs"><option value="all">ყველა მიმართვა</option><option value="requests">დაბრუნება და გაცვლა</option><option value="return">დაბრუნება</option><option value="exchange">გაცვლა</option></select></div>
+            {supportRequestFilter !== 'all' && <p className="text-xs text-slate-400">ტიპი მითითებულია მიმართვის თემის მიხედვით. გადაწყვეტილებამდე გადაამოწმეთ შეკვეთა და მისი მფლობელი. მხარდაჭერის სტატუსი არ ცვლის ფინანსურ ან მარაგის მონაცემებს.</p>}
+            {(supportSearch || supportStatusFilter !== 'all' || supportRequestFilter !== 'all') && <button type="button" onClick={() => { setSupportSearch(''); setSupportStatusFilter('all'); setSupportRequestFilter('all'); setSelectedSupportTicketId(null); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">ფილტრების გასუფთავება</button>}
             <p role="status" className="text-xs text-slate-300">{supportTicketsReady ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
             <div className="admin-support-list space-y-3">
               {visibleSupportTickets.length === 0 ? (

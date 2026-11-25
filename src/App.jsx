@@ -1,6 +1,6 @@
 import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
 import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
-import { buildCustomerOrderRequest } from './utils/customerOrderRequest.js';
+import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import {captureCheckoutCart,planConfirmedLocalCartCleanup,checkoutCartUnchanged} from './utils/checkoutCartCleanup.js';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
@@ -813,6 +813,9 @@ export default function App() {
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [supportSubmission, setSupportSubmission] = useState(null);
   const [orderRequestDraft, setOrderRequestDraft] = useState(null);
+  const [supportRequestFilter, setSupportRequestFilter] = useState('all');
+  useEffect(() => { if (!supportOpen) setSupportRequestFilter('all'); }, [supportOpen]);
+  useEffect(() => { setSupportRequestFilter('all'); }, [currentUser?.id]);
   const activeOrderRequestDraft = orderRequestDraft?.ownerId === currentUser?.id ? orderRequestDraft : null;
   useEffect(() => { setOrderRequestDraft(null); }, [currentUser?.id]);
   useEffect(() => { if (!supportOpen) setOrderRequestDraft(null); }, [supportOpen]);
@@ -4402,6 +4405,9 @@ export default function App() {
                 {t.orderHistory}
               </h3>
 
+              <button type="button" disabled={supportOpen || isSubmittingSupport} className="w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
+                {currentLang === 'en' ? 'My returns & exchanges' : currentLang === 'ru' ? 'Мои возвраты и обмены' : 'ჩემი დაბრუნება და გაცვლა'}
+              </button>
               <div className="gs-video-profile-order-list space-y-3" aria-busy={myOrdersLoading}>
                 {myOrdersError && myOrders.length > 0 && <p role="status" className="gs-video-profile-history-warning">{myOrdersError}</p>}
                 {myOrdersLoading && myOrders.length === 0 ? (
@@ -4456,6 +4462,7 @@ export default function App() {
                           const request = buildCustomerOrderRequest(order, kind, currentLang);
                           if (!request) return;
                           setOrderRequestDraft({ ...request, ownerId: currentUser.id });
+                          setSupportRequestFilter('requests');
                           setSupportSubmission(null);
                           setSupportOpen(true);
                         }}/>
@@ -4663,6 +4670,7 @@ export default function App() {
                 type="text"
                 name="csubject"
                 defaultValue={activeOrderRequestDraft?.subject || ''}
+                readOnly={!!activeOrderRequestDraft}
                 maxLength={150}
                 aria-label={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
@@ -4698,15 +4706,26 @@ export default function App() {
                   <p id="gs-my-support-tickets-title" className="text-sm font-bold text-white">
                     {currentLang === 'en' ? 'My support requests' : currentLang === 'ru' ? 'Мои обращения' : 'ჩემი მხარდაჭერის მიმართვები'}
                   </p>
-                  <span className="text-[10px] text-slate-400">{mySupportTickets.length}</span>
+                  <span className="text-[10px] text-slate-400">{mySupportTickets.filter(ticket => matchesCustomerOrderRequestFilter(ticket.subject, supportRequestFilter)).length}</span>
                 </div>
+                <label className="block text-xs text-slate-300">
+                  {currentLang === 'en' ? 'Request type' : currentLang === 'ru' ? 'Тип обращения' : 'მიმართვის ტიპი'}
+                  <select className="gs-support-field mt-1 w-full" value={supportRequestFilter} onChange={event=>setSupportRequestFilter(event.target.value)}>
+                    <option value="all">{currentLang === 'en' ? 'All requests' : currentLang === 'ru' ? 'Все обращения' : 'ყველა მიმართვა'}</option>
+                    <option value="requests">{currentLang === 'en' ? 'Returns & exchanges' : currentLang === 'ru' ? 'Возвраты и обмены' : 'დაბრუნება და გაცვლა'}</option>
+                    <option value="return">{currentLang === 'en' ? 'Returns' : currentLang === 'ru' ? 'Возвраты' : 'დაბრუნება'}</option>
+                    <option value="exchange">{currentLang === 'en' ? 'Exchanges' : currentLang === 'ru' ? 'Обмены' : 'გაცვლა'}</option>
+                  </select>
+                </label>
+                {supportRequestFilter !== 'all' && <p className="text-xs text-slate-400">{currentLang === 'en' ? 'These are support requests, not refund or exchange approvals. Results cover loaded requests only.' : currentLang === 'ru' ? 'Это обращения в поддержку, а не одобрение возврата или обмена. Показаны загруженные обращения.' : 'ეს მხარდაჭერის მიმართვებია და არა დაბრუნების ან გაცვლის დამტკიცება. ფილტრი მუშაობს ჩატვირთულ მიმართვებზე.'}</p>}
+                {!mySupportTicketsLoading && !mySupportTicketsError && supportRequestFilter !== 'all' && !mySupportTickets.some(ticket=>matchesCustomerOrderRequestFilter(ticket.subject,supportRequestFilter)) && <p role="status" className="text-xs text-slate-300">{currentLang === 'en' ? 'No matching loaded requests.' : currentLang === 'ru' ? 'Нет подходящих загруженных обращений.' : 'ჩატვირთულ მიმართვებში შესაბამისი მოთხოვნა არ მოიძებნა.'}</p>}
                 {mySupportTicketsLoading && !mySupportTickets.length && <p className="text-xs text-slate-400">{currentLang === 'en' ? 'Loading requests…' : currentLang === 'ru' ? 'Загрузка обращений…' : 'მიმართვები იტვირთება…'}</p>}
                 {mySupportTicketsError && <p role="alert" className="text-xs text-rose-300">{mySupportTicketsError}</p>}
-                {!mySupportTicketsLoading && !mySupportTicketsError && mySupportTickets.length === 0 && (
+                {!mySupportTicketsLoading && !mySupportTicketsError && supportRequestFilter === 'all' && mySupportTickets.length === 0 && (
                   <p className="text-xs text-slate-400">{currentLang === 'en' ? 'No account-linked requests yet. Guest requests can still be opened below with their ticket number and access code.' : currentLang === 'ru' ? 'Пока нет обращений, связанных с аккаунтом. Гостевые обращения можно открыть ниже по номеру и коду доступа.' : 'ანგარიშთან დაკავშირებული მიმართვები ჯერ არ გაქვს. სტუმრის მიმართვის გახსნა კვლავ შეგიძლია ქვემოთ ნომრითა და წვდომის კოდით.'}</p>
                 )}
                 <div className="space-y-2">
-                  {mySupportTickets.map((ticket) => (
+                  {mySupportTickets.filter(ticket => matchesCustomerOrderRequestFilter(ticket.subject, supportRequestFilter)).map((ticket) => (
                     <div key={ticket.ticket_id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">

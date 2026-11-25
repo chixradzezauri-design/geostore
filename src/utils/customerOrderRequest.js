@@ -16,3 +16,24 @@ export function buildCustomerOrderRequest(order, kind, lang = 'ka') {
   const subject = `${words[kind]} · ${words.order} #${id}`;
   return subject.length <= 150 ? {kind, subject} : null;
 }
+
+// Subjects are user-provided labels, never proof of order ownership or return eligibility.
+export function classifyCustomerOrderRequest(subject) {
+  if (typeof subject !== 'string' || subject.length > 150) return null;
+  for (const words of Object.values(labels)) {
+    for (const kind of ['return','exchange']) {
+      const prefix = `${words[kind]} · ${words.order} #`;
+      if (!subject.startsWith(prefix)) continue;
+      const id = subject.slice(prefix.length);
+      if (!id || id !== id.trim() || id.length > 100 || /[\x00-\x1f\x7f]/.test(id)) return null;
+      return {kind, orderId:id};
+    }
+  }
+  return null;
+}
+
+export function matchesCustomerOrderRequestFilter(subject, filter) {
+  if (filter === 'all') return true;
+  const request = classifyCustomerOrderRequest(subject);
+  return !!request && (filter === 'requests' || request.kind === filter);
+}
