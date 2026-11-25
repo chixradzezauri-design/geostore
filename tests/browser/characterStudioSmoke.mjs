@@ -11,6 +11,7 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       await context.route(backend+'/**',async route=>{
         const path=new URL(route.request().url()).pathname;
         const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
+        if(!['GET','HEAD','OPTIONS'].includes(route.request().method()))return route.fulfill({status:403,contentType:'application/json',body:'{}'});
         return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
       });
       await context.routeWebSocket('wss://xmtnszxtnfxnrojionoa.supabase.co/**',socket=>socket.close());
@@ -59,15 +60,18 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       await reaction.waitFor({state:'detached'});
       assert.equal(await card.locator('.gs-catalog-wishlist-toggle').getAttribute('aria-pressed'),'true','Cooldown never blocks commerce');
       activeSale=false;
+      const inactiveConfig=page.waitForResponse(r=>r.url().includes('/rest/v1/storefront_config')&&r.ok());
       await page.reload({waitUntil:'domcontentloaded'});
-      await page.locator('.geostore-storefront').waitFor({state:'visible'});
-      await page.waitForTimeout(800);
+      await inactiveConfig;
+      await page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
       assert.equal(await flash.count(),0,'No flash mascot without active sale');
       enabled=false;
       await page.evaluate(()=>{sessionStorage.removeItem('geostore_character_seen_v1');localStorage.setItem('geostore_site_settings',JSON.stringify({characterStudio:{enabled:true,delay:0}}));});
+      const disabledConfig=page.waitForResponse(r=>r.url().includes('/rest/v1/storefront_config')&&r.ok());
       await page.reload({waitUntil:'domcontentloaded'});
-      await page.locator('.geostore-storefront').waitFor({state:'visible'});
-      await page.waitForTimeout(800);
+      await disabledConfig;
+      await page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
+      await page.waitForTimeout(250);
       assert.equal(await mascot.count(),0,'Unpublished local configuration cannot enable mascot');
       assert.deepEqual(errors,[]);
       console.log('PASS character studio public greeting at '+width+'px');

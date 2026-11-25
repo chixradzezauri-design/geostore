@@ -162,8 +162,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           const calendar=studio.locator('[data-character-calendar]');
           await calendar.locator('summary').click();
           await calendar.getByRole('button',{name:'ღონისძიების დამატება'}).click();
+          await calendar.getByLabel('ღონისძიება',{exact:true}).waitFor({state:'visible',timeout:10000});
           await calendar.getByLabel('თემა',{exact:true}).selectOption('newyear');
           await calendar.getByLabel('მისალმება (ka)',{exact:true}).fill('Fixture calendar greeting');
+          await studio.getByLabel('საიტზე ჩართვა',{exact:true}).check();
+          await calendar.getByLabel('კალენდრის ჩართვა',{exact:true}).check();
+          await calendar.getByLabel('ღონისძიება ჩართულია',{exact:true}).check();
+          assert.match(await calendar.innerText(),/მოქმედი: ახალი ღონისძიება/);
           await calendar.getByRole('button',{name:'ღონისძიების ანიმაციის ნახვა'}).click();
           const eventScene=calendar.locator('.gs-character-preview-scene');
           await eventScene.waitFor({state:'visible',timeout:12000});
