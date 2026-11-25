@@ -1013,6 +1013,8 @@ export default function AdminDashboardPro({
   onPublishStorefront,
   storefrontPublishBusy = false,
   publishedCharacterSettings = null,
+  onTestPublishedCharacter,
+  characterMobile = false,
   siteSettings,
   setSiteSettings,
   formatPrice,
@@ -8199,7 +8201,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'settings' || adminContentTab === 'settings') && (
           <div className="admin-settings-panel space-y-4">
-            {hasSettingsPermission && visibleAdminTab === 'settings' && <React.Suspense fallback={<AdminSectionLoading/>}><AdminCharacterStudio siteSettings={siteSettings} publishedSettings={publishedCharacterSettings} setSiteSettings={setSiteSettings} busy={storefrontDraftBusy || storefrontPublishBusy} lang={currentLang}/></React.Suspense>}
+            {hasSettingsPermission && visibleAdminTab === 'settings' && <React.Suspense fallback={<AdminSectionLoading/>}><AdminCharacterStudio siteSettings={siteSettings} publishedSettings={publishedCharacterSettings} onTestPublishedCharacter={onTestPublishedCharacter} actualMobile={characterMobile} setSiteSettings={setSiteSettings} busy={storefrontDraftBusy || storefrontPublishBusy} lang={currentLang}/></React.Suspense>}
 
             {SYSTEM_HISTORY_ENABLED && ADMIN_MFA_ROLLOUT_ENABLED && isOwner && adminLoggedIn && adminUserId && visibleAdminTab==='settings' && (
               <React.Suspense fallback={<AdminSectionLoading/>}>

@@ -219,9 +219,17 @@ export function characterInteractionCopy(mode,lang='ka'){
   }[locale];
   return {...characterWaveCopy(locale),emoji:'👋',motion:'celebrate',effect:'sparkles'};
 }
-export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
+export function characterDisplayReason(settings,{route='home',mobile=false,blocked=false}={}){
+  if(settings==null)return 'unconfirmed';
   const s=normalizeCharacterSettings(settings);
-  return s.enabled&&!blocked&&(mobile?s.mobile:s.desktop)&&(route==='home'||(s.pages==='catalogue'&&route==='category'));
+  if(!s.enabled)return 'disabled';
+  if(!(mobile?s.mobile:s.desktop))return 'device';
+  if(blocked)return 'blocked';
+  if(!(route==='home'||(s.pages==='catalogue'&&route==='category')))return 'page';
+  return 'ready';
+}
+export function canDisplayCharacter(settings,options={}){
+  return characterDisplayReason(settings,{...options,route:options.route??'unknown'})==='ready';
 }
 export function getCharacterScenario(settings,key,{mobile=false,eligible=false}={}){
   const s=normalizeCharacterSettings(settings);

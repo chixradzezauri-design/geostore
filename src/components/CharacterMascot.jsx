@@ -3,6 +3,7 @@ import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,select
 import './characterStudio.css';
 
 const lastSeen={session:null,daily:null};
+let lastForcedReplay=null;
 function seen(frequency,revision){
   if(characterRevisionSeen(lastSeen[frequency],frequency,revision))return true;
   try{return characterRevisionSeen((frequency==='daily'?localStorage:sessionStorage).getItem(CHARACTER_SESSION_KEY),frequency,revision);}catch{return false;}
@@ -114,7 +115,7 @@ export function CharacterReaction({scenario,lang='ka'}){
     <span className="gs-character-reaction-copy">{scenario.message||scenario.lines[lang]||scenario.lines.ka}</span>
   </span>;
 }
-export default function CharacterMascot({settings,lang}){
+export default function CharacterMascot({settings,lang,forceReplay=null}){
   const s=normalizeCharacterSettings(settings);
   const [presentation,setPresentation]=useState(null);
   const settingsKey=JSON.stringify(s);
@@ -122,10 +123,12 @@ export default function CharacterMascot({settings,lang}){
     setPresentation(null);
     const current=JSON.parse(settingsKey);
     const revision=characterSettingsRevision(current);
-    if(!current.enabled||seen(current.frequency,revision))return;
+    const forced=forceReplay!=null&&forceReplay!==lastForcedReplay;
+    if(!current.enabled||(!forced&&seen(current.frequency,revision)))return;
     let closeTimer;
     const showTimer=setTimeout(()=>{
-      if(seen(current.frequency,revision))return;
+      if(!forced&&seen(current.frequency,revision))return;
+      if(forced){if(lastForcedReplay===forceReplay)return;lastForcedReplay=forceReplay;}
       markSeen(current.frequency,revision);
       const now=new Date();
       const effective=applyCharacterEvent(current,activeCharacterEvent(current,now),lang);
@@ -133,6 +136,6 @@ export default function CharacterMascot({settings,lang}){
       closeTimer=setTimeout(()=>setPresentation(null),current.duration*1000);
     },current.delay*1000);
     return()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
-  },[settingsKey,lang]);
+  },[settingsKey,lang,forceReplay]);
   return presentation?<CharacterScene character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>setPresentation(null)}/>:null;
 }

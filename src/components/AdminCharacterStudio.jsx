@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
@@ -15,7 +15,7 @@ const choices={
   frequency:[['session','ერთხელ სესიაში'],['daily','ერთხელ 24 საათში']],
   pages:[['home','მხოლოდ მთავარი გვერდი'],['catalogue','მთავარი და კატეგორიები']]
 };
-export default function AdminCharacterStudio({siteSettings,publishedSettings=null,setSiteSettings,busy=false,lang='ka'}){
+export default function AdminCharacterStudio({siteSettings,publishedSettings=null,onTestPublishedCharacter,actualMobile=false,setSiteSettings,busy=false,lang='ka'}){
   const s=normalizeCharacterSettings(siteSettings?.characterStudio);
   const [preview,setPreview]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
@@ -28,6 +28,9 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const activeEvent=activeCharacterEvent(s);
   const selectedCharacter=CHARACTERS.find(c=>c.id===s.character);
   const publishedKnown=publishedSettings!==null;
+  const actualReason=characterDisplayReason(publishedSettings,{mobile:actualMobile,route:'home'});
+  const previewReason=characterDisplayReason(publishedSettings,{mobile:previewMobile,route:'home'});
+  const reasons={unconfirmed:'საჯარო ვერსია ჯერ ვერ დადასტურდა',disabled:'გამოქვეყნებული პერსონაჟი გამორთულია',device:'ამ მოწყობილობაზე გამოჩენა გამორთულია',page:'ამ გვერდზე გამოჩენა არ არის დაშვებული',blocked:'გახსნილი ფანჯარა დროებით ბლოკავს მისალმებას',ready:'გამოჩენის ძირითადი პირობები შესრულებულია'};
   const draftDiffers=publishedKnown&&JSON.stringify(s)!==JSON.stringify(normalizeCharacterSettings(publishedSettings));
   const enabledScenarios=Object.values(s.scenarios).filter(item=>item.enabled).length;
   const enabledEvents=s.events.filter(item=>item.enabled&&item.start&&item.end&&item.start<=item.end&&item.end>=today).length;
@@ -63,6 +66,9 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <p className="font-bold">{publishedKnown?(publishedSettings.enabled?'საჯარო საიტზე: ჩართულია':'საჯარო საიტზე: გამორთულია'):'საჯარო ვერსია ჯერ ვერ დადასტურდა'}</p>
       {draftDiffers?<p className="text-amber-300">მონახაზი განსხვავდება გამოქვეყნებული ვერსიისგან. ზედა ღილაკით „ცვლილებების გამოქვეყნება“ გაააქტიურეთ საიტზე.</p>:<p>საიტზე გამოჩნდება მხოლოდ დადასტურებული გამოქვეყნებული პარამეტრები. ადმინისტრატორსაც შეუძლია საჯარო გვერდზე ნახვა.</p>}
       <p>ახალი გამოქვეყნებული პარამეტრები ხილულ გვერდზე ავტომატურად მოწმდება ყოველ 30 წამში და ჩანართზე დაბრუნებისას.</p>
+      <div className="grid gap-2 sm:grid-cols-2 pt-2"><div className="rounded-lg border border-slate-700 p-2"><strong>ამ მოწყობილობაზე ({actualMobile?'ტელეფონი':'კომპიუტერი'})</strong><p>{reasons[actualReason]}</p></div><div className="rounded-lg border border-slate-700 p-2"><strong>არჩეულ სატესტო ეკრანზე ({previewMobile?'ტელეფონი':'კომპიუტერი'})</strong><p>{reasons[previewReason]}</p></div></div>
+      <button type="button" data-character-live-test disabled={busy||actualReason!=='ready'||typeof onTestPublishedCharacter!=='function'} onClick={onTestPublishedCharacter} className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40 min-h-[44px]">გამოქვეყნებული პერსონაჟის ნახვა საიტზე</button>
+      <p className="text-slate-300">ტესტი გადაგიყვანს მთავარ გვერდზე და ამ ბრაუზერში ერთხელ გაიმეორებს გამოქვეყნებულ მისალმებას, სიხშირის ლიმიტის მიუხედავად. მონახაზი არ ქვეყნდება და სხვა მომხმარებლების პარამეტრები არ იცვლება.</p>
     </div>
     <div className="gs-character-admin-status" aria-label="Character Studio მდგომარეობა">
       <div><span>საიტის რეჟიმი</span><strong>{s.enabled?'ჩართული':'გამორთული'}</strong></div>
