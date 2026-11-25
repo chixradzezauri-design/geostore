@@ -118,7 +118,9 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});
-          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),14,'twelve character cards and two viewport buttons');
+          assert.equal(await studio.locator('.gs-character-roster button[aria-pressed][type="button"]').count(),12,'twelve character cards');
+          for(const label of ['კომპიუტერი','ტელეფონი'])assert.equal(await studio.getByRole('button',{name:label,exact:true}).count(),1,'one viewport control per device');
+          assert.equal(await studio.locator('.gs-character-extra-controls button[aria-pressed]').count(),2,'two independent feature toggles');
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
