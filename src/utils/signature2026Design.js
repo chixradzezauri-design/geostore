@@ -4,7 +4,7 @@ import { normalizeStorefrontVisualDesign } from './storefrontVisualDesign.js';
 // Applies to the editor draft only. Existing media, copy, visibility, product
 // ordering, custom sections, geometry and individual element overrides survive.
 export const SIGNATURE_SECTION_ORDER = Object.freeze([
-  'hero', 'categories', 'filters', 'products', 'banners', 'flashSale'
+  'hero', 'flashSale', 'categories', 'filters', 'products', 'banners'
 ]);
 
 const theme = {

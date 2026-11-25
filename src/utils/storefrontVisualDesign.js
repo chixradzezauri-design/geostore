@@ -1,3 +1,4 @@
+import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion, FLASH_PRODUCT_APPEARANCE, normalizeFlashProductAppearance, normalizeFlashBannerAppearance } from './flashCampaignThemes.js';
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
 const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
 export function getStorefrontSectionOrder(raw,viewport='desktop'){
@@ -10,6 +11,22 @@ export function setStorefrontSectionOrder(raw,viewport,order){
  if(!['desktop','tablet','mobile'].includes(viewport)||!validSectionOrder(order))return null;
  const d=normalizeStorefrontVisualDesign(raw);
  return normalizeStorefrontVisualDesign(viewport==='desktop'?{...d,sectionOrder:order}:{...d,responsive:{...d.responsive,[viewport]:{...d.responsive[viewport],sectionOrder:order}}});
+}
+// Explicit editor action: move only the offer group, preserving every other section.
+export function moveFlashSaleAfterHero(raw){
+ const d=normalizeStorefrontVisualDesign(raw);
+ const move=order=>{
+   const next=order.filter(id=>id!=='flashSale');
+   next.splice(next.indexOf('hero')+1,0,'flashSale');
+   return next;
+ };
+ const responsive={...d.responsive};
+ for(const viewport of ['tablet','mobile']){
+   if(validSectionOrder(responsive[viewport]?.sectionOrder)){
+     responsive[viewport]={...responsive[viewport],sectionOrder:move(responsive[viewport].sectionOrder)};
+   }
+ }
+ return normalizeStorefrontVisualDesign({...d,sectionOrder:move(d.sectionOrder),responsive});
 }
 export function inheritStorefrontSectionOrder(raw,viewport){
  if(!['tablet','mobile'].includes(viewport))return null;
@@ -24,6 +41,7 @@ const ELEMENT_STYLE_IDS = [
   'hero', 'hero.image', 'hero.title', 'hero.description', 'hero.button',
   'banner', 'banner.card', 'banner.image', 'banner.title', 'banner.description', 'banner.button',
   'flashSale', 'flashSale.title', 'flashSale.badge', 'flashSale.description',
+  'flashSale.card', 'flashSale.image', 'flashSale.timer', 'flashSale.discount', 'flashSale.button',
   'categories', 'categories.title', 'categories.description', 'category.card', 'category.title', 'category.description',
   'filters', 'filters.priceLabel', 'filters.input', 'filters.clearButton', 'filters.sortLabel', 'filters.sortSelect', 'product.card', 'product.image', 'product.title', 'product.button',
   'product.detail.image', 'product.detail.title', 'product.detail.price',
@@ -258,6 +276,13 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
   return {
     version: 1,
     ...(raw.signature2026 === true ? { signature2026: true } : {}),
+    ...(normalizeFlashCampaignTheme(raw.flashCampaignTheme) !== 'inherit' ? { flashCampaignTheme: normalizeFlashCampaignTheme(raw.flashCampaignTheme) } : {}),
+    ...(normalizeFlashCampaignLayout(raw.flashCampaignLayout) !== 'inherit' ? { flashCampaignLayout: normalizeFlashCampaignLayout(raw.flashCampaignLayout) } : {}),
+    ...(normalizeFlashCampaignBanner(raw.flashCampaignBanner) ? { flashCampaignBanner: normalizeFlashCampaignBanner(raw.flashCampaignBanner) } : {}),
+    ...(Object.keys(normalizeFlashBannerAppearance(raw.flashBannerAppearance)).length?{flashBannerAppearance:normalizeFlashBannerAppearance(raw.flashBannerAppearance)}:{}),
+    ...(normalizeFlashTimerStyle(raw.flashTimerStyle)!=='inherit'?{flashTimerStyle:normalizeFlashTimerStyle(raw.flashTimerStyle)}:{}),
+    ...(normalizeFlashTimerMotion(raw.flashTimerMotion)!=='none'?{flashTimerMotion:normalizeFlashTimerMotion(raw.flashTimerMotion)}:{}),
+    ...Object.fromEntries(FLASH_PRODUCT_APPEARANCE.map(({key})=>[key,normalizeFlashProductAppearance(key,raw[key])]).filter(([,value])=>value!=='inherit')),
     theme: {
       canvas: safeColor(theme.canvas, defaults.theme.canvas),
       surface: safeColor(theme.surface, defaults.theme.surface),

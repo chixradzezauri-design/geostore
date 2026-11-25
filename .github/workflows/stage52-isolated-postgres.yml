@@ -109,6 +109,10 @@ on:
       - 'release/staged-marketing-templates.sql'
       - 'release/staged-marketing-preflight.sql'
       - 'tests/sql/admin_marketing_consent_contract.sql'
+      - 'release/staged-flash-sale-schedule.sql'
+      - 'release/staged-flash-sale-selected.sql'
+      - 'release/staged-flash-sale-schedule-cron.sql'
+      - 'tests/sql/flash_sale_schedule_contract.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'
       - 'release/phase4-wishlist-sync-draft.sql'
       - 'tests/sql/phase4_wishlist_sync_contract.sql'
@@ -203,6 +207,9 @@ jobs:
           node scripts/stage86MissingHistoryProvenanceGate.mjs --verify-pinned
           node scripts/stage87PhaseAPreflightHighRiskGate.mjs --verify-pinned
           node scripts/stage88SupportStaffLiveReleaseGate.mjs --verify-pinned
+
+          createdb flash_sale_schedule
+          PGDATABASE=flash_sale_schedule psql -v ON_ERROR_STOP=1 -f tests/sql/flash_sale_schedule_contract.sql
 
           createdb admin_supplier_purchase
           PGDATABASE=admin_supplier_purchase psql -v ON_ERROR_STOP=1 -f tests/sql/admin_supplier_purchase_contract.sql

@@ -41,6 +41,10 @@ import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
+import AdminFlashSchedule from './AdminFlashSchedule.jsx';
+import AdminFlashPricePreview from './AdminFlashPricePreview.jsx';
+import {previewFlashPrices,selectedFlashRows} from '../utils/adminFlashPricePreview.js';
+import { classifyAdminFlashSales, previewFlashSaleWindow, formatFlashSaleTime, FLASH_SALE_HOURS } from '../utils/adminFlashSalePlanning.js';
 import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
 import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
 import { analyzeBusinessCampaigns } from '../utils/businessCampaignAnalytics.js';
@@ -2082,32 +2086,14 @@ export default function AdminDashboardPro({
   const [editingBannerId, setEditingBannerId] = useState(null);
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა', durationHours: '12' });
+  const [flashSalePlannedStart, setFlashSalePlannedStart] = useState('');
   const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
   const flashSaleMutationRef = useRef(null);
 
   const [flashSaleStatusClock, setFlashSaleStatusClock] = useState(() => Date.now());
-  const flashSaleAdminSummary = useMemo(() => {
-    const now = flashSaleStatusClock;
-    const activeProducts = (Array.isArray(products) ? products : []).filter(product => {
-      const endsAt = Date.parse(product?.flashSaleEndsAt || '');
-      const originalPrice = Number(product?.oldPriceGEL);
-      const salePrice = Number(product?.priceGEL);
-      const hasOnlyBasePricing = !Array.isArray(product?.variants) || product.variants.length === 0;
-      return hasOnlyBasePricing
-        && Number.isFinite(endsAt)
-        && endsAt > now
-        && Number.isFinite(originalPrice)
-        && Number.isFinite(salePrice)
-        && originalPrice > salePrice;
-    });
-    const endTimes = activeProducts.map(product => Date.parse(product.flashSaleEndsAt));
-    return {
-      count: activeProducts.length,
-      activeProducts: [...activeProducts].sort((a,b) => Date.parse(a.flashSaleEndsAt) - Date.parse(b.flashSaleEndsAt)),
-      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null,
-      expiringCount: endTimes.filter(endTime => endTime - now <= 24 * 60 * 60 * 1000).length
-    };
-  }, [products, flashSaleStatusClock]);
+  const flashSaleAdminSummary = useMemo(() => classifyAdminFlashSales(products, flashSaleStatusClock), [products, flashSaleStatusClock]);
+  const flashSaleWindow = previewFlashSaleWindow(flashSaleForm.durationHours, flashSalePlannedStart, flashSaleStatusClock);
+
 
   useEffect(() => {
     const timer = setInterval(() => setFlashSaleStatusClock(Date.now()), 30000);
@@ -3963,7 +3949,12 @@ export default function AdminDashboardPro({
     const percent = Number(flashSaleForm.discountPercent);
     const category = String(flashSaleForm.category || 'ყველა').trim();
     const durationHours = Number(flashSaleForm.durationHours);
-    const allowedDurations = [1, 3, 6, 12, 24, 48];
+    const allowedDurations = FLASH_SALE_HOURS;
+
+    if (flashSalePlannedStart) {
+      alert('მომავალი თარიღი მხოლოდ წინასწარი დაგეგმვისთვისაა. გასაშვებად გაასუფთავეთ თარიღი და დაადასტურეთ დაუყოვნებელი აქტივაცია.');
+      return;
+    }
 
     if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\d+(?:\.\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
       alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
@@ -3987,18 +3978,27 @@ export default function AdminDashboardPro({
 
     const sessionVersion = adminSessionVersion.current;
     if (!isOwner || !isCurrentAdminSession(sessionVersion) || isApplyingFlashSale || flashSaleMutationRef.current === sessionVersion) return;
-    if (!window.confirm(`გააქტიურდეს ${percent}% ფასდაკლება კატეგორიაზე „${category}“ ${durationHours} საათით?`)) return;
+    const immediateWindow = previewFlashSaleWindow(durationHours, '', Date.now());
+    const overlap = classifyAdminFlashSales(products, Date.now()).activeProducts.filter(product => category === 'ყველა' || product.category === category).length;
+    const pricePreview = previewFlashPrices(products, flashSaleForm);
+    const selectedMode = Array.isArray(flashSaleForm.selectedIds);
+    const selectedRows = selectedMode ? selectedFlashRows(pricePreview, flashSaleForm.selectedIds) : null;
+    if (selectedMode && !selectedRows) { alert('მონიშნეთ მოქმედი პროდუქტები; ცარიელი არჩევანი არ გაააქტიურებს კატეგორიას.'); return; }
+    const priceIncreaseCount = selectedMode ? selectedRows.filter(row=>row.raisesPrice).length : pricePreview?.raisesPrice;
+    const scopeDescription = selectedMode ? selectedRows.length + ' მონიშნულ პროდუქტზე (' + category + ')' : 'კატეგორიაზე „' + category + '“';
+    if (!window.confirm(`გააქტიურდეს ${percent}% ფასდაკლება ${scopeDescription} ${durationHours} საათით?\nსავარაუდო დასრულება (თბილისი): ${formatFlashSaleTime(immediateWindow.endsAt)}${priceIncreaseCount ? '\nყურადღება: ჩატვირთული პროდუქტებიდან '  + priceIncreaseCount + ' პროდუქტზე ახალი ფასი მიმდინარე ფასზე მაღალია.' : ''}${overlap ? '\nარჩეულ კატეგორიაში უკვე აქტიურია ' + overlap + ' პროდუქტი; მათ აქციას ახალი პირობები ჩაანაცვლებს.' : ''}`)) return;
     flashSaleMutationRef.current = sessionVersion;
     setIsApplyingFlashSale(true);
 
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_apply_flash_sale', {
+      const response = await fetch(SUPABASE_URL + (selectedMode ? '/rest/v1/rpc/admin_apply_selected_flash_sale' : '/rest/v1/rpc/admin_apply_flash_sale'), {
         method: 'POST',
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({
           p_discount_percent: percent,
           p_category: category,
-          p_duration_hours: durationHours
+          p_duration_hours: durationHours,
+          ...(selectedMode ? {p_product_ids:selectedRows.map(row=>row.id)} : {})
         })
       });
 
@@ -4011,7 +4011,7 @@ export default function AdminDashboardPro({
       const rawCount = await response.json();
       if (!isCurrentAdminSession(sessionVersion)) return;
       const updatedCount = rawCount === null || rawCount === '' || typeof rawCount === 'boolean' ? NaN : Number(rawCount);
-      if (!Number.isInteger(updatedCount) || updatedCount < 0) {
+      if (!Number.isInteger(updatedCount) || updatedCount < 0 || (selectedMode && updatedCount > selectedRows.length)) {
         throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
       }
 
@@ -4057,7 +4057,7 @@ export default function AdminDashboardPro({
         }));
       }
 
-      logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
+      logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) ${scopeDescription}; განახლდა ${updatedCount} პროდუქტი`);
       alert(refreshedRows
         ? `⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`
         : `ფასდაკლება ბაზაში შენახულია (${updatedCount} პროდუქტი), თუმცა სიის განახლება ვერ მოხერხდა. განაახლეთ გვერდი, რომ ფასები ზუსტად გამოჩნდეს.`);
@@ -7462,16 +7462,20 @@ export default function AdminDashboardPro({
                   <strong>{flashSaleAdminSummary.count} პროდუქტი</strong>
                 </div>
                 {flashSaleAdminSummary.nextEndsAt !== null && (
-                  <p>უახლოესი დასრულება: {new Date(flashSaleAdminSummary.nextEndsAt).toLocaleString('ka-GE')}</p>
+                  <p>უახლოესი დასრულება: {formatFlashSaleTime(flashSaleAdminSummary.nextEndsAt)} (თბილისი)</p>
                 )}
                 <p>24 საათში სრულდება: {flashSaleAdminSummary.expiringCount}</p>
                 <details className="text-xs"><summary className="cursor-pointer py-2 font-bold">აქტიური პროდუქტების ნახვა</summary>
                   <div className="space-y-2 max-h-72 overflow-y-auto">
-                    {flashSaleAdminSummary.activeProducts.map(product => <div key={product.id} className="flex flex-wrap justify-between gap-2 border-t border-slate-700 pt-2"><span className="min-w-0 break-words">{product.name || product.title || product.id}</span><span>{Number(product.oldPriceGEL).toFixed(2)} ₾ → {Number(product.priceGEL).toFixed(2)} ₾ · {new Date(product.flashSaleEndsAt).toLocaleString('ka-GE')}</span></div>)}
+                    {flashSaleAdminSummary.activeProducts.map(product => <div key={product.id} className="flex flex-wrap justify-between gap-2 border-t border-slate-700 pt-2"><span className="min-w-0 break-words">{product.name || product.title || product.id}</span><span>{Number(product.oldPriceGEL).toFixed(2)} ₾ → {Number(product.priceGEL).toFixed(2)} ₾ · {formatFlashSaleTime(Date.parse(product.flashSaleEndsAt ?? product.flash_sale_ends_at))}</span></div>)}
                   </div>
                 </details>
               </div>
             )}
+            {flashSaleAdminSummary.upcomingProducts.length > 0 && <div className="rounded-xl border border-sky-400/30 bg-sky-950/30 p-3 text-xs text-sky-100">
+              <strong>მომავალი აქციის ჩანაწერები: {flashSaleAdminSummary.upcomingProducts.length} პროდუქტი</strong>
+              <p className="mt-1">უახლოესი დაწყება: {formatFlashSaleTime(flashSaleAdminSummary.nextStartsAt)} (თბილისი)</p>
+            </div>}
             <p className="text-xs text-slate-300">სტატისტიკა ასახავს ჩატვირთულ პროდუქტებს. მოქმედება ცვლის ფასებს სერვერზე; საბოლოო რაოდენობას სერვერი ადასტურებს.</p>
             <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
               <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -7481,7 +7485,7 @@ export default function AdminDashboardPro({
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor="admin-workspace-flash-category" className="text-slate-300 font-bold">კატეგორია</label>
-                  <select id="admin-workspace-flash-category" disabled={isApplyingFlashSale} value={flashSaleForm.category} onChange={e => setFlashSaleForm({...flashSaleForm, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                  <select id="admin-workspace-flash-category" disabled={isApplyingFlashSale} value={flashSaleForm.category} onChange={e => setFlashSaleForm({...flashSaleForm, category: e.target.value, selectedIds:Array.isArray(flashSaleForm.selectedIds)?[]:null})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
                     <option value="ყველა">ყველა კატეგორია</option>
                     {safeCategories.map(cat => (
                       <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -7500,13 +7504,28 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <button type="submit" disabled={isApplyingFlashSale} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
-                <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
+              <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
+                <h4 className="font-bold text-white">აქციის დროის წინასწარი ნახვა</h4>
+                <label htmlFor="admin-flash-planned-start" className="block text-slate-300">მომავალი დაწყების თარიღი (თბილისი)</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input id="admin-flash-planned-start" type="datetime-local" disabled={isApplyingFlashSale} value={flashSalePlannedStart} onChange={event=>setFlashSalePlannedStart(event.target.value)} className="min-h-11 min-w-0 max-w-full flex-1 rounded-xl border border-slate-700 bg-slate-950 p-2 text-white" />
+                  {flashSalePlannedStart && <button type="button" onClick={()=>setFlashSalePlannedStart('')} className="min-h-11 rounded-xl border border-slate-600 px-3 text-slate-200">გასუფთავება</button>}
+                </div>
+                {flashSaleWindow ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-200">
+                  <p>დაწყება: <strong>{formatFlashSaleTime(flashSaleWindow.startsAt)}</strong></p>
+                  <p>დასრულება: <strong>{formatFlashSaleTime(flashSaleWindow.endsAt)}</strong></p>
+                </div> : <p role="alert" className="text-amber-200">აირჩიეთ მომავალი დრო.</p>}
+                <p className="text-[11px] leading-relaxed text-slate-400">თარიღის არჩევისას გამოიყენეთ ქვემოთ მოცემული დაგეგმვის ღილაკი. თარიღის გარეშე აქცია დაუყოვნებლივ დაიწყება დადასტურების შემდეგ.</p>
+              </div>
+              <AdminFlashPricePreview products={products} form={flashSaleForm} scheduled={Boolean(flashSalePlannedStart)} disabled={isApplyingFlashSale} onSelectionChange={ids=>setFlashSaleForm(previous=>({...previous,selectedIds:ids}))} />
+              <button type="submit" disabled={isApplyingFlashSale || Boolean(flashSalePlannedStart) || (Array.isArray(flashSaleForm.selectedIds)&&!selectedFlashRows(previewFlashPrices(products,flashSaleForm),flashSaleForm.selectedIds))} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+                <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : (Array.isArray(flashSaleForm.selectedIds)?'მონიშნული პროდუქტების აქციის გააქტიურება':'ფასდაკლების მასობრივად გააქტიურება')}
               </button>
               <p className="admin-flash-sale-expiry-note text-[11px] leading-relaxed text-emerald-100/70">
                 აქციის დასრულებისას სისტემა ავტომატურად დააბრუნებს პროდუქტების წინა ფასებს. დრო ბაზაში ინახება და გვერდის განახლება ათვლას აღარ გაანულებს.
               </p>
             </form>
+            {isOwner && <AdminFlashSchedule client={supabase} form={flashSaleForm} products={products} plannedStart={flashSalePlannedStart} immediateBusy={isApplyingFlashSale} sessionVersion={adminSessionVersion.current} isCurrentSession={isCurrentAdminSession} onScheduled={()=>setFlashSalePlannedStart('')} />}
           </div>
         )}
 

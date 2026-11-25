@@ -1,0 +1,31 @@
+.gs-admin-flash-schedule{min-width:0;display:grid;gap:12px;padding:14px;border:1px solid var(--admin-border,#334155);border-radius:16px;background:rgba(15,23,42,.36);color:inherit;font-size:12px;line-height:1.5}
+.gs-admin-flash-schedule header,.gs-admin-flash-schedule-list li>div{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;min-width:0}
+.gs-admin-flash-schedule h4{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:750;margin:0}
+.gs-admin-flash-schedule p{margin:0;overflow-wrap:anywhere}
+.gs-admin-flash-schedule button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #64748b;border-radius:10px;padding:8px 12px;color:inherit;font-weight:700;white-space:normal}
+.gs-admin-flash-schedule button:disabled{opacity:.5;cursor:not-allowed}
+.gs-admin-flash-schedule button:focus-visible{outline:2px solid #34d399;outline-offset:3px}
+.gs-admin-flash-schedule .gs-admin-flash-schedule-create{background:#34d399;color:#052e24;border-color:#34d399}
+.gs-admin-flash-schedule-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.gs-admin-flash-schedule-summary span{padding:10px;border:1px solid #64748b55;border-radius:10px;overflow-wrap:anywhere}
+.gs-admin-flash-schedule-summary strong{display:block;font-size:14px;font-variant-numeric:tabular-nums}
+.gs-admin-flash-schedule-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:480px;overflow:auto;overscroll-behavior:contain}
+.gs-admin-flash-schedule-list li{min-width:0;display:grid;gap:6px;padding:10px;border:1px solid #64748b55;border-radius:10px;overflow-wrap:anywhere}
+.gs-admin-flash-schedule-status{font-weight:700;font-size:11px;padding:3px 7px;border:1px solid currentColor;border-radius:6px}
+.gs-admin-flash-schedule-status[data-status=pending]{color:#93c5fd}.gs-admin-flash-schedule-status[data-status=started]{color:#34d399}
+@media(max-width:380px){.gs-admin-flash-schedule{padding:10px}.gs-admin-flash-schedule-summary{grid-template-columns:1fr}}
+
+.gs-admin-flash-history{display:grid;gap:10px;min-width:0;border-top:1px solid #64748b55;padding-top:12px}
+.gs-admin-flash-history h5{margin:0;font-size:14px;font-weight:750}
+.gs-admin-flash-history-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gs-admin-flash-history-metrics>button,.gs-admin-flash-history-metrics>div{min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;text-align:left;padding:10px;border:1px solid #64748b66;border-radius:10px;overflow-wrap:anywhere}
+.gs-admin-flash-history-metrics strong{font-size:20px;font-variant-numeric:tabular-nums;line-height:1.2}
+.gs-admin-flash-history-metrics button[aria-pressed=true]{border-color:#34d399;background:#34d39918}
+.gs-admin-flash-history-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.gs-admin-flash-history-filters label{display:grid;gap:4px;min-width:0}
+.gs-admin-flash-history-filters input,.gs-admin-flash-history-filters select{min-width:0;width:100%;min-height:44px;box-sizing:border-box;border:1px solid #64748b;border-radius:10px;background:#0f172a;color:#f8fafc;padding:8px;font:inherit}
+.gs-admin-flash-history-filters :is(input,select):focus-visible{outline:2px solid #34d399;outline-offset:2px}
+@media(max-width:640px){.gs-admin-flash-history-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:380px){.gs-admin-flash-history-filters{grid-template-columns:1fr}}
+
+.gs-admin-flash-edit{display:grid;gap:10px;padding:12px;border:1px solid #64748b88;border-radius:12px;min-width:0}.gs-admin-flash-edit h5{font-size:14px;font-weight:750;margin:0}.gs-admin-flash-edit-actions{display:flex;flex-wrap:wrap;gap:6px;min-width:0}.gs-admin-flash-edit-actions button{font-size:11px;padding:6px 9px}

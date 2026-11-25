@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applySignature2026Design, SIGNATURE_SECTION_ORDER } from './signature2026Design.js';
-import { getStorefrontSectionOrder, normalizeStorefrontVisualDesign } from './storefrontVisualDesign.js';
+import { getStorefrontSectionOrder, normalizeStorefrontVisualDesign, moveFlashSaleAfterHero } from './storefrontVisualDesign.js';
 
 test('Signature preset uses the supported compact layout and editorial section sequence on all viewports', () => {
   const result = applySignature2026Design({});
@@ -39,4 +39,19 @@ test('Signature preset preserves content, visibility, product order and granular
   assert.equal(normalizeStorefrontVisualDesign({}).signature2026, undefined);
   assert.equal(normalizeStorefrontVisualDesign({signature2026:'true'}).signature2026, undefined);
   assert.equal(normalizeStorefrontVisualDesign(applySignature2026Design({})).signature2026, true);
+ });
+
+ test('campaign position shortcut changes only flash order across all effective viewports',()=>{
+ const before=normalizeStorefrontVisualDesign({sectionOrder:['hero','categories','filters','products','banners','flashSale'],copy:{flashSaleTitle:'შავი პარასკევი'},sections:{flashSale:false},responsive:{mobile:{sectionOrder:['categories','hero','products','filters','banners','flashSale']}}});
+ const after=moveFlashSaleAfterHero(before);
+ for(const viewport of ['desktop','tablet','mobile']){
+   const old=getStorefrontSectionOrder(before,viewport),next=getStorefrontSectionOrder(after,viewport);
+   assert.equal(next.indexOf('flashSale'),next.indexOf('hero')+1);
+   assert.deepEqual(next.filter(id=>id!=='flashSale'),old.filter(id=>id!=='flashSale'));
+ }
+ assert.equal(after.responsive.tablet.sectionOrder,undefined);
+ assert.deepEqual(after.copy,before.copy);
+ assert.deepEqual(after.sections,before.sections);
+ assert.deepEqual(moveFlashSaleAfterHero(after),after);
+ assert.equal(SIGNATURE_SECTION_ORDER[1],'flashSale');
  });
