@@ -41,7 +41,7 @@ export async function runCharacterStudioSmoke(browser,host,widths){
     try{
       const errors=[];
       let activeSale=true;
-      await installCharacterFixture(context,()=>({enabled:true,activeSale}));
+      await installCharacterFixture(context,()=>({enabled:true,activeSale,appearance:{renderMode:'vector'}}));
       const page=await context.newPage();
       page.on('pageerror',e=>errors.push(e.message));
       await page.goto(host,{waitUntil:'domcontentloaded'});
@@ -108,10 +108,10 @@ export async function runCharacterStudioSmoke(browser,host,widths){
 /** Exercise actual WebGL rendering and explicit fallback on the built storefront.
  * Software ANGLE is intentionally allowed in this isolated CI browser only. */
 export async function runFlagship3DSmoke(browser,host){
-  for(const mode of ['webgl','unavailable','vector']){
+  for(const [mode,character] of [['webgl','fox'],['webgl','panda'],['webgl','rabbit'],['webgl','robot'],['webgl','cat'],['webgl','monkey'],['webgl','bear'],['webgl','owl'],['webgl','cheetah'],['unavailable','fox'],['vector','fox']]){
     const context=await browser.newContext(fixtureContextOptions(390));
     try{
-      await installCharacterFixture(context,()=>({enabled:true,activeSale:false,character:'fox',appearance:{renderMode:mode==='vector'?'vector':'auto'}}));
+      await installCharacterFixture(context,()=>({enabled:true,activeSale:false,character,appearance:{renderMode:mode==='vector'?'vector':'auto'}}));
       await context.addInitScript(mode=>{
         const original=HTMLCanvasElement.prototype.getContext;
         window.__mascot3DProbe={requests:0,pixels:0,frames:0};
@@ -146,7 +146,7 @@ export async function runFlagship3DSmoke(browser,host){
       const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
       await scene.waitFor({state:'visible',timeout:15000});
       if(mode==='webgl'){
-        await scene.locator('[data-character-3d="ready"]').waitFor({state:'visible',timeout:10000});
+        await scene.locator('[data-character-3d="ready"][data-character-3d-model="'+character+'"]').waitFor({state:'visible',timeout:10000});
         const probe=await page.evaluate(()=>window.__mascot3DProbe);
         assert.ok(probe.pixels>300,'Actual depth-tested model produced visible framebuffer pixels');
         assert.equal(probe.frames,1,'Reduced-motion mode renders a single WebGL frame');
@@ -158,7 +158,7 @@ export async function runFlagship3DSmoke(browser,host){
           const gl=n.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');
           if(!ext)return false;ext.loseContext();return true;
         });
-        if(lost){await scene.locator('[data-character-3d="fallback"] svg[data-character-model="fox"]').waitFor({state:'visible'});}
+        if(lost){await scene.locator('[data-character-3d="fallback"] svg[data-character-model="'+character+'"]').waitFor({state:'visible'});}
       }else{
         await scene.locator('svg[data-character-model="fox"]').waitFor({state:'visible'});
         if(mode==='unavailable'){
@@ -172,7 +172,7 @@ export async function runFlagship3DSmoke(browser,host){
       await scene.locator('.gs-character-dismiss').click();
       await scene.waitFor({state:'detached'});
       assert.deepEqual(errors,[]);
-      console.log('PASS flagship mascot '+mode);
+      console.log('PASS 3D mascot '+character+' '+mode);
     }finally{await context.close();}
   }
 }

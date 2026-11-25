@@ -1,5 +1,6 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {sphereMesh,mascotRgb,foxPose} from '../utils/mascot3DGeometry.js';
+import {drawMascot3DModel} from '../utils/mascot3DModels.js';
 
 // Actual depth-tested geometry, with no external scripts, downloads, or dependencies.
 const vertex=`
@@ -39,7 +40,7 @@ function compile(gl,type,source){
   if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){gl.deleteShader(shader);throw Error('shader compile failed');}
   return shader;
 }
-export default function FlagshipFox3D({color,emotion='happy',behavior='wave',season='none',fallback}){
+export default function FlagshipFox3D({characterId='fox',color,emotion='happy',behavior='wave',season='none',fallback}){
   const canvas=useRef(null);
   const [ready,setReady]=useState(false);
   useEffect(()=>{
@@ -93,6 +94,8 @@ export default function FlagshipFox3D({color,emotion='happy',behavior='wave',sea
             gl.viewport(0,0,width,height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
             const pose=foxPose(elapsed,behavior,motion.matches);
             gl.uniform1f(loc.aspect,width/height);gl.uniform1f(loc.yaw,pose.yaw);
+            if(characterId!=='fox')drawMascot3DModel(characterId,draw,base,pose,{emotion,blink:!motion.matches&&elapsed%3.1>2.92,season});
+            else{
             // Tail, feet, trunk and limbs are independently posed ellipsoid meshes.
             draw([-.74,-.48,-.35],[.29,.78,.32],base,-.85+pose.tail);
             draw([-1.05,-.12,-.35],[.27,.35,.30],cream,-.85+pose.tail);
@@ -128,6 +131,7 @@ export default function FlagshipFox3D({color,emotion='happy',behavior='wave',sea
               }
             }
             if(season==='winter')draw([0,-.02,.06],[.52,.13,.42],[.65,.05,.12],0,.1,0);
+            }
             if(gl.getError()!==gl.NO_ERROR)throw Error('draw failed');
             if(firstFrame){firstFrame=false;setReady(true);}
           }
@@ -137,8 +141,8 @@ export default function FlagshipFox3D({color,emotion='happy',behavior='wave',sea
       frame=requestAnimationFrame(render);
     }catch{fail();}
     return()=>{node.removeEventListener('webglcontextlost',lost);cleanup();};
-  },[color,emotion,behavior,season]);
-  return <div className="gs-character-3d" data-character-3d={ready?'ready':'fallback'}>
+  },[characterId,color,emotion,behavior,season]);
+  return <div className="gs-character-3d" data-character-3d={ready?'ready':'fallback'} data-character-3d-model={characterId}>
     {!ready&&fallback}
     <canvas ref={canvas} aria-hidden="true" className="gs-character-3d-canvas" style={{visibility:ready?'visible':'hidden'}}/>
   </div>;

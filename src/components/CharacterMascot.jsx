@@ -1,6 +1,7 @@
 import React,{useEffect,useState} from 'react';
 import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen} from '../utils/characterStudio.js';
 import './characterStudio.css';
+import {MASCOT_3D_IDS} from '../utils/mascot3DModels.js';
 const FlagshipFox3D=React.lazy(()=>import('./FlagshipFox3D.jsx'));
 class Mascot3DBoundary extends React.Component{
   constructor(props){super(props);this.state={failed:false};}
@@ -113,9 +114,9 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
   const artCharacter=styledCharacter(character,settings);
   const artEmotion=waved?'happy':settings.emotion;
   const fallback=<CharacterArt character={artCharacter} emotion={artEmotion} season={settings.season}/>;
-  const use3D=character.id==='fox'&&settings.behavior!=='still'&&settings.appearance?.renderMode!=='vector'&&['none','winter'].includes(resolveCharacterSeason(settings.season));
+  const use3D=MASCOT_3D_IDS.includes(character.id)&&settings.behavior!=='still'&&settings.appearance?.renderMode!=='vector'&&['none','winter'].includes(resolveCharacterSeason(settings.season));
   return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
-    <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig">{use3D?<Mascot3DBoundary fallback={fallback}><React.Suspense fallback={fallback}><FlagshipFox3D color={artCharacter.color} emotion={artEmotion} behavior={waved?wave.motion:settings.behavior} season={resolveCharacterSeason(settings.season)} fallback={fallback}/></React.Suspense></Mascot3DBoundary>:fallback}</div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?wave.effect:settings.effect}/>}</div>
+    <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig">{use3D?<Mascot3DBoundary fallback={fallback}><React.Suspense fallback={fallback}><FlagshipFox3D characterId={character.id} color={artCharacter.color} emotion={artEmotion} behavior={waved?wave.motion:settings.behavior} season={resolveCharacterSeason(settings.season)} fallback={fallback}/></React.Suspense></Mascot3DBoundary>:fallback}</div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?wave.effect:settings.effect}/>}</div>
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} {wave.emoji}</button>}

@@ -177,7 +177,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           const eventScene=calendar.locator('.gs-character-preview-scene');
           await eventScene.waitFor({state:'visible',timeout:12000});
           assert.match(await eventScene.innerText(),/Fixture calendar greeting/);
-          assert.equal(await eventScene.locator('svg[data-character-model="panda"]').count(),1);
+          assert.equal(await eventScene.locator('svg[data-character-model="panda"], [data-character-3d-model="panda"] canvas').count(),1);
           await calendar.locator('summary').click();
           await eventScene.waitFor({state:'detached'});
           const scenarios=studio.locator('[data-character-scenarios]');
