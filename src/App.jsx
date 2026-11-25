@@ -1,4 +1,6 @@
 import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
+import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
+import { buildCustomerOrderRequest } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import {captureCheckoutCart,planConfirmedLocalCartCleanup,checkoutCartUnchanged} from './utils/checkoutCartCleanup.js';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
@@ -810,6 +812,10 @@ export default function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [supportSubmission, setSupportSubmission] = useState(null);
+  const [orderRequestDraft, setOrderRequestDraft] = useState(null);
+  const activeOrderRequestDraft = orderRequestDraft?.ownerId === currentUser?.id ? orderRequestDraft : null;
+  useEffect(() => { setOrderRequestDraft(null); }, [currentUser?.id]);
+  useEffect(() => { if (!supportOpen) setOrderRequestDraft(null); }, [supportOpen]);
   const [supportLookupTicketId, setSupportLookupTicketId] = useState('');
   const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
@@ -4445,6 +4451,14 @@ export default function App() {
                           </span>
                         </div>
                         <CustomerOrderProgress order={order} lang={currentLang}/>
+                        <CustomerOrderRequest order={order} lang={currentLang} disabled={supportOpen || isSubmittingSupport || !!myOrdersError || myOrdersLoading} onRequest={(kind) => {
+                          if (supportOpen || isSubmittingSupport || myOrdersError || myOrdersLoading || !currentUser?.id || String(activeCartOwnerRef.current.userId ?? '') !== String(currentUser.id)) return;
+                          const request = buildCustomerOrderRequest(order, kind, currentLang);
+                          if (!request) return;
+                          setOrderRequestDraft({ ...request, ownerId: currentUser.id });
+                          setSupportSubmission(null);
+                          setSupportOpen(true);
+                        }}/>
                       </div>
                     ))
                 )}
@@ -4519,6 +4533,7 @@ export default function App() {
               </div>
             ) : (
             <form
+              key={JSON.stringify([currentUser?.id ?? null, activeOrderRequestDraft?.subject ?? null])}
               onSubmit={async (e) => {
                 e.preventDefault();
                 if (isSubmittingSupport) return;
@@ -4608,6 +4623,7 @@ export default function App() {
 
                   supportCreateRequestRef.current = null;
                   setSupportSubmission({ ticketId, accessToken });
+                  setOrderRequestDraft(null);
                   e.target.reset();
                 } catch (error) {
                   console.error('Support ticket error:', error);
@@ -4646,6 +4662,7 @@ export default function App() {
               <input
                 type="text"
                 name="csubject"
+                defaultValue={activeOrderRequestDraft?.subject || ''}
                 maxLength={150}
                 aria-label={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
