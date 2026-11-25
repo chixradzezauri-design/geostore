@@ -118,6 +118,7 @@ on:
       - 'release/phase4-wardrobe-items-draft.sql'
       - 'release/phase4-wardrobe-reservations-draft.sql'
       - 'release/phase4-wardrobe-erasure-worker-draft.sql'
+      - 'release/phase4-wardrobe-remove-item-draft.sql'
       - 'tests/sql/phase4_wardrobe_contract.sql'
       - 'release/phase4-admin-mfa-guard-draft.sql'
       - 'tests/sql/phase4_admin_mfa_guard_contract.sql'

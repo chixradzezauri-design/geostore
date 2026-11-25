@@ -26,6 +26,7 @@ insert into storage.objects values('customer-wardrobe-private','00000000-0000-40
 \ir ../../release/phase4-wardrobe-items-draft.sql
 \ir ../../release/phase4-wardrobe-reservations-draft.sql
 \ir ../../release/phase4-wardrobe-erasure-worker-draft.sql
+\ir ../../release/phase4-wardrobe-remove-item-draft.sql
 set role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","is_anonymous":false}',false);
 do $test$
@@ -121,3 +122,29 @@ reset role;
 delete from auth.users where id='00000000-0000-4000-8000-000000000001';
 do $$ begin if exists(select 1 from private.customer_wardrobe_state where user_id='00000000-0000-4000-8000-000000000001') then raise exception 'Metadata cascade failed';end if;end $$;
 \echo 'PASS phase4 wardrobe isolated policy boundary, metadata CAS, reservations, quota and storefront compatibility'
+
+set role authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000002","is_anonymous":false}',false);
+do $test$
+declare b uuid:='00000000-0000-4000-8000-000000000002'; a uuid:='00000000-0000-4000-8000-000000000001';
+ p text:=b::text||'/00000000-0000-4000-8000-000000000003.png';
+ i uuid:='00000000-0000-4000-8000-000000000010'; j uuid:='00000000-0000-4000-8000-000000000011';
+ item jsonb;r jsonb;
+begin
+ item:=jsonb_build_object('id',i::text,'name','fixture','category','','subCategory','','color','','season','','photoPath',p);
+ perform public.customer_wardrobe_change(b,0,'set',item);
+ perform public.customer_wardrobe_change(b,1,'set',item||jsonb_build_object('id',j::text));
+ if public.customer_wardrobe_remove_item(b,1,i)->>'status'<>'conflict' then raise exception 'stale removal';end if;
+ begin perform public.customer_wardrobe_remove_item(a,2,i);raise exception 'cross owner removal';exception when insufficient_privilege then null;end;
+ r:=public.customer_wardrobe_remove_item(b,2,i);
+ if r->>'photoErasure' is distinct from 'referenced' or (r->'snapshot'->>'revision')::integer<>3 then raise exception 'shared photo retirement';end if;
+ r:=public.customer_wardrobe_remove_item(b,3,j);
+ if r is distinct from '{"status":"removed","photoErasure":"pending","snapshot":{"revision":5,"items":[]}}'::jsonb then raise exception 'atomic retirement mismatch: %',r;end if;
+ if not exists(select 1 from storage.objects where name=p) then raise exception 'direct photo deletion';end if;
+ if public.customer_wardrobe_remove_item(b,3,j)->>'status' is distinct from 'conflict' then raise exception 'replay';end if;
+end $test$;
+reset role;
+do $$ begin
+ if has_function_privilege('anon','public.customer_wardrobe_remove_item(uuid,bigint,uuid)','EXECUTE') then raise exception 'anonymous removal';end if;
+end $$;
+\echo 'PASS phase4 atomic wardrobe removal and retirement'
