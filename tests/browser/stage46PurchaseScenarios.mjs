@@ -76,7 +76,7 @@ async function addSelectedProduct(page) {
 
 export async function runStage46ProductPurchaseScenarios(browser, host, widths = [320, 390, 768, 1440]) {
   for (const width of widths) {
-    const context = await browser.newContext({
+    const context = await browser.newContext({ serviceWorkers: 'block',
       viewport: { width, height: 850 }, reducedMotion: 'reduce'
     });
     const page = await context.newPage();

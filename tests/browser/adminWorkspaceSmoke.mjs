@@ -25,7 +25,7 @@ const modules = {
 
 export async function runAdminWorkspaceSmoke(browser, host) {
   for (const width of [390, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const errors = [];
     const writes = [];
     try {

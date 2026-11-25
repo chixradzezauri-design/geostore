@@ -33,7 +33,7 @@ try {
   await awaitServer();
   browser = await chromium.launch({ headless: true });
   for (const width of [320, 375, 430, 768, 1024, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const page = await context.newPage();
     try {
       const pageErrors = [];
@@ -198,7 +198,7 @@ try {
   // anonymous browser access. Supabase auth restore deliberately redirects the
   // route back to the storefront; it does not render a private admin fallback.
   for (const width of [375, 768, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const page = await context.newPage();
     try {
       const pageErrors = [];

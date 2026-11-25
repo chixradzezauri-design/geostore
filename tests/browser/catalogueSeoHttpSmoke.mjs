@@ -82,7 +82,7 @@ export async function runCatalogueSeoHttpSmoke(browser,staticHost){
    const r=await fetch(host+path);assert.equal(r.status,status);
    assert.equal(r.headers.get('cache-control'),'no-store');assert.ok((await r.text()).includes('noindex, follow'));
   }
-  context=await browser.newContext({viewport:{width:390,height:850},reducedMotion:'reduce'});
+  context=await browser.newContext({ serviceWorkers: 'block',viewport:{width:390,height:850},reducedMotion:'reduce'});
   const page=await context.newPage(),errors=[],writes=[];
   page.on('pageerror',e=>errors.push(String(e.message||e)));
   await context.route(origin+'/**',async route=>{
