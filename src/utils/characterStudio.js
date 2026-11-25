@@ -184,6 +184,20 @@ export function getCharacterScenario(settings,key,{mobile=false,eligible=false}=
   if(!Object.hasOwn(CHARACTER_SCENARIOS,key)||!s.enabled||!eligible||!(mobile?s.mobile:s.desktop)||!s.scenarios[key].enabled)return null;
   return {character:styledCharacter(CHARACTERS.find(c=>c.id===s.scenarios[key].character),s),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines,emotion:s.emotion,season:s.season,appearance:s.appearance};
 }
+// A new published configuration can greet again; identical refreshes cannot.
+export function characterSettingsRevision(settings){
+  const input=JSON.stringify(normalizeCharacterSettings(settings));
+  let hash=2166136261;
+  for(let i=0;i<input.length;i++){hash^=input.charCodeAt(i);hash=Math.imul(hash,16777619);}
+  return (hash>>>0).toString(36)+'-'+input.length;
+}
+export function characterRevisionSeen(value,frequency,revision,now=Date.now()){
+  try{
+    const record=typeof value==='string'?JSON.parse(value):value;
+    if(!record||record.revision!==revision)return false;
+    return frequency==='session'?record.seen===true:characterAlreadySeen(record.at,frequency,now);
+  }catch{return false;}
+}
 export const CHARACTER_SESSION_KEY='geostore_character_seen_v1';
 export function characterAlreadySeen(value,frequency,now=Date.now()){
   if(frequency==='session') return value==='1';

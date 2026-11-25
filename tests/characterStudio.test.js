@@ -140,3 +140,17 @@ test('invalid dates and disabled events cannot activate; limits and localized ov
   assert.equal(applyCharacterEvent({},event,'ka').message,'ჩემი ტექსტი');
   assert.equal(event.messages.en.length,120);
 });
+
+import {characterSettingsRevision,characterRevisionSeen} from '../src/utils/characterStudio.js';
+test('new published character configurations can greet without repeating identical refreshes',()=>{
+  const original={enabled:true,character:'fox'},same={character:'fox',enabled:true};
+  const key=characterSettingsRevision(original);
+  assert.equal(key,characterSettingsRevision(same));
+  assert.notEqual(key,characterSettingsRevision({...original,character:'cat'}));
+  const record=JSON.stringify({revision:key,seen:true,at:1000});
+  assert.equal(characterRevisionSeen(record,'session',key),true);
+  assert.equal(characterRevisionSeen(record,'session',characterSettingsRevision({...original,character:'cat'})),false);
+  assert.equal(characterRevisionSeen(record,'daily',key,2000),true);
+  assert.equal(characterRevisionSeen(record,'daily',key,86401000),false);
+  assert.equal(characterRevisionSeen('1','session',key),false);
+});

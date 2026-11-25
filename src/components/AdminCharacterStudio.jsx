@@ -14,7 +14,7 @@ const choices={
   frequency:[['session','ერთხელ სესიაში'],['daily','ერთხელ 24 საათში']],
   pages:[['home','მხოლოდ მთავარი გვერდი'],['catalogue','მთავარი და კატეგორიები']]
 };
-export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=false,lang='ka'}){
+export default function AdminCharacterStudio({siteSettings,publishedSettings=null,setSiteSettings,busy=false,lang='ka'}){
   const s=normalizeCharacterSettings(siteSettings?.characterStudio);
   const [preview,setPreview]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
@@ -26,6 +26,8 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const event=s.events.find(item=>item.id===eventId)||s.events[0];
   const activeEvent=activeCharacterEvent(s);
   const selectedCharacter=CHARACTERS.find(c=>c.id===s.character);
+  const publishedKnown=publishedSettings!==null;
+  const draftDiffers=publishedKnown&&JSON.stringify(s)!==JSON.stringify(normalizeCharacterSettings(publishedSettings));
   const enabledScenarios=Object.values(s.scenarios).filter(item=>item.enabled).length;
   const enabledEvents=s.events.filter(item=>item.enabled&&item.start&&item.end&&item.start<=item.end&&item.end>=today).length;
   const updateEvent=(patch)=>{setPreview(null);setEventPreview(null);setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);return {...previous,characterStudio:{...current,greetingLibrary:previous?.characterStudio?.greetingLibrary??current.greetingLibrary,events:current.events.map(item=>item.id===event?.id?{...item,...previous?.characterStudio?.events?.find(raw=>raw.id===item.id),...patch}:item)}};});};
@@ -55,6 +57,11 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">GEOSTORE-ის მოცულობითი პერსონაჟები და მისალმება</p></div>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
+    </div>
+    <div data-character-publish-status role="status" className="rounded-lg border border-slate-600 bg-slate-950 p-3 text-xs text-slate-200 space-y-1">
+      <p className="font-bold">{publishedKnown?(publishedSettings.enabled?'საჯარო საიტზე: ჩართულია':'საჯარო საიტზე: გამორთულია'):'საჯარო ვერსია ჯერ ვერ დადასტურდა'}</p>
+      {draftDiffers?<p className="text-amber-300">მონახაზი განსხვავდება გამოქვეყნებული ვერსიისგან. ზედა ღილაკით „ცვლილებების გამოქვეყნება“ გაააქტიურეთ საიტზე.</p>:<p>საიტზე გამოჩნდება მხოლოდ დადასტურებული გამოქვეყნებული პარამეტრები. ადმინისტრატორსაც შეუძლია საჯარო გვერდზე ნახვა.</p>}
+      <p>ახალი გამოქვეყნებული პარამეტრები ხილულ გვერდზე ავტომატურად მოწმდება ყოველ 30 წამში და ჩანართზე დაბრუნებისას.</p>
     </div>
     <div className="gs-character-admin-status" aria-label="Character Studio მდგომარეობა">
       <div><span>საიტის რეჟიმი</span><strong>{s.enabled?'ჩართული':'გამორთული'}</strong></div>

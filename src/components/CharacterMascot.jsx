@@ -1,21 +1,16 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterWaveCopy,activeCharacterEvent,applyCharacterEvent} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterWaveCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen} from '../utils/characterStudio.js';
 import './characterStudio.css';
 
-let seenInMemory=false;
-let seenDaily=0;
-function seen(frequency){
-  if(frequency==='session'&&seenInMemory)return true;
-  if(frequency==='daily'&&characterAlreadySeen(seenDaily,frequency))return true;
-  try{return characterAlreadySeen(frequency==='daily'?localStorage.getItem(CHARACTER_SESSION_KEY):sessionStorage.getItem(CHARACTER_SESSION_KEY),frequency);}catch{return false;}
+const lastSeen={session:null,daily:null};
+function seen(frequency,revision){
+  if(characterRevisionSeen(lastSeen[frequency],frequency,revision))return true;
+  try{return characterRevisionSeen((frequency==='daily'?localStorage:sessionStorage).getItem(CHARACTER_SESSION_KEY),frequency,revision);}catch{return false;}
 }
-function markSeen(frequency){
-  seenInMemory=true;
-  if(frequency==='daily')seenDaily=Date.now();
-  try{
-    if(frequency==='daily')localStorage.setItem(CHARACTER_SESSION_KEY,String(seenDaily));
-    else sessionStorage.setItem(CHARACTER_SESSION_KEY,'1');
-  }catch{/* storage may be unavailable; the in-memory guard still applies */}
+function markSeen(frequency,revision){
+  const record={revision,seen:true,at:Date.now()};
+  lastSeen[frequency]=record;
+  try{(frequency==='daily'?localStorage:sessionStorage).setItem(CHARACTER_SESSION_KEY,JSON.stringify(record));}catch{/* in-memory fallback */}
 }
 // Original toy-like dimensional vector figures. No WebGL or external assets.
 export function CharacterArt({character,emotion='happy',season='none'}){
@@ -115,11 +110,12 @@ export default function CharacterMascot({settings,lang}){
   useEffect(()=>{
     setPresentation(null);
     const current=JSON.parse(settingsKey);
-    if(!current.enabled||seen(current.frequency))return;
+    const revision=characterSettingsRevision(current);
+    if(!current.enabled||seen(current.frequency,revision))return;
     let closeTimer;
     const showTimer=setTimeout(()=>{
-      if(seen(current.frequency))return;
-      markSeen(current.frequency);
+      if(seen(current.frequency,revision))return;
+      markSeen(current.frequency,revision);
       const now=new Date();
       const effective=applyCharacterEvent(current,activeCharacterEvent(current,now),lang);
       setPresentation({character:selectCharacter(effective,now),settings:effective});

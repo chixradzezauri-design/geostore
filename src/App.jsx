@@ -490,6 +490,7 @@ export default function App() {
   const t = translations[currentLang] || translations.ka;
 
   const [publishedCharacterSettings, setPublishedCharacterSettings] = useState(null);
+  const publishedCharacterGeneration=useRef(0);
   const [characterMobile, setCharacterMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)');
@@ -1145,32 +1146,44 @@ export default function App() {
   }, [hasSettingsAccess, categories, bannersList, siteSettings]);
 
   useEffect(() => {
-    setPublishedCharacterSettings(null);
-    // Settings-authorized staff load the private draft in the separate authenticated effect above.
-    // Do not let a slower public-config request overwrite that draft after login.
-    if (hasSettingsAccess) return undefined;
-    let active = true;
+    let active=true,loading=false,appliedPublicSnapshot=false;
+    // All visitors, including authenticated staff browsing the shop, read the published config.
+    // Staff editor state is never replaced by public configuration.
     const loadPublishedStorefront = async () => {
+      if(!active||loading)return;
+      loading=true;
+      const generation=publishedCharacterGeneration.current;
       try {
-        const response = await fetch(
+        const response=await fetch(
           `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=published_config,is_published`,
-          { headers: await getSupabaseHeaders() }
+          {headers:await getSupabaseHeaders(),cache:'no-store'}
         );
-        if (!response.ok) return;
-        const rows = await response.json();
-        const config = rows?.[0]?.is_published ? rows[0].published_config : null;
-        if (!active || !config || typeof config !== 'object') return;
-        setPublishedCharacterSettings(normalizeCharacterSettings(config.siteSettings?.characterStudio));
-        if (Array.isArray(config.categories)) setCategoriesList(config.categories);
-        if (Array.isArray(config.banners)) setBannersList(config.banners);
-        if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) setSiteSettings(config.siteSettings);
-      } catch (error) {
-        console.error('Published storefront config load error:', error);
-      }
+        if(!response.ok)return;
+        const rows=await response.json();
+        if(!active||generation!==publishedCharacterGeneration.current)return;
+        const config=rows?.[0]?.is_published?rows[0].published_config:null;
+        if(!config||typeof config!=='object'||Array.isArray(config)){
+          setPublishedCharacterSettings(normalizeCharacterSettings(null));
+          return;
+        }
+        const next=normalizeCharacterSettings(config.siteSettings?.characterStudio);
+        setPublishedCharacterSettings(previous=>JSON.stringify(previous)===JSON.stringify(next)?previous:next);
+        if(!hasSettingsAccess&&!appliedPublicSnapshot){
+          appliedPublicSnapshot=true;
+          if(Array.isArray(config.categories))setCategoriesList(config.categories);
+          if(Array.isArray(config.banners))setBannersList(config.banners);
+          if(config.siteSettings&&typeof config.siteSettings==='object'&&!Array.isArray(config.siteSettings))setSiteSettings(config.siteSettings);
+        }
+      }catch(error){console.error('Published storefront config load error:',error);}
+      finally{loading=false;}
     };
-    loadPublishedStorefront();
-    return () => { active = false; };
-  }, [hasSettingsAccess]);
+    const refresh=()=>{if(document.visibilityState==='visible')void loadPublishedStorefront();};
+    void loadPublishedStorefront();
+    const interval=window.setInterval(refresh,30000);
+    window.addEventListener('focus',refresh);
+    document.addEventListener('visibilitychange',refresh);
+    return()=>{active=false;window.clearInterval(interval);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);};
+  },[hasSettingsAccess]);
 
   useEffect(() => {
     if (isCheckoutOpen || orderConfirmation || isAuthOpen || isTermsOpen || isWarrantyOpen || isTrackerOpen || isNotificationsOpen) {
@@ -1478,7 +1491,7 @@ export default function App() {
   }, []);
   const showToast = (msg, tone = 'success', characterKey = null) => {
     const now=Date.now();
-    const reaction=tone==='success'&&['cartAdded','wishlistAdded'].includes(characterKey)&&getCharacterScenario(publishedCharacterSettings,characterKey,{mobile:characterMobile,eligible:!hasSettingsAccess&&['store','cart','wishlist'].includes(activeTab)});
+    const reaction=tone==='success'&&['cartAdded','wishlistAdded'].includes(characterKey)&&getCharacterScenario(publishedCharacterSettings,characterKey,{mobile:characterMobile,eligible:['store','cart','wishlist'].includes(activeTab)});
     const allowed=Boolean(reaction)&&canShowCharacterReaction(lastCharacterReactionRef.current,now);
     if(allowed)lastCharacterReactionRef.current=now;
     setToastCharacterKey(allowed?characterKey:null);
@@ -1775,6 +1788,8 @@ export default function App() {
       // and its immutable history row. Do not clean up referenced uploads
       // if response parsing or a later UI update fails.
       storefrontPublished = true;
+      publishedCharacterGeneration.current+=1;
+      setPublishedCharacterSettings(normalizeCharacterSettings(publishedSiteSettings.characterStudio));
       const publishResult = await publishResponse.json();
       if (
         !publishResult?.version_id
@@ -3751,15 +3766,15 @@ export default function App() {
     }else robots?.remove();
   },[activeTab,catalogueRoute,products,catalogueVerifiedEpoch,categories,adminAccess]);
 
-  const toastCharacter=toastTone==='success'&&getCharacterScenario(publishedCharacterSettings,toastCharacterKey,{mobile:characterMobile,eligible:!hasSettingsAccess&&['store','cart','wishlist'].includes(activeTab)});
-  const emptyCartCharacter=getCharacterScenario(publishedCharacterSettings,'cart',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='cart'&&cart.length===0&&!authLoading});
-  const emptyWishlistCharacter=getCharacterScenario(publishedCharacterSettings,'wishlist',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='wishlist'&&wishlist.length===0&&!authLoading});
+  const toastCharacter=toastTone==='success'&&getCharacterScenario(publishedCharacterSettings,toastCharacterKey,{mobile:characterMobile,eligible:['store','cart','wishlist'].includes(activeTab)});
+  const emptyCartCharacter=getCharacterScenario(publishedCharacterSettings,'cart',{mobile:characterMobile,eligible:activeTab==='cart'&&cart.length===0&&!authLoading});
+  const emptyWishlistCharacter=getCharacterScenario(publishedCharacterSettings,'wishlist',{mobile:characterMobile,eligible:activeTab==='wishlist'&&wishlist.length===0&&!authLoading});
   const formatPrice = (p) =>
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
   return (
     <div data-signature-commerce={activeTab !== 'admin' && siteSettings?.visualDesign?.signature2026 === true ? "true" : undefined} className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
-      {!hasSettingsAccess && activeTab === 'store' && !searchQuery && canDisplayCharacter(publishedCharacterSettings, { route: catalogueRoute?.kind, mobile: characterMobile, blocked: Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal) }) && (
+      {!authLoading && activeTab === 'store' && !searchQuery && canDisplayCharacter(publishedCharacterSettings, { route: catalogueRoute?.kind, mobile: characterMobile, blocked: Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal) }) && (
         <Suspense fallback={null}><CharacterMascot settings={publishedCharacterSettings} lang={currentLang}/></Suspense>
       )}
       {activeTab === 'admin' && hasSettingsAccess && storefrontRemoteConflict && (
@@ -3870,7 +3885,7 @@ export default function App() {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             catalogueNavigation
-            publishedCharacterSettings={hasSettingsAccess?null:publishedCharacterSettings}
+            publishedCharacterSettings={publishedCharacterSettings}
             characterMobile={characterMobile}
             catalogueRoute={catalogueRoute}
             catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current}
@@ -3967,6 +3982,7 @@ export default function App() {
             storefrontDraftBusy={storefrontDraftBusy}
             onPublishStorefront={handlePublishStorefront}
             storefrontPublishBusy={storefrontPublishBusy}
+            publishedCharacterSettings={publishedCharacterSettings}
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
