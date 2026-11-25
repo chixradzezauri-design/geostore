@@ -35,7 +35,7 @@ export function mascotPose(id,time,behavior='wave',reduced=false){
  const gait=travel>0&&t<travel;
  const envelope=gait?smooth(t/.18)*smooth((travel-t)/.24):0;
  const phase=t*(behavior==='walk-wave'?9:behavior==='sneak'?7:15)*pace;
- const step=Math.sin(phase)*stride*envelope;
+ const step=envelope>0?Math.sin(phase)*stride*envelope:0;
  const after=Math.max(0,t-travel);
  const greeting=smooth(after/.22)*(1-smooth((after-2.05)/.38));
  const pulse=Math.sin(t*7);
