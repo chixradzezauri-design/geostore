@@ -1,5 +1,8 @@
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
+import { WISHLIST_SYNC_ENABLED } from './utils/wishlistSyncReview.js';
+import { projectWishlistIds } from './utils/wishlistSyncContract.js';
+const WishlistSyncPanel = React.lazy(()=>import('./components/WishlistSyncPanel.jsx'));
 import {getInstallPlatform,isStandaloneApp} from './utils/pwaInstall.js';
 // src/App.jsx
 // GEOSTORE — Supabase Auth integration
@@ -636,6 +639,15 @@ export default function App() {
   // მომხმარებლის მდგომარეობა ახლა Supabase Auth-ის სესიიდან მოდის.
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const wishlistSyncScopeRef=useRef({ownerId:null,epoch:0,authLoading:true});
+  const suspendWishlistSync=()=>{const old=wishlistSyncScopeRef.current;wishlistSyncScopeRef.current={ownerId:null,epoch:old.epoch+1,authLoading:true};};
+  React.useLayoutEffect(()=>{
+    const owner=activeCartOwnerRef.current;
+    const old=wishlistSyncScopeRef.current;
+    const id=!authLoading&&owner.initialized&&owner.userId===currentUser?.id?currentUser?.id:null;
+    wishlistSyncScopeRef.current={ownerId:id||null,epoch:old.epoch,authLoading:!id};
+    return suspendWishlistSync;
+  },[currentUser?.id,authLoading]);
   const mfaScopeRef = useRef({ownerId:null,epoch:0,authLoading:true,adminEligible:false});
   const [mfaEntry,setMfaEntry] = useState(null);
   const coordinatedAuth = (method,...args) => ADMIN_MFA_ROLLOUT_ENABLED
@@ -1255,6 +1267,7 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       authEventVersion += 1;
+      suspendWishlistSync();
 
       if (event === 'PASSWORD_RECOVERY') {
         setAuthForm((current) => ({ ...current, email: session?.user?.email || current.email, password: '' }));
@@ -1351,6 +1364,7 @@ export default function App() {
     return () => {
       mounted = false;
       deferredAuth.cancel();
+      suspendWishlistSync();
       subscription.unsubscribe();
     };
   }, []);
@@ -2648,6 +2662,21 @@ export default function App() {
     setCart(nextCart);
   };
 
+  const importSyncedFavorite=(id,scope)=>{
+    if(!WISHLIST_SYNC_ENABLED)return false;
+    const now=wishlistSyncScopeRef.current;
+    if(now.authLoading||now.ownerId!==scope.ownerId||now.epoch!==scope.epoch||activeCartOwnerRef.current.userId!==scope.ownerId||catalogueVerifiedEpoch!==productsAccessEpoch.current)return false;
+    const current=wishlistRef.current;
+    if(current.some(item=>item.id===id))return true;
+    if(current.length>=100)return false;
+    const product=products.find(p=>p.id===id&&p.isPublished!==false&&p.is_published!==false);
+    if(!product)return false;
+    const next=sanitizeProductCollection([...current,product],100);
+    if(!next.some(p=>p.id===id))return false;
+    try{window.localStorage.setItem(getUserScopedCollectionStorageKey('geostore_wishlist',scope.ownerId),JSON.stringify(next));}
+    catch{return false;}
+    setWishlist(next);return true;
+  };
   const toggleWishlist = (product) => {
     setWishlist((prev) => {
       const exists = prev.some(
@@ -3862,6 +3891,7 @@ export default function App() {
               )}
             </div>
 
+            {WISHLIST_SYNC_ENABLED && !authLoading && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><WishlistSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getLocalIds={()=>projectWishlistIds(wishlistRef.current)} importFavorite={importSyncedFavorite} lang={currentLang}/></Suspense>}
             {wishlist.length === 0 ? (
               <div className="gs-video-wishlist-empty"><p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
             ) : (
