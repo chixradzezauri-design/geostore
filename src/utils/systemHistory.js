@@ -1,4 +1,6 @@
 // Candidate owner-only history reader. No raw exception text is rendered.
+// Enable only with reviewed server release and actual AAL2 integration.
+export const SYSTEM_HISTORY_ENABLED=false;
 const codes=new Set(["browser_runtime_error","browser_resource_error","browser_unhandled_rejection","react_root_render_error","react_admin_render_error","catalogue_upstream_error","catalogue_render_error","sitemap_upstream_error"]);
 export function normalizeSystemHistory(rows){
  if(!Array.isArray(rows)||rows.length>1344)return null;

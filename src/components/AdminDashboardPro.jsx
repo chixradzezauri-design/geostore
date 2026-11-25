@@ -10,6 +10,8 @@ import { createClient } from '@supabase/supabase-js';
 import { EMPTY_ADMIN_ACCESS, hasAdminPermission, hasAnyAdminAccess } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
 import { ADMIN_MFA_ROLLOUT_ENABLED } from '../utils/adminAuthCoordinator.js';
+import { createSystemHistoryReader, SYSTEM_HISTORY_ENABLED } from '../utils/systemHistory.js';
+const SystemMonitoringPanel = React.lazy(() => import('./SystemMonitoringPanel.jsx'));
 import { listReactivationTotpFactors, verifyReactivationTotp } from '../utils/adminOrderReactivationMfa.js';
 import { normalizeMfaCode } from '../utils/adminMfaView.js';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
@@ -975,6 +977,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 export default function AdminDashboardPro({
   adminLoggedIn,
   adminUserId = null,
+  currentLang = 'ka',
   adminAccess = EMPTY_ADMIN_ACCESS,
   setAdminLoggedIn,
   adminLoginForm,
@@ -1016,6 +1019,16 @@ export default function AdminDashboardPro({
   const adminSessionActiveRef = useRef(Boolean(adminLoggedIn));
   const isCurrentAdminSession = (version) => adminSessionActiveRef.current && version === adminSessionVersion.current;
   const isOwner = adminAccess?.is_admin === true;
+  const historyScopeRef=useRef({ownerId:null,isOwner:false});
+  useLayoutEffect(()=>{
+    historyScopeRef.current={ownerId:adminUserId,isOwner:isOwner&&adminLoggedIn===true};
+    return ()=>{historyScopeRef.current={ownerId:null,isOwner:false};};
+  },[adminUserId,isOwner,adminLoggedIn]);
+  const readSystemHistory=useMemo(()=>createSystemHistoryReader({
+    enabled:SYSTEM_HISTORY_ENABLED&&ADMIN_MFA_ROLLOUT_ENABLED,
+    client:supabase,getContext:()=>({...historyScopeRef.current,epoch:adminSessionVersion.current,
+      isOwner:historyScopeRef.current.isOwner&&adminSessionActiveRef.current})
+  }),[]);
   const hasModulePermission = (permission) => hasAdminPermission(adminAccess, permission);
   const hasProductsPermission = hasModulePermission('products');
   const hasOrdersPermission = hasModulePermission('orders');
@@ -8145,6 +8158,11 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'settings' || adminContentTab === 'settings') && (
           <div className="admin-settings-panel space-y-4">
+            {SYSTEM_HISTORY_ENABLED && ADMIN_MFA_ROLLOUT_ENABLED && isOwner && adminLoggedIn && adminUserId && visibleAdminTab==='settings' && (
+              <React.Suspense fallback={<AdminSectionLoading/>}>
+                <SystemMonitoringPanel key={adminUserId+':'+adminSessionVersion.current} enabled read={readSystemHistory} lang={currentLang}/>
+              </React.Suspense>
+            )}
             <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-4 sm:p-5 rounded-2xl space-y-3 shadow-lg">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
               <p className="text-xs text-slate-300 leading-6">

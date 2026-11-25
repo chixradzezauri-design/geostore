@@ -3803,6 +3803,7 @@ export default function App() {
             key={`${currentUser?.id || 'anonymous'}-${adminAccess.is_admin ? 'owner' : Object.keys(adminAccess.permissions || {}).filter((permission) => adminAccess.permissions[permission]).sort().join('-')}`}
             adminLoggedIn={adminLoggedIn}
             adminUserId={currentUser?.id || null}
+            currentLang={currentLang}
             adminAccess={adminAccess}
             setAdminLoggedIn={setAdminLoggedIn}
             adminLoginForm={
