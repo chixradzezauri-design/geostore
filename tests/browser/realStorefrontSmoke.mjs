@@ -140,6 +140,10 @@ try {
       
       // Stage 39 — integrated client-side search and filter recovery.
       const search = page.locator('.gs-header-search input[type="search"]');
+      if (!(await search.isVisible())) {
+        await page.locator('.gs-signature-actions button').first().click();
+        await search.waitFor({state:'visible'});
+      }
       await search.fill('stage39-no-results');
       const searchClear = page.locator('.gs-header-search-clear');
       await searchClear.waitFor({ state: 'visible', timeout: 10000 });

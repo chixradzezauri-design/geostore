@@ -204,6 +204,7 @@ export default function Header({
               style={visualStyle('header.search.input')}
               value={searchQuery || ''}
               onChange={(event) => setSearchQuery?.(event.target.value)}
+              onFocus={() => { if (signature) setSearchOpen(true); }}
               placeholder={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
               aria-label={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
             />
@@ -212,7 +213,7 @@ export default function Header({
             <button
               type="button"
               className="gs-header-search-clear"
-              onClick={() => { setSearchQuery?.(''); searchInputRef.current?.focus(); }}
+              onClick={() => { if (signature) setSearchOpen(true); setSearchQuery?.(''); searchInputRef.current?.focus(); }}
               aria-label={currentLang === 'en' ? 'Clear product search' : currentLang === 'ru' ? 'Очистить поиск товаров' : 'პროდუქტის ძებნის გასუფთავება'}
               title={currentLang === 'en' ? 'Clear search' : currentLang === 'ru' ? 'Очистить поиск' : 'ძებნის გასუფთავება'}
             ><X aria-hidden="true" /></button>

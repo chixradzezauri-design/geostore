@@ -13,3 +13,9 @@ test('Signature header reuses the original profile action and search hook', () =
   assert.ok(header.includes('setSearchQuery?.(event.target.value)'));
   assert.ok(header.includes('runAction(setIsImageSearchOpen)'));
 });
+
+
+test('Signature search stays open and focusable when the final query is cleared', () => {
+  assert.match(header, /onFocus=\{\(\) => \{ if \(signature\) setSearchOpen\(true\); \}\}/);
+  assert.match(header, /if \(signature\) setSearchOpen\(true\); setSearchQuery\?\.\(''\); searchInputRef\.current\?\.focus\(\)/);
+});

@@ -47,6 +47,8 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await search.locator('input').fill('Stage46 Everyday Wallet');
    await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-product-card').length===1);
    await search.locator('.gs-header-search-clear').click();
+   assert.equal(await search.isVisible(),true,'Search remains open after clearing');
+   assert.ok(await search.locator('input').evaluate(el=>document.activeElement===el),'Search clear restores focus in Signature at '+width);
    await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-product-card').length===4);
    await search.locator('.gs-signature-search-dismiss').click();
    await search.waitFor({state:'hidden'});
