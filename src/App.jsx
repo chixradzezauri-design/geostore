@@ -4,6 +4,10 @@
 
 import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
+import { ADMIN_MFA_ROLLOUT_ENABLED, runAdminAuthExclusive } from './utils/adminAuthCoordinator.js';
+import { createAdminMfaAccessResolver } from './utils/adminMfaAccessResolver.js';
+import { createAdminMfaTransport } from './utils/adminMfaTransport.js';
+const AdminMfaPanel = lazy(() => import('./components/AdminMfaPanel.jsx'));
 
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
@@ -641,6 +645,25 @@ export default function App() {
   // მომხმარებლის მდგომარეობა ახლა Supabase Auth-ის სესიიდან მოდის.
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const mfaScopeRef = useRef({ownerId:null,epoch:0,authLoading:true,adminEligible:false});
+  const [mfaEntry,setMfaEntry] = useState(null);
+  const coordinatedAuth = (method,...args) => ADMIN_MFA_ROLLOUT_ENABLED
+    ? runAdminAuthExclusive(() => supabase.auth[method](...args))
+    : supabase.auth[method](...args);
+  const mfaTransport = useMemo(() => createAdminMfaTransport({
+    enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
+    getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
+  }),[]);
+  const mfaResolve = useMemo(() => createAdminMfaAccessResolver({
+    enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
+    getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
+  }),[]);
+  const invalidateMfaScope = (userId) => {
+    if (!ADMIN_MFA_ROLLOUT_ENABLED) return;
+    mfaTransport.forgetEnrollment();
+    mfaScopeRef.current={ownerId:userId||null,epoch:mfaScopeRef.current.epoch+1,authLoading:!userId,adminEligible:false};
+    setMfaEntry(null);
+  };
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
@@ -661,6 +684,16 @@ export default function App() {
   const hasSettingsAccess = hasAdminPermission('settings');
   const resolveAdminAccess = async (user) => {
     if (!user?.id) return EMPTY_ADMIN_ACCESS;
+    if (ADMIN_MFA_ROLLOUT_ENABLED) {
+      const scope=mfaScopeRef.current;
+      if(scope.ownerId!==user.id) return EMPTY_ADMIN_ACCESS;
+      const resolved=await mfaResolve();
+      const now=mfaScopeRef.current;
+      if(now.ownerId!==scope.ownerId||now.epoch!==scope.epoch) return EMPTY_ADMIN_ACCESS;
+      mfaScopeRef.current={...now,adminEligible:resolved.eligible===true};
+      setMfaEntry(resolved.eligible&&resolved.status!=='authorized'?{ownerId:scope.ownerId,epoch:scope.epoch}:null);
+      return resolved.status==='authorized'?resolved.access:EMPTY_ADMIN_ACCESS;
+    }
     if (isAuthorizedAdmin(user)) return OWNER_ADMIN_ACCESS;
     try {
       const { data, error } = await supabase.rpc('get_my_admin_access');
@@ -1232,6 +1265,7 @@ export default function App() {
 
       const eventVersion = authEventVersion;
       const authUser = session?.user || null;
+      invalidateMfaScope(authUser?.id);
       activateCartOwner(authUser?.id || null);
       setCurrentUser(normalizeAuthUser(authUser));
       setAdminAccess(EMPTY_ADMIN_ACCESS);
@@ -1277,6 +1311,8 @@ export default function App() {
         }
 
         const authUser = data?.user || null;
+        if (ADMIN_MFA_ROLLOUT_ENABLED && isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })
+          && mfaScopeRef.current.ownerId!==authUser?.id) invalidateMfaScope(authUser?.id);
         const access = await resolveAdminAccess(authUser);
         if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
           const authorized = hasAnyAdminAccess(access);
@@ -2082,7 +2118,7 @@ export default function App() {
             // Refresh once, then verify the refreshed identity with the Auth server
             // before retrying the privileged RPC. Never weaken the database guard.
             const { data: { session: refreshedSession } = {}, error: refreshError } =
-              await supabase.auth.refreshSession();
+              await coordinatedAuth('refreshSession');
 
             if (refreshError || !refreshedSession?.access_token) {
               setAdminAccess(EMPTY_ADMIN_ACCESS);
@@ -2749,7 +2785,7 @@ export default function App() {
       if (authSubmitLock.current) return;
       authSubmitLock.current = true;
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error } = await coordinatedAuth('resetPasswordForEmail', email, {
           redirectTo: 'https://geostore.vercel.app/'
         });
         if (error) throw error;
@@ -2794,9 +2830,9 @@ export default function App() {
           alert(currentLang === 'en' ? 'Choose a different password; this password is unsafe or could not be checked.' : currentLang === 'ru' ? 'Выберите другой пароль: этот пароль небезопасен или его не удалось проверить.' : 'აირჩიეთ სხვა პაროლი — ეს პაროლი არასაიმედოა ან მისი შემოწმება ვერ მოხერხდა.');
           return;
         }
-        const { error } = await supabase.auth.updateUser({ password });
+        const { error } = await coordinatedAuth('updateUser', { password });
         if (error) throw error;
-        const { error: signOutError } = await supabase.auth.signOut();
+        const { error: signOutError } = await coordinatedAuth('signOut');
         if (signOutError) throw signOutError;
         setCurrentUser(null);
         setAdminAccess(EMPTY_ADMIN_ACCESS);
@@ -2876,7 +2912,7 @@ export default function App() {
           return;
         }
 
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await coordinatedAuth('signUp', {
           email,
           password,
           options: {
@@ -2921,7 +2957,7 @@ export default function App() {
         }
       } else {
         const { data, error } =
-          await supabase.auth.signInWithPassword({
+          await coordinatedAuth('signInWithPassword', {
             email,
             password
           });
@@ -2992,7 +3028,7 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await coordinatedAuth('signOut');
 
       if (error) {
         throw error;
@@ -3673,6 +3709,19 @@ export default function App() {
       )}
 
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
+        {ADMIN_MFA_ROLLOUT_ENABLED && mfaEntry && !authLoading && !adminLoggedIn && !isAuthOpen && currentUser?.id===mfaEntry.ownerId && (
+          <Suspense fallback={<p role="status">იტვირთება...</p>}>
+            <AdminMfaPanel enabled transport={mfaTransport} ownerId={mfaEntry.ownerId} epoch={mfaEntry.epoch}
+              lang={currentLang} onSignOut={handleLogout} onRecheck={async()=>{
+                const scope=mfaScopeRef.current;
+                const access=await resolveAdminAccess({id:scope.ownerId});
+                if(mfaScopeRef.current.ownerId!==scope.ownerId||mfaScopeRef.current.epoch!==scope.epoch)return;
+                setAdminAccess(access);
+                setAdminLoggedIn(hasAnyAdminAccess(access));
+                if(hasAnyAdminAccess(access))setActiveTab('admin');
+              }}/>
+          </Suspense>
+        )}
         {activeTab === 'store' && (
           <Suspense
             fallback={(
@@ -3735,7 +3784,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && (!ADMIN_MFA_ROLLOUT_ENABLED || (adminLoggedIn && !authLoading && hasAnyAdminAccess(adminAccess))) && (
           <AdminDashboardErrorBoundary>
           <Suspense
             fallback={(
