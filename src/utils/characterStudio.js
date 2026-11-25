@@ -124,7 +124,7 @@ export function characterMessage(settings,character,lang='ka',variant=0,date=new
   return character.lines[locale]||character.lines.ka;
 }
 export function characterWaveCopy(lang='ka'){
-  return ({ka:{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'},en:{button:'Wave back',reply:'Yay! Hello to you too!'},ru:{button:'Помахать в ответ',reply:'Ура! И тебе привет!'}})[lang]||{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'};
+  return ({ka:{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'},en:{button:'Wave back',reply:'Yay! Hello to you too!'},ru:{button:'Помахать в ответ',reply:'Ура! И тебе привет!'}})[CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka'];
 }
 export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
   const s=normalizeCharacterSettings(settings);

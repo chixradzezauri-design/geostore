@@ -24,7 +24,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const updateScenario=(patch)=>{
     setSiteSettings(previous=>{
       const current=normalizeCharacterSettings(previous?.characterStudio);
-      return {...previous,characterStudio:{...current,scenarios:{...current.scenarios,[scenarioKey]:{...current.scenarios[scenarioKey],...patch}}}};
+      return {...previous,characterStudio:{...current,greetingLibrary:previous?.characterStudio?.greetingLibrary??current.greetingLibrary,scenarios:{...current.scenarios,[scenarioKey]:{...current.scenarios[scenarioKey],...patch}}}};
     });
   };
   const scenarioPreview=getCharacterScenario({...s,enabled:true,mobile:true,desktop:true,scenarios:{...s.scenarios,[scenarioKey]:{...scenario,enabled:true}}},scenarioKey,{mobile:previewMobile,eligible:true});
@@ -54,7 +54,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">ხანგრძლივობა: {s.duration} წმ</span><input className="w-full" type="range" min="3" max="12" value={s.duration} disabled={busy} onChange={e=>update({duration:Number(e.target.value)})}/></label>
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
     </div>
-    <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),message}}));}}/></label>
+    <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary,message}}));}}/></label>
     <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-greetings>
       <summary className="cursor-pointer text-sm font-bold text-white">მისალმებების ბიბლიოთეკა და ეფექტები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -67,7 +67,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
         <label className="block text-xs text-slate-300">ფრაზების ენა<select className={field} value={libraryLang} onChange={e=>setLibraryLang(e.target.value)}>{CHARACTER_GREETING_LANGS.map(code=><option key={code} value={code}>{({ka:'ქართული',en:'English',ru:'Русский'})[code]}</option>)}</select></label>
         {Array.from({length:8},(_,i)=><label key={i} className="block text-xs text-slate-300">ფრაზა {i+1}<input className={field} type="text" maxLength={120} disabled={busy} value={siteSettings?.characterStudio?.greetingLibrary?.[libraryLang]?.[i]??''} onChange={e=>{
           const value=e.target.value;setPreview(null);
-          setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);const list=Array.from({length:8},(_,j)=>previous?.characterStudio?.greetingLibrary?.[libraryLang]?.[j]??'');list[i]=value;return {...previous,characterStudio:{...current,greetingLibrary:{...current.greetingLibrary,[libraryLang]:list}}};});
+          setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);const list=Array.from({length:8},(_,j)=>previous?.characterStudio?.greetingLibrary?.[libraryLang]?.[j]??'');list[i]=value;return {...previous,characterStudio:{...current,greetingLibrary:{...current.greetingLibrary,...previous?.characterStudio?.greetingLibrary,[libraryLang]:list}}};});
         }}/></label>)}
         <p className="text-xs text-slate-400">თითოეულ ენაზე მაქსიმუმ 8 ფრაზა. ცარიელი ველები გამოქვეყნებისას გამოტოვებულია. შერჩევა შემთხვევითია და ენის მიხედვით ხდება.</p>
       </div>}
