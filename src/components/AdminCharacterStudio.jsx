@@ -1,12 +1,13 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
 const choices={
   rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური']],
   behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა'],['walk-wave','მოსეირნება და მისალმება'],['look-around','დათვალიერება'],['point','მინიშნება'],['patrol','გადაადგილება, გაჩერება და მისალმება']],
-  greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა']],
+  greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა'],['friendly','მეგობრული'],['premium','დახვეწილი / პრემიუმ'],['minimal','მოკლე და მინიმალისტური']],
+  interaction:[['wave','საპასუხო მისალმება'],['high-five','ხუთიანი'],['cheer','გამხნევება']],
   effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი']],
   emotion:[['happy','ღიმილი'],['wink','თვალის ჩაკვრა'],['surprise','გაკვირვება']],
   season:[['none','გამორთული'],['auto','ავტომატურად სეზონის მიხედვით'],['winter','ზამთარი'],['hearts','გულები'],['summer','ზაფხული'],['autumn','შემოდგომა']],
@@ -88,10 +89,12 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <summary className="cursor-pointer text-sm font-bold text-white">მისალმებების ბიბლიოთეკა და ეფექტები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         {choose('greetingMode','მისალმების რეჟიმი')}{choose('effect','ვიზუალური ეფექტი')}
-        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.waveBack} disabled={busy} onChange={e=>update({waveBack:e.target.checked})}/> მომხმარებელს შეუძლია საპასუხოდ ხელი დაუქნიოს</label>
+        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.waveBack} disabled={busy} onChange={e=>update({waveBack:e.target.checked})}/> მომხმარებელს შეუძლია საპასუხოდ ხელი დაუქნიოს ან სხვა ჟესტი აირჩიოს</label>
+        {s.waveBack&&choose('interaction','საპასუხო ჟესტი')}
       </div>
       {s.message&&<p className="text-xs text-amber-300">ზემოთ ჩაწერილი ინდივიდუალური ტექსტი უპირატესია ყველა რეჟიმზე. ბიბლიოთეკის გამოსაყენებლად გაასუფთავეთ ის ველი.</p>}
       {s.greetingMode==='funny'&&<div className="space-y-1 text-xs text-slate-300">{FUNNY_GREETINGS.map((line,i)=><p key={i}>{line[lang]||line.ka}</p>)}</div>}
+      {Object.hasOwn(CHARACTER_GREETING_TONES,s.greetingMode)&&<div className="rounded-xl border border-slate-700 p-3 space-y-2 text-xs text-slate-200"><p className="font-bold text-white">ფრაზების მაგალითები</p>{CHARACTER_GREETING_TONES[s.greetingMode].map((line,i)=><p key={i}>{line[lang]||line.ka}</p>)}</div>}
       {s.greetingMode==='library'&&<div className="space-y-3">
         <label className="block text-xs text-slate-300">ფრაზების ენა<select className={field} value={libraryLang} onChange={e=>setLibraryLang(e.target.value)}>{CHARACTER_GREETING_LANGS.map(code=><option key={code} value={code}>{({ka:'ქართული',en:'English',ru:'Русский'})[code]}</option>)}</select></label>
         {Array.from({length:8},(_,i)=><label key={i} className="block text-xs text-slate-300">ფრაზა {i+1}<input className={field} type="text" maxLength={120} disabled={busy} value={siteSettings?.characterStudio?.greetingLibrary?.[libraryLang]?.[i]??''} onChange={e=>{

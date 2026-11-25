@@ -14,11 +14,11 @@ export const CHARACTER_MOTIONS=Object.freeze(['run-wave','wave','jump','slide','
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
 const bounded=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.min(max,Math.max(min,Math.round(value))):fallback;
 export const CHARACTER_SCENARIOS=Object.freeze({
-  flash:{character:'rabbit',label:'ფლეშ აქციები',lines:{ka:'ჰოპ! მოქმედი აქციები აქაა!',en:'Hop! Explore the current offers!',ru:'Прыг! Здесь действующие акции!'}},
-  cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'ბიპ-ბუპ! კალათა ჯერ ცარიელია.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
-  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'მიაუ! აქ შენი რჩეულები შეინახება.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}},
-  cartAdded:{character:'fox',label:'კალათაში დამატება',lines:{ka:'ვაშა! კარგი არჩევანია!',en:'Hooray! Great choice!',ru:'Ура! Отличный выбор!'}},
-  wishlistAdded:{character:'cat',label:'ფავორიტებში დამატება',lines:{ka:'მიაუ! რჩეული შენახულია!',en:'Meow! Favourite saved!',ru:'Мяу! Избранное сохранено!'}}
+  flash:{character:'rabbit',label:'ფლეშ აქციები',lines:{ka:'აღმოაჩინე მიმდინარე შეთავაზებები — იქნებ შენი რჩეულიც აქაა.',en:'Hop! Explore the current offers!',ru:'Прыг! Здесь действующие акции!'}},
+  cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'შენი კალათა ჯერ ცარიელია. მოდი, სასურველი ნივთები აღმოვაჩინოთ.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
+  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'რაც მოგეწონება, აქ შეინახე და ნებისმიერ დროს დაუბრუნდი.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}},
+  cartAdded:{character:'fox',label:'კალათაში დამატება',lines:{ka:'შესანიშნავია! შენი ნივთი კალათაშია.',en:'Hooray! Great choice!',ru:'Ура! Отличный выбор!'}},
+  wishlistAdded:{character:'cat',label:'ფავორიტებში დამატება',lines:{ka:'შენი რჩეული შენახულია — კარგი აღმოჩენაა!',en:'Meow! Favourite saved!',ru:'Мяу! Избранное сохранено!'}}
 });
 function normalizeScenarios(raw){
   const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -64,6 +64,27 @@ export const FUNNY_GREETINGS=Object.freeze([
   {ka:'გამარჯობა! დღეს ოფიციალურად კარგი განწყობის დღეა.',en:'Hello! Today is officially a good-mood day.',ru:'Привет! Сегодня официально день хорошего настроения.'},
   {ka:'არ შეგეშინდეს, უბრალოდ მეგობარი პერსონაჟი ვარ!',en:'Don’t mind me, I’m just your friendly mascot!',ru:'Не пугайся, я просто дружелюбный талисман!'}
 ]);
+export const CHARACTER_GREETING_TONES=Object.freeze({
+  friendly:[
+    {ka:'რა კარგია, რომ შემოიარე! აქ შენი შემდეგი საყვარელი ნივთი გელოდება.',en:'Lovely to see you! Your next favourite might be right here.',ru:'Как здорово, что ты заглянул! Возможно, здесь твоя новая любимая вещь.'},
+    {ka:'კეთილი იყოს შენი მობრძანება! დაათვალიერე ყველაფერი შენს ტემპში.',en:'Welcome! Explore at your own pace.',ru:'Добро пожаловать! Выбирай в своём темпе.'},
+    {ka:'მიხარია შენი ნახვა! სასიამოვნო აღმოჩენებს გისურვებ.',en:'Glad you’re here! Enjoy discovering something new.',ru:'Рад тебя видеть! Приятных открытий!'},
+    {ka:'დღეს რა განწყობაზე ხარ? იქნებ რაღაც განსაკუთრებულს გადააწყდე.',en:'What are you in the mood for today? Something special might catch your eye.',ru:'Какое сегодня настроение? Вдруг найдётся что-то особенное.'}
+  ],
+  premium:[
+    {ka:'აღმოაჩინე დეტალები, რომლებიც შენს ყოველდღიურობას განსაკუთრებულს ხდის.',en:'Discover details that make every day feel special.',ru:'Открой детали, которые делают каждый день особенным.'},
+    {ka:'კარგი არჩევანი შენი სტილით იწყება. კეთილი იყოს შენი მობრძანება.',en:'Great choices begin with your own style. Welcome.',ru:'Хороший выбор начинается с твоего стиля. Добро пожаловать.'},
+    {ka:'შეარჩიე ის, რაც ნამდვილად შენია. სასიამოვნო შოპინგს გისურვებ.',en:'Find what truly feels like you. Enjoy browsing.',ru:'Найди то, что подходит именно тебе. Приятного выбора.'},
+    {ka:'პატარა დეტალები, დიდი შთაბეჭდილებები. აღმოაჩინე შენი სტილი.',en:'Small details, lasting impressions. Discover your style.',ru:'Маленькие детали, яркие впечатления. Найди свой стиль.'}
+  ],
+  minimal:[
+    {ka:'კეთილი იყოს შენი მობრძანება!',en:'Welcome!',ru:'Добро пожаловать!'},
+    {ka:'აღმოაჩინე შენი რჩეული.',en:'Discover your favourite.',ru:'Найди своё любимое.'},
+    {ka:'სასიამოვნო შოპინგს გისურვებ!',en:'Enjoy exploring!',ru:'Приятного выбора!'},
+    {ka:'მიხარია შენი ნახვა.',en:'Lovely to see you.',ru:'Рад тебя видеть.'}
+  ]
+});
+export const CHARACTER_INTERACTIONS=Object.freeze(['wave','high-five','cheer']);
 function normalizeGreetingLibrary(raw){
   const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,Array.isArray(source[lang])?[...new Set(source[lang].slice(0,8).filter(x=>typeof x==='string').map(x=>x.trim().slice(0,120)).filter(Boolean))]:[]]));
@@ -126,10 +147,11 @@ export function normalizeCharacterSettings(raw){
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
     rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
     behavior:pick(s.behavior,CHARACTER_MOTIONS,'run-wave'),
-    greetingMode:pick(s.greetingMode,['character','funny','time','library'],'character'),
+    greetingMode:pick(s.greetingMode,['character','funny','time','library',...Object.keys(CHARACTER_GREETING_TONES)],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
     effect:pick(s.effect,['none','sparkles','hearts','confetti'],'none'),waveBack:s.waveBack===true,
+    interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right'],'left'),
@@ -167,6 +189,7 @@ export function characterMessage(settings,character,lang='ka',variant=0,date=new
   if(s.message)return s.message;
   const index=Number.isFinite(variant)?Math.max(0,Math.min(.999999,variant)):0;
   if(s.greetingMode==='funny')return FUNNY_GREETINGS[Math.floor(index*FUNNY_GREETINGS.length)][locale];
+  if(Object.hasOwn(CHARACTER_GREETING_TONES,s.greetingMode)){const lines=CHARACTER_GREETING_TONES[s.greetingMode];return lines[Math.floor(index*lines.length)][locale];}
   if(s.greetingMode==='library'&&s.greetingLibrary[locale].length){
     const lines=s.greetingLibrary[locale];return lines[Math.floor(index*lines.length)];
   }
@@ -179,6 +202,20 @@ export function characterMessage(settings,character,lang='ka',variant=0,date=new
 }
 export function characterWaveCopy(lang='ka'){
   return ({ka:{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'},en:{button:'Wave back',reply:'Yay! Hello to you too!'},ru:{button:'Помахать в ответ',reply:'Ура! И тебе привет!'}})[CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka'];
+}
+export function characterInteractionCopy(mode,lang='ka'){
+  const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+  if(mode==='high-five')return {
+    ka:{button:'მომეცი ხუთიანი',reply:'ხუთიანი! მშვენიერი გუნდი ვართ.',emoji:'✋',motion:'celebrate',effect:'confetti'},
+    en:{button:'High five',reply:'High five! We make a great team.',emoji:'✋',motion:'celebrate',effect:'confetti'},
+    ru:{button:'Дай пять',reply:'Дай пять! Отличная команда!',emoji:'✋',motion:'celebrate',effect:'confetti'}
+  }[locale];
+  if(mode==='cheer')return {
+    ka:{button:'გამამხნევე',reply:'დღეს შენს მხარეს ვარ! კარგ განწყობას გისურვებ.',emoji:'✨',motion:'dance',effect:'hearts'},
+    en:{button:'Cheer me up',reply:'I’m on your team today! Sending good vibes.',emoji:'✨',motion:'dance',effect:'hearts'},
+    ru:{button:'Подбодри меня',reply:'Сегодня я на твоей стороне! Отличного настроения.',emoji:'✨',motion:'dance',effect:'hearts'}
+  }[locale];
+  return {...characterWaveCopy(locale),emoji:'👋',motion:'celebrate',effect:'sparkles'};
 }
 export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
   const s=normalizeCharacterSettings(settings);

@@ -172,3 +172,7 @@
 @keyframes gs-v2-point{0%,100%{transform:rotate(0)}35%,70%{transform:rotate(38deg)}}
 @media(max-width:767px){.gs-character-scene:not(.gs-character-preview-scene){--gs-travel:clamp(24px,12vw,65px)}.gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){--gs-travel:clamp(-65px,-12vw,-24px)}}
 @media(prefers-reduced-motion:reduce){.gs-character-scene .gs-character-body-rig,.gs-character-scene .gs-character-figure,.gs-character-scene .gs-character-bubble,.gs-character-scene .gs-character-hand,.gs-character-scene .gs-character-leg{animation:none!important;transform:none!important}}
+
+.gs-character-wave-back{min-height:34px;padding:5px 10px;line-height:1.3;transition:background-color .15s ease}
+.gs-character-wave-back:hover{background:#80808018}
+@media(pointer:coarse){.gs-character-wave-back{min-height:44px}}
