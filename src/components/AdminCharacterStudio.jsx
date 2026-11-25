@@ -25,6 +25,9 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const today=characterCalendarDay();
   const event=s.events.find(item=>item.id===eventId)||s.events[0];
   const activeEvent=activeCharacterEvent(s);
+  const selectedCharacter=CHARACTERS.find(c=>c.id===s.character);
+  const enabledScenarios=Object.values(s.scenarios).filter(item=>item.enabled).length;
+  const enabledEvents=s.events.filter(item=>item.enabled&&item.start&&item.end&&item.start<=item.end&&item.end>=today).length;
   const updateEvent=(patch)=>{setPreview(null);setEventPreview(null);setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);return {...previous,characterStudio:{...current,greetingLibrary:previous?.characterStudio?.greetingLibrary??current.greetingLibrary,events:current.events.map(item=>item.id===event?.id?{...item,...previous?.characterStudio?.events?.find(raw=>raw.id===item.id),...patch}:item)}};});};
   const addEvent=()=>{if(s.events.length>=CHARACTER_EVENT_LIMIT)return;const id='event-'+Date.now().toString(36);update({events:[...s.events,{id,title:'ახალი ღონისძიება',enabled:false,start:today,end:today,theme:'custom'}]});setEventId(id);};
   const scenario=s.scenarios[scenarioKey];
@@ -48,22 +51,33 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   },[preview]);
   useEffect(()=>{if(!eventPreview)return;const id=setTimeout(()=>setEventPreview(null),(eventPreview.settings.delay+eventPreview.settings.duration)*1000);return()=>clearTimeout(id);},[eventPreview]);
   const choose=(key,title)=><label className="min-w-0 space-y-1 block"><span className="text-xs font-semibold text-slate-300">{title}</span><select className={field} value={s[key]} disabled={busy} onChange={e=>update({[key]:e.target.value})}>{choices[key].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>;
-  return <section data-character-studio className="rounded-2xl border border-emerald-500/30 bg-slate-900 p-4 space-y-4 min-w-0">
+  return <section data-character-studio className="gs-character-admin rounded-2xl border border-emerald-500/30 bg-slate-900 p-3 sm:p-4 space-y-3 min-w-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">GEOSTORE-ის მოცულობითი პერსონაჟები და მისალმება</p></div>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
     </div>
+    <div className="gs-character-admin-status" aria-label="Character Studio მდგომარეობა">
+      <div><span>საიტის რეჟიმი</span><strong>{s.enabled?'ჩართული':'გამორთული'}</strong></div>
+      <div><span>პერსონაჟი</span><strong>{s.rotation==='fixed'?selectedCharacter.name:'ავტომატური შერჩევა'}</strong></div>
+      <div><span>სცენარები</span><strong>{enabledScenarios}/{Object.keys(CHARACTER_SCENARIOS).length}</strong></div>
+      <div><span>დაგეგმილი ღონისძიებები</span><strong>{s.calendarEnabled?enabledEvents:'გამორთული'}</strong></div>
+    </div>
+    {s.enabled&&!s.mobile&&!s.desktop&&<p role="status" className="rounded-lg border border-amber-500/50 bg-amber-950/40 p-2 text-xs text-amber-200">პერსონაჟი არ გამოჩნდება: ჩართეთ მინიმუმ ერთი ტიპის მოწყობილობა.</p>}
+    <h4 className="text-sm font-bold text-white">პერსონაჟის არჩევა</h4>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="mx-auto w-20 max-w-full"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <details className="gs-character-admin-section" data-character-motion>
+      <summary>მოძრაობა, დრო და მოწყობილობები</summary>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
       {choose('rotation','პერსონაჟის შერჩევა')}{choose('behavior','მოძრაობა')}{choose('emotion','ემოცია')}{choose('season','სეზონური აქსესუარი')}{choose('side','გამოსვლის მხარე')}{choose('frequency','გამოჩენის სიხშირე')}{choose('pages','გვერდები')}
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">დაყოვნება: {s.delay} წმ</span><input className="w-full" type="range" min="0" max="10" value={s.delay} disabled={busy} onChange={e=>update({delay:Number(e.target.value)})}/></label>
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">ხანგრძლივობა: {s.duration} წმ</span><input className="w-full" type="range" min="3" max="12" value={s.duration} disabled={busy} onChange={e=>update({duration:Number(e.target.value)})}/></label>
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
-    </div>
+      </div>
+    </details>
     <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary,message}}));}}/></label>
-    <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-greetings>
+    <details className="gs-character-admin-section" data-character-greetings>
       <summary className="cursor-pointer text-sm font-bold text-white">მისალმებების ბიბლიოთეკა და ეფექტები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         {choose('greetingMode','მისალმების რეჟიმი')}{choose('effect','ვიზუალური ეფექტი')}
@@ -81,7 +95,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       </div>}
       <p className="text-xs text-slate-400">ეფექტები მოკლეა და მხოლოდ პერსონაჟთან ჩნდება. სისტემის შემცირებული მოძრაობის პარამეტრს პატივს სცემს.</p>
     </details>
-    <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-appearance>
+    <details className="gs-character-admin-section" data-character-appearance>
       <summary className="cursor-pointer text-sm font-bold text-white">ვიზუალური დიზაინი — ზომები და ფერები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
         {[[ 'desktopSize','კომპიუტერზე ზომა',80,144 ],['mobileSize','ტელეფონზე ზომა',56,100],['lift','დამატებითი სიმაღლე ქვედა კიდიდან',0,48],['fontSize','ტექსტის ზომა',12,15]].map(([key,label,min,max])=><label key={key} className="block space-y-1 text-xs text-slate-300">{label}: {s.appearance[key]} px<input aria-label={label} className="w-full" type="range" min={min} max={max} value={s.appearance[key]} disabled={busy} onChange={e=>updateAppearance({[key]:Number(e.target.value)})}/></label>)}
@@ -93,12 +107,12 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       <p className="text-xs text-slate-400">თითოეულ პერსონაჟს დამოუკიდებელი ფერი აქვს. ტექსტის კონტრასტი ავტომატურად შეირჩევა. ზომები შეზღუდულია, რათა არ დაიფაროს მნიშვნელოვანი ღილაკები.</p>
       <div className="gs-character-preview p-3" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}><CharacterScene character={styledCharacter(CHARACTERS.find(c=>c.id===s.character),s)} settings={{...s,behavior:'still'}} lang={lang} preview/></div>
     </details>
-    <div className="flex flex-wrap gap-2 items-center"><button type="button" aria-pressed={!previewMobile} onClick={()=>{setPreviewMobile(false);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">კომპიუტერი</button><button type="button" aria-pressed={previewMobile} onClick={()=>{setPreviewMobile(true);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">ტელეფონი</button><button type="button" onClick={()=>setPreview({settings:s,character:selectCharacter(s),key:Date.now()})} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">ანიმაციის გაშვება</button></div>
-    <div data-character-playback className="gs-character-preview mx-auto w-full" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined}}>
-      <span className="text-sm">GEOSTORE · გადახედვა</span>
-      {preview&&<PreviewPlayback key={preview.key} preview={preview} lang={lang}/>}
+    <div className="flex flex-wrap gap-2 items-center"><button type="button" aria-pressed={!previewMobile} onClick={()=>{setPreviewMobile(false);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">კომპიუტერი</button><button type="button" aria-pressed={previewMobile} onClick={()=>{setPreviewMobile(true);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">ტელეფონი</button><button type="button" onClick={()=>{setEventPreview(null);setPreview({settings:s,character:selectCharacter(s),key:Date.now()});}} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">ანიმაციის გაშვება</button></div>
+    <div data-character-playback data-playing={preview?'true':'false'} className="gs-character-preview mx-auto w-full" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined}}>
+      <span className="gs-character-preview-label text-xs">GEOSTORE · {previewMobile?'მობილური':'კომპიუტერი'} · {preview?'ანიმაცია':'გადახედვა'}</span>
+      {preview?<PreviewPlayback key={preview.key} preview={preview} lang={lang}/>:<CharacterScene character={selectedCharacter} settings={{...s,behavior:'still'}} lang={lang} preview/>}
     </div>
-    <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-calendar>
+    <details className="gs-character-admin-section" data-character-calendar onToggle={e=>{if(!e.currentTarget.open)setEventPreview(null);}}>
       <summary className="cursor-pointer text-sm font-bold text-white">ღონისძიებების კალენდარი</summary>
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
         <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.calendarEnabled} disabled={busy} onChange={e=>update({calendarEnabled:e.target.checked})}/> კალენდრის ჩართვა</label>
@@ -107,7 +121,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       </div>
       <p className="text-xs text-slate-300">{activeEvent?'მოქმედი: '+(activeEvent.title||activeEvent.start):'დღეს სპეციალური ღონისძიება არ მოქმედებს.'} პერიოდები მოიცავს ორივე თარიღს. გადაფარვისას ზედა ჩანაწერს აქვს უპირატესობა; სხვა დროს მოქმედებს ჩვეულებრივი მისალმება. სიხშირისა და მოწყობილობის წესები უცვლელია.</p>
       {s.events.length>0&&<div className="space-y-3">
-        <label className="block text-xs text-slate-300">ღონისძიება<select className={field} value={event.id} onChange={e=>setEventId(e.target.value)}>{s.events.map(item=><option key={item.id} value={item.id}>{item.title||'ღონისძიება'} · {item.start||'—'} – {item.end||'—'}{item.enabled?' · ჩართული':''}</option>)}</select></label>
+        <label className="block text-xs text-slate-300">ღონისძიება<select className={field} value={event.id} onChange={e=>{setEventId(e.target.value);setEventPreview(null);}}>{s.events.map(item=><option key={item.id} value={item.id}>{item.title||'ღონისძიება'} · {item.start||'—'} – {item.end||'—'}{item.enabled?' · ჩართული':''}</option>)}</select></label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block text-xs text-slate-300">სახელი<input className={field} maxLength={60} value={siteSettings?.characterStudio?.events?.find(item=>item.id===event.id)?.title??event.title} disabled={busy} onChange={e=>updateEvent({title:e.target.value})}/></label>
           <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={event.enabled} disabled={busy||!event.start||!event.end||event.start>event.end} onChange={e=>updateEvent({enabled:e.target.checked})}/> ღონისძიება ჩართულია</label>
@@ -119,23 +133,23 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
         {event.start&&event.end&&event.start>event.end&&<p role="alert" className="text-xs text-rose-300">დასრულება დაწყებამდე ვერ იქნება.</p>}
         {CHARACTER_GREETING_LANGS.map(code=><label key={code} className="block text-xs text-slate-300">მისალმება ({code})<input className={field} maxLength={120} value={siteSettings?.characterStudio?.events?.find(item=>item.id===event.id)?.messages?.[code]??event.messages[code]} disabled={busy} onChange={e=>updateEvent({messages:{...event.messages,[code]:e.target.value}})}/></label>)}
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950" onClick={()=>{const settings=applyCharacterEvent(s,event,lang);setEventPreview({settings,character:selectCharacter(settings),key:Date.now()});}}>ღონისძიების ანიმაციის ნახვა</button>
+          <button type="button" className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950" onClick={()=>{const settings=applyCharacterEvent(s,event,lang);setPreview(null);setEventPreview({settings,character:selectCharacter(settings),key:Date.now()});}}>ღონისძიების ანიმაციის ნახვა</button>
           <button type="button" className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white" disabled={busy||s.events[0].id===event.id} onClick={()=>update({events:[event,...s.events.filter(item=>item.id!==event.id)]})}>უმაღლესი პრიორიტეტი</button>
           <button type="button" className="rounded-lg border border-rose-500/50 px-3 py-2 text-xs text-rose-200" disabled={busy} onClick={()=>{update({events:s.events.filter(item=>item.id!==event.id)});setEventId(null);}}>ღონისძიების წაშლა</button>
         </div>
         {eventPreview&&<div className="gs-character-preview" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}><PreviewPlayback key={eventPreview.key} preview={eventPreview} lang={lang}/></div>}
       </div>}
     </details>
-    <div className="border-t border-slate-700 pt-4 space-y-3" data-character-scenarios>
-      <h4 className="text-sm font-bold text-white">პერსონაჟების სპეციალური სცენარები</h4>
+    <details className="gs-character-admin-section" data-character-scenarios>
+      <summary>პერსონაჟების სპეციალური სცენარები · {enabledScenarios}/{Object.keys(CHARACTER_SCENARIOS).length}</summary>
       <label className="block space-y-1 text-xs text-slate-300">სცენარი<select className={field} value={scenarioKey} onChange={e=>setScenarioKey(e.target.value)}>{Object.entries(CHARACTER_SCENARIOS).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
       <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={scenario.enabled} disabled={busy} onChange={e=>updateScenario({enabled:e.target.checked})}/> ამ სცენარის ჩართვა</label>
       <label className="block space-y-1 text-xs text-slate-300">სცენარის პერსონაჟი<select className={field} value={scenario.character} disabled={busy} onChange={e=>updateScenario({character:e.target.value})}>{CHARACTERS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
       <label className="block space-y-1 text-xs text-slate-300">სცენარის ტექსტი<textarea className={field} rows={2} maxLength={120} value={siteSettings?.characterStudio?.scenarios?.[scenarioKey]?.message??''} disabled={busy} onChange={e=>updateScenario({message:e.target.value})}/></label>
       <div className="gs-character-preview p-3" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}>{scenarioKey.endsWith('Added')?<div className="flex items-center gap-2 rounded-xl bg-emerald-500 p-3 text-xs font-bold text-slate-950"><span className="min-w-0 flex-1">წარმატებით დაემატა</span><CharacterReaction scenario={scenarioPreview} lang={lang}/></div>:<CharacterContextCard key={scenarioKey+scenario.character} scenario={scenarioPreview} lang={lang}/>}</div>
       <p className="text-xs text-slate-300">ფლეშ აქციების პერსონაჟი ჩანს მხოლოდ მოქმედ აქციებთან. კალათისა და ფავორიტების პერსონაჟები ჩანს მხოლოდ ცარიელ გვერდზე; დამატებით ფანჯარას არ ხსნის. დამატების რეაქცია მხოლოდ წარმატების არსებულ შეტყობინებაში ჩანს, მაქსიმუმ ერთხელ 15 წამში.</p>
-    </div>
-    <p className="text-xs text-slate-300 leading-relaxed">ცვლილებები საერთო მონახაზშია. გამოიყენეთ ქვემოთ მონახაზის შენახვა და შემდეგ გამოქვეყნება. გადახედვა საიტზე არ ჩანს.</p>
+    </details>
+    <p className="gs-character-admin-save text-xs text-slate-300 leading-relaxed">ცვლილებები საერთო მონახაზშია. გამოიყენეთ ქვემოთ მონახაზის შენახვა და შემდეგ გამოქვეყნება. გადახედვა საიტზე არ ჩანს.</p>
   </section>;
 }
 function PreviewPlayback({preview,lang}){

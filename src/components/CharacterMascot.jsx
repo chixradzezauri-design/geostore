@@ -111,19 +111,21 @@ export function CharacterReaction({scenario,lang='ka'}){
 export default function CharacterMascot({settings,lang}){
   const s=normalizeCharacterSettings(settings);
   const [presentation,setPresentation]=useState(null);
+  const settingsKey=JSON.stringify(s);
   useEffect(()=>{
     setPresentation(null);
-    if(!s.enabled||seen(s.frequency))return;
+    const current=JSON.parse(settingsKey);
+    if(!current.enabled||seen(current.frequency))return;
     let closeTimer;
     const showTimer=setTimeout(()=>{
-      if(seen(s.frequency))return;
-      markSeen(s.frequency);
+      if(seen(current.frequency))return;
+      markSeen(current.frequency);
       const now=new Date();
-      const effective=applyCharacterEvent(s,activeCharacterEvent(s,now),lang);
+      const effective=applyCharacterEvent(current,activeCharacterEvent(current,now),lang);
       setPresentation({character:selectCharacter(effective,now),settings:effective});
-      closeTimer=setTimeout(()=>setPresentation(null),s.duration*1000);
-    },s.delay*1000);
+      closeTimer=setTimeout(()=>setPresentation(null),current.duration*1000);
+    },current.delay*1000);
     return()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
-  },[s.enabled,s.character,s.rotation,s.behavior,s.side,s.delay,s.duration,s.frequency,s.message,s.calendarEnabled,JSON.stringify(s.events),lang]);
+  },[settingsKey,lang]);
   return presentation?<CharacterScene character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>setPresentation(null)}/>:null;
 }

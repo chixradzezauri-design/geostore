@@ -88,3 +88,25 @@
 @media(prefers-reduced-motion:reduce){.gs-character-effects{display:none!important}.gs-character-scene .gs-character-figure{animation:none!important}}
 
 .gs-character-effects>span:nth-child(even){top:12%}
+
+/* Compact, touch-friendly controls scoped to the admin studio. */
+.gs-character-admin{max-width:100%;overflow-wrap:anywhere}
+.gs-character-admin-status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.gs-character-admin-status>div{min-width:0;padding:9px;border:1px solid #475569;border-radius:10px;background:#0f172a}
+.gs-character-admin-status span,.gs-character-admin-status strong{display:block;overflow-wrap:anywhere}
+.gs-character-admin-status span{font-size:10px;color:#cbd5e1;line-height:1.4}
+.gs-character-admin-status strong{font-size:12px;color:#f8fafc;margin-top:3px}
+.gs-character-admin-section{min-width:0;border:1px solid #475569;border-radius:12px;background:#0f172a;padding:10px;overflow-wrap:anywhere}
+.gs-character-admin-section>summary{cursor:pointer;font-size:13px;font-weight:700;color:#f1f5f9;padding:6px 2px;min-height:32px;line-height:1.5}
+.gs-character-admin-section[open]>summary{margin-bottom:10px;border-bottom:1px solid #334155}
+.gs-character-admin-section[open]>:not(summary)+:not(summary){margin-top:10px}
+.gs-character-admin input:not([type="checkbox"]),.gs-character-admin select,.gs-character-admin textarea{min-width:0;max-width:100%;box-sizing:border-box}
+.gs-character-admin select,.gs-character-admin input[type="date"]{min-height:40px}
+.gs-character-admin button:focus-visible,.gs-character-admin summary:focus-visible{outline:2px solid #34d399;outline-offset:2px}
+.gs-character-preview-label{position:absolute;top:10px;inset-inline:10px;text-align:center;pointer-events:none;color:#625849}
+.gs-character-admin-save{padding:10px;border:1px solid #334155;border-radius:10px;background:#0f172a}
+.gs-character-preview{min-width:0}
+.gs-character-preview .gs-character-bubble{max-height:120px}
+.gs-character-scene .gs-character-bubble{flex:0 1 auto;min-width:0}
+@media(min-width:900px){.gs-character-admin-status{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:380px){.gs-character-admin-section{padding:8px}.gs-character-admin-status>div{padding:7px}}
