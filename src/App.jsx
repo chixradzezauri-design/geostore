@@ -8,6 +8,8 @@ import { ADMIN_MFA_ROLLOUT_ENABLED, runAdminAuthExclusive } from './utils/adminA
 import { createAdminMfaAccessResolver } from './utils/adminMfaAccessResolver.js';
 import { createAdminMfaTransport } from './utils/adminMfaTransport.js';
 const AdminMfaPanel = lazy(() => import('./components/AdminMfaPanel.jsx'));
+const AdminBackupMfaPanel = lazy(() => import('./components/AdminBackupMfaPanel.jsx'));
+import {createAdminBackupMfa} from './utils/adminBackupMfa.js';
 
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
@@ -654,6 +656,9 @@ export default function App() {
     enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
     getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
   }),[]);
+  const backupMfa = useMemo(() => createAdminBackupMfa({
+    enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
+  }),[]);
   const mfaResolve = useMemo(() => createAdminMfaAccessResolver({
     enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
     getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
@@ -661,6 +666,7 @@ export default function App() {
   const invalidateMfaScope = (userId) => {
     if (!ADMIN_MFA_ROLLOUT_ENABLED) return;
     mfaTransport.forgetEnrollment();
+    backupMfa.forget();
     mfaScopeRef.current={ownerId:userId||null,epoch:mfaScopeRef.current.epoch+1,authLoading:!userId,adminEligible:false};
     setMfaEntry(null);
   };
@@ -3721,6 +3727,9 @@ export default function App() {
                 if(hasAnyAdminAccess(access))setActiveTab('admin');
               }}/>
           </Suspense>
+        )}
+        {ADMIN_MFA_ROLLOUT_ENABLED && activeTab==='admin' && adminLoggedIn && !authLoading && !isAuthOpen && currentUser?.id===mfaScopeRef.current.ownerId && (
+          <Suspense fallback={null}><AdminBackupMfaPanel key={currentUser.id+':'+mfaScopeRef.current.epoch} transport={backupMfa} lang={currentLang}/></Suspense>
         )}
         {activeTab === 'store' && (
           <Suspense
