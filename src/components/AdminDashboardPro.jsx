@@ -41,6 +41,7 @@ import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
+import AdminFlashSchedule from './AdminFlashSchedule.jsx';
 import { classifyAdminFlashSales, previewFlashSaleWindow, formatFlashSaleTime, FLASH_SALE_HOURS } from '../utils/adminFlashSalePlanning.js';
 import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
 import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
@@ -7496,7 +7497,7 @@ export default function AdminDashboardPro({
               </div>
               <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
                 <h4 className="font-bold text-white">აქციის დროის წინასწარი ნახვა</h4>
-                <label htmlFor="admin-flash-planned-start" className="block text-slate-300">მომავალი დაწყების თარიღი (თბილისი, მხოლოდ დაგეგმვა)</label>
+                <label htmlFor="admin-flash-planned-start" className="block text-slate-300">მომავალი დაწყების თარიღი (თბილისი)</label>
                 <div className="flex flex-wrap items-center gap-2">
                   <input id="admin-flash-planned-start" type="datetime-local" disabled={isApplyingFlashSale} value={flashSalePlannedStart} onChange={event=>setFlashSalePlannedStart(event.target.value)} className="min-h-11 min-w-0 max-w-full flex-1 rounded-xl border border-slate-700 bg-slate-950 p-2 text-white" />
                   {flashSalePlannedStart && <button type="button" onClick={()=>setFlashSalePlannedStart('')} className="min-h-11 rounded-xl border border-slate-600 px-3 text-slate-200">გასუფთავება</button>}
@@ -7505,7 +7506,7 @@ export default function AdminDashboardPro({
                   <p>დაწყება: <strong>{formatFlashSaleTime(flashSaleWindow.startsAt)}</strong></p>
                   <p>დასრულება: <strong>{formatFlashSaleTime(flashSaleWindow.endsAt)}</strong></p>
                 </div> : <p role="alert" className="text-amber-200">აირჩიეთ მომავალი დრო.</p>}
-                <p className="text-[11px] leading-relaxed text-slate-400">ეს მხოლოდ დროის გამოთვლაა. მომავალ თარიღზე ავტომატური გაშვება ჯერ არ არის ჩართული. თარიღის გარეშე აქცია დაუყოვნებლივ დაიწყება დადასტურების შემდეგ.</p>
+                <p className="text-[11px] leading-relaxed text-slate-400">თარიღის არჩევისას გამოიყენეთ ქვემოთ მოცემული დაგეგმვის ღილაკი. თარიღის გარეშე აქცია დაუყოვნებლივ დაიწყება დადასტურების შემდეგ.</p>
               </div>
               <button type="submit" disabled={isApplyingFlashSale || Boolean(flashSalePlannedStart)} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
@@ -7514,6 +7515,7 @@ export default function AdminDashboardPro({
                 აქციის დასრულებისას სისტემა ავტომატურად დააბრუნებს პროდუქტების წინა ფასებს. დრო ბაზაში ინახება და გვერდის განახლება ათვლას აღარ გაანულებს.
               </p>
             </form>
+            {isOwner && <AdminFlashSchedule client={supabase} form={flashSaleForm} plannedStart={flashSalePlannedStart} immediateBusy={isApplyingFlashSale} sessionVersion={adminSessionVersion.current} isCurrentSession={isCurrentAdminSession} onScheduled={()=>setFlashSalePlannedStart('')} />}
           </div>
         )}
 
