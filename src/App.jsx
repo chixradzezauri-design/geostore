@@ -5,6 +5,7 @@
 import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import { ADMIN_MFA_ROLLOUT_ENABLED, runAdminAuthExclusive } from './utils/adminAuthCoordinator.js';
+import { createDeferredAuthResolution, advanceMfaScope, isMfaScopeCurrent } from './utils/adminAuthEventSafety.js';
 import { createAdminMfaAccessResolver } from './utils/adminMfaAccessResolver.js';
 import { createAdminMfaTransport } from './utils/adminMfaTransport.js';
 const AdminMfaPanel = lazy(() => import('./components/AdminMfaPanel.jsx'));
@@ -663,11 +664,11 @@ export default function App() {
     enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
     getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
   }),[]);
-  const invalidateMfaScope = (userId) => {
+  const invalidateMfaScope = (userId,event) => {
     if (!ADMIN_MFA_ROLLOUT_ENABLED) return;
     mfaTransport.forgetEnrollment();
     backupMfa.forget();
-    mfaScopeRef.current={ownerId:userId||null,epoch:mfaScopeRef.current.epoch+1,authLoading:!userId,adminEligible:false};
+    mfaScopeRef.current=advanceMfaScope(mfaScopeRef.current,userId,event);
     setMfaEntry(null);
   };
 
@@ -692,10 +693,10 @@ export default function App() {
     if (!user?.id) return EMPTY_ADMIN_ACCESS;
     if (ADMIN_MFA_ROLLOUT_ENABLED) {
       const scope=mfaScopeRef.current;
-      if(scope.ownerId!==user.id) return EMPTY_ADMIN_ACCESS;
+      if(scope.ownerId!==user.id||scope.recovery===true) return EMPTY_ADMIN_ACCESS;
       const resolved=await mfaResolve();
       const now=mfaScopeRef.current;
-      if(now.ownerId!==scope.ownerId||now.epoch!==scope.epoch) return EMPTY_ADMIN_ACCESS;
+      if(!isMfaScopeCurrent(scope,now)) return EMPTY_ADMIN_ACCESS;
       mfaScopeRef.current={...now,adminEligible:resolved.eligible===true};
       setMfaEntry(resolved.eligible&&resolved.status!=='authorized'?{ownerId:scope.ownerId,epoch:scope.epoch}:null);
       return resolved.status==='authorized'?resolved.access:EMPTY_ADMIN_ACCESS;
@@ -1165,6 +1166,7 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
     let authEventVersion = 0;
+    const deferredAuth=createDeferredAuthResolution();
 
     // ძველი localStorage მომხმარებლის მონაცემი აღარ გამოიყენება.
     try {
@@ -1271,13 +1273,14 @@ export default function App() {
 
       const eventVersion = authEventVersion;
       const authUser = session?.user || null;
-      invalidateMfaScope(authUser?.id);
+      invalidateMfaScope(authUser?.id,event);
       activateCartOwner(authUser?.id || null);
       setCurrentUser(normalizeAuthUser(authUser));
       setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setAuthLoading(Boolean(authUser));
 
+      deferredAuth.cancel();
       if (!authUser) {
         setActiveTab((current) => current === 'admin' ? 'store' : current);
         setAuthLoading(false);
@@ -1286,7 +1289,9 @@ export default function App() {
 
       // Supabase auth callbacks stay synchronous; resolve the database permission
       // after the callback returns, and discard stale results after account switches.
-      Promise.resolve().then(() => resolveAdminAccess(authUser)).then((access) => {
+      deferredAuth.schedule(async()=>{
+      if(!mounted||eventVersion!==authEventVersion)return;
+      await Promise.resolve().then(() => resolveAdminAccess(authUser)).then((access) => {
         if (!mounted || eventVersion !== authEventVersion) return;
         const authorized = hasAnyAdminAccess(access);
         setAdminAccess(access);
@@ -1302,6 +1307,7 @@ export default function App() {
         setAdminLoggedIn(false);
         setActiveTab((current) => current === 'admin' ? 'store' : current);
         setAuthLoading(false);
+      });
       });
     });
 
@@ -1336,6 +1342,7 @@ export default function App() {
           // Fail closed if the server cannot verify the restored session.
           // Clear every privilege-related UI state, not only the profile.
           activateCartOwner(null);
+          invalidateMfaScope(null,'SIGNED_OUT');
           setCurrentUser(null);
           setAdminAccess(EMPTY_ADMIN_ACCESS);
           setAdminLoggedIn(false);
@@ -1352,6 +1359,7 @@ export default function App() {
 
     return () => {
       mounted = false;
+      deferredAuth.cancel();
       subscription.unsubscribe();
     };
   }, []);
@@ -3064,12 +3072,15 @@ export default function App() {
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setAdminError('');
-
+    const start=mfaScopeRef.current;
+    const current=()=>!ADMIN_MFA_ROLLOUT_ENABLED||isMfaScopeCurrent(start,mfaScopeRef.current);
     try {
       const { data, error } = await supabase.auth.getUser();
+      if(!current())return;
       if (error) throw error;
 
       const access = await resolveAdminAccess(data?.user);
+      if(!current())return;
       if (!hasAnyAdminAccess(access)) {
         setAdminAccess(EMPTY_ADMIN_ACCESS);
         setAdminLoggedIn(false);
@@ -3084,6 +3095,7 @@ export default function App() {
         ? '🔓 მთავარი ადმინისტრატორის წვდომა დადასტურებულია.'
         : '🔓 თანამშრომლის წვდომა დადასტურებულია.');
     } catch (error) {
+      if(!current())return;
       setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setAdminError(error.message || 'ვერ მოხერხდა ანგარიშის შემოწმება.');
@@ -3721,7 +3733,7 @@ export default function App() {
               lang={currentLang} onSignOut={handleLogout} onRecheck={async()=>{
                 const scope=mfaScopeRef.current;
                 const access=await resolveAdminAccess({id:scope.ownerId});
-                if(mfaScopeRef.current.ownerId!==scope.ownerId||mfaScopeRef.current.epoch!==scope.epoch)return;
+                if(!isMfaScopeCurrent(scope,mfaScopeRef.current))return;
                 setAdminAccess(access);
                 setAdminLoggedIn(hasAnyAdminAccess(access));
                 if(hasAnyAdminAccess(access))setActiveTab('admin');
