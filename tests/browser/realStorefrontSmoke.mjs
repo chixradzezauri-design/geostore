@@ -7,6 +7,7 @@ import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
 import {runCatalogueSeoHttpSmoke} from './catalogueSeoHttpSmoke.mjs';
 import {runPwaOfflineSmoke} from './pwaOfflineSmoke.mjs';
 import {runSignatureStorefrontSmoke} from './signatureStorefrontSmoke.mjs';
+import {runCharacterStudioSmoke} from './characterStudioSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -254,6 +255,7 @@ try {
   await runSignatureStorefrontSmoke(browser,host);
   await runStage49AccountSwitchScenario(browser, host);
   await runAdminWorkspaceSmoke(browser, host);
+  await runCharacterStudioSmoke(browser,host,[320,1440]);
   await runPwaOfflineSmoke(browser);
 
   // Stage 48: exercise Safari's WebKit engine with the exact same fully
@@ -262,6 +264,7 @@ try {
   browser = await webkit.launch({ headless: true });
   await runStage46ProductPurchaseScenarios(browser, host, [390]);
   await runSignatureStorefrontSmoke(browser,host,[390]);
+  await runCharacterStudioSmoke(browser,host,[390]);
   console.log('PASS Stage48 WebKit phone-sized checkout flow at 390px (mock data, no live orders)');
 } finally {
   if (browser) await browser.close();

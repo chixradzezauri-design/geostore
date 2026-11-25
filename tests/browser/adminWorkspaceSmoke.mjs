@@ -115,6 +115,19 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           throw new Error(width + 'px: expected module ' + tab + ', active ' + selected + ', errors: ' + errors.join('; ') + '; ' + error.message);
         }
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
+        if(tab==='settings'){
+          const studio=shell.locator('[data-character-studio]');
+          await studio.waitFor({state:'visible'});
+          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),7,'five character cards and two viewport buttons');
+          await studio.getByRole('button',{name:/Mini Robot/}).click();
+          await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
+          await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
+          await studio.locator('.gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
+          assert.match(await studio.locator('.gs-character-preview-scene').innerText(),/Mini Robot/);
+          assert.equal(await page.locator('.gs-character-scene:not(.gs-character-preview-scene)').count(),0,'Admin preview does not start public mascot');
+          const box=await studio.locator('.gs-character-preview').boundingBox();
+          assert.ok(box.width<=321,'Phone preview is constrained to phone width');
+        }
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
         if(tab==='products'){
           const gallery=shell.locator('#admin-workspace-product-gallery');

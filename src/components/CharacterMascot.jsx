@@ -58,6 +58,7 @@ export default function CharacterMascot({settings,lang}){
   const s=normalizeCharacterSettings(settings);
   const [character,setCharacter]=useState(null);
   useEffect(()=>{
+    setCharacter(null);
     if(!s.enabled||seen(s.frequency))return;
     let closeTimer;
     const showTimer=setTimeout(()=>{
