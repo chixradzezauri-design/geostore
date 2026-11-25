@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CHARACTERS,normalizeCharacterSettings,selectCharacter,characterMessage,canDisplayCharacter,characterAlreadySeen,getCharacterScenario} from '../src/utils/characterStudio.js';
+import {CHARACTERS,normalizeCharacterSettings,selectCharacter,characterMessage,canDisplayCharacter,characterAlreadySeen,getCharacterScenario,resolveCharacterSeason,canShowCharacterReaction} from '../src/utils/characterStudio.js';
 test('mascot is opt-in and strict boolean',()=>{
   assert.equal(normalizeCharacterSettings(null).enabled,false);
   assert.equal(normalizeCharacterSettings({enabled:'true'}).enabled,false);
@@ -58,4 +58,25 @@ test('scene normalization bounds text, drops unknown scene keys, preserves greet
   assert.equal(s.scenarios.flash.character,'rabbit');
   assert.equal(s.scenarios.flash.message.length,120);
   assert.equal(s.scenarios.other,undefined);
+});
+
+test('additional movements, expressions and season presets are strictly bounded',()=>{
+  const s=normalizeCharacterSettings({behavior:'dance',emotion:'wink',season:'winter'});
+  assert.equal(s.behavior,'dance');assert.equal(s.emotion,'wink');assert.equal(s.season,'winter');
+  assert.equal(normalizeCharacterSettings({emotion:'unknown',season:'bad'}).emotion,'happy');
+  assert.equal(normalizeCharacterSettings({season:'bad'}).season,'none');
+  assert.equal(resolveCharacterSeason('auto',new Date(2026,11,1)),'winter');
+  assert.equal(resolveCharacterSeason('auto',new Date(2026,1,1)),'hearts');
+  assert.equal(resolveCharacterSeason('auto',new Date(2026,6,1)),'summer');
+  assert.equal(resolveCharacterSeason('auto',new Date(2026,9,1)),'autumn');
+  assert.equal(resolveCharacterSeason('auto',new Date(2026,3,1)),'none');
+});
+test('successful commerce reactions are opt-in and rate limited',()=>{
+  const s={enabled:true,emotion:'wink',scenarios:{cartAdded:{enabled:true}}};
+  assert.equal(getCharacterScenario(s,'cartAdded',{eligible:true}).emotion,'wink');
+  assert.equal(getCharacterScenario(s,'wishlistAdded',{eligible:true}),null);
+  assert.equal(getCharacterScenario(s,'cartAdded',{eligible:false}),null);
+  assert.equal(canShowCharacterReaction(null,100),true);
+  assert.equal(canShowCharacterReaction(100,15099),false);
+  assert.equal(canShowCharacterReaction(100,15100),true);
 });

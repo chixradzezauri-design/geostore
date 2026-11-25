@@ -11,7 +11,9 @@ const bounded=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite
 export const CHARACTER_SCENARIOS=Object.freeze({
   flash:{character:'rabbit',label:'ფლეშ აქციები',lines:{ka:'ჰოპ! მოქმედი აქციები აქაა!',en:'Hop! Explore the current offers!',ru:'Прыг! Здесь действующие акции!'}},
   cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'ბიპ-ბუპ! კალათა ჯერ ცარიელია.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
-  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'მიაუ! აქ შენი რჩეულები შეინახება.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}}
+  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'მიაუ! აქ შენი რჩეულები შეინახება.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}},
+  cartAdded:{character:'fox',label:'კალათაში დამატება',lines:{ka:'ვაშა! კარგი არჩევანია!',en:'Hooray! Great choice!',ru:'Ура! Отличный выбор!'}},
+  wishlistAdded:{character:'cat',label:'ფავორიტებში დამატება',lines:{ka:'მიაუ! რჩეული შენახულია!',en:'Meow! Favourite saved!',ru:'Мяу! Избранное сохранено!'}}
 });
 function normalizeScenarios(raw){
   const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -29,7 +31,9 @@ export function normalizeCharacterSettings(raw){
   return {
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
     rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
-    behavior:pick(s.behavior,['run-wave','wave','jump','slide'],'run-wave'),
+    behavior:pick(s.behavior,['run-wave','wave','jump','slide','dance','peek','bow'],'run-wave'),
+    emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
+    season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right'],'left'),
     delay:bounded(s.delay,0,10,2), duration:bounded(s.duration,3,12,6),
     frequency:pick(s.frequency,['session','daily'],'session'),
@@ -47,6 +51,19 @@ export function selectCharacter(settings,date=new Date(),random=Math.random){
   if(s.rotation==='seasonal') id=[ 'panda','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','panda' ][date.getMonth()];
   return CHARACTERS.find(c=>c.id===id)||CHARACTERS[0];
 }
+export function resolveCharacterSeason(value,date=new Date()){
+  const season=pick(value,['none','auto','winter','hearts','summer','autumn'],'none');
+  if(season!=='auto')return season;
+  const month=date.getMonth();
+  if(month===11||month===0)return 'winter';
+  if(month===1)return 'hearts';
+  if(month>=5&&month<=7)return 'summer';
+  if(month>=8&&month<=10)return 'autumn';
+  return 'none';
+}
+export function canShowCharacterReaction(lastAt,now=Date.now()){
+  return Number.isFinite(now)&&(!Number.isFinite(lastAt)||now<lastAt||now-lastAt>=15000);
+}
 export function characterMessage(settings,character,lang='ka'){
   return normalizeCharacterSettings(settings).message||character.lines[lang]||character.lines.ka;
 }
@@ -57,7 +74,7 @@ export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
 export function getCharacterScenario(settings,key,{mobile=false,eligible=false}={}){
   const s=normalizeCharacterSettings(settings);
   if(!Object.hasOwn(CHARACTER_SCENARIOS,key)||!s.enabled||!eligible||!(mobile?s.mobile:s.desktop)||!s.scenarios[key].enabled)return null;
-  return {character:CHARACTERS.find(c=>c.id===s.scenarios[key].character),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines};
+  return {character:CHARACTERS.find(c=>c.id===s.scenarios[key].character),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines,emotion:s.emotion,season:s.season};
 }
 export const CHARACTER_SESSION_KEY='geostore_character_seen_v1';
 export function characterAlreadySeen(value,frequency,now=Date.now()){

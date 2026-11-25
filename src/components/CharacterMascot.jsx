@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason} from '../utils/characterStudio.js';
 import './characterStudio.css';
 
 let seenInMemory=false;
@@ -17,7 +17,7 @@ function markSeen(frequency){
     else sessionStorage.setItem(CHARACTER_SESSION_KEY,'1');
   }catch{/* storage may be unavailable; the in-memory guard still applies */}
 }
-export function CharacterArt({character}){
+export function CharacterArt({character,emotion='happy',season='none'}){
   const {id,color}=character;
   const robot=id==='robot', panda=id==='panda', rabbit=id==='rabbit',cat=id==='cat',fox=id==='fox';
   const dark='#17233b', cream='#fff4dc';
@@ -38,16 +38,20 @@ export function CharacterArt({character}){
     <rect x="24" y="25" width="72" height="57" rx={robot?13:29} fill={panda?'#fafaf9':color} stroke={dark} strokeWidth="3"/>
     {robot?<rect x="33" y="35" width="54" height="34" rx="10" fill={dark}/>:<path d="M31 58Q45 47 60 58Q75 47 89 58Q88 77 60 79Q32 77 31 58" fill={cream}/>}
     {panda&&<><ellipse cx="44" cy="49" rx="11" ry="13" fill={dark} transform="rotate(18 44 49)"/><ellipse cx="76" cy="49" rx="11" ry="13" fill={dark} transform="rotate(-18 76 49)"/></>}
-    <circle cx="44" cy="49" r="4.5" fill={robot||panda?'#fff':dark}/><circle cx="76" cy="49" r="4.5" fill={robot||panda?'#fff':dark}/>
+    <circle cx="44" cy="49" r={emotion==='surprise'?6:4.5} fill={robot||panda?'#fff':dark}/>{emotion==='wink'?<path d="M70 49q6-6 12 0" stroke={robot||panda?'#fff':dark} strokeWidth="3" strokeLinecap="round" fill="none"/>:<circle cx="76" cy="49" r={emotion==='surprise'?6:4.5} fill={robot||panda?'#fff':dark}/>}
     {!robot&&<path d="M55 60q5-5 10 0l-5 4z" fill={dark}/>}
-    <path d={robot?'M52 60q8 7 16 0':'M53 67q7 8 14 0'} fill="none" stroke={robot?'#67e8f9':dark} strokeWidth="2.5" strokeLinecap="round"/>
+    {emotion==='surprise'?<ellipse cx="60" cy={robot?60:68} rx="4" ry="5" fill={robot?'#67e8f9':dark}/>:<path d={robot?'M52 60q8 7 16 0':'M53 67q7 8 14 0'} fill="none" stroke={robot?'#67e8f9':dark} strokeWidth="2.5" strokeLinecap="round"/>}
     {cat&&<path d="M32 60l-10-3m11 9-11 3m66-9 10-3m-11 9 11 3" fill="none" stroke={dark} strokeWidth="1.5" strokeLinecap="round"/>}
     <text x="60" y="94" textAnchor="middle" fontSize="10" fontWeight="900" fill={dark}>G</text>
+    {resolveCharacterSeason(season)==='winter'&&<g><path d="M34 78q26 10 52 0v9q-26 9-52 0z" fill="#be123c"/><path d="M77 86l-3 17 9 2 4-19" fill="#be123c"/><path d="M75 99l8 2" stroke="#fff" strokeWidth="2"/></g>}
+    {resolveCharacterSeason(season)==='hearts'&&<path d="M14 17C4 8 0 24 14 30C28 24 24 8 14 17Z" fill="#f43f5e" stroke="#9f1239" strokeWidth="1.5"/>}
+    {resolveCharacterSeason(season)==='summer'&&<g fill="#facc15" stroke="#a16207" strokeWidth="1.5"><circle cx="106" cy="19" r="7"/><path d="M106 7v4m0 16v4M94 19h4m16 0h4M98 11l3 3m10 10 3 3M98 27l3-3m10-10 3-3"/></g>}
+    {resolveCharacterSeason(season)==='autumn'&&<path d="M99 11q18-2 14 15-17 5-14-15zm2 2 9 10" fill="#ea580c" stroke="#9a3412" strokeWidth="1.5"/>}
   </svg>;
 }
 export function CharacterScene({character,settings,lang='ka',preview=false,onClose}){
   return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={settings.behavior}>
-    <div className="gs-character-figure"><CharacterArt character={character}/></div>
+    <div className="gs-character-figure"><CharacterArt character={character} emotion={settings.emotion} season={settings.season}/></div>
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span>{characterMessage(settings,character,lang)}</span>
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
@@ -58,9 +62,16 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
 export function CharacterContextCard({scenario,lang='ka'}){
   if(!scenario)return null;
   return <div className="gs-character-context">
-    <div className="gs-character-context-art"><CharacterArt character={scenario.character}/></div>
+    <div className="gs-character-context-art"><CharacterArt character={scenario.character} emotion={scenario.emotion} season={scenario.season}/></div>
     <div className="gs-character-context-copy"><strong>{scenario.character.name}</strong><span>{scenario.message||scenario.lines[lang]||scenario.lines.ka}</span></div>
   </div>;
+}
+export function CharacterReaction({scenario,lang='ka'}){
+  if(!scenario)return null;
+  return <span className="gs-character-reaction">
+    <span className="gs-character-reaction-art"><CharacterArt character={scenario.character} emotion={scenario.emotion} season={scenario.season}/></span>
+    <span className="gs-character-reaction-copy">{scenario.message||scenario.lines[lang]||scenario.lines.ka}</span>
+  </span>;
 }
 export default function CharacterMascot({settings,lang}){
   const s=normalizeCharacterSettings(settings);

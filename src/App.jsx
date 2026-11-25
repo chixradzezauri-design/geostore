@@ -23,9 +23,10 @@ const AdminBackupMfaPanel = lazy(() => import('./components/AdminBackupMfaPanel.
 import {createAdminBackupMfa} from './utils/adminBackupMfa.js';
 
 import Header from './components/Header';
-import { normalizeCharacterSettings, canDisplayCharacter, getCharacterScenario } from './utils/characterStudio.js';
+import { normalizeCharacterSettings, canDisplayCharacter, getCharacterScenario, canShowCharacterReaction } from './utils/characterStudio.js';
 const CharacterMascot = lazy(() => import('./components/CharacterMascot.jsx'));
 const CharacterContextCard = lazy(() => import('./components/CharacterMascot.jsx').then(module=>({default:module.CharacterContextCard})));
+const CharacterReaction = lazy(() => import('./components/CharacterMascot.jsx').then(module=>({default:module.CharacterReaction})));
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
 import {loadAdminCss} from './utils/loadAdminCss.js';
@@ -1469,11 +1470,18 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState('success');
+  const [toastCharacterKey,setToastCharacterKey]=useState(null);
+  const lastCharacterReactionRef=useRef(null);
   const toastTimerRef = useRef(null);
   useEffect(() => () => {
     if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
   }, []);
-  const showToast = (msg, tone = 'success') => {
+  const showToast = (msg, tone = 'success', characterKey = null) => {
+    const now=Date.now();
+    const reaction=tone==='success'&&['cartAdded','wishlistAdded'].includes(characterKey)&&getCharacterScenario(publishedCharacterSettings,characterKey,{mobile:characterMobile,eligible:!hasSettingsAccess&&['store','cart','wishlist'].includes(activeTab)});
+    const allowed=Boolean(reaction)&&canShowCharacterReaction(lastCharacterReactionRef.current,now);
+    if(allowed)lastCharacterReactionRef.current=now;
+    setToastCharacterKey(allowed?characterKey:null);
     if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
     setToastTone(tone);
     setToastMessage(msg);
@@ -2682,7 +2690,7 @@ export default function App() {
 
     cartRef.current = result.cart;
     setCart(result.cart);
-    showToast(getCartFeedbackMessage(currentLang, 'added', { name: product.name }));
+    showToast(getCartFeedbackMessage(currentLang, 'added', { name: product.name }), 'success', 'cartAdded');
     return true;
   };
 
@@ -2757,7 +2765,7 @@ export default function App() {
         );
       }
 
-      showToast('❤️ დაემატა სურვილების სიაში!');
+      showToast('❤️ დაემატა სურვილების სიაში!', 'success', 'wishlistAdded');
 
       return [...prev, product];
     });
@@ -3743,6 +3751,7 @@ export default function App() {
     }else robots?.remove();
   },[activeTab,catalogueRoute,products,catalogueVerifiedEpoch,categories,adminAccess]);
 
+  const toastCharacter=toastTone==='success'&&getCharacterScenario(publishedCharacterSettings,toastCharacterKey,{mobile:characterMobile,eligible:!hasSettingsAccess&&['store','cart','wishlist'].includes(activeTab)});
   const emptyCartCharacter=getCharacterScenario(publishedCharacterSettings,'cart',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='cart'&&cart.length===0&&!authLoading});
   const emptyWishlistCharacter=getCharacterScenario(publishedCharacterSettings,'wishlist',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='wishlist'&&wishlist.length===0&&!authLoading});
   const formatPrice = (p) =>
@@ -3765,7 +3774,7 @@ export default function App() {
           aria-live={toastTone === 'error' ? 'assertive' : 'polite'}
           className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-4 left-3 right-3 sm:left-auto sm:top-6 sm:right-6'} z-50 max-w-[min(480px,calc(100vw-24px))] break-words font-bold px-4 py-3 rounded-2xl shadow-2xl border motion-reduce:animate-none flex items-center gap-2.5 text-xs ${toastTone === 'error' ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-emerald-500 text-slate-950 border-emerald-300'}`}
         >
-          {toastMessage}
+          {toastCharacter?<><span className="min-w-0 flex-1">{toastMessage}</span><Suspense fallback={null}><CharacterReaction scenario={toastCharacter} lang={currentLang}/></Suspense></>:toastMessage}
         </div>
       )}
 
