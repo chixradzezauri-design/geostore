@@ -135,3 +135,40 @@
   .gs-character-scene:not(.gs-character-preview-scene){bottom:calc(170px + env(safe-area-inset-bottom,0px));}
   .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){bottom:calc(74px + env(safe-area-inset-bottom,0px));}
 }
+
+/* Character v2 movement: independently animate root travel, body weight, feet and gesture.
+   The public layer remains fixed, decorative and below all existing assistance controls. */
+.gs-character-body-rig{transform-origin:50% 88%;position:relative}
+.gs-character-scene{--gs-gait-sign:1;--gs-travel:clamp(80px,38vw,380px)}
+.gs-character-scene[data-side="right"]{--gs-gait-sign:-1;--gs-travel:clamp(-380px,-38vw,-80px)}
+.gs-character-preview-scene{--gs-travel:70%}
+.gs-character-preview-scene[data-side="right"]{--gs-travel:-70%}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]){animation:none;--gs-step:.36s;--gs-travel-time:1.44s;--gs-step-count:4}
+.gs-character-scene[data-motion="walk-wave"]{--gs-step:.58s;--gs-travel-time:2.32s}
+.gs-character-scene[data-motion="patrol"]{--gs-step:.44s;--gs-travel-time:1.76s}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-figure{animation:gs-v2-arrive var(--gs-travel-time) cubic-bezier(.16,.68,.35,1) both}
+.gs-character-scene[data-motion="patrol"] .gs-character-figure{animation:gs-v2-patrol 2.65s ease-in-out both}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-body-rig{animation:gs-v2-weight var(--gs-step) ease-in-out var(--gs-step-count),gs-v2-settle .42s ease-out var(--gs-travel-time) both}
+.gs-character-scene[data-motion="patrol"] .gs-character-body-rig{animation:gs-v2-weight .44s ease-in-out 6}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-leg-left{transform-box:fill-box;transform-origin:50% 5%;animation:gs-v2-foot var(--gs-step) ease-in-out var(--gs-step-count)}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-leg-right{transform-box:fill-box;transform-origin:50% 5%;animation:gs-v2-foot var(--gs-step) ease-in-out var(--gs-step-count) reverse}
+.gs-character-scene[data-motion="patrol"] :is(.gs-character-leg-left,.gs-character-leg-right){animation-iteration-count:6}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-hand{animation:gs-v2-arm var(--gs-step) ease-in-out var(--gs-step-count),gs-character-wave .6s ease-in-out var(--gs-travel-time) 2}
+.gs-character-scene[data-motion="patrol"] .gs-character-hand{animation:gs-v2-arm .44s ease-in-out 6,gs-character-wave .6s ease-in-out 2.65s 2}
+.gs-character-scene:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) .gs-character-bubble{animation:gs-character-bubble-in .3s ease-out calc(var(--gs-travel-time) - .2s) both}
+.gs-character-scene[data-motion="patrol"] .gs-character-bubble{animation-delay:2.45s}
+.gs-character-scene[data-motion="look-around"] .gs-character-body-rig{animation:gs-v2-inspect 2s ease-in-out 1}
+.gs-character-scene[data-motion="look-around"] .gs-character-hand{animation:none}
+.gs-character-scene[data-motion="point"] .gs-character-hand{animation:gs-v2-point 1.25s ease-in-out 2}
+.gs-character-scene[data-motion="point"] .gs-character-body-rig{animation:gs-v2-inspect 1.25s ease-in-out 2}
+.gs-character-scene:not([data-motion="still"]) .gs-character-eyes{animation:gs-character-blink 2.8s ease-in-out 2}
+@keyframes gs-v2-arrive{0%{opacity:0;transform:translateX(var(--gs-character-enter))}12%{opacity:1}78%{transform:translateX(calc(var(--gs-gait-sign)*7px))}100%{opacity:1;transform:translateX(0)}}
+@keyframes gs-v2-patrol{0%{opacity:0;transform:translateX(var(--gs-character-enter))}10%{opacity:1}50%{transform:translateX(var(--gs-travel))}62%{transform:translateX(var(--gs-travel))}100%{opacity:1;transform:translateX(0)}}
+@keyframes gs-v2-weight{0%,100%{transform:translateY(0) rotate(calc(var(--gs-gait-sign)*-5deg)) scale(1.02,.98)}50%{transform:translateY(-6px) rotate(calc(var(--gs-gait-sign)*5deg)) scale(.98,1.03)}}
+@keyframes gs-v2-foot{0%,100%{transform:translate(2px,1px) rotate(-21deg)}50%{transform:translate(-3px,-7px) rotate(24deg)}}
+@keyframes gs-v2-arm{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(16deg)}}
+@keyframes gs-v2-settle{0%{transform:scale(1.04,.96)}55%{transform:scale(.985,1.015)}100%{transform:none}}
+@keyframes gs-v2-inspect{0%,100%{transform:none}24%{transform:rotate(-7deg) translateX(-3px)}68%{transform:rotate(7deg) translateX(3px)}}
+@keyframes gs-v2-point{0%,100%{transform:rotate(0)}35%,70%{transform:rotate(38deg)}}
+@media(max-width:767px){.gs-character-scene:not(.gs-character-preview-scene){--gs-travel:clamp(24px,12vw,65px)}.gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){--gs-travel:clamp(-65px,-12vw,-24px)}}
+@media(prefers-reduced-motion:reduce){.gs-character-scene .gs-character-body-rig,.gs-character-scene .gs-character-figure,.gs-character-scene .gs-character-bubble,.gs-character-scene .gs-character-hand,.gs-character-scene .gs-character-leg{animation:none!important;transform:none!important}}

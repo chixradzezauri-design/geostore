@@ -156,3 +156,6 @@ test('new published character configurations can greet without repeating identic
 });
 
 test('all nine mascot identities are selectable, recolourable and localized',()=>{for(const c of CHARACTERS){assert.equal(selectCharacter({character:c.id}).id,c.id);assert.equal(styledCharacter(c,{palette:{[c.id]:'#123456'}}).color,'#123456');for(const lang of ['ka','en','ru'])assert.ok(c.lines[lang].length>0);}});
+
+import {CHARACTER_MOTIONS} from '../src/utils/characterStudio.js';
+test('all motion modes including new articulated choreography survive normalization and calendar selection',()=>{assert.equal(CHARACTER_MOTIONS.length,13);for(const behavior of CHARACTER_MOTIONS){assert.equal(normalizeCharacterSettings({behavior}).behavior,behavior);assert.equal(normalizeCharacterSettings({events:[{id:'motion',behavior}]}).events[0].behavior,behavior);}assert.equal(normalizeCharacterSettings({behavior:'unsafe'}).behavior,'run-wave');});

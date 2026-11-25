@@ -10,6 +10,7 @@ export const CHARACTERS = Object.freeze([
   { id:'owl', name:'Smart Owl', label:'ბუ', color:'#8c735e', lines:{ka:'გამარჯობა! კარგი აღმოჩენა პატარა დეტალით იწყება.',en:'Hello! Great finds start with the little details.',ru:'Привет! Отличные находки начинаются с мелочей.'} },
   { id:'cheetah', name:'Speed Cheetah', label:'გეპარდი', color:'#dca94f', lines:{ka:'მოვირბინე, რომ სასიამოვნო აღმოჩენები გისურვო!',en:'I dashed over to wish you happy browsing!',ru:'Прибежал пожелать приятных находок!'} },
 ]);
+export const CHARACTER_MOTIONS=Object.freeze(['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak','walk-wave','look-around','point','patrol']);
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
 const bounded=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.min(max,Math.max(min,Math.round(value))):fallback;
 export const CHARACTER_SCENARIOS=Object.freeze({
@@ -99,7 +100,7 @@ export function normalizeCharacterEvents(raw){
       character:pick(event.character,CHARACTERS.map(c=>c.id),preset.character),
       season:pick(event.season,['none','auto','winter','hearts','summer','autumn'],preset.season),
       effect:pick(event.effect,['none','sparkles','hearts','confetti'],preset.effect),
-      behavior:pick(event.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],preset.behavior),
+      behavior:pick(event.behavior,CHARACTER_MOTIONS,preset.behavior),
       messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof event.messages?.[lang]==='string'?event.messages[lang].trim().slice(0,120):'']))}];
   });
 }
@@ -124,7 +125,7 @@ export function normalizeCharacterSettings(raw){
   return {
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
     rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
-    behavior:pick(s.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],'run-wave'),
+    behavior:pick(s.behavior,CHARACTER_MOTIONS,'run-wave'),
     greetingMode:pick(s.greetingMode,['character','funny','time','library'],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),

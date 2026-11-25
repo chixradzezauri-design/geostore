@@ -5,7 +5,7 @@ import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
 const choices={
   rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური']],
-  behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა']],
+  behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა'],['walk-wave','მოსეირნება და მისალმება'],['look-around','დათვალიერება'],['point','მინიშნება'],['patrol','გადაადგილება, გაჩერება და მისალმება']],
   greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა']],
   effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი']],
   emotion:[['happy','ღიმილი'],['wink','თვალის ჩაკვრა'],['surprise','გაკვირვება']],

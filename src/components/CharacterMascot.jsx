@@ -91,7 +91,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
   const wave=characterWaveCopy(lang);
   const interactive=settings.waveBack&&settings.behavior!=='still';
   return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={waved?'celebrate':settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
-    <div className="gs-character-figure" key={waved?'reply':'greeting'}><CharacterArt character={styledCharacter(character,settings)} emotion={waved?'happy':settings.emotion} season={settings.season}/>{settings.behavior!=='still'&&<CharacterEffects effect={waved?'sparkles':settings.effect}/>}</div>
+    <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig"><CharacterArt character={styledCharacter(character,settings)} emotion={waved?'happy':settings.emotion} season={settings.season}/></div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?'sparkles':settings.effect}/>}</div>
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} 👋</button>}
