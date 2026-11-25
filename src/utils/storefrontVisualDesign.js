@@ -1,4 +1,4 @@
-import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion } from './flashCampaignThemes.js';
+import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion, FLASH_PRODUCT_APPEARANCE, normalizeFlashProductAppearance } from './flashCampaignThemes.js';
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
 const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
 export function getStorefrontSectionOrder(raw,viewport='desktop'){
@@ -281,6 +281,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     ...(normalizeFlashCampaignBanner(raw.flashCampaignBanner) ? { flashCampaignBanner: normalizeFlashCampaignBanner(raw.flashCampaignBanner) } : {}),
     ...(normalizeFlashTimerStyle(raw.flashTimerStyle)!=='inherit'?{flashTimerStyle:normalizeFlashTimerStyle(raw.flashTimerStyle)}:{}),
     ...(normalizeFlashTimerMotion(raw.flashTimerMotion)!=='none'?{flashTimerMotion:normalizeFlashTimerMotion(raw.flashTimerMotion)}:{}),
+    ...Object.fromEntries(FLASH_PRODUCT_APPEARANCE.map(({key})=>[key,normalizeFlashProductAppearance(key,raw[key])]).filter(([,value])=>value!=='inherit')),
     theme: {
       canvas: safeColor(theme.canvas, defaults.theme.canvas),
       surface: safeColor(theme.surface, defaults.theme.surface),

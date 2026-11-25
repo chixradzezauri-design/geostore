@@ -32,3 +32,13 @@ export function normalizeFlashTimerStyle(value){
 export function normalizeFlashTimerMotion(value){
  return value==='reveal'?'reveal':'none';
 }
+
+export const FLASH_PRODUCT_APPEARANCE=Object.freeze([
+ {key:'flashCardStyle',label:'პროდუქტის ბარათი',options:[['inherit','არსებული'],['editorial','ელეგანტური'],['soft','რბილი'],['minimal','მინიმალური']]},
+ {key:'flashDiscountStyle',label:'ფასდაკლების ნიშანი',options:[['inherit','არსებული'],['pill','მომრგვალებული'],['ticket','ბილეთი'],['gold','ოქროსფერი']]},
+ {key:'flashButtonStyle',label:'შესაძენი ღილაკი',options:[['inherit','არსებული'],['outline','ჩარჩო'],['rounded','მომრგვალებული'],['gold','ოქროსფერი']]}
+].map(group=>Object.freeze({...group,options:Object.freeze(group.options.map(Object.freeze))})));
+export function normalizeFlashProductAppearance(key,value){
+ const group=FLASH_PRODUCT_APPEARANCE.find(group=>group.key===key);
+ return group?.options.some(([id])=>id===value)?value:'inherit';
+}

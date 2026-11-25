@@ -1,4 +1,4 @@
-import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner, FLASH_TIMER_STYLES } from '../utils/flashCampaignThemes.js';
+import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner, FLASH_TIMER_STYLES, FLASH_PRODUCT_APPEARANCE } from '../utils/flashCampaignThemes.js';
 import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
 import { FLASH_CAMPAIGN_COPY_PRESETS, applyFlashCampaignCopyPreset } from '../utils/flashCampaignCopy.js';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
@@ -1289,6 +1289,16 @@ export default function StorefrontVisualEditor({
                 </div>
                 <label className="mt-2 flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-300"><input type="checkbox" checked={design.flashTimerMotion==='reveal'} onChange={event=>commitDesign({...designRef.current,flashTimerMotion:event.target.checked?'reveal':'none'})}/> მსუბუქი გამოჩენის ანიმაცია</label>
                 <p className="text-[11px] leading-5 text-slate-400">ანიმაცია მხოლოდ გამოჩენისას სრულდება; მოძრაობის შემცირების სისტემურ პარამეტრს პატივს სცემს. ვადა და უკუთვლის გამოთვლა უცვლელია.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">პროდუქტის პრემიუმ დიზაინი</h4>
+                {FLASH_PRODUCT_APPEARANCE.map(group=><fieldset key={group.key} className="mb-3 min-w-0 space-y-2">
+                  <legend className="mb-1 text-xs font-semibold text-slate-300">{group.label}</legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    {group.options.map(([id,label])=><button key={id} type="button" aria-pressed={(design[group.key]||'inherit')===id} onClick={()=>commitDesign({...designRef.current,[group.key]:id})} className="min-h-11 min-w-0 rounded-lg border border-slate-600 px-2 py-2 text-xs text-slate-200 break-words aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
+                  </div>
+                </fieldset>)}
+                <p className="text-[11px] leading-5 text-slate-400">სამივე ელემენტის სტილი დამოუკიდებელია. ინდივიდუალურად დაყენებული ფერები და ზომები უპირატესია. ფასები, მარაგი და კალათის მოქმედებები უცვლელია.</p>
               </div>
               <div className="border-t border-slate-700 pt-3">
                 <h4 className="mb-2 text-xs font-bold text-white">აქციის ელემენტების დეტალური გაფორმება</h4>
