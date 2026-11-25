@@ -1,5 +1,5 @@
 // src/components/Header.jsx - Unified, compact and responsive GEOSTORE navigation
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera,
   Sparkles, Scale, PackageCheck, Bell, Shirt, Globe, MessageCircle,
@@ -61,6 +61,7 @@ export default function Header({
   const headerRef = useRef(null);
   const menuToggleRef = useRef(null);
   const searchInputRef = useRef(null);
+  const restoreSearchFocus = useRef(false);
   const t = translations[currentLang] || translations.ka;
 
   const closeMenu = () => setMenuOpen(false);
@@ -108,6 +109,13 @@ export default function Header({
   useEffect(() => {
     if (signature && searchOpen && activeTab === 'store') searchInputRef.current?.focus();
   }, [signature, searchOpen, activeTab]);
+
+  // Restore after React removes the clear button and commits the empty query.
+  useLayoutEffect(() => {
+    if (!restoreSearchFocus.current || searchQuery || activeTab !== 'store') return;
+    restoreSearchFocus.current = false;
+    searchInputRef.current?.focus();
+  }, [searchQuery, activeTab, signature, searchOpen]);
 
   const linkClass = (tab) =>
     `gs-menu-link${activeTab === tab ? ' is-active' : ''}`;
@@ -204,7 +212,7 @@ export default function Header({
               style={visualStyle('header.search.input')}
               value={searchQuery || ''}
               onChange={(event) => setSearchQuery?.(event.target.value)}
-              onFocus={() => { if (signature) setSearchOpen(true); }}
+              onFocus={() => setSearchOpen(true)}
               placeholder={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
               aria-label={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
             />
@@ -213,7 +221,7 @@ export default function Header({
             <button
               type="button"
               className="gs-header-search-clear"
-              onClick={() => { if (signature) setSearchOpen(true); setSearchQuery?.(''); searchInputRef.current?.focus(); }}
+              onClick={() => { restoreSearchFocus.current = true; setSearchOpen(true); setSearchQuery?.(''); searchInputRef.current?.focus(); }}
               aria-label={currentLang === 'en' ? 'Clear product search' : currentLang === 'ru' ? 'Очистить поиск товаров' : 'პროდუქტის ძებნის გასუფთავება'}
               title={currentLang === 'en' ? 'Clear search' : currentLang === 'ru' ? 'Очистить поиск' : 'ძებნის გასუფთავება'}
             ><X aria-hidden="true" /></button>

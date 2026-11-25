@@ -154,6 +154,7 @@ try {
         'Search clear target at ' + width + 'px');
       await searchClear.click();
       assert.equal(await search.inputValue(), '', 'Search clear resets query at ' + width + 'px');
+      await page.waitForFunction(() => document.activeElement === document.querySelector('.gs-header-search input[type="search"]'), null, {timeout:5000});
       assert.ok(await search.evaluate(node => document.activeElement === node),
         'Search clear restores focus at ' + width + 'px');
       const priceMin = page.locator('.gs-price-input').first();

@@ -51,6 +51,14 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
      });
    });
    assert.ok(headerBounds,'Signature header controls remain inside the row at '+width);
+   const cardsFit = await page.locator('[data-signature-products="true"] .gs-catalog-product-card').evaluateAll(cards => cards.every(card => {
+     const box=card.getBoundingClientRect();
+     const cta=card.querySelector('.gs-catalog-product-cta').getBoundingClientRect();
+     const shortcuts=[...card.querySelectorAll('.gs-catalog-media-toggle')].map(el=>el.getBoundingClientRect());
+     return cta.height>=43 && cta.left>=box.left-1 && cta.right<=box.right+1 &&
+       shortcuts.every(rect=>rect.width>=43 && rect.height>=43 && rect.right<=box.right+1);
+   }));
+   assert.ok(cardsFit,'Signature cards retain accessible and contained actions at '+width);
    const hero=page.locator('[data-signature-hero="true"]');
    await hero.locator('.gs-signature-hero-dot').nth(1).click();
    await hero.getByRole('heading',{name:'Signature campaign'}).waitFor({state:'visible'});
