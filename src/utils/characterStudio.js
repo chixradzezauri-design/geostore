@@ -30,12 +30,12 @@ function normalizeScenarios(raw){
   }));
 }
 const hexColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():fallback;
-export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13});
+export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13,renderMode:'auto'});
 export function normalizeCharacterAppearance(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return {desktopSize:bounded(v.desktopSize,80,144,116),mobileSize:bounded(v.mobileSize,56,100,76),
     lift:bounded(v.lift,0,48,0),bubbleColor:hexColor(v.bubbleColor,'#fffdf7'),
-    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13)};
+    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13),renderMode:pick(v.renderMode,['auto','vector'],'auto')};
 }
 export function normalizeCharacterPalette(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};

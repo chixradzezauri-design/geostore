@@ -83,7 +83,7 @@ test('successful commerce reactions are opt-in and rate limited',()=>{
 
 test('custom mascot appearance clamps geometry and rejects unsafe CSS',()=>{
   const a=normalizeCharacterAppearance({desktopSize:900,mobileSize:-10,lift:999,fontSize:30,bubbleColor:'url(https://example.test)',bubbleShape:'invalid'});
-  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded'});
+  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded',renderMode:'auto'});
   assert.equal(characterAppearanceStyle({bubbleColor:'#000000',bubbleShape:'pill'})['--gs-mascot-radius'],'28px');
   assert.equal(characterBubbleInk('#000000'),'#ffffff');
   assert.equal(characterBubbleInk('#ffffff'),'#000000');
@@ -168,3 +168,6 @@ test('product and empty-search scenes are opt-in, localized and device/eligibili
 
 import {characterDisplayReason} from '../src/utils/characterStudio.js';
 test('published visibility diagnostic and actual rendering share the same gates',()=>{assert.equal(characterDisplayReason(null),'unconfirmed');assert.equal(characterDisplayReason({enabled:false}),'disabled');assert.equal(characterDisplayReason({enabled:true,mobile:false},{mobile:true}),'device');assert.equal(characterDisplayReason({enabled:true},{blocked:true}),'blocked');assert.equal(characterDisplayReason({enabled:true},{route:'product'}),'page');assert.equal(characterDisplayReason({enabled:true},{route:'home'}),'ready');assert.equal(canDisplayCharacter({enabled:true},{}),false);});
+
+import {sphereMesh,mascotRgb,foxPose} from '../src/utils/mascot3DGeometry.js';
+test('flagship mesh is bounded, depth-bearing and has valid triangle indices',()=>{const mesh=sphereMesh();assert.equal(mesh.positions.length,19*25*3);assert.equal(mesh.indices.length,18*24*6);assert.ok(mesh.indices.every(i=>i<mesh.positions.length/3));assert.ok(mesh.positions.some(x=>x<-.9)&&mesh.positions.some(x=>x>.9));assert.deepEqual(mascotRgb('#ff0000'),[1,0,0]);assert.deepEqual(foxPose(8,'wave',true),foxPose(0,'wave',true));assert.notDeepEqual(foxPose(.2,'run-wave'),foxPose(.8,'run-wave'));assert.equal(normalizeCharacterAppearance({renderMode:'unsafe'}).renderMode,'auto');assert.equal(normalizeCharacterAppearance({renderMode:'vector'}).renderMode,'vector');});
