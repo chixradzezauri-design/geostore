@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {stage49FixtureProductRows} from './stage46PurchaseScenarios.mjs';
 const backend='https://xmtnszxtnfxnrojionoa.supabase.co';
 export async function runCharacterStudioSmoke(browser,host,widths){
   for(const width of widths){
@@ -6,12 +7,14 @@ export async function runCharacterStudioSmoke(browser,host,widths){
     try{
       const errors=[];
       let enabled=true;
+      let activeSale=true;
       await context.route(backend+'/**',async route=>{
         const path=new URL(route.request().url()).pathname;
-        const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture'}}}}]:[];
+        const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
         return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
       });
       await context.routeWebSocket('wss://xmtnszxtnfxnrojionoa.supabase.co/**',socket=>socket.close());
+      await context.addInitScript(()=>localStorage.setItem('geostore_lang','ka'));
       const page=await context.newPage();
       page.on('pageerror',e=>errors.push(e.message));
       await page.goto(host,{waitUntil:'domcontentloaded'});
@@ -28,6 +31,24 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       await page.locator('.geostore-storefront').waitFor({state:'visible'});
       await page.waitForTimeout(800);
       assert.equal(await mascot.count(),0,'Greeting cannot replay in same session');
+      const flash=page.locator('.gs-flash-sale-section .gs-character-context');
+      await flash.waitFor({state:'visible',timeout:15000});
+      assert.match(await flash.innerText(),/Flash scene fixture/);
+      await page.locator('.gs-menu-toggle').click();
+      await page.locator('#geostore-main-menu .gs-menu-link').filter({hasText:'კალათა'}).click();
+      const cartScene=page.locator('.gs-cart-empty .gs-character-context');
+      await cartScene.waitFor({state:'visible',timeout:10000});
+      assert.match(await cartScene.innerText(),/Cart scene fixture/);
+      await page.locator('.gs-menu-toggle').click();
+      await page.locator('#geostore-main-menu .gs-menu-link').filter({hasText:'ფავორიტები'}).click();
+      const wishlistScene=page.locator('.gs-video-wishlist-empty .gs-character-context');
+      await wishlistScene.waitFor({state:'visible',timeout:10000});
+      assert.match(await wishlistScene.innerText(),/Wishlist scene fixture/);
+      activeSale=false;
+      await page.reload({waitUntil:'domcontentloaded'});
+      await page.locator('.geostore-storefront').waitFor({state:'visible'});
+      await page.waitForTimeout(800);
+      assert.equal(await flash.count(),0,'No flash mascot without active sale');
       enabled=false;
       await page.evaluate(()=>{sessionStorage.removeItem('geostore_character_seen_v1');localStorage.setItem('geostore_site_settings',JSON.stringify({characterStudio:{enabled:true,delay:0}}));});
       await page.reload({waitUntil:'domcontentloaded'});

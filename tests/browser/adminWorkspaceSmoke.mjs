@@ -125,8 +125,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await studio.locator('.gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
           assert.match(await studio.locator('.gs-character-preview-scene').innerText(),/Mini Robot/);
           assert.equal(await page.locator('.gs-character-scene:not(.gs-character-preview-scene)').count(),0,'Admin preview does not start public mascot');
-          const box=await studio.locator('.gs-character-preview').boundingBox();
+          const box=await studio.locator('.gs-character-preview').first().boundingBox();
           assert.ok(box.width<=321,'Phone preview is constrained to phone width');
+          const scenarios=studio.locator('[data-character-scenarios]');
+          await scenarios.getByLabel('სცენარი',{exact:true}).selectOption('cart');
+          await scenarios.getByLabel('სცენარის პერსონაჟი').selectOption('panda');
+          await scenarios.getByLabel('სცენარის ტექსტი').fill('Fixture cart scene');
+          assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
         }
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
         if(tab==='products'){
