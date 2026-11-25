@@ -1167,7 +1167,7 @@ export default function StoreView({
 
   return (
     <div data-gs-dom-order="true" data-signature-commerce={signatureHero ? "true" : undefined} className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
-      {(campaignPreviewOnly?sectionOrder.filter(id=>id==='flashSale'):sectionOrder).map(id=><React.Fragment key={id}>{sectionGroups[id]}</React.Fragment>)}
+      {campaignPreviewOnly ? sectionGroups.flashSale : sectionOrder.map(id=><React.Fragment key={id}>{sectionGroups[id]}</React.Fragment>)}
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {unavailableRoute&&<div role="alert" className="rounded-xl border border-amber-500/30 p-4 text-sm text-slate-200">

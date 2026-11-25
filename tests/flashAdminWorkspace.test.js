@@ -18,5 +18,5 @@ test('focused mode reuses campaign controls and does not offer global reset or u
  assert.ok(editor.includes('{!campaignOnly&&campaignControls}'));
  assert.ok(editor.includes('{!campaignOnly&&<button type="button" onClick={resetDesign}'));
  assert.ok(editor.includes('campaignPreviewOnly={campaignOnly}'));
- assert.ok(store.includes("campaignPreviewOnly?sectionOrder.filter(id=>id==='flashSale'):sectionOrder"));
+ assert.ok(store.includes("campaignPreviewOnly ? sectionGroups.flashSale : sectionOrder.map"));
 });
