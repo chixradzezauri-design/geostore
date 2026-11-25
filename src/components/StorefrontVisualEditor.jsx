@@ -13,7 +13,7 @@ import { supabase } from '../supabaseClient';
 import {
   DEFAULT_STOREFRONT_VISUAL_DESIGN,
   normalizeStorefrontVisualDesign,
-  getStorefrontSectionOrder, setStorefrontSectionOrder, inheritStorefrontSectionOrder,
+  getStorefrontSectionOrder, setStorefrontSectionOrder, inheritStorefrontSectionOrder, moveFlashSaleAfterHero,
   buildStorefrontVisualStyle
 } from '../utils/storefrontVisualDesign.js';
 
@@ -1296,6 +1296,8 @@ export default function StorefrontVisualEditor({
             <div className="mt-4 space-y-2">
               <p className="text-xs text-slate-400">თანმიმდევრობა: {previewMode==='desktop'?'კომპიუტერი / საერთო':previewMode==='tablet'?'ტაბლეტი':'მობილური'} · სექციების ჩართვა/გამორთვა საერთო რჩება.</p>
               {previewMode!=='desktop'&&<div className="flex flex-wrap gap-2 items-center"><span className="text-xs text-slate-300">{design.responsive?.[previewMode]?.sectionOrder?'ინდივიდუალური რიგი':'საერთო რიგის მემკვიდრეობა'}</span><button type="button" disabled={!design.responsive?.[previewMode]?.sectionOrder} onClick={()=>{const next=inheritStorefrontSectionOrder(designRef.current,previewMode);if(next)commitDesign(next);}} className="min-h-11 rounded-lg border border-slate-700 px-3 py-2 text-xs text-white disabled:opacity-40">საერთო რიგის აღდგენა</button></div>}
+              <button type="button" onClick={()=>commitDesign(moveFlashSaleAfterHero(designRef.current))} className="min-h-11 w-full rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100">⚡ აქცია მთავარი ბანერის შემდეგ — ყველა მოწყობილობაზე</button>
+              <p className="text-[11px] text-slate-400">მხოლოდ აქციის მდებარეობა იცვლება მონახაზში. საიტზე გამოსაჩენად შეინახეთ და გამოაქვეყნეთ დიზაინი.</p>
               <StorefrontSectionGeometry design={design} viewport={previewMode} labels={SECTION_LABELS} onChange={commitDesign}/>
               {currentSectionOrder.map((id, index) => (
                 <div

@@ -11,6 +11,22 @@ export function setStorefrontSectionOrder(raw,viewport,order){
  const d=normalizeStorefrontVisualDesign(raw);
  return normalizeStorefrontVisualDesign(viewport==='desktop'?{...d,sectionOrder:order}:{...d,responsive:{...d.responsive,[viewport]:{...d.responsive[viewport],sectionOrder:order}}});
 }
+// Explicit editor action: move only the offer group, preserving every other section.
+export function moveFlashSaleAfterHero(raw){
+ const d=normalizeStorefrontVisualDesign(raw);
+ const move=order=>{
+   const next=order.filter(id=>id!=='flashSale');
+   next.splice(next.indexOf('hero')+1,0,'flashSale');
+   return next;
+ };
+ const responsive={...d.responsive};
+ for(const viewport of ['tablet','mobile']){
+   if(validSectionOrder(responsive[viewport]?.sectionOrder)){
+     responsive[viewport]={...responsive[viewport],sectionOrder:move(responsive[viewport].sectionOrder)};
+   }
+ }
+ return normalizeStorefrontVisualDesign({...d,sectionOrder:move(d.sectionOrder),responsive});
+}
 export function inheritStorefrontSectionOrder(raw,viewport){
  if(!['tablet','mobile'].includes(viewport))return null;
  const d=normalizeStorefrontVisualDesign(raw),next={...d.responsive[viewport]};

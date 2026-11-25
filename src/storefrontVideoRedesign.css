@@ -1644,3 +1644,41 @@
   :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-site-footer .geostore-footer-links { gap: 6px !important; }
 }
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-site-footer .gs-video-footer-support { width: min(100%,320px); }
+
+
+/* Campaign studio 01 — quieter editorial offer surface, independent of price/expiry logic. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section {
+  box-shadow: none !important;
+  border: 1px solid var(--gs-video-flashSale-borderColor,var(--gs-line,#e2d9ce)) !important;
+  padding: var(--gs-video-flashSale-padding,clamp(12px,2vw,20px)) !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-video-flash-heading { gap: 8px !important; padding-bottom: 10px !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown {
+  display: flex !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 5px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown .gs-flash-sale-timer {
+  min-width: 0 !important;
+  border: 1px solid var(--gs-line,#e2d9ce) !important;
+  border-radius: 8px !important;
+  padding: 5px 9px !important;
+  box-shadow: none !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section > .grid > .gs-flash-sale-card {
+  box-shadow: none !important;
+  border: 1px solid var(--gs-line,#e2d9ce) !important;
+  border-radius: var(--gs-card-radius,12px) !important;
+  padding: 10px !important;
+  gap: 8px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-title-action { font-size: 12px !important; line-height: 1.4 !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-discount { background: #9e3038 !important; color: #fff !important; }
+@media (max-width:640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown { width: 100% !important; }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown .gs-flash-sale-timer { flex: 1 1 0; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront:where([data-signature-commerce="true"]) .gs-flash-sale-section .gs-flash-sale-countdown { width: 100% !important; }
