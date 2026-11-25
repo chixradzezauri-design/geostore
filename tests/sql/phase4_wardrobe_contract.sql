@@ -53,11 +53,22 @@ begin
  raise exception 'Raw image accepted';exception when invalid_parameter_value then null;end;
  r:=public.customer_wardrobe_change(a,0,'set',item);
  if r is distinct from jsonb_build_object('status','accepted','snapshot',jsonb_build_object('revision',1,'items',jsonb_build_array(item))) then raise exception 'Set mismatch: %',r;end if;
+ r:=public.customer_wardrobe_request_erasure(a,1,p);
+ if r is distinct from '{"status":"referenced","revision":1}'::jsonb then raise exception 'Referenced photo erasure allowed';end if;
  r:=public.customer_wardrobe_change(a,1,'remove',jsonb_build_object('id',item->>'id'));
  if r->'snapshot' is distinct from '{"revision":2,"items":[]}'::jsonb then raise exception 'Remove mismatch';end if;
  r:=public.customer_wardrobe_change(a,0,'set',item);
  if r->>'status' is distinct from 'conflict' then raise exception 'Stale metadata replay accepted';end if;
  if not exists(select 1 from storage.objects where name=p) then raise exception 'Metadata remove deleted file';end if;
+ r:=public.customer_wardrobe_request_erasure(a,1,p);
+ if r->>'status' is distinct from 'conflict' then raise exception 'Stale erase accepted';end if;
+ r:=public.customer_wardrobe_request_erasure(a,2,p);
+ if r is distinct from '{"status":"pending","revision":3}'::jsonb then raise exception 'Erasure request mismatch';end if;
+ r:=public.customer_wardrobe_request_erasure(a,3,p);
+ if r is distinct from '{"status":"pending","revision":3}'::jsonb then raise exception 'Erasure replay mismatch';end if;
+ begin perform public.customer_wardrobe_change(a,3,'set',item);raise exception 'Retired photo reattached';exception when invalid_parameter_value then null;end;
+ begin perform public.customer_wardrobe_request_erasure(a,3,b::text||'/00000000-0000-4000-8000-000000000003.png');raise exception 'Cross-owner erasure accepted';exception when invalid_parameter_value then null;end;
+ if not exists(select 1 from storage.objects where name=p) then raise exception 'Request directly deleted file';end if;
 end $test$;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000002","is_anonymous":true}',false);
 do $$ begin

@@ -1,3 +1,15 @@
+-- A permanent tombstone prevents reattachment after a deletion request.
+-- No FK cascade: the cleanup record must survive account erasure until the
+-- authorized Storage API worker has completed physical deletion.
+create table private.customer_wardrobe_photo_erasure (
+ user_id uuid not null,
+ photo_path text primary key,
+ requested_at timestamptz not null default now(),
+ check(split_part(photo_path,'/',1)=user_id::text)
+);
+alter table private.customer_wardrobe_photo_erasure enable row level security;
+revoke all on private.customer_wardrobe_photo_erasure from public,anon,authenticated,service_role;
+
 -- Unapplied wardrobe metadata draft. Photos are independent immutable
 -- private Storage objects; no direct Storage writes or object deletion here.
 create table private.customer_wardrobe_state (
@@ -70,6 +82,10 @@ begin
  if v_revision<>p_expected_revision then
   return jsonb_build_object('status','conflict','snapshot',jsonb_build_object('revision',v_revision,'items',v_items));
  end if;
+ -- Check tombstone under the same account lock used by erasure requests.
+ if v_path is not null and exists(select 1 from private.customer_wardrobe_photo_erasure where photo_path=v_path) then
+  raise exception 'Photo scheduled for erasure' using errcode='22023';
+ end if;
  select (ord-1)::integer into v_index from jsonb_array_elements(v_items) with ordinality as l(item,ord) where item->>'id'=v_id limit 1;
  if p_action='remove' then
   if v_index is not null then v_items:=v_items-v_index;end if;
@@ -96,3 +112,45 @@ grant execute on function private.customer_wardrobe_read(uuid),private.customer_
  public.customer_wardrobe_read(uuid),public.customer_wardrobe_change(uuid,bigint,text,jsonb) to authenticated;
 -- Metadata deletion does not delete the referenced file; lifecycle, quota,
 -- account-erasure cleanup and actual Storage API validation are release blockers.
+
+create function private.customer_wardrobe_request_erasure(p_expected_owner uuid,p_expected_revision bigint,p_path text)
+returns jsonb language plpgsql security definer set search_path=''
+as $$
+declare v_owner uuid:=auth.uid(); v_revision bigint; v_items jsonb;
+begin
+ if v_owner is null or p_expected_owner is distinct from v_owner
+  or coalesce(auth.jwt()->>'is_anonymous','false')='true' then
+  raise exception 'Wardrobe authorization required' using errcode='42501';
+ end if;
+ if p_expected_revision is null or p_expected_revision not between 0 and 9007199254740991
+  or p_path is null or p_path !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](jpg|png|webp|gif)$'
+  or split_part(p_path,'/',1)<>v_owner::text then
+  raise exception 'Invalid erasure request' using errcode='22023';
+ end if;
+ insert into private.customer_wardrobe_state(user_id) values(v_owner) on conflict(user_id) do nothing;
+ select revision,items into strict v_revision,v_items from private.customer_wardrobe_state where user_id=v_owner for update;
+ if v_revision<>p_expected_revision then return jsonb_build_object('status','conflict','revision',v_revision);end if;
+ if exists(select 1 from jsonb_array_elements(v_items) as l(item) where item->>'photoPath'=p_path) then
+  return jsonb_build_object('status','referenced','revision',v_revision);
+ end if;
+ if exists(select 1 from private.customer_wardrobe_photo_erasure where photo_path=p_path) then
+  return jsonb_build_object('status','pending','revision',v_revision);
+ end if;
+ if not exists(select 1 from storage.objects where bucket_id='customer-wardrobe-private' and name=p_path) then
+  return jsonb_build_object('status','missing','revision',v_revision);
+ end if;
+ if v_revision>=9007199254740991 then raise exception 'Wardrobe revision exhausted' using errcode='22003';end if;
+ insert into private.customer_wardrobe_photo_erasure(user_id,photo_path) values(v_owner,p_path);
+ v_revision:=v_revision+1;
+ update private.customer_wardrobe_state set revision=v_revision where user_id=v_owner;
+ return jsonb_build_object('status','pending','revision',v_revision);
+end;
+$$;
+create function public.customer_wardrobe_request_erasure(p_expected_owner uuid,p_expected_revision bigint,p_path text)
+returns jsonb language sql security invoker set search_path=''
+as $$ select private.customer_wardrobe_request_erasure(p_expected_owner,p_expected_revision,p_path) $$;
+revoke all on function private.customer_wardrobe_request_erasure(uuid,bigint,text),public.customer_wardrobe_request_erasure(uuid,bigint,text) from public,anon,authenticated,service_role;
+grant execute on function private.customer_wardrobe_request_erasure(uuid,bigint,text),public.customer_wardrobe_request_erasure(uuid,bigint,text) to authenticated;
+-- No file deletion or worker in this draft. Before rollout, prevent uploads
+-- to retired paths, serialize reservations, and use a verified Storage API
+-- worker (never SQL DELETE on storage.objects).
