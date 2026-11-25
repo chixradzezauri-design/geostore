@@ -110,6 +110,8 @@ on:
       - 'release/staged-marketing-preflight.sql'
       - 'tests/sql/admin_marketing_consent_contract.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'
+      - 'release/phase4-wishlist-sync-draft.sql'
+      - 'tests/sql/phase4_wishlist_sync_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -199,3 +201,6 @@ jobs:
           node tests/advancedAdminHttpContract.mjs || { docker logs advanced-admin-http-fixture; exit 1; }
           PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_http_inventory_verify.sql
           PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_acl_verify.sql
+
+          createdb phase4_wishlist_sync
+          PGDATABASE=phase4_wishlist_sync psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_wishlist_sync_contract.sql
