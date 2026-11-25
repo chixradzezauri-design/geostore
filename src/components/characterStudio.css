@@ -176,3 +176,10 @@
 .gs-character-wave-back{min-height:34px;padding:5px 10px;line-height:1.3;transition:background-color .15s ease}
 .gs-character-wave-back:hover{background:#80808018}
 @media(pointer:coarse){.gs-character-wave-back{min-height:44px}}
+
+/* Context-specific assistants remain within normal content flow; never overlay purchase actions. */
+.gs-character-product-context,.gs-character-search-context{min-width:0;max-width:100%;padding:2px 0;pointer-events:none}
+.gs-character-product-context .gs-character-context,.gs-character-search-context .gs-character-context{margin:6px auto;max-width:100%;padding:4px 10px;text-align:start}
+.gs-character-product-context .gs-character-context-art{width:42px;flex:0 0 42px}
+.gs-character-search-context .gs-character-context-art{width:48px;flex:0 0 48px}
+@media(max-width:420px){.gs-character-product-context .gs-character-context{font-size:12px}.gs-character-product-context .gs-character-context-art{width:34px;flex-basis:34px}}

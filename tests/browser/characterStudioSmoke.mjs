@@ -6,7 +6,7 @@ async function installCharacterFixture(context,readState){
   await context.route(backend+'/**',async route=>{
     const path=new URL(route.request().url()).pathname;
     const {enabled,activeSale}=readState();
-    const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
+    const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'},product:{enabled:true,message:'Product guide fixture'},searchEmpty:{enabled:true,message:'Search helper fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
     if(!['GET','HEAD','OPTIONS'].includes(route.request().method()))return route.fulfill({status:403,contentType:'application/json',body:'{}'});
     return route.fulfill({status:200,contentType:'application/json',headers:{'cache-control':'no-store'},body:JSON.stringify(data)});
   });
@@ -82,6 +82,9 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       await card.locator('.gs-catalog-product-title-action').click();
       const dialog=page.locator('.gs-product-dialog');
       await dialog.waitFor({state:'visible'});
+      const productGuide=dialog.locator('.gs-character-product-context .gs-character-context');
+      await productGuide.waitFor({state:'visible'});
+      assert.match(await productGuide.innerText(),/Product guide fixture/);
       await dialog.locator('.gs-modal-add-to-cart').click();
       await dialog.waitFor({state:'detached'});
       const reaction=page.locator('[role="status"] .gs-character-reaction');

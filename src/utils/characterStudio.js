@@ -18,6 +18,8 @@ export const CHARACTER_SCENARIOS=Object.freeze({
   cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'შენი კალათა ჯერ ცარიელია. მოდი, სასურველი ნივთები აღმოვაჩინოთ.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
   wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'რაც მოგეწონება, აქ შეინახე და ნებისმიერ დროს დაუბრუნდი.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}},
   cartAdded:{character:'fox',label:'კალათაში დამატება',lines:{ka:'შესანიშნავია! შენი ნივთი კალათაშია.',en:'Hooray! Great choice!',ru:'Ура! Отличный выбор!'}},
+  product:{character:'owl',label:'პროდუქტის დათვალიერება',lines:{ka:'დააკვირდი დეტალებს და შეარჩიე შენთვის შესაფერისი ვარიანტი.',en:'Explore the details and choose the option that suits you.',ru:'Посмотри детали и выбери подходящий вариант.'}},
+  searchEmpty:{character:'fox',label:'ძიება შედეგის გარეშე',lines:{ka:'ჯერ ვერ ვიპოვეთ. სხვა სიტყვით ან ნაკლები ფილტრით ვცადოთ?',en:'Nothing found yet. Try a different word or fewer filters?',ru:'Пока ничего не нашли. Попробуем другое слово или меньше фильтров?'}},
   wishlistAdded:{character:'cat',label:'ფავორიტებში დამატება',lines:{ka:'შენი რჩეული შენახულია — კარგი აღმოჩენაა!',en:'Meow! Favourite saved!',ru:'Мяу! Избранное сохранено!'}}
 });
 function normalizeScenarios(raw){
