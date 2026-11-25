@@ -29,7 +29,7 @@ const StorefrontVisualEditor = React.lazy(() => import('./StorefrontVisualEditor
 import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan, calculateReplenishmentDraftPreview } from '../utils/inventoryReplenishment.js';
 import { validateReplenishmentSettingsResponse, validateReplenishmentSaveResponse } from '../utils/replenishmentApiValidation.js';
-import AdminPanelVisualEditor from './AdminPanelVisualEditor';
+const AdminPanelVisualEditor = React.lazy(() => import('./AdminPanelVisualEditor'));
 import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, loadAdminPanelVisualDesign, normalizeAdminPanelVisualDesign, saveAdminPanelVisualDesign } from '../utils/adminPanelVisualDesign.js';
 import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
 import '../adminPanelVisualDesign.css';
@@ -38,9 +38,14 @@ import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '..
 import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
 import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
 import { analyzeBusinessCampaigns } from '../utils/businessCampaignAnalytics.js';
-import AdminSupplierWorkspace from './AdminSupplierWorkspace';
-import AdminPurchaseWorkspace from './AdminPurchaseWorkspace';
-import AdminMarketingSegments from './AdminMarketingSegments.jsx';
+const AdminSupplierWorkspace = React.lazy(() => import('./AdminSupplierWorkspace'));
+const AdminPurchaseWorkspace = React.lazy(() => import('./AdminPurchaseWorkspace'));
+const AdminMarketingSegments = React.lazy(() => import('./AdminMarketingSegments.jsx'));
+
+// Local Suspense keeps the surrounding workspace and navigation available.
+function AdminSectionLoading(){
+  return <div role="status" aria-live="polite" className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">განყოფილება იტვირთება…</div>;
+}
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -7533,6 +7538,7 @@ export default function AdminDashboardPro({
 
         {visibleAdminTab === 'admin_visual_editor' && isOwner && (
           adminVisualDesignReady ? (
+            <React.Suspense fallback={<AdminSectionLoading />}>
             <AdminPanelVisualEditor
               previewTab={adminVisualPreviewTab}
               onPreviewTabChange={setAdminVisualPreviewTab}
@@ -7542,6 +7548,7 @@ export default function AdminDashboardPro({
               onRetrySave={retryAdminVisualSave}
               onReloadRemote={() => setAdminVisualReloadKey(value => value + 1)}
             />
+            </React.Suspense>
           ) : (
             <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
               <p>{adminVisualSyncStatus === 'error' ? 'საერთო დიზაინის ჩატვირთვა ვერ მოხერხდა. ცვლილებების დაკარგვის თავიდან ასაცილებლად რედაქტორი დროებით დაბლოკილია.' : 'ადმინპანელის საერთო დიზაინი იტვირთება…'}</p>
@@ -7870,8 +7877,8 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'vendors' || adminContentTab === 'vendors') && (
           <div className="admin-vendors-panel space-y-4">
-            {isOwner && visibleAdminTab === 'vendors' && <AdminSupplierWorkspace key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} localRows={vendorsList}/>}
-            {isOwner && visibleAdminTab === 'vendors' && <AdminPurchaseWorkspace key={'purchases-'+adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} products={products} refreshProducts={refreshProducts}/>}
+            {isOwner && visibleAdminTab === 'vendors' && <React.Suspense fallback={<AdminSectionLoading /></React.Suspense>}><AdminSupplierWorkspace key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} localRows={vendorsList}/>}
+            {isOwner && visibleAdminTab === 'vendors' && <React.Suspense fallback={<AdminSectionLoading /></React.Suspense>}><AdminPurchaseWorkspace key={'purchases-'+adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} products={products} refreshProducts={refreshProducts}/>}
             {visibleAdminTab === 'admin_visual_editor' && <p className="text-xs text-slate-400">სერვერული მომწოდებლების მართვა ხელმისაწვდომია რეალურ განყოფილებაში, არა დიზაინის წინასწარ ხედში.</p>}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -7912,7 +7919,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'users' || adminContentTab === 'users') && (
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
-            {isOwner && visibleAdminTab === 'users' && <AdminMarketingSegments key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>} 
+            {isOwner && visibleAdminTab === 'users' && <React.Suspense fallback={<AdminSectionLoading /></React.Suspense>}><AdminMarketingSegments key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>} 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — {crmReady ? "სინქრონიზებული სია" : "სია დასადასტურებელია"} ({crmUsers.length})
