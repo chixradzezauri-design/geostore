@@ -31,7 +31,7 @@ export function chooseConciergeAdvice(raw,{characterId='',target=null,index=0,la
  const preference=characterId==='santa'||characterId==='snowman'?'gifts':characterId==='deal'||target==='flash'?'prices':hasProduct?'details':characterId==='cat'?'style':null;
  const topic=s.topic!=='auto'?s.topic:preference||topics[n%topics.length];
  const lines=CONCIERGE_ADVICE[topic].lines;
- return {topic,text:s.custom[topic][locale]||lines[Math.floor(n/topics.length)%lines.length][locale]};
+ return {topic,text:s.custom[topic][locale]||lines[(s.topic!=='auto'||preference?n:Math.floor(n/topics.length))%lines.length][locale]};
 }
 export const CONCIERGE_ADVICE_LABEL={ka:'პატარა რჩევა',en:'A little tip',ru:'Небольшой совет'};
 
