@@ -1,3 +1,4 @@
+import { FLASH_CAMPAIGN_THEMES } from '../utils/flashCampaignThemes.js';
 import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
 import { FLASH_CAMPAIGN_COPY_PRESETS, applyFlashCampaignCopyPreset } from '../utils/flashCampaignCopy.js';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
@@ -1243,6 +1244,20 @@ export default function StorefrontVisualEditor({
                   <span className="block text-right text-[10px] font-normal text-slate-400">{design.copy[key].length}/{maxLength}</span>
                 </label>
               ))}
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">აქციის ვიზუალური თემა</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {FLASH_CAMPAIGN_THEMES.map(theme=>(
+                    <button key={theme.id} type="button" aria-pressed={(design.flashCampaignTheme || 'inherit')===theme.id} onClick={()=>commitDesign({...designRef.current,flashCampaignTheme:theme.id})}
+                      className="flex min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 aria-pressed:ring-2 aria-pressed:ring-amber-300"
+                      style={{backgroundColor:theme.background,color:theme.ink,borderColor:theme.accent}}>
+                      <span aria-hidden="true" className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:theme.accent}}/>{theme.label}
+                      {(design.flashCampaignTheme || 'inherit')===theme.id && <span className="ml-auto" aria-hidden="true">✓</span>}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-slate-400">თემა არ ცვლის ფასებს, ვადებს, სათაურსა და ინდივიდუალურად დაყენებულ ფერებს. მოქმედებს ყველა მოწყობილობაზე გამოქვეყნების შემდეგ.</p>
+              </div>
               <button type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,'reset'))} className="min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300">ნაგულისხმევი ტექსტების აღდგენა</button>
               <p className="text-[11px] leading-5 text-slate-400">ტექსტები საერთო ვიზუალურ მონახაზში ინახება. გამოქვეყნების შემდეგ ყველა მოწყობილობაზე გამოჩნდება, როცა აქტიური აქცია არსებობს.</p>
             </div>

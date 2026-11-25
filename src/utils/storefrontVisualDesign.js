@@ -1,3 +1,4 @@
+import { normalizeFlashCampaignTheme } from './flashCampaignThemes.js';
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
 const validSectionOrder = value => Array.isArray(value)&&value.length===SECTION_IDS.length&&new Set(value).size===SECTION_IDS.length&&value.every(id=>SECTION_IDS.includes(id));
 export function getStorefrontSectionOrder(raw,viewport='desktop'){
@@ -274,6 +275,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
   return {
     version: 1,
     ...(raw.signature2026 === true ? { signature2026: true } : {}),
+    ...(normalizeFlashCampaignTheme(raw.flashCampaignTheme) !== 'inherit' ? { flashCampaignTheme: normalizeFlashCampaignTheme(raw.flashCampaignTheme) } : {}),
     theme: {
       canvas: safeColor(theme.canvas, defaults.theme.canvas),
       surface: safeColor(theme.surface, defaults.theme.surface),
