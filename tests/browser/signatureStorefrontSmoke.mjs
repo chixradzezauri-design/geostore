@@ -32,6 +32,13 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await page.locator('[data-signature-products="true"] .gs-catalog-product-card').first().waitFor({state:'visible',timeout:20000});
    assert.equal(await page.locator('[data-signature-categories="true"] .gs-category-card').count(),4);
    assert.equal(await page.locator('.gs-signature-service-link').count(),4);
+   const campaignBounds=await page.locator('[data-signature-banners="true"]').evaluate(grid=>{
+     const card=grid.querySelector('.gs-signature-banner-card');
+     if(!card || grid.children.length!==1) return false;
+     const g=grid.getBoundingClientRect(), c=card.getBoundingClientRect();
+     return c.width>=g.width-2 && c.right<=g.right+1 && c.left>=g.left-1;
+   });
+   assert.ok(campaignBounds,'Single published campaign fills available width at '+width);
    assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),width<=640);
    const columns=await page.locator('[data-signature-products="true"]').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
    assert.equal(columns,width<360?1:width<=640?2:width<=1023?3:6,'Signature columns at '+width);
