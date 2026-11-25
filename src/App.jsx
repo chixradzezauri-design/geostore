@@ -1,7 +1,7 @@
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
 import { WISHLIST_SYNC_ENABLED } from './utils/wishlistSyncReview.js';
-import { CART_SYNC_ENABLED, validateCartReviewStock } from './utils/cartSyncReview.js';
+import { CART_SYNC_ENABLED, validateCartReviewStock, planCartReviewRestore, matchesCartRestorePreview } from './utils/cartSyncReview.js';
 const CartSyncPanel = React.lazy(()=>import('./components/CartSyncPanel.jsx'));
 import { projectWishlistIds } from './utils/wishlistSyncContract.js';
 const WishlistSyncPanel = React.lazy(()=>import('./components/WishlistSyncPanel.jsx'));
@@ -2664,6 +2664,23 @@ export default function App() {
     setCart(nextCart);
   };
 
+  const planSyncedCartRestore=(line,scope)=>{
+    const now=wishlistSyncScopeRef.current;
+    if(!CART_SYNC_ENABLED||now.authLoading||now.ownerId!==scope.ownerId||now.epoch!==scope.epoch||activeCartOwnerRef.current.userId!==scope.ownerId||catalogueVerifiedEpoch!==productsAccessEpoch.current||orderSubmitLock.current||isCheckoutOpen||pendingCheckoutRef.current)return {status:'blocked'};
+    try{if(window.sessionStorage.getItem('geostore.pendingCheckout'))return {status:'blocked'};}catch{return {status:'blocked'};}
+    return planCartReviewRestore(cartRef.current,line,products);
+  };
+  const restoreSyncedCartLine=(line,scope,expected)=>{
+    const plan=planSyncedCartRestore(line,scope);
+    if(plan.status!=='ready'||!matchesCartRestorePreview(expected,plan.preview))return false;
+    try{
+      // Never silently replace a cart written by another tab since this view loaded.
+      const key=getCartStorageKey(scope.ownerId),raw=window.localStorage.getItem(key);
+      if(raw===null||JSON.stringify(sanitizeCartSnapshot(JSON.parse(raw)))!==JSON.stringify(sanitizeCartSnapshot(cartRef.current)))return false;
+      window.localStorage.setItem(key,JSON.stringify(plan.cart));
+    }catch{return false;}
+    cartRef.current=plan.cart;setCart(plan.cart);return true;
+  };
   const importSyncedFavorite=(id,scope)=>{
     if(!WISHLIST_SYNC_ENABLED)return false;
     const now=wishlistSyncScopeRef.current;
@@ -3960,7 +3977,7 @@ export default function App() {
               {t.cart}
             </h2>
 
-            {CART_SYNC_ENABLED && !authLoading && !adminLoggedIn && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><CartSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getCart={()=>cartRef.current} validateStock={lines=>catalogueVerifiedEpoch===productsAccessEpoch.current&&validateCartReviewStock(lines,products)} lang={currentLang}/></Suspense>}
+            {CART_SYNC_ENABLED && !authLoading && !adminLoggedIn && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><CartSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getCart={()=>cartRef.current} validateStock={lines=>catalogueVerifiedEpoch===productsAccessEpoch.current&&validateCartReviewStock(lines,products)} planRestore={planSyncedCartRestore} restoreLine={restoreSyncedCartLine} lang={currentLang}/></Suspense>}
             {cart.length === 0 ? (
               <div className="gs-cart-empty flex flex-col items-center justify-center gap-3 text-center px-5 py-12 sm:py-16">
                 <span className="gs-cart-empty-icon flex items-center justify-center w-14 h-14 rounded-full border border-slate-200 bg-slate-50 text-slate-500">

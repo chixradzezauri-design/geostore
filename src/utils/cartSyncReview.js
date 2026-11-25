@@ -1,6 +1,7 @@
 // Candidate cart reconciliation. Local checkout remains untouched.
-import {projectCartIntents,validateCartSyncSnapshot,cartIntentKey,applyCartSyncIntent,validateCartIntentLines} from './cartSyncContract.js';
+import {projectCartIntents,validateCartSyncSnapshot,cartIntentKey,applyCartSyncIntent,validateCartIntentLines,normalizeCartIntentLine} from './cartSyncContract.js';
 import {getAvailableProductSizes,getAvailableProductColors,hasSizeColorInventory,hasCustomProductVariants,getProductSizeColorVariant,getCustomProductVariant} from './productVariants.js';
+import {sanitizeCartSnapshot} from './cartSafety.js';
 export const CART_SYNC_ENABLED=false;
 export function compareCartForReview(cart,snapshot){
  const local=projectCartIntents(cart),remote=validateCartSyncSnapshot(snapshot).lines;
@@ -44,4 +45,34 @@ export function planCartReviewPublish(cart,snapshot,line,validateStock){
   if(validateStock(next.snapshot.lines)!==true)return {status:'unavailable'};
   return {status:'ready',intent};
  }catch{return {status:'blocked'};}
+}
+
+// Restore one explicitly selected line, preserving unrelated local rows.
+// Prices come exclusively from the current catalogue, not the account snapshot.
+export function planCartReviewRestore(cart,line,products){
+ try{
+  const requested=normalizeCartIntentLine(line),local=projectCartIntents(cart),key=cartIntentKey(requested);
+  const index=local.findIndex(x=>cartIntentKey(x)===key);
+  const nextLines=index<0?[...local,requested]:local.map((x,i)=>i===index?requested:x);
+  if(!validateCartReviewStock(nextLines,products))return {status:'unavailable'};
+  const product=products.find(p=>p.id===requested.productId);
+  const variant=hasSizeColorInventory(product)?getProductSizeColorVariant(product,requested.size,requested.color):requested.variantId?getCustomProductVariant(product,requested.variantId):null;
+  const rawPrice=variant?variant.priceGEL:product.priceGEL??product.price_gel;
+  const price=Number(rawPrice);
+  if(rawPrice==null||String(rawPrice).trim()===''||!Number.isFinite(price)||price<0||!Number.isSafeInteger(Math.round(price*100)))return {status:'unavailable'};
+  const name=String(product.name??'').trim();
+  if(!name||name.length>300)return {status:'unavailable'};
+  const row={id:product.id,name,image:product.image||null,selectedSize:requested.size,selectedColor:requested.color,
+   customVariantId:requested.variantId,customVariantName:variant?.name||'',quantity:requested.quantity,
+   giftWrap:requested.giftWrap,vipWarranty:requested.vipWarranty,giftMessage:'',
+   basePriceGEL:price,priceGEL:price+(requested.giftWrap?5:0)+(requested.vipWarranty?15:0),stock:Number(variant?variant.stock:product.stock)};
+  const next=index<0?[...cart,row]:cart.map((x,i)=>i===index?row:x);
+  const safe=sanitizeCartSnapshot(next);
+  if(safe.length!==next.length||JSON.stringify(projectCartIntents(safe))!==JSON.stringify(nextLines))return {status:'blocked'};
+  // Do not sanitize or change unrelated local rows as a side effect.
+  return {status:'ready',cart:next,preview:{line:requested,name,priceGEL:row.priceGEL,basePriceGEL:price,localQuantity:index<0?0:local[index].quantity}};
+ }catch{return {status:'blocked'};}
+}
+export function matchesCartRestorePreview(expected,actual){
+ return Boolean(expected&&actual&&JSON.stringify(expected)===JSON.stringify(actual));
 }
