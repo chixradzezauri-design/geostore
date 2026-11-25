@@ -16,7 +16,7 @@ export function SignatureMobileNav({currentLang='ka',activeTab='store',menuOpen=
   })[currentLang] || ['მთავარი','კატეგორიები','ფავორიტები','პროფილი','მობილური ნავიგაცია'];
   return <nav className="gs-signature-mobile-nav" aria-label={labels[4]}>
     <button type="button" onClick={onHome} aria-current={activeTab==='store'&&!menuOpen?'page':undefined}><Home aria-hidden="true"/><span>{labels[0]}</span></button>
-    <button type="button" onClick={onCategories} aria-expanded={menuOpen}><LayoutGrid aria-hidden="true"/><span>{labels[1]}</span></button>
+    <button type="button" onClick={onCategories} aria-expanded={menuOpen} aria-controls={menuOpen ? "geostore-main-menu" : undefined}><LayoutGrid aria-hidden="true"/><span>{labels[1]}</span></button>
     <button type="button" onClick={onWishlist} aria-current={activeTab==='wishlist'?'page':undefined} aria-label={wishlistCount>0?labels[2]+' ('+wishlistCount+')':labels[2]}><Heart aria-hidden="true"/><span>{labels[2]}</span>{wishlistCount>0&&<small aria-hidden="true">{wishlistCount}</small>}</button>
     <button type="button" onClick={onProfile} aria-current={activeTab==='profile'?'page':undefined}><User aria-hidden="true"/><span>{labels[3]}</span></button>
   </nav>;

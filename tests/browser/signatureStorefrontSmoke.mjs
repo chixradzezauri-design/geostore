@@ -40,6 +40,28 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    });
    assert.ok(campaignBounds,'Single published campaign fills available width at '+width);
    assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),width<=640);
+   if(width<=640){
+     const nav=page.locator('.gs-signature-mobile-nav');
+     const categoriesControl=nav.getByRole('button',{name:'კატეგორიები'});
+     const geometry=await nav.evaluate(el=>{
+       const outer=el.getBoundingClientRect();
+       return [...el.querySelectorAll('button')].every(button=>{
+         const r=button.getBoundingClientRect();
+         return r.height>=44 && r.left>=outer.left-1 && r.right<=outer.right+1;
+       });
+     });
+     assert.ok(geometry,'Mobile nav targets fit at '+width);
+     await categoriesControl.click();
+     const menu=page.locator('#geostore-main-menu');
+     await menu.waitFor({state:'visible'});
+     assert.equal(await categoriesControl.getAttribute('aria-expanded'),'true');
+     assert.equal(await categoriesControl.getAttribute('aria-controls'),'geostore-main-menu');
+     assert.ok(await menu.evaluate(el=>el.scrollWidth<=el.clientWidth+2),'Mobile menu does not overflow horizontally');
+     await page.keyboard.press('Escape');
+     await menu.waitFor({state:'detached'});
+     assert.equal(await categoriesControl.getAttribute('aria-expanded'),'false');
+     assert.ok(await page.locator('.gs-menu-toggle').evaluate(el=>document.activeElement===el),'Escape restores menu trigger focus');
+   }
    const columns=await page.locator('[data-signature-products="true"]').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
    assert.equal(columns,width<360?1:width<=640?2:width<=1023?3:6,'Signature columns at '+width);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Signature horizontal overflow at '+width);
