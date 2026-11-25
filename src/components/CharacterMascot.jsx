@@ -132,12 +132,13 @@ function CharacterEffects({effect}){
   const seasonal=effect==='snow'||effect==='festive';
   return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:seasonal?8:5},(_,i)=><span key={i} style={{'--gs-effect-i':i,'--gs-effect-x':(i*37)%93+'%','--gs-effect-delay':(i%4)*.22+'s'}}>{symbols[effect][i%symbols[effect].length]}</span>)}</span>;
 }
-export function CharacterScene({character,settings,lang='ka',preview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,interactionNotice='',actionCount=0}){
+export function CharacterScene({character,settings,lang='ka',preview=false,interactivePreview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,interactionNotice='',actionCount=0}){
   const [variant]=useState(()=>Math.random());
   const [greetingDate]=useState(()=>new Date());
   const [waved,setWaved]=useState(false);
   const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
-  const hasGuideActions=!preview&&settings.interactiveGuide&&actionCount<4;
+  const showActions=!preview||interactivePreview;
+  const hasGuideActions=showActions&&settings.interactiveGuide&&actionCount<4;
   const wave=characterInteractionCopy(settings.interaction,lang);
   const target=Object.hasOwn(CHARACTER_GUIDE_TARGETS,guideTarget)?CHARACTER_GUIDE_TARGETS[guideTarget]:null;
   const location=conciergePlacement(settings,0);
@@ -154,8 +155,8 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
     <div className="gs-character-bubble">
       <strong>{character.name}</strong>{!waved&&advice&&<small className="gs-character-advice-label">{CONCIERGE_ADVICE_LABEL[lang]||CONCIERGE_ADVICE_LABEL.ka}</small>}<span aria-live={interactive?'polite':undefined} data-character-advice={waved?undefined:advice?.topic}>{waved?wave.reply:advice?.text||characterMessage(settings,character,lang,variant,greetingDate)}</span>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>{setWaved(true);onActivity?.();}}>{wave.button} {wave.emoji}</button>}
-      {!preview&&recommendation&&onRecommend&&<div className="gs-character-recommendation" data-character-sale={recommendation.sale?'true':undefined}><span>{recommendation.sale?saleCopy.intro:productCopy.intro}</span><strong>{recommendation.name}</strong>{recommendation.sale&&<div className="gs-character-sale-prices"><b>{money(recommendation.price)}</b><del>{money(recommendation.oldPrice)}</del><small>{saleCopy.saving}: {money(recommendation.savings)}</small></div>}<button type="button" className="gs-character-guide-action" data-character-product={recommendation.id} onClick={onRecommend}>{recommendation.sale?saleCopy.action:productCopy.action} <span aria-hidden="true">↗</span></button></div>}
-      {!preview&&!recommendation&&target&&onGuide&&<button type="button" className="gs-character-guide-action" data-character-guide={guideTarget} onClick={onGuide}><span aria-hidden="true">↗</span>{target.copy[lang]||target.copy.ka}</button>}
+      {showActions&&recommendation&&onRecommend&&<div className="gs-character-recommendation" data-character-sale={recommendation.sale?'true':undefined}><span>{recommendation.sale?saleCopy.intro:productCopy.intro}</span><strong>{recommendation.name}</strong>{recommendation.sale&&<div className="gs-character-sale-prices"><b>{money(recommendation.price)}</b><del>{money(recommendation.oldPrice)}</del><small>{saleCopy.saving}: {money(recommendation.savings)}</small></div>}<button type="button" className="gs-character-guide-action" data-character-product={recommendation.id} onClick={onRecommend}>{recommendation.sale?saleCopy.action:productCopy.action} <span aria-hidden="true">↗</span></button></div>}
+      {showActions&&!recommendation&&target&&onGuide&&<button type="button" className="gs-character-guide-action" data-character-guide={guideTarget} onClick={onGuide}><span aria-hidden="true">↗</span>{target.copy[lang]||target.copy.ka}</button>}
       {hasGuideActions&&<div className="gs-character-quick-actions" aria-label={lang==='en'?'Assistant actions':lang==='ru'?'Действия помощника':'დამხმარის მოქმედებები'}>
         {settings.advice?.enabled&&onNextTip&&<button type="button" data-character-next-tip onClick={()=>{setWaved(false);onNextTip();}}>{copy.tip}</button>}
         {(settings.recommendProducts||settings.saleGuide)&&onNextProduct&&<button type="button" data-character-next-product onClick={()=>{setWaved(false);onNextProduct();}}>{recommendation?.sale?copy.offer:copy.product}</button>}

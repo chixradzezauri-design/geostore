@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CONCIERGE_ADVICE,chooseConciergeAdvice} from '../utils/characterAdvice.js';
+import {CONCIERGE_ADVICE,chooseConciergeAdvice,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY} from '../utils/characterAdvice.js';
 import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason,CONCIERGE_PRESETS,applyConciergePreset} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
@@ -21,6 +21,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const s=normalizeCharacterSettings(siteSettings?.characterStudio);
   const [preview,setPreview]=useState(null);
   const [presetKey,setPresetKey]=useState('balanced');
+  const [demoOpen,setDemoOpen]=useState(false);
   const [presetUndo,setPresetUndo]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
@@ -102,12 +103,17 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       </div>
       <p>{CONCIERGE_PRESETS[presetKey].description}</p>
       {presetUndo&&JSON.stringify(s)===presetUndo.applied&&<div role="status" className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-200"><span>რეჟიმი გამოყენებულია მონახაზზე.</span><button type="button" data-character-undo-preset disabled={busy} onClick={undoPreset} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">გაუქმება</button></div>}
-      <div className="gs-concierge-summary" aria-label="აქტიური ფუნქციები">{[['რჩევები',s.advice.enabled],['პროდუქტები',s.recommendProducts],['აქციები',s.saleGuide],['ინტერაქცია',s.interactiveGuide],['საახალწლო',s.winterCelebration],['მინიშნებები',s.guideLinks]].map(([label,on])=><span key={label} data-enabled={on?'true':'false'}>{on?'✓':'–'} {label}</span>)}</div>
+      <div className="gs-concierge-summary" aria-label="აქტიური ფუნქციები">{[['რჩევები',s.advice.enabled,()=>update({advice:{...s.advice,enabled:!s.advice.enabled}})],['პროდუქტები',s.recommendProducts,()=>update({recommendProducts:!s.recommendProducts})],['აქციები',s.saleGuide,()=>update({saleGuide:!s.saleGuide})],['ინტერაქცია',s.interactiveGuide,()=>update({interactiveGuide:!s.interactiveGuide})],['საახალწლო',s.winterCelebration,()=>update({winterCelebration:!s.winterCelebration})],['მინიშნებები',s.guideLinks,()=>update({guideLinks:!s.guideLinks})]].map(([label,on,toggle])=><button type="button" key={label} disabled={busy} data-enabled={on?'true':'false'} aria-label={label+(on?' — გამორთვა':' — ჩართვა')} onClick={toggle}>{on?'✓':'–'} {label}</button>)}</div>
+      <p>ფუნქციის ღილაკზე დაჭერით პირდაპირ შეცვლი მის ჩართვას.</p>
       <p>რეჟიმები არ ცვლის საიტზე ჩართვის ღილაკს, მოწყობილობების არჩევანს, შენს ტექსტებს, ფერებს ან ინდივიდუალურ კალენდარს.</p>
     </div>
+    <div className="gs-concierge-demo-panel" data-character-functional-preview>
+      <div className="flex flex-wrap items-center justify-between gap-2"><div><h4 className="text-sm font-bold text-white">ფუნქციების გამოცდა</h4><p className="text-xs text-slate-300">გამოსცადე მოქმედებები გამოქვეყნების გარეშე.</p></div><button type="button" aria-expanded={demoOpen} className="rounded-lg border border-emerald-400 px-3 py-2 text-xs font-bold text-emerald-100 min-h-[44px]" onClick={()=>setDemoOpen(v=>!v)}>{demoOpen?'გამოცდის დახურვა':'გამოცდის გახსნა'}</button></div>
+      {demoOpen&&<ConciergeFunctionalDemo key={JSON.stringify(s)} settings={s} lang={lang}/>}
+    </div>
     <h4 className="text-sm font-bold text-white">პერსონაჟის არჩევა</h4>
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-      {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="mx-auto w-20 max-w-full"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
+    <div className="gs-character-roster">
+      {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'gs-character-roster-card min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="gs-character-roster-art"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
     </div>
     <details className="gs-character-admin-section" data-character-motion>
       <summary>მოძრაობა, დრო და მოწყობილობები</summary>
@@ -231,4 +237,30 @@ function PreviewPlayback({preview,lang}){
   const [visible,setVisible]=useState(false);
   useEffect(()=>{const timer=setTimeout(()=>setVisible(true),preview.settings.delay*1000);return()=>clearTimeout(timer);},[preview]);
   return visible?<CharacterScene character={preview.character} settings={preview.settings} lang={lang} preview/>:null;
+}
+
+function ConciergeFunctionalDemo({settings,lang}){
+  const [topic,setTopic]=useState('normal');
+  const [number,setNumber]=useState(0);
+  const [advice,setAdvice]=useState(null);
+  const [notice,setNotice]=useState('');
+  const [actions,setActions]=useState(0);
+  const [revision,setRevision]=useState(0);
+  const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
+  const reset=(value=topic)=>{setTopic(value);setNumber(0);setAdvice(null);setNotice('');setActions(0);setRevision(v=>v+1);};
+  const sale=topic==='sale',winter=topic==='winter';
+  const character=selectCharacter({...settings,rotation:'fixed',character:sale?'deal':winter?'santa':settings.character});
+  const effective={...settings,appearance:{...settings.appearance,renderMode:'vector'},behavior:settings.behavior==='still'?'wave':settings.behavior};
+  const canProduct=sale?settings.saleGuide:settings.recommendProducts;
+  const names=lang==='en'?['Sample wallet','Sample bag','Sample accessory']:lang==='ru'?['Пример кошелька','Пример сумки','Пример аксессуара']:['საცდელი საფულე','საცდელი ჩანთა','საცდელი აქსესუარი'];
+  const recommendation=canProduct?{id:'demo-'+number,name:names[number%names.length],...(sale?{sale:true,price:35+number*5,oldPrice:45+number*5,savings:10}:{})}:null;
+  const firstAdvice=settings.advice.enabled?chooseConciergeAdvice(settings.advice,{characterId:character.id,lang,hasProduct:!!recommendation}):null;
+  const act=fn=>{if(actions>=4)return;setActions(v=>v+1);fn();};
+  return <div className="gs-concierge-demo-content">
+    <label className="block text-xs text-slate-300">სატესტო სიტუაცია<select aria-label="სატესტო სიტუაცია" className={field} value={topic} onChange={e=>reset(e.target.value)}><option value="normal">ჩვეულებრივი რეკომენდაცია</option><option value="sale">მოქმედი აქციის მაგალითი</option><option value="winter">საახალწლო რჩევა</option><option value="guide">განყოფილებაზე მინიშნება</option></select></label>
+    <p className="text-xs text-slate-300">სატესტო მონაცემები და პირობითი ფასები. ღილაკები არ ხსნის ნამდვილ პროდუქტს და არ ცვლის საიტის მონაცემებს.</p>
+    {((sale&&!settings.saleGuide)||(winter&&!settings.winterCelebration)||(topic==='guide'&&!settings.guideLinks))&&<p role="status" className="text-xs text-amber-300">ეს შესაძლებლობა მონახაზში გამორთულია — ჩართე შესაბამისი ფუნქციის ღილაკით.</p>}
+    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||firstAdvice} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(settings.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))}/></div>
+    <div className="flex items-center justify-between gap-2"><span className="text-xs text-slate-300">მოქმედება: {actions}/4</span><button type="button" className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white min-h-[44px]" onClick={()=>reset()}>გამოცდის თავიდან დაწყება</button></div>
+  </div>;
 }

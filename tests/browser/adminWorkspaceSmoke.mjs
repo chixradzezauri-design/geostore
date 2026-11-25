@@ -195,6 +195,18 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await presets.locator('[data-character-apply-preset]').click();
           await presets.locator('[data-character-undo-preset]').waitFor({state:'visible'});
           assert.equal(await presets.locator('.gs-concierge-summary [data-enabled="true"]').count(),5);
+          const roster=studio.locator('.gs-character-roster');
+          assert.ok(await roster.evaluate(n=>getComputedStyle(n).gridTemplateColumns.split(' ').length)>=2,'Mobile roster must have at least two columns');
+          const demo=studio.locator('[data-character-functional-preview]');
+          await demo.getByRole('button',{name:'გამოცდის გახსნა'}).click();
+          await demo.locator('[data-character-next-tip]').click();
+          assert.ok(await demo.locator('[data-character-advice]').innerText());
+          const sample=await demo.locator('[data-character-product]').getAttribute('data-character-product');
+          await demo.locator('[data-character-next-product]').click();
+          assert.notEqual(await demo.locator('[data-character-product]').getAttribute('data-character-product'),sample);
+          await demo.locator('[data-character-product]').click();
+          assert.match(await demo.locator('[role="status"]').last().innerText(),/საცდელი მოქმედება/);
+          await demo.getByRole('button',{name:'გამოცდის დახურვა'}).click();
           await presets.locator('[data-character-undo-preset]').click();
           assert.equal(await presets.locator('[data-character-undo-preset]').count(),0);
           assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
