@@ -2,7 +2,7 @@ import React,{useRef,useState,useEffect} from 'react';
 import {summarizeSystemHistory,pageSystemHistory} from '../utils/systemHistoryStats.js';
 import {startSystemHistoryRefresh} from '../utils/systemHistoryRefresh.js';
 const labels={ka:['ტექნიკური მონიტორინგი','24 საათი','7 დღე','განახლება','მონაცემები ვერ ჩაიტვირთა','შეცდომები არ დაფიქსირებულა','საათი (UTC)','ტექნიკური კოდი','რაოდენობა'],en:['System monitoring','24 hours','7 days','Refresh','History unavailable','No recorded observations','Hour (UTC)','Technical code','Count'],ru:['Мониторинг системы','24 часа','7 дней','Обновить','История недоступна','Нет записей','Час (UTC)','Технический код','Количество']};
-export default function SystemMonitoringPanel({enabled=false,read,lang='ka'}){
+function MonitoringContent({read,lang='ka'}){
  const t=labels[lang]||labels.ka;
  const warningText={ka:'ამ საათში განმეორებითი სერვერული შეცდომებია — გადაამოწმეთ.',en:'Repeated server errors this hour — review required.',ru:'Повторные ошибки сервера за этот час — требуется проверка.'}[lang]||'ამ საათში განმეორებითი სერვერული შეცდომებია — გადაამოწმეთ.';
  const more={
@@ -16,7 +16,7 @@ export default function SystemMonitoringPanel({enabled=false,read,lang='ka'}){
  const gen=useRef(0),inFlight=useRef(false);
  useEffect(()=>()=>{gen.current++;},[]);
  async function refresh(h){
-  if(inFlight.current||!enabled)return;
+  if(inFlight.current)return;
   inFlight.current=true;
   const id=++gen.current;setPage(1);setState({status:'loading'});setLastRefresh(null);
   try{const r=await read(h);if(gen.current===id){setState(r);if(r.status==='ready')setLastRefresh(Date.now());}}
@@ -24,11 +24,10 @@ export default function SystemMonitoringPanel({enabled=false,read,lang='ka'}){
   finally{inFlight.current=false;}
  }
  useEffect(()=>{
-  if(!enabled||!autoRefresh)return undefined;
+  if(!autoRefresh)return undefined;
   return startSystemHistoryRefresh({refresh:()=>refresh(hours),visible:()=>document.visibilityState==='visible'});
- },[enabled,autoRefresh,hours,read]);
+ },[autoRefresh,hours,read]);
  const refreshLabels={ka:['ავტომატური განახლება (2 წუთი)','ბოლო განახლება'],en:['Auto-refresh (2 minutes)','Last refreshed'],ru:['Автообновление (2 минуты)','Последнее обновление']}[lang]||['ავტომატური განახლება (2 წუთი)','ბოლო განახლება'];
- if(!enabled)return null;
  const summary=state.status==='ready'?summarizeSystemHistory(state.rows):null;
  const paged=pageSystemHistory(state.status==='ready'?state.rows:[],page);
  return <section className="min-w-0 space-y-3 rounded-xl border border-slate-700 bg-slate-950 p-4 text-slate-100">
@@ -44,4 +43,10 @@ export default function SystemMonitoringPanel({enabled=false,read,lang='ka'}){
  {state.status==='ready'&&state.rows.length>0&&<div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead><tr>{t.slice(6).map(x=><th key={x} className="p-2">{x}</th>)}</tr></thead><tbody>{paged.rows.map(r=><tr key={r.hourAt+':'+r.code} className="border-t border-slate-800"><td className="p-2 whitespace-nowrap">{new Date(r.hourAt).toISOString().slice(0,16).replace('T',' ')}</td><td className="p-2 break-all">{r.code}</td><td className="p-2 tabular-nums">{r.count}</td></tr>)}</tbody></table></div>}
  {paged.pages>1&&<nav aria-label={t[0]} className="flex flex-wrap items-center justify-end gap-2 text-xs"><button type="button" disabled={paged.page===1} onClick={()=>setPage(paged.page-1)} className="rounded-lg border border-slate-600 p-2 disabled:opacity-40">{more[3]}</button><span>{paged.page} / {paged.pages}</span><button type="button" disabled={paged.page===paged.pages} onClick={()=>setPage(paged.page+1)} className="rounded-lg border border-slate-600 p-2 disabled:opacity-40">{more[4]}</button></nav>}
  </section>;
+}
+
+// Unmount on revocation, not just hide: cached history and refresh preference
+// must not reappear if access is later granted again.
+export default function SystemMonitoringPanel({enabled=false,...props}){
+ return enabled===true?<MonitoringContent {...props}/>:null;
 }

@@ -40,8 +40,33 @@ try{
    assert.equal(await panel.count(),0);
    assert.equal(await page.getByTestId('access').textContent(),'signed-out');
    assert.deepEqual(errors,[]);
-   await context.close();
    console.log('PASS isolated enabled MFA UI '+engine.name()+' invalid code, recheck, account switch');
+   await page.goto(host+'/tests/browser/systemMonitoringFixture.html',{waitUntil:'domcontentloaded'});
+   const heading=page.getByRole('heading',{name:'System monitoring'});
+   await heading.waitFor({state:'visible'});
+   assert.equal(await page.getByTestId('calls').textContent(),'0','No background read before opt-in');
+   const auto=page.getByRole('checkbox',{name:'Auto-refresh (2 minutes)'});
+   assert.equal(await auto.isChecked(),false);
+   await page.getByRole('button',{name:'Refresh',exact:true}).click();
+   await page.getByText('Repeated server errors this hour — review required.').waitFor({state:'visible'});
+   assert.equal(await page.locator('tbody tr').count(),20);
+   await page.getByRole('button',{name:'Next',exact:true}).click();
+   assert.equal(await page.locator('tbody tr').count(),1);
+   await page.getByRole('button',{name:'Hold next response'}).click();
+   await page.getByRole('button',{name:'Refresh',exact:true}).click();
+   await page.waitForFunction(()=>document.querySelector('[data-testid="waiting"]')?.textContent==='true');
+   await page.getByRole('button',{name:'Toggle access'}).click();
+   await heading.waitFor({state:'detached'});
+   await page.getByRole('button',{name:'Toggle access'}).click();
+   await heading.waitFor({state:'visible'});
+   await page.getByRole('button',{name:'Release response'}).click();
+   await page.waitForFunction(()=>document.querySelector('[data-testid="waiting"]')?.textContent==='false');
+   assert.equal(await page.locator('tbody tr').count(),0,'Revoked response must not reappear');
+   assert.equal(await auto.isChecked(),false);
+   assert.equal(await page.getByTestId('calls').textContent(),'2');
+   assert.deepEqual(errors,[]);
+   console.log('PASS isolated system monitoring '+engine.name()+' paging, warning, access revocation');
+   await context.close();
   }finally{await browser.close();}
  }
 }finally{server.kill('SIGTERM');}
