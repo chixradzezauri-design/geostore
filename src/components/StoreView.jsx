@@ -1,5 +1,6 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { getSignatureCampaignSlides, signatureSlideIndex } from '../utils/signatureHero.js';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import {productPath,categoryPath,findPublishedRouteProduct,resolveCatalogueCategory,shouldHandleCatalogueClick} from '../utils/catalogueSeo.js';
@@ -10,7 +11,7 @@ import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountd
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
+  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight, ChevronLeft, ChevronRight, Truck, RotateCcw, MessageCircle 
 } from 'lucide-react';
 
 
@@ -62,7 +63,11 @@ export default function StoreView({
   catalogueRoute=null,
   catalogueReady=false,
   catalogueProducts=[],
-  onCatalogueNavigate
+  onCatalogueNavigate,
+  onOpenTracker,
+  onOpenTerms,
+  onOpenPrivacy,
+  onOpenSupport
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -85,6 +90,25 @@ export default function StoreView({
   })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max' };
 
   const visualCopy = siteSettings?.visualDesign?.copy || {};
+  const signatureHero = siteSettings?.visualDesign?.signature2026 === true;
+  const serviceLabels = ({
+    ka: [['მიწოდება','შეკვეთის სტატუსი'],['დაბრუნების პირობები','წესები და პირობები'],['კონფიდენციალურობა','მონაცემთა დაცვის პოლიტიკა'],['მხარდაჭერა','დაგვიკავშირდი']],
+    en: [['Delivery','Track your order'],['Returns','Terms and conditions'],['Privacy','Data protection policy'],['Support','Contact us']],
+    ru: [['Доставка','Статус заказа'],['Возврат','Условия и правила'],['Конфиденциальность','Политика защиты данных'],['Поддержка','Связаться с нами']]
+  })[currentLang] || [['მიწოდება','შეკვეთის სტატუსი'],['დაბრუნების პირობები','წესები და პირობები'],['კონფიდენციალურობა','მონაცემთა დაცვის პოლიტიკა'],['მხარდაჭერა','დაგვიკავშირდი']];
+  const signatureServices = [
+    {Icon:Truck, action:onOpenTracker},
+    {Icon:RotateCcw, action:onOpenTerms},
+    {Icon:ShieldCheck, action:onOpenPrivacy},
+    {Icon:MessageCircle, action:onOpenSupport}
+  ].map((service,index)=>({...service, labels:serviceLabels[index]})).filter(service=>typeof service.action==='function');
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+  const campaignSlides = useMemo(() => signatureHero && siteSettings?.visualDesign?.sections?.banners !== false ? getSignatureCampaignSlides(banners) : [], [signatureHero, banners, siteSettings?.visualDesign?.sections?.banners]);
+  const heroSlideCount = 1 + campaignSlides.length;
+  const activeHeroIndex = signatureSlideIndex(heroSlideIndex, heroSlideCount);
+  const heroCampaign = activeHeroIndex > 0 ? campaignSlides[activeHeroIndex - 1] : null;
+  useEffect(() => { if (heroSlideIndex !== activeHeroIndex) setHeroSlideIndex(activeHeroIndex); }, [heroSlideIndex, activeHeroIndex]);
+  const heroNavLabels = currentLang === 'en' ? ['Previous slide', 'Next slide', 'Slide'] : currentLang === 'ru' ? ['Предыдущий слайд', 'Следующий слайд', 'Слайд'] : ['წინა სლაიდი', 'შემდეგი სლაიდი', 'სლაიდი'];
   const videoElementStyle = targetId => withStorefrontVideoTokens(buildStorefrontElementStyle(siteSettings?.visualDesign, targetId, visualEditorViewport), targetId);
   const customSections = normalizeStorefrontCustomSections(siteSettings?.visualDesign?.customSections);
 
@@ -595,27 +619,39 @@ export default function StoreView({
     hero: <>
       
       {/* GEOSTORE FASHION EDITORIAL HERO */}
-      <section data-visual-editor-target="hero" {...sectionGeometryProps('hero',videoElementStyle('hero'))} className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
-        <div data-visual-editor-target="hero.image" style={videoElementStyle('hero.image')} className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
+      <section data-visual-editor-target="hero" {...sectionGeometryProps('hero',videoElementStyle('hero'))} className="gs-fashion-hero gs-editorial-hero" data-signature-hero={signatureHero ? "true" : undefined} aria-label="GEOSTORE fashion collection">
+        <div data-visual-editor-target="hero.image" style={videoElementStyle('hero.image')} className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label={heroCampaign?.title || "Fashion editorial collection"}>{heroCampaign && <img src={heroCampaign.image} alt="" decoding="async" className="gs-signature-campaign-image" />}</div>
         <div className="gs-fashion-hero__content gs-editorial-hero-content">
           <span className="gs-fashion-eyebrow">{visualCopy.heroEyebrow || 'GEOSTORE / NEW SEASON'}</span>
-          <p className="gs-fashion-kicker">{visualCopy.heroKicker || storeText.styleKicker}</p>
-          <h1 data-visual-editor-target="hero.title" style={videoElementStyle('hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
-          <p data-visual-editor-target="hero.description" style={videoElementStyle('hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
+          {(!signatureHero || visualCopy.heroKicker) && <p className="gs-fashion-kicker">{visualCopy.heroKicker || storeText.styleKicker}</p>}
+          <h1 data-visual-editor-target="hero.title" style={videoElementStyle('hero.title')}>{heroCampaign?.title || (/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle))}</h1>
+          <p data-visual-editor-target="hero.description" style={videoElementStyle('hero.description')} className="gs-fashion-hero__description">{heroCampaign ? heroCampaign.subtitle : (/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle))}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { selectCatalogueCategory('ყველა'); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
-            <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
+            {heroCampaign?.link ? <a data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} href={heroCampaign.link} target="_blank" rel="noopener noreferrer" className="gs-fashion-primary">{visualCopy.bannerButtonText || storeText.viewCollection} <span aria-hidden="true">↗</span></a> : <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { selectCatalogueCategory('ყველა'); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>}
+            {(!signatureHero || visualCopy.heroNote) && <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>}
           </div>
         </div>
-        <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>{visualCopy.heroStampTop || 'CURATED'}</span><strong>{visualCopy.heroStampTitle || 'STYLE\nEDITION'}</strong><span>{visualCopy.heroStampBottom || 'GEORGIA · 2026'}</span></div>
+        {(!signatureHero || visualCopy.heroStampTop || visualCopy.heroStampTitle || visualCopy.heroStampBottom) && <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>{visualCopy.heroStampTop || 'CURATED'}</span><strong>{visualCopy.heroStampTitle || 'STYLE\nEDITION'}</strong><span>{visualCopy.heroStampBottom || 'GEORGIA · 2026'}</span></div>}
+        {signatureHero && heroSlideCount > 1 && <div className="gs-signature-hero-controls" role="group" aria-label={heroNavLabels[2]}>
+          <button type="button" aria-label={heroNavLabels[0]} onClick={() => setHeroSlideIndex((activeHeroIndex + heroSlideCount - 1) % heroSlideCount)}><ChevronLeft aria-hidden="true" /></button>
+          {Array.from({length:heroSlideCount}, (_, index) => <button key={index} type="button" className="gs-signature-hero-dot" aria-label={`${heroNavLabels[2]} ${index + 1}`} aria-pressed={activeHeroIndex === index} onClick={() => setHeroSlideIndex(index)}><span aria-hidden="true" /></button>)}
+          <button type="button" aria-label={heroNavLabels[1]} onClick={() => setHeroSlideIndex((activeHeroIndex + 1) % heroSlideCount)}><ChevronRight aria-hidden="true" /></button>
+        </div>}
       </section>
 
       {renderCustomSections('after-hero')}
     </>,
     banners: <>
+      {signatureHero && signatureServices.length > 0 && (
+        <section className="gs-signature-service-strip" aria-label={currentLang === 'en' ? 'Customer services' : currentLang === 'ru' ? 'Сервисы для покупателей' : 'მომხმარებლის სერვისები'}>
+          {signatureServices.map(({Icon,action,labels}) => <button key={labels[0]} type="button" onClick={action} className="gs-signature-service-link">
+            <Icon aria-hidden="true" size={24}/><span><strong>{labels[0]}</strong><small>{labels[1]}</small></span>
+          </button>)}
+        </section>
+      )}
 
       {Array.isArray(banners) && banners.length > 0 && (
-        <section data-visual-editor-target="banner" {...sectionGeometryProps('banners',videoElementStyle('banner'))} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
+        <section data-visual-editor-target="banner" {...sectionGeometryProps('banners',videoElementStyle('banner'))} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" data-signature-banners={signatureHero ? "true" : undefined} aria-label="GEOSTORE featured collections">
           {banners.slice(0, 4).map((banner) => {
             const imageUrl = String(banner?.image || '').trim();
             const targetUrl = String(banner?.link || '').trim();
@@ -625,12 +661,12 @@ export default function StoreView({
               if (['https:', 'http:'].includes(parsed.protocol)) safeTarget = parsed.href;
             } catch {}
             const content = (
-              <div data-visual-editor-target="banner.card" style={videoElementStyle('banner.card')} className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
+              <div data-visual-editor-target="banner.card" style={videoElementStyle('banner.card')} className="gs-signature-banner-card relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
                 {imageUrl && (
                   <img data-visual-editor-target="banner.image" style={videoElementStyle('banner.image')} src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
-                <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
+                <div className="gs-signature-banner-shade absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
+                <div className="gs-signature-banner-copy relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
                   <h2 data-visual-editor-target="banner.title" style={videoElementStyle('banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
                   {banner?.subtitle && <p data-visual-editor-target="banner.description" style={videoElementStyle('banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
                   {safeTarget && <span data-visual-editor-target="banner.button" style={videoElementStyle('banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
@@ -729,7 +765,7 @@ export default function StoreView({
     categories: <>
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div id="gs-video-collections" data-visual-editor-target="categories" {...sectionGeometryProps('categories',videoElementStyle('categories'))} className="gs-editorial-collections space-y-6">
+      <div id="gs-video-collections" data-visual-editor-target="categories" {...sectionGeometryProps('categories',videoElementStyle('categories'))} className="gs-editorial-collections space-y-6" data-signature-categories={signatureHero ? "true" : undefined}>
         <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 data-visual-editor-target="categories.title" style={videoElementStyle('categories.title')} className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -737,9 +773,10 @@ export default function StoreView({
             </h3>
             <p data-visual-editor-target="categories.description" style={videoElementStyle('categories.description')} className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
           </div>
-          <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
-            {processedProducts?.length || 0} {storeText.productsOnDisplay}
-          </span>
+          <div className="gs-signature-collection-tools">
+            <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">{processedProducts?.length || 0} {storeText.productsOnDisplay}</span>
+            {signatureHero && <button type="button" className="gs-signature-all-categories" aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory} onClick={() => selectCatalogueCategory('ყველა')}>{storeText.allCategories} <ArrowUpRight aria-hidden="true" size={16}/></button>}
+          </div>
         </div>
         
         {(selectedCategory !== 'ყველა' || selectedSubCategory) && (
@@ -770,7 +807,7 @@ export default function StoreView({
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
         <div className="gs-category-grid gs-catalog-category-grid gs-editorial-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div
+          {(!signatureHero || !(mainCategories.length || categories?.length)) && <div
             data-visual-editor-target="category.card"
             style={videoElementStyle('category.card')}
             role="button"
@@ -796,7 +833,7 @@ export default function StoreView({
               <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
               <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
             </div>
-          </div>
+          </div>}
 
           {(mainCategories.length > 0 ? mainCategories : (categories || []).map(c => typeof c === 'object' ? c : { id: c, name: c })).map(cat => {
             const catName = cat.name;
@@ -841,9 +878,10 @@ export default function StoreView({
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
                   </div>
                 </div>
-                <div className="z-10">
+                <div className="z-10 gs-signature-category-copy">
                   <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
                   <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
+                  {signatureHero && <span className="gs-signature-category-arrow" aria-hidden="true"><ArrowUpRight size={17}/></span>}
                 </div>
               </CategoryControl>
             );
@@ -986,7 +1024,8 @@ export default function StoreView({
           )}
         </div>
       ) : (
-        <div id="gs-catalog-products" {...sectionGeometryProps('products')} className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
+        <div id="gs-catalog-products" {...sectionGeometryProps('products')} data-signature-products={signatureHero ? "true" : undefined} className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
+          {signatureHero && <h2 className="gs-signature-products-heading">{currentLang === 'en' ? 'Products' : currentLang === 'ru' ? 'Товары' : 'პროდუქტები'} <span>{processedProducts.length}</span></h2>}
           {paginatedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -1120,7 +1159,7 @@ export default function StoreView({
   };
 
   return (
-    <div data-gs-dom-order="true" className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
+    <div data-gs-dom-order="true" data-signature-commerce={signatureHero ? "true" : undefined} className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       {sectionOrder.map(id=><React.Fragment key={id}>{sectionGroups[id]}</React.Fragment>)}
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}

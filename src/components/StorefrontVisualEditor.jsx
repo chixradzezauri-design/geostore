@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import StoreView from './StoreView';
 import Header from './Header';
+import { SignatureMobileNav } from './Header';
 import StorefrontFooter from './StorefrontFooter';
 import { supabase } from '../supabaseClient';
 import {
@@ -1269,7 +1270,7 @@ export default function StorefrontVisualEditor({
               <RangeControl label="პროდუქტის ფოტოს პროპორცია" value={activeLayout.productImageRatio} min={0.7} max={1.2} step={0.05} onChange={value => updateGroup('layout', 'productImageRatio', value)} />
               <RangeControl label="კატეგორიის ბარათის სიმაღლე" value={activeLayout.categoryCardHeight} min={110} max={260} step={5} unit=" px" onChange={value => updateGroup('layout', 'categoryCardHeight', value)} />
               <RangeControl label="კატეგორიები ერთ რიგში (Desktop)" value={activeLayout.categoryColumns} min={2} max={6} onChange={value => updateGroup('layout', 'categoryColumns', value)} />
-              <RangeControl label="პროდუქტები ერთ რიგში (Desktop)" value={activeLayout.productColumns} min={2} max={5} onChange={value => updateGroup('layout', 'productColumns', value)} />
+              <RangeControl label="პროდუქტები ერთ რიგში (Desktop)" value={activeLayout.productColumns} min={2} max={6} onChange={value => updateGroup('layout', 'productColumns', value)} />
               <RangeControl label="ბარათების კუთხეები" value={activeLayout.cardRadius} min={0} max={28} unit=" px" onChange={value => updateGroup('layout', 'cardRadius', value)} />
               <RangeControl label="ღილაკების კუთხეები" value={activeLayout.buttonRadius} min={0} max={28} unit=" px" onChange={value => updateGroup('layout', 'buttonRadius', value)} />
             </div>
@@ -1505,6 +1506,10 @@ export default function StorefrontVisualEditor({
             />
             <div className="gs-visual-preview-content">
               <StoreView
+                onOpenTracker={NOOP}
+                onOpenTerms={NOOP}
+                onOpenPrivacy={NOOP}
+                onOpenSupport={NOOP}
                 onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
                 siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
@@ -1533,6 +1538,7 @@ export default function StorefrontVisualEditor({
               setIsWarrantyOpen={NOOP}
               currentLang="ka"
             />
+            {previewDesign.signature2026 === true && previewMode === "mobile" && <SignatureMobileNav currentLang="ka" onHome={() => setPreviewCategory("ყველა")} onCategories={NOOP} onWishlist={NOOP} onProfile={NOOP}/>}
           </div>
         </div>
       </div>
