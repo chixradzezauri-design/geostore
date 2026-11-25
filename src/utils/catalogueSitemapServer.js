@@ -43,7 +43,7 @@ export async function fetchPublishedCatalogue(config,fetchImpl=fetch,{includeNam
  }while(rows.length<total);
  return rows;
 }
-export function createSitemapHandler(loadRows){
+export function createSitemapHandler(loadRows,reportError=()=>{}){
  return async function sitemap(req,res){
   const method=req.method;
   if(method!=='GET'&&method!=='HEAD'){
@@ -57,6 +57,7 @@ export function createSitemapHandler(loadRows){
    res.setHeader('X-Content-Type-Options','nosniff');
    return res.end(method==='HEAD'?undefined:xml);
   }catch{
+   try{await reportError('sitemap_upstream_error');}catch{/* Preserve failure response. */}
    // Never cache a partial or falsely empty sitemap on upstream failure.
    res.statusCode=503;res.setHeader('Content-Type','text/plain; charset=utf-8');res.setHeader('Cache-Control','no-store');res.setHeader('Retry-After','60');
    return res.end(method==='HEAD'?undefined:'Sitemap temporarily unavailable');

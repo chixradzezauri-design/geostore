@@ -69,7 +69,8 @@ export async function loadCataloguePage(config,path,fetchImpl=fetch){
  }
  return cataloguePageResponse(path);
 }
-export function createCataloguePageHandler({readShell,loadPage}){
+export function createCataloguePageHandler({readShell,loadPage,reportError=()=>{}}){
+ const report=async code=>{try{await reportError(code);}catch{/* Diagnostics cannot change the response contract. */}};
  return async function cataloguePage(req,res){
   const method=req.method;
   res.setHeader('Cache-Control','no-store');
@@ -80,7 +81,7 @@ export function createCataloguePageHandler({readShell,loadPage}){
   const path=resolveServerCataloguePath(req);
   let page;
   try{page=path?await loadPage(path):cataloguePageResponse(null);}
-  catch{page=cataloguePageResponse(path,{upstreamFailed:true});}
+  catch{page=cataloguePageResponse(path,{upstreamFailed:true});await report('catalogue_upstream_error');}
   try{
    const body=renderCatalogueHtml(await readShell(),page);
    res.statusCode=page.status;res.setHeader('Content-Type','text/html; charset=utf-8');
@@ -90,6 +91,7 @@ export function createCataloguePageHandler({readShell,loadPage}){
    else if(page.status===503)res.setHeader('Retry-After','60');
    return res.end(method==='HEAD'?undefined:body);
   }catch{
+   await report('catalogue_render_error');
    res.statusCode=503;res.setHeader('Cache-Control','no-store');res.setHeader('Retry-After','60');res.setHeader('Content-Type','text/plain; charset=utf-8');
    return res.end(method==='HEAD'?undefined:'GEOSTORE temporarily unavailable');
   }
