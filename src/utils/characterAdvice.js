@@ -56,3 +56,18 @@ export function conciergeInteractionDeadline(start,now,actions){
  if(!Number.isFinite(start)||!Number.isFinite(now)||now<start||!Number.isInteger(actions)||actions<1||actions>4)return null;
  return Math.max(0,Math.min(24000-(now-start),9000));
 }
+
+export const CONCIERGE_HELP_COPY=Object.freeze({
+ ka:{title:'რით დაგეხმარო?',gift:'საჩუქრის იდეა',budget:'ბიუჯეტური ნივთი',sale:'მოქმედი აქცია',noGift:'ამ პირობებით ნივთი ჯერ არ არის ხელმისაწვდომი.',noSale:'ამ პირობებით მოქმედი აქცია არ მოიძებნა.',budgetTip:'ბიუჯეტის ფარგლებში შეარჩიე სასურველი ნივთი.'},
+ en:{title:'How can I help?',gift:'Gift idea',budget:'Budget item',sale:'Current offer',noGift:'No available item matches these settings.',noSale:'No current offer matches these settings.',budgetTip:'Choose an item within your budget.'},
+ ru:{title:'Чем помочь?',gift:'Идея подарка',budget:'Недорогой товар',sale:'Текущая акция',noGift:'Нет доступного товара по этим условиям.',noSale:'Нет действующей акции по этим условиям.',budgetTip:'Выбирай товар в пределах бюджета.'}
+});
+export function conciergeHelpChoices(settings){
+ if(!settings?.interactiveGuide||!settings.helpChoices)return [];
+ return [...(settings.recommendProducts?['gift','budget']:[]),...(settings.saleGuide?['sale']:[])];
+}
+export function conciergeHelpRequest(settings,type){
+ if(!conciergeHelpChoices(settings).includes(type))return null;
+ const cap=Number.isFinite(settings.recommendationBudget)&&settings.recommendationBudget>0?settings.recommendationBudget:0;
+ return {sale:type==='sale',mode:settings.recommendationMode==='context'?'context':type==='sale'?settings.recommendationMode:'variety',budget:type==='budget'?(cap?Math.min(cap,50):50):cap,topic:type==='gift'?'gifts': 'prices'};
+}

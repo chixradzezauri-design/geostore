@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CONCIERGE_ADVICE,chooseConciergeAdvice,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY} from '../utils/characterAdvice.js';
+import {CONCIERGE_ADVICE,chooseConciergeAdvice,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeHelpRequest,CONCIERGE_HELP_COPY} from '../utils/characterAdvice.js';
 import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason,CONCIERGE_PRESETS,applyConciergePreset,CHARACTER_PROFILE_ROLES,applyCharacterProfile,applyRecommendedCharacterRoles} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
@@ -185,6 +185,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
         <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.waveBack} disabled={busy} onChange={e=>update({waveBack:e.target.checked})}/> მომხმარებელს შეუძლია საპასუხოდ ხელი დაუქნიოს ან სხვა ჟესტი აირჩიოს</label>
         {s.waveBack&&choose('interaction','საპასუხო ჟესტი')}
         <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.interactiveGuide} disabled={busy} onChange={e=>update({interactiveGuide:e.target.checked})}/> ინტერაქტიული დამხმარე — სხვა რჩევა, სხვა ნივთი, მადლობა</label>
+        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.helpChoices} disabled={busy||!s.interactiveGuide} onChange={e=>update({helpChoices:e.target.checked})}/> მომხმარებლის არჩევანი — საჩუქარი, 50 ₾-მდე ნივთი, მოქმედი აქცია</label><p className="text-xs text-slate-300">ბიუჯეტური არჩევანი იცავს უფრო დაბალ ადმინისტრატორის ლიმიტსაც. მხოლოდ ჩართული შეთავაზებები გამოჩნდება.</p>
         <p className="text-xs text-slate-300">ღილაკები მუშაობს მხოლოდ ჩართული რჩევებისა და რეკომენდაციების ფარგლებში. თითო გამოჩენაზე მაქსიმუმ 4 მოქმედება და 24 წამი.</p>
       </div>
       {s.message&&<p className="text-xs text-amber-300">ზემოთ ჩაწერილი ინდივიდუალური ტექსტი უპირატესია ყველა რეჟიმზე. ბიბლიოთეკის გამოსაყენებლად გაასუფთავეთ ის ველი.</p>}
@@ -269,28 +270,32 @@ function PreviewPlayback({preview,lang}){
 function ConciergeFunctionalDemo({settings,lang}){
   const [topic,setTopic]=useState('normal');
   const [number,setNumber]=useState(0);
+  const [help,setHelp]=useState(null);
   const [advice,setAdvice]=useState(null);
   const [notice,setNotice]=useState('');
   const [actions,setActions]=useState(0);
   const [revision,setRevision]=useState(0);
   const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
-  const reset=(value=topic)=>{setTopic(value);setNumber(0);setAdvice(null);setNotice('');setActions(0);setRevision(v=>v+1);};
+  const reset=(value=topic)=>{setTopic(value);setNumber(0);setHelp(null);setAdvice(null);setNotice('');setActions(0);setRevision(v=>v+1);};
   const sale=topic==='sale',winter=topic==='winter'||topic==='snowman';
   const theme=winter?CHARACTER_EVENT_THEMES[topic==='snowman'?'snowman':'santa']:sale?CHARACTER_EVENT_THEMES.blackfriday:null;
   const themed=theme?{...settings,character:theme.character,rotation:'fixed',season:theme.season,effect:winter&&!settings.winterEffects?'none':theme.effect,behavior:theme.behavior,message:theme.lines[lang]||theme.lines.ka}:settings;
   const character=selectCharacter({...themed,rotation:'fixed'});
   const configured=applyCharacterProfile(themed,character.id,lang,{preserveEvent:!!theme});
   const effective={...configured,appearance:{...configured.appearance,renderMode:'vector'},behavior:configured.behavior==='still'?'wave':configured.behavior};
-  const canProduct=sale?effective.saleGuide:effective.recommendProducts;
+  const sampleSale=help?help.sale:sale;
+  const samplePrice=35+number*5;
+  const sampleBudget=help?.budget??effective.recommendationBudget;
+  const canProduct=(sampleSale?effective.saleGuide:effective.recommendProducts)&&(!sampleBudget||samplePrice<=sampleBudget);
   const names=lang==='en'?['Sample wallet','Sample bag','Sample accessory']:lang==='ru'?['Пример кошелька','Пример сумки','Пример аксессуара']:['საცდელი საფულე','საცდელი ჩანთა','საცდელი აქსესუარი'];
-  const recommendation=canProduct?{id:'demo-'+number,name:names[number%names.length],...(sale?{sale:true,price:35+number*5,oldPrice:45+number*5,savings:10}:{})}:null;
+  const recommendation=canProduct?{id:'demo-'+number,name:names[number%names.length],...(sampleSale?{sale:true,price:samplePrice,oldPrice:samplePrice+10,savings:10}:{})}:null;
   const firstAdvice=effective.advice.enabled?chooseConciergeAdvice(effective.advice,{characterId:character.id,lang,hasProduct:!!recommendation}):null;
   const act=fn=>{if(actions>=4)return;setActions(v=>v+1);fn();};
   return <div className="gs-concierge-demo-content">
     <label className="block text-xs text-slate-300">სატესტო სიტუაცია<select aria-label="სატესტო სიტუაცია" className={field} value={topic} onChange={e=>reset(e.target.value)}><option value="normal">ჩვეულებრივი რეკომენდაცია</option><option value="sale">მოქმედი აქციის მაგალითი</option><option value="winter">Santa — საჩუქრის რჩევა</option><option value="snowman">Snowy — ზამთრის ეფექტი</option><option value="guide">განყოფილებაზე მინიშნება</option></select></label>
     <p className="text-xs text-slate-300">სატესტო მონაცემები და პირობითი ფასები. ღილაკები არ ხსნის ნამდვილ პროდუქტს და არ ცვლის საიტის მონაცემებს.</p>
     {((sale&&!settings.saleGuide)||(winter&&!settings.winterCelebration)||(topic==='guide'&&!settings.guideLinks))&&<p role="status" className="text-xs text-amber-300">ეს შესაძლებლობა მონახაზში გამორთულია — ჩართე შესაბამისი ფუნქციის ღილაკით.</p>}
-    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||(winter?null:firstAdvice)} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(effective.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))}/></div>
+    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||(winter?null:firstAdvice)} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(effective.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))} onHelp={type=>{const request=conciergeHelpRequest(effective,type);if(request)act(()=>{setHelp(request);setNumber(0);setAdvice(chooseConciergeAdvice({...effective.advice,topic:request.topic},{lang,index:actions}));setNotice((CONCIERGE_HELP_COPY[lang]||CONCIERGE_HELP_COPY.ka)[type]);});}}/></div>
     <div className="flex items-center justify-between gap-2"><span className="text-xs text-slate-300">მოქმედება: {actions}/4</span><button type="button" className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white min-h-[44px]" onClick={()=>reset()}>გამოცდის თავიდან დაწყება</button></div>
   </div>;
 }

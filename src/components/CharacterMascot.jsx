@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {CHARACTERS,CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS,applyCharacterProfile,chooseCharacterGuideTarget,blackFridayWindow} from '../utils/characterStudio.js';
 import './characterStudio.css';
-import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeInteractionDeadline} from '../utils/characterAdvice.js';
+import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeInteractionDeadline,CONCIERGE_HELP_COPY,conciergeHelpChoices,conciergeHelpRequest} from '../utils/characterAdvice.js';
 import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY,conciergeSaleProducts,chooseConciergeSale,CONCIERGE_SALE_COPY,conciergeRecommendationPool} from '../utils/characterRecommendations.js';
 import {MASCOT_3D_IDS} from '../utils/mascot3DModels.js';
 const FlagshipFox3D=React.lazy(()=>import('./FlagshipFox3D.jsx'));
@@ -132,11 +132,13 @@ function CharacterEffects({effect}){
   const seasonal=effect==='snow'||effect==='festive';
   return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:seasonal?8:5},(_,i)=><span key={i} style={{'--gs-effect-i':i,'--gs-effect-x':(i*37)%93+'%','--gs-effect-delay':(i%4)*.22+'s'}}>{symbols[effect][i%symbols[effect].length]}</span>)}</span>;
 }
-export function CharacterScene({character,settings,lang='ka',preview=false,interactivePreview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,interactionNotice='',actionCount=0}){
+export function CharacterScene({character,settings,lang='ka',preview=false,interactivePreview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,onHelp,interactionNotice='',actionCount=0}){
   const [variant]=useState(()=>Math.random());
   const [greetingDate]=useState(()=>new Date());
   const [waved,setWaved]=useState(false);
   const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
+  const helpCopy=CONCIERGE_HELP_COPY[lang]||CONCIERGE_HELP_COPY.ka;
+  const helpOptions=onHelp?conciergeHelpChoices(settings):[];
   const showActions=!preview||interactivePreview;
   const hasGuideActions=showActions&&settings.interactiveGuide&&actionCount<4;
   const wave=characterInteractionCopy(settings.interaction,lang);
@@ -162,6 +164,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,inter
         {(settings.recommendProducts||settings.saleGuide)&&onNextProduct&&<button type="button" data-character-next-product onClick={()=>{setWaved(false);onNextProduct();}}>{recommendation?.sale?copy.offer:copy.product}</button>}
         {onThanks&&<button type="button" data-character-thanks onClick={onThanks}>{copy.thanks}</button>}
       </div>}
+      {hasGuideActions&&helpOptions.length>0&&<div className="gs-character-help-options"><small>{helpCopy.title}</small><div>{helpOptions.map(type=><button key={type} type="button" data-character-help={type} onClick={()=>{setWaved(false);onHelp(type);}}>{helpCopy[type]}</button>)}</div></div>}
       {interactionNotice&&<small className="gs-character-interaction-notice" role="status">{interactionNotice}</small>}
       {!preview&&onMute&&<button type="button" className="gs-character-mute" onClick={onMute}>{lang==='en'?'Hide for this visit':lang==='ru'?'Скрыть на этот визит':'ამ ვიზიტზე დამალვა'}</button>}
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
@@ -290,24 +293,34 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
     document.addEventListener('focusin',focus);
     return()=>{disposed=true;clear();dismissRef.current=null;extendRef.current=null;document.removeEventListener('visibilitychange',visibility);document.removeEventListener('focusin',focus);};
   },[settingsKey,lang,forceReplay]);
-  const recommendation=presentation?.recommendationId?conciergeRecommendationPool(presentation.sale?conciergeSaleProducts(products,catalogueReady,saleClock):conciergeProducts(products,catalogueReady),{mode:presentation.settings.recommendationMode,category,budget:presentation.settings.recommendationBudget}).find(p=>p.id===presentation.recommendationId)||null:null;
+  const recommendation=presentation?.recommendationId?conciergeRecommendationPool(presentation.sale?conciergeSaleProducts(products,catalogueReady,saleClock):conciergeProducts(products,catalogueReady),{mode:presentation.helpFilter?.mode??presentation.settings.recommendationMode,category,budget:presentation.helpFilter?.budget??presentation.settings.recommendationBudget}).find(p=>p.id===presentation.recommendationId)||null:null;
   useEffect(()=>{
     if(!recommendation?.sale)return;
     const timer=setTimeout(()=>setSaleClock(Date.now()),Math.min(24000,Math.max(0,recommendation.endsAt-Date.now()+1)));
     return()=>clearTimeout(timer);
   },[recommendation?.sale,recommendation?.endsAt,saleClock]);
-  const act=(type)=>{
-    if(!presentation||!presentation.settings.interactiveGuide||!extendRef.current?.())return;
+  const act=(type,helpType)=>{
+    if(!presentation||!presentation.settings.interactiveGuide)return;
+    const request=type==='help'?conciergeHelpRequest(presentation.settings,helpType):null;
+    if(type==='help'&&!request)return;
+    if(!extendRef.current?.())return;
     const current=catalogueRef.current;
     const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
     const actionCount=actionsRef.current;
-    if(type==='tip'){
+    if(type==='help'){
+      const now=Date.now();const options={ready:current.ready,now,mode:request.mode,category:current.category,budget:request.budget,index:actionCount-1};
+      const next=request.sale?chooseConciergeSale(current.products,options):chooseConciergeProduct(current.products,options);
+      const words=CONCIERGE_HELP_COPY[lang]||CONCIERGE_HELP_COPY.ka;
+      const tip=presentation.settings.advice.enabled?chooseConciergeAdvice({...presentation.settings.advice,topic:request.topic},{lang,index:actionCount,hasProduct:!!next}):null;
+      if(next){lastRecommendedId.current=next.id;setSaleClock(now);}
+      setPresentation(previous=>previous?{...previous,recommendationId:next?.id,sale:request.sale,helpFilter:request,advice:tip||previous.advice,interactionNotice:next?(helpType==='budget'?words.budgetTip:''):(request.sale?words.noSale:words.noGift),actionCount}:previous);
+    }else if(type==='tip'){
       const tip=nextConciergeAdvice(presentation.settings.advice,presentation.advice,{lang,index:actionCount});
       setPresentation(previous=>previous?{...previous,advice:tip||previous.advice,interactionNotice:'',actionCount}:previous);
     }else if(type==='product'){
       const now=Date.now();
       const saleOnly=presentation.sale||(!presentation.settings.recommendProducts&&presentation.settings.saleGuide);
-      const available=conciergeRecommendationPool(saleOnly?conciergeSaleProducts(current.products,current.ready,now):conciergeProducts(current.products,current.ready),{mode:presentation.settings.recommendationMode,category:current.category,budget:presentation.settings.recommendationBudget});
+      const available=conciergeRecommendationPool(saleOnly?conciergeSaleProducts(current.products,current.ready,now):conciergeProducts(current.products,current.ready),{mode:presentation.helpFilter?.mode??presentation.settings.recommendationMode,category:current.category,budget:presentation.helpFilter?.budget??presentation.settings.recommendationBudget});
       const alternatives=available.filter(p=>p.id!==presentation.recommendationId);
       const next=alternatives.length?alternatives[(actionCount-1)%alternatives.length]:null;
       if(next){lastRecommendedId.current=next.id;setSaleClock(now);}
@@ -316,5 +329,5 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       setPresentation(previous=>previous?{...previous,interactionNotice:type==='thanks'?copy.reply:'',actionCount}:previous);
     }
   };
-  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} advice={presentation.advice} recommendation={recommendation} actionCount={presentation.actionCount} interactionNotice={presentation.interactionNotice} onNextTip={()=>act('tip')} onNextProduct={()=>act('product')} onThanks={()=>act('thanks')} onActivity={()=>act('gesture')} onRecommend={()=>{const current=catalogueRef.current;const product=conciergeRecommendationPool(presentation.sale?conciergeSaleProducts(current.products,current.ready,Date.now()):conciergeProducts(current.products,current.ready),{mode:presentation.settings.recommendationMode,category:current.category,budget:presentation.settings.recommendationBudget}).find(p=>p.id===presentation.recommendationId);if(product&&current.onOpenProduct?.(product.path))dismissRef.current?.(false);}} guideTarget={presentation.guideTarget} onGuide={()=>{if(guideToSection(presentation.guideTarget))dismissRef.current?.(false);}} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
+  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} advice={presentation.advice} recommendation={recommendation} actionCount={presentation.actionCount} interactionNotice={presentation.interactionNotice} onNextTip={()=>act('tip')} onNextProduct={()=>act('product')} onThanks={()=>act('thanks')} onHelp={type=>act('help',type)} onActivity={()=>act('gesture')} onRecommend={()=>{const current=catalogueRef.current;const product=conciergeRecommendationPool(presentation.sale?conciergeSaleProducts(current.products,current.ready,Date.now()):conciergeProducts(current.products,current.ready),{mode:presentation.helpFilter?.mode??presentation.settings.recommendationMode,category:current.category,budget:presentation.helpFilter?.budget??presentation.settings.recommendationBudget}).find(p=>p.id===presentation.recommendationId);if(product&&current.onOpenProduct?.(product.path))dismissRef.current?.(false);}} guideTarget={presentation.guideTarget} onGuide={()=>{if(guideToSection(presentation.guideTarget))dismissRef.current?.(false);}} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
 }

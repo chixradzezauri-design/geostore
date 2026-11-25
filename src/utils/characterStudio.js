@@ -163,7 +163,7 @@ export function normalizeCharacterSettings(raw){
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
     winterCelebration:s.winterCelebration===true,winterStyle:pick(s.winterStyle,['alternate','santa','snowman'],'alternate'),winterEffects:s.winterEffects!==false,winterPeriod:pick(s.winterPeriod,['standard','extended','short'],'standard'),blackFridayBoost:s.blackFridayBoost===true,
     effect:pick(s.effect,['none','sparkles','hearts','confetti','snow','festive'],'none'),waveBack:s.waveBack===true,
-    interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),interactiveGuide:s.interactiveGuide===true,
+    interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),interactiveGuide:s.interactiveGuide===true,helpChoices:s.helpChoices===true,
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right','alternate'],'left'),
