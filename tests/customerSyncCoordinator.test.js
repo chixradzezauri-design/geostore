@@ -80,3 +80,6 @@ test('status copy is localized and unknown failures never claim success',()=>{
  assert.equal(getCustomerSyncStatus('offline','ka').attention,false);
  assert.equal(getCustomerSyncStatus('bogus','ru').attention,true);
 });
+
+test('reversed local intent stays in journal and does not issue mutation',async()=>{const f=fixture();await f.coordinator.enqueue('wishlist',base,intent);const c=createCustomerSyncCoordinator({...f.options,canSendIntent:()=>false});assert.equal((await c.reconnect('wishlist')).status,'review');assert.equal(f.calls.length,1);assert.equal(readPendingSync(f.storage,A,'wishlist').entry.state,'queued');});
+test('explicit discard checks exact journal entry and never changes server',async()=>{const f=fixture();await f.coordinator.enqueue('wishlist',base,intent);const entry=readPendingSync(f.storage,A,'wishlist').entry;assert.equal((await f.coordinator.discard('wishlist',entry,false)).status,'review');assert.equal((await f.coordinator.discard('wishlist',{...entry,intent:{productId:'other',present:true}},true)).status,'blocked');assert.equal((await f.coordinator.discard('wishlist',entry,true)).status,'cleared');assert.equal(f.calls.length,0);});

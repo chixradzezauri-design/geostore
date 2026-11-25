@@ -2,7 +2,7 @@
 // Without Web Locks, fail closed: localStorage read/modify/write is not a mutex.
 import {pendingSyncKey,readPendingSync,savePendingSync,markPendingAttempt,planPendingSync,clearPendingSync} from './customerSyncJournal.js';
 
-export function createCustomerSyncCoordinator({enabled=false,locks,storage,transport,getContext,isOnline=()=>true}={}){
+export function createCustomerSyncCoordinator({enabled=false,locks,storage,transport,getContext,isOnline=()=>true,canSendIntent=()=>true}={}){
  async function run(kind,task){
   if(enabled!==true)return {status:'disabled'};
   if(!locks||typeof locks.request!=='function')return {status:'unsupported'};
@@ -42,6 +42,8 @@ export function createCustomerSyncCoordinator({enabled=false,locks,storage,trans
   if(read.ownerId!==ownerId||read.epoch!==epoch)return {status:'inactive'};
   const plan=planPendingSync(pending.entry,read.snapshot);
   if(plan.status!=='send-original')return plan;
+  // Never send an old local intent after the user has reversed it.
+  if(canSendIntent(kind,plan.intent)!==true)return {status:'review',snapshot:read.snapshot};
   let entry=pending.entry;
   if(entry.state==='queued'){
    const marked=markPendingAttempt(storage,entry);
@@ -49,6 +51,7 @@ export function createCustomerSyncCoordinator({enabled=false,locks,storage,trans
    entry=marked.entry;
   }
   if(!active())return {status:'inactive'};
+  if(canSendIntent(kind,plan.intent)!==true)return {status:'review',snapshot:read.snapshot};
   // The transport verifies the exact original base immediately before sending.
   const result=await api.change(plan.intent,{ownerId,epoch,base:entry.base});
   if(!active())return {status:'inactive'};
