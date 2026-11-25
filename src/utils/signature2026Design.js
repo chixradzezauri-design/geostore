@@ -39,7 +39,7 @@ export function applySignature2026Design(raw) {
     }
   ]));
   return normalizeStorefrontVisualDesign({
-    ...design, theme, typography, layout, responsive,
+    ...design, signature2026: true, theme, typography, layout, responsive,
     sectionOrder: [...SIGNATURE_SECTION_ORDER],
     hero: { ...design.hero, overlayOpacity: 40, imagePositionX: 65 }
   });

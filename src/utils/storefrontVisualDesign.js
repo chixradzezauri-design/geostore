@@ -257,6 +257,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
 
   return {
     version: 1,
+    ...(raw.signature2026 === true ? { signature2026: true } : {}),
     theme: {
       canvas: safeColor(theme.canvas, defaults.theme.canvas),
       surface: safeColor(theme.surface, defaults.theme.surface),

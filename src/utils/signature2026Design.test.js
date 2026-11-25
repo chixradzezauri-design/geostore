@@ -32,3 +32,9 @@ test('Signature preset preserves content, visibility, product order and granular
   assert.deepEqual(result.responsive.mobile.sectionGeometry, before.responsive.mobile.sectionGeometry);
   assert.deepEqual(applySignature2026Design(result), result);
 });
+
+ test('Signature header activation survives draft normalization and legacy layouts stay unchanged', () => {
+  assert.equal(normalizeStorefrontVisualDesign({}).signature2026, undefined);
+  assert.equal(normalizeStorefrontVisualDesign({signature2026:'true'}).signature2026, undefined);
+  assert.equal(normalizeStorefrontVisualDesign(applySignature2026Design({})).signature2026, true);
+ });

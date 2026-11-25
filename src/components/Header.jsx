@@ -1,5 +1,5 @@
 // src/components/Header.jsx - Unified, compact and responsive GEOSTORE navigation
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera,
   Sparkles, Scale, PackageCheck, Bell, Shirt, Globe, MessageCircle,
@@ -40,6 +40,9 @@ export default function Header({
   setCurrLang
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const signature = visualDesign?.signature2026 === true && activeTab !== 'admin';
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchId = useId();
   const headerRef = useRef(null);
   const menuToggleRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -86,6 +89,10 @@ export default function Header({
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (signature && searchOpen && activeTab === 'store') searchInputRef.current?.focus();
+  }, [signature, searchOpen, activeTab]);
+
   const linkClass = (tab) =>
     `gs-menu-link${activeTab === tab ? ' is-active' : ''}`;
   const mainCategories = (categories || []).filter((category) => !category?.parentId);
@@ -109,8 +116,17 @@ export default function Header({
   const categoryName = (category) => typeof category === 'string' ? category : (category?.name || '');
   const visualStyle = targetId => withStorefrontVideoTokens(buildStorefrontElementStyle(visualDesign, targetId, visualEditorViewport), targetId);
 
+  const searchVisible = !signature || searchOpen || Boolean(searchQuery);
+  const searchLabel = currentLang === 'en' ? 'Search products' : currentLang === 'ru' ? 'Поиск товаров' : 'პროდუქტის ძებნა';
+  const openSearch = () => {
+    closeMenu();
+    if (activeTab !== 'store') goTo('store');
+    if (searchOpen && activeTab === 'store') { searchInputRef.current?.focus(); return; }
+    setSearchOpen(true);
+  };
+
   return (
-    <header ref={headerRef} data-visual-editor-target="header" style={visualStyle('header')} className={`gs-site-header${menuOpen ? ' is-menu-open' : ''}`}>
+    <header ref={headerRef} data-visual-editor-target="header" style={visualStyle('header')} className={`gs-site-header${signature ? ' gs-signature-header' : ''}${menuOpen ? ' is-menu-open' : ''}`}>
       <div data-visual-editor-target="header.announcement" style={visualStyle('header.announcement')} className="gs-site-announcement">
         <Sparkles aria-hidden="true" />
         <span data-visual-editor-target="header.announcement.text" style={visualStyle('header.announcement.text')}>{siteSettings?.topBarText || t.topBarText}</span>
@@ -132,6 +148,16 @@ export default function Header({
           </span>
         </button>
 
+        {signature && (
+          <nav className="gs-signature-category-nav" aria-label={categoryLabel}>
+            {mainCategories.filter(category => categoryName(category)).slice(0, 4).map((category, index) => {
+              const name = categoryName(category);
+              return <button key={category?.id || name || index} type="button" aria-pressed={activeTab === 'store' && selectedCategory === name} onClick={() => { setSelectedCategory?.(name); goTo('store'); }}>{name}</button>;
+            })}
+            <button type="button" className="gs-signature-all" onClick={() => { setSelectedCategory?.('ყველა'); goTo('store'); }}>{allCategoriesLabel}</button>
+          </nav>
+        )}
+
         <button
           type="button"
           ref={menuToggleRef}
@@ -143,10 +169,16 @@ export default function Header({
         >
           {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
+        {signature && <div className="gs-signature-actions">
+          <button type="button" aria-label={searchLabel} aria-expanded={activeTab === 'store' && searchVisible} aria-controls={activeTab === 'store' ? searchId : undefined} onClick={openSearch}><Search aria-hidden="true" /></button>
+          <button type="button" aria-label={`${t.wishlist || 'ფავორიტები'} (${wishlistCount})`} onClick={() => goTo('wishlist')}><Heart aria-hidden="true" />{wishlistCount > 0 && <span aria-hidden="true">{wishlistCount}</span>}</button>
+          <button type="button" aria-label={t.profile || 'პროფილი'} onClick={() => currentUser ? goTo('profile') : openAuth('login')}><User aria-hidden="true" /></button>
+          <button type="button" aria-label={`${t.cart || 'კალათა'} (${cartCount})`} onClick={() => goTo('cart')}><ShoppingBag aria-hidden="true" />{cartCount > 0 && <span aria-hidden="true">{cartCount}</span>}</button>
+        </div>}
       </div>
 
       {activeTab === 'store' && (
-        <div data-visual-editor-target="header.search" style={visualStyle('header.search')} className="gs-header-search-row" role="search">
+        <div data-visual-editor-target="header.search" style={visualStyle('header.search')} className={`gs-header-search-row${signature && !searchVisible ? ' gs-signature-search-closed' : ''}`} id={searchId} role="search">
           <label className="gs-header-search">
             <Search aria-hidden="true" />
             <input
@@ -169,6 +201,7 @@ export default function Header({
               title={currentLang === 'en' ? 'Clear search' : currentLang === 'ru' ? 'Очистить поиск' : 'ძებნის გასუფთავება'}
             ><X aria-hidden="true" /></button>
           )}
+          {signature && <button type="button" className="gs-signature-search-dismiss" aria-label={currentLang === 'en' ? 'Close search' : currentLang === 'ru' ? 'Закрыть поиск' : 'ძებნის დახურვა'} onClick={() => { setSearchOpen(false); headerRef.current?.querySelector('.gs-signature-actions button')?.focus(); }} disabled={Boolean(searchQuery)}><X aria-hidden="true" /></button>}
           <button
             type="button"
             data-visual-editor-target="header.search.button" style={visualStyle('header.search.button')} className="gs-header-image-search"
