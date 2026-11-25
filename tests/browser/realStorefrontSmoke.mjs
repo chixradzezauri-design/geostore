@@ -68,14 +68,17 @@ try {
         'Anonymous visitor must not see the administrator shortcut at ' + width + 'px');
       assert.equal(await page.locator('.admin-dashboard-pro').count(), 0,
         'Anonymous visitor must not mount private administrator content at ' + width + 'px');
-      const allCategoryCard = page.locator('.gs-category-card--all');
-       assert.equal(await allCategoryCard.getAttribute('role'), 'button', 'All-category is keyboard operable');
+      // Published Signature settings can hydrate after the legacy shell renders.
+      // Both controls implement the same all-category action.
+      const allCategorySelector = '.gs-signature-all-categories, .gs-category-card--all';
+      const allCategoryCard = page.locator(allCategorySelector).first();
+       assert.ok(await allCategoryCard.evaluate(el => el.tagName === 'BUTTON' || el.getAttribute('role') === 'button'), 'All-category is keyboard operable');
        await allCategoryCard.focus();
        await page.keyboard.press('Space');
        // React's category selection commits after the keyboard event. A
        // one-shot attribute read can race the state render on slower CI hosts.
        await page.waitForFunction(() =>
-         document.querySelector('.gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
+         document.querySelector('.gs-signature-all-categories, .gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
          null, { timeout: 5000 });
        const firstCategoryCard = page.locator('.gs-category-card:not(.gs-category-card--all)').first();
        if (await firstCategoryCard.count()) {
@@ -126,7 +129,7 @@ try {
          await allCategoryCard.focus();
          await page.keyboard.press('Space');
          await page.waitForFunction(() =>
-           document.querySelector('.gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
+           document.querySelector('.gs-signature-all-categories, .gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
            null, { timeout: 5000 });
        }
        const firstProduct = page.locator('.gs-catalog-product-card').first();

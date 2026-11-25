@@ -36,6 +36,21 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    const columns=await page.locator('[data-signature-products="true"]').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
    assert.equal(columns,width<360?1:width<=640?2:width<=1023?3:6,'Signature columns at '+width);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Signature horizontal overflow at '+width);
+   const allCategories=page.locator('.gs-signature-all-categories');
+   assert.equal(await allCategories.getAttribute('aria-pressed'),'true');
+   await page.locator('[data-signature-categories="true"] .gs-category-card').first().click();
+   await page.waitForFunction(()=>document.querySelector('.gs-signature-all-categories')?.getAttribute('aria-pressed')==='false');
+   await allCategories.focus();
+   await page.keyboard.press('Space');
+   await page.waitForFunction(()=>document.querySelector('.gs-signature-all-categories')?.getAttribute('aria-pressed')==='true');
+   const headerBounds=await page.locator('.gs-signature-header .gs-site-header-inner').evaluate(el=>{
+     const row=el.getBoundingClientRect();
+     return [...el.querySelectorAll('.gs-signature-actions button')].filter(b=>b.getClientRects().length).every(b=>{
+       const rect=b.getBoundingClientRect();
+       return rect.width>=43 && rect.left>=row.left-1 && rect.right<=row.right+1;
+     });
+   });
+   assert.ok(headerBounds,'Signature header controls remain inside the row at '+width);
    const hero=page.locator('[data-signature-hero="true"]');
    await hero.locator('.gs-signature-hero-dot').nth(1).click();
    await hero.getByRole('heading',{name:'Signature campaign'}).waitFor({state:'visible'});
