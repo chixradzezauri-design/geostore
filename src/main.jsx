@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import RootErrorBoundary from './components/RootErrorBoundary.jsx'
+import {installBrowserDiagnostics} from './utils/systemMonitor.js'
 import './index.css'
 // Exact legacy tail extracted in its original stylesheet position.
 import './responsiveCompatibility.css'
@@ -16,8 +18,11 @@ import './designSystemV2.css'
 import './videoAuditMobileAdmin.css'
 import './storefrontVideoRedesign.css'
 
+const disposeDiagnostics = installBrowserDiagnostics(window)
+if (import.meta.hot) import.meta.hot.dispose(disposeDiagnostics)
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <RootErrorBoundary><App /></RootErrorBoundary>
   </React.StrictMode>,
 )
