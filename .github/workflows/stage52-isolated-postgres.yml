@@ -121,6 +121,9 @@ on:
       - 'tests/sql/phase4_wardrobe_contract.sql'
       - 'release/phase4-admin-mfa-guard-draft.sql'
       - 'tests/sql/phase4_admin_mfa_guard_contract.sql'
+      - 'release/phase4-admin-mfa-owner-rpcs-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_owner_original_fixture.sql'
+      - 'tests/sql/phase4_admin_mfa_owner_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -222,3 +225,5 @@ jobs:
 
           createdb phase4_admin_mfa
           PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_guard_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_owner_contract.sql
