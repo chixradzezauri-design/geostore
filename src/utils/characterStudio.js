@@ -333,3 +333,25 @@ export function winterConciergePresentation(settings,{now=new Date(),index=0,lan
  const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
  return {...s,character:id,rotation:'fixed',season:'winter',effect:s.winterEffects?preset.effect:'none',behavior:preset.behavior,message:preset.lines[locale]};
 }
+
+export const CONCIERGE_PRESETS=Object.freeze({
+  balanced:{label:'დაბალანსებული',description:'რჩევები, პროდუქტები და მონაცვლეობა — ყოველდღიური რეჟიმი.'},
+  active:{label:'აქტიური დამხმარე',description:'უფრო ხშირი გამოჩენა, სხვადასხვა პოზიცია და ინტერაქცია.'},
+  quiet:{label:'მინიმალისტური',description:'ერთი მშვიდი მისალმება, დამატებითი შეთავაზებების გარეშე.'},
+  winter:{label:'საახალწლო',description:'Santa და Snowy ზამთრის განრიგით, საჩუქრების იდეებით.'},
+  sale:{label:'აქციების დამხმარე',description:'Deal Hunter და მხოლოდ მოქმედი შეთავაზებები.'}
+});
+export function applyConciergePreset(raw,key){
+ const s=normalizeCharacterSettings(raw);
+ if(!Object.hasOwn(CONCIERGE_PRESETS,key))return s;
+ const common={rotation:'sequence',frequency:'repeat',repeatInterval:60,repeatLimit:4,pages:'catalogue',side:'alternate',placement:'bottom',behavior:'walk-wave',delay:2,duration:10,guideLinks:true,recommendProducts:true,recommendationMode:'featured',saleGuide:true,saleGuidePriority:'alternate',interactiveGuide:true,waveBack:true,interaction:'wave',winterCelebration:false,season:'none',effect:'sparkles'};
+ const modes={
+  balanced:{},
+  active:{repeatInterval:30,repeatLimit:8,duration:12,placement:'roam',behavior:'patrol',recommendationMode:'variety'},
+  quiet:{rotation:'fixed',frequency:'session',pages:'home',side:'left',behavior:'bow',delay:3,duration:6,guideLinks:false,recommendProducts:false,saleGuide:false,interactiveGuide:false,waveBack:false,effect:'none'},
+  winter:{winterCelebration:true,winterStyle:'alternate',winterEffects:true,repeatInterval:45,repeatLimit:6,saleGuide:false,effect:'sparkles',recommendationMode:'variety'},
+  sale:{character:'deal',rotation:'fixed',behavior:'point',saleGuide:true,saleGuidePriority:'always',recommendProducts:false,repeatInterval:60,repeatLimit:4}
+ };
+ const scenarioUpdates=Object.fromEntries(Object.entries(s.scenarios).map(([k,v])=>[k,{...v,enabled:key==='quiet'?false:key==='sale'?k==='flash':true}]));
+ return normalizeCharacterSettings({...s,...common,...modes[key],enabled:s.enabled,mobile:s.mobile,desktop:s.desktop,advice:{...s.advice,enabled:key!=='quiet',topic:key==='sale'?'prices':key==='winter'?'gifts':'auto'},scenarios:scenarioUpdates,appearance:{...s.appearance,prominence:key==='quiet'?'compact':'enhanced'}});
+}

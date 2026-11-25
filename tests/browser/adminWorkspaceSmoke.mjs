@@ -190,6 +190,14 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await scenarios.getByLabel('სცენარის პერსონაჟი').selectOption('panda');
           await scenarios.getByLabel('სცენარის ტექსტი').fill('Fixture cart scene');
           assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
+          const presets=studio.locator('[data-character-presets]');
+          await presets.getByLabel('მზა რეჟიმი').selectOption('active');
+          await presets.locator('[data-character-apply-preset]').click();
+          await presets.locator('[data-character-undo-preset]').waitFor({state:'visible'});
+          assert.equal(await presets.locator('.gs-concierge-summary [data-enabled="true"]').count(),5);
+          await presets.locator('[data-character-undo-preset]').click();
+          assert.equal(await presets.locator('[data-character-undo-preset]').count(),0);
+          assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
         }
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
         if(tab==='products'){

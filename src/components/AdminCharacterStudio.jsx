@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {CONCIERGE_ADVICE,chooseConciergeAdvice} from '../utils/characterAdvice.js';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason,CONCIERGE_PRESETS,applyConciergePreset} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
@@ -20,6 +20,8 @@ const choices={
 export default function AdminCharacterStudio({siteSettings,publishedSettings=null,onTestPublishedCharacter,actualMobile=false,setSiteSettings,busy=false,lang='ka'}){
   const s=normalizeCharacterSettings(siteSettings?.characterStudio);
   const [preview,setPreview]=useState(null);
+  const [presetKey,setPresetKey]=useState('balanced');
+  const [presetUndo,setPresetUndo]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
   const [libraryLang,setLibraryLang]=useState('ka');
@@ -52,6 +54,17 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     setPreview(null);setEventPreview(null);
     setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings({...previous?.characterStudio,...patch}),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary}}));
   };
+  const applyPreset=()=>{
+    setPreview(null);setEventPreview(null);
+    const previous=siteSettings?.characterStudio;
+    const next=applyConciergePreset(previous,presetKey);
+    setPresetUndo({previous,applied:JSON.stringify(next)});
+    setSiteSettings(value=>({...value,characterStudio:next}));
+  };
+  const undoPreset=()=>{
+    if(!presetUndo||JSON.stringify(s)!==presetUndo.applied)return;
+    setSiteSettings(value=>({...value,characterStudio:presetUndo.previous}));setPresetUndo(null);setPreview(null);setEventPreview(null);
+  };
   const updateAppearance=(patch)=>update({appearance:{...s.appearance,...patch}});
   const updatePalette=(color)=>update({palette:{...s.palette,[s.character]:color}});
   useEffect(()=>{
@@ -63,7 +76,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const choose=(key,title)=><label className="min-w-0 space-y-1 block"><span className="text-xs font-semibold text-slate-300">{title}</span><select aria-label={title} className={field} value={s[key]} disabled={busy} onChange={e=>update({[key]:e.target.value})}>{choices[key].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>;
   return <section data-character-studio className="gs-character-admin rounded-2xl border border-emerald-500/30 bg-slate-900 p-3 sm:p-4 space-y-3 min-w-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">GEOSTORE-ის მოცულობითი პერსონაჟები და მისალმება</p></div>
+      <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">12 პერსონაჟი · რჩევები · შეთავაზებები</p></div>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
     </div>
     <div data-character-publish-status role="status" className="rounded-lg border border-slate-600 bg-slate-950 p-3 text-xs text-slate-200 space-y-1">
@@ -81,6 +94,17 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div><span>დაგეგმილი ღონისძიებები</span><strong>{s.calendarEnabled?enabledEvents:'გამორთული'}</strong></div>
     </div>
     {s.enabled&&!s.mobile&&!s.desktop&&<p role="status" className="rounded-lg border border-amber-500/50 bg-amber-950/40 p-2 text-xs text-amber-200">პერსონაჟი არ გამოჩნდება: ჩართეთ მინიმუმ ერთი ტიპის მოწყობილობა.</p>}
+    <div className="gs-concierge-presets" data-character-presets>
+      <div><h4>მზა მართვის რეჟიმები</h4><p>აირჩიე რეჟიმი და გამოიყენე მონახაზზე. გამოქვეყნება ცალკე მოქმედებაა.</p></div>
+      <div className="gs-concierge-preset-controls">
+        <label className="block text-xs text-slate-300">რეჟიმი<select aria-label="მზა რეჟიმი" className={field} value={presetKey} disabled={busy} onChange={e=>setPresetKey(e.target.value)}>{Object.entries(CONCIERGE_PRESETS).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
+        <button type="button" data-character-apply-preset disabled={busy} onClick={applyPreset} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">რეჟიმის გამოყენება</button>
+      </div>
+      <p>{CONCIERGE_PRESETS[presetKey].description}</p>
+      {presetUndo&&JSON.stringify(s)===presetUndo.applied&&<div role="status" className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-200"><span>რეჟიმი გამოყენებულია მონახაზზე.</span><button type="button" data-character-undo-preset disabled={busy} onClick={undoPreset} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">გაუქმება</button></div>}
+      <div className="gs-concierge-summary" aria-label="აქტიური ფუნქციები">{[['რჩევები',s.advice.enabled],['პროდუქტები',s.recommendProducts],['აქციები',s.saleGuide],['ინტერაქცია',s.interactiveGuide],['საახალწლო',s.winterCelebration],['მინიშნებები',s.guideLinks]].map(([label,on])=><span key={label} data-enabled={on?'true':'false'}>{on?'✓':'–'} {label}</span>)}</div>
+      <p>რეჟიმები არ ცვლის საიტზე ჩართვის ღილაკს, მოწყობილობების არჩევანს, შენს ტექსტებს, ფერებს ან ინდივიდუალურ კალენდარს.</p>
+    </div>
     <h4 className="text-sm font-bold text-white">პერსონაჟის არჩევა</h4>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="mx-auto w-20 max-w-full"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
