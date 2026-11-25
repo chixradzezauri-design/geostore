@@ -707,17 +707,17 @@ export default function StoreView({
             </div>
 
             <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" role="timer" aria-live="off" aria-label={`დარჩენილია ${timeLeft.hours} საათი ${timeLeft.minutes} წუთი ${timeLeft.seconds} წამი`}>
-              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+              <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.hours}</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
-              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+              <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.minutes}</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
-              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+              <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.seconds}</span>
               </div>
@@ -737,10 +737,10 @@ export default function StoreView({
                 : calculatedDiscount;
               const availableStock = getProductAvailableStock(prod);
               return (
-                <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
+                <div key={`flash-${prod.id}`} data-visual-editor-target="flashSale.card" style={videoElementStyle('flashSale.card')} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <button type="button" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 w-full flex items-center justify-center cursor-pointer overflow-hidden">
-                    {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="gs-video-flash-image h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
-                    <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
+                    {prod.image ? <img data-visual-editor-target="flashSale.image" style={videoElementStyle('flashSale.image')} src={prod.image} alt="" loading="lazy" decoding="async" className="gs-video-flash-image h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
+                    <span data-visual-editor-target="flashSale.discount" style={videoElementStyle('flashSale.discount')} className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </button>
                   <div className="gs-video-flash-copy py-3 space-y-1.5">
                     <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300">{catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-flash-sale-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}</h4>
@@ -751,7 +751,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
-                  <button type="button" onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" data-visual-editor-target="flashSale.button" style={videoElementStyle('flashSale.button')} onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>

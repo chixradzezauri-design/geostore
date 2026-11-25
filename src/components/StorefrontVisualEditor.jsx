@@ -67,6 +67,11 @@ const VISUAL_EDITOR_TARGETS = {
   'flashSale.title': { label: 'Flash Sale სათაური', group: 'copy', key: 'flashSaleTitle', help: 'სათაური პირდაპირ აქედან შეცვალეთ.' },
   'flashSale.badge': { label: 'Flash Sale Badge', group: 'copy', key: 'flashSaleBadge', help: 'პატარა წარწერა პირდაპირ აქედან შეცვალეთ.' },
   'flashSale.description': { label: 'Flash Sale აღწერა', group: 'copy', key: 'flashSaleSubtitle', help: 'აღწერა პირდაპირ აქედან შეცვალეთ.' },
+  'flashSale.card': { label: 'აქციის პროდუქტის ბარათი', help: 'ფონი, ჩარჩო, ზომა და დაშორება.' },
+  'flashSale.image': { label: 'აქციის პროდუქტის ფოტო', help: 'ფოტოს ჩასმა, პოზიცია და ზომა. ფოტოს წყარო პროდუქტებში იმართება.' },
+  'flashSale.timer': { label: 'უკუთვლის ბარათები', help: 'ტაიმერის ფონი, ციფრების ფერი, ჩარჩო და ზომა.' },
+  'flashSale.discount': { label: 'ფასდაკლების ნიშანი', help: 'ფასდაკლების წარწერის ვიზუალი; პროცენტი ავტომატურად ითვლება.' },
+  'flashSale.button': { label: 'აქციის კალათის ღილაკი', help: 'ღილაკის ფერები, ზომა, ჩარჩო და ფორმა. ყიდვის ფუნქცია უცვლელია.' },
   'categories': { label: 'კატეგორიების ბლოკი', help: 'კატეგორიების ფოტოები და დასახელებები მართეთ კატეგორიების განყოფილებაში.' },
   'categories.title': { label: 'კატეგორიების სათაური', group: 'copy', key: 'categoriesTitle', help: 'სათაური პირდაპირ აქედან შეცვალეთ.' },
   'categories.description': { label: 'კატეგორიების აღწერა', group: 'copy', key: 'categoriesSubtitle', help: 'აღწერა პირდაპირ აქედან შეცვალეთ.' },
@@ -1257,6 +1262,15 @@ export default function StorefrontVisualEditor({
                   ))}
                 </div>
                 <p className="mt-2 text-[11px] leading-5 text-slate-400">თემა არ ცვლის ფასებს, ვადებს, სათაურსა და ინდივიდუალურად დაყენებულ ფერებს. მოქმედებს ყველა მოწყობილობაზე გამოქვეყნების შემდეგ.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">აქციის ელემენტების დეტალური გაფორმება</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {['flashSale','flashSale.title','flashSale.badge','flashSale.description','flashSale.card','flashSale.image','flashSale.timer','flashSale.discount','flashSale.button'].map(id=>(
+                    <button key={id} type="button" aria-pressed={selectedElement?.id===id} onClick={()=>selectElementFromTree(id)} className="min-h-11 rounded-lg border border-slate-600 px-3 py-2 text-left text-xs font-semibold text-slate-200 aria-pressed:border-emerald-300 aria-pressed:text-emerald-200">{VISUAL_EDITOR_TARGETS[id].label}</button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-slate-400">აირჩიეთ ელემენტი და გამოიყენეთ პირდაპირი რედაქტორის ფერები, ზომები და მოწყობილობის რეჟიმები. პროდუქტის მონაცემები და ფასდაკლების გამოთვლა უცვლელია.</p>
               </div>
               <button type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,'reset'))} className="min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300">ნაგულისხმევი ტექსტების აღდგენა</button>
               <p className="text-[11px] leading-5 text-slate-400">ტექსტები საერთო ვიზუალურ მონახაზში ინახება. გამოქვეყნების შემდეგ ყველა მოწყობილობაზე გამოჩნდება, როცა აქტიური აქცია არსებობს.</p>
