@@ -11,8 +11,8 @@ test('invalid settings are constrained and unknown properties dropped',()=>{
   assert.equal(s.character,'fox');assert.equal(s.behavior,'run-wave');assert.equal(s.side,'left');assert.equal(s.delay,0);assert.equal(s.duration,12);assert.equal(s.message.length,120);assert.equal(s.unknown,undefined);
 });
 test('rotation selects only the five original characters',()=>{
-  assert.equal(new Set(CHARACTERS.map(c=>c.id)).size,5);
-  for(let i=0;i<5;i++)assert.equal(selectCharacter({rotation:'random'},new Date(),()=>i/5).id,CHARACTERS[i].id);
+  assert.equal(new Set(CHARACTERS.map(c=>c.id)).size,9);
+  for(let i=0;i<CHARACTERS.length;i++)assert.equal(selectCharacter({rotation:'random'},new Date(),()=>(i+.5)/CHARACTERS.length).id,CHARACTERS[i].id);
   assert.equal(selectCharacter({rotation:'fixed',character:'cat'}).id,'cat');
   assert.equal(selectCharacter({rotation:'daypart'},new Date(2026,5,1,9)).id,'fox');
   assert.equal(selectCharacter({rotation:'seasonal'},new Date(2026,11,1)).id,'panda');
@@ -83,7 +83,7 @@ test('successful commerce reactions are opt-in and rate limited',()=>{
 
 test('custom mascot appearance clamps geometry and rejects unsafe CSS',()=>{
   const a=normalizeCharacterAppearance({desktopSize:900,mobileSize:-10,lift:999,fontSize:30,bubbleColor:'url(https://example.test)',bubbleShape:'invalid'});
-  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded'});
+  assert.deepEqual(a,{desktopSize:144,mobileSize:56,lift:48,fontSize:15,bubbleColor:'#fffdf7',bubbleShape:'rounded',renderMode:'auto',lighting:'studio'});
   assert.equal(characterAppearanceStyle({bubbleColor:'#000000',bubbleShape:'pill'})['--gs-mascot-radius'],'28px');
   assert.equal(characterBubbleInk('#000000'),'#ffffff');
   assert.equal(characterBubbleInk('#ffffff'),'#000000');
@@ -140,3 +140,43 @@ test('invalid dates and disabled events cannot activate; limits and localized ov
   assert.equal(applyCharacterEvent({},event,'ka').message,'ჩემი ტექსტი');
   assert.equal(event.messages.en.length,120);
 });
+
+import {characterSettingsRevision,characterRevisionSeen} from '../src/utils/characterStudio.js';
+test('new published character configurations can greet without repeating identical refreshes',()=>{
+  const original={enabled:true,character:'fox'},same={character:'fox',enabled:true};
+  const key=characterSettingsRevision(original);
+  assert.equal(key,characterSettingsRevision(same));
+  assert.notEqual(key,characterSettingsRevision({...original,character:'cat'}));
+  const record=JSON.stringify({revision:key,seen:true,at:1000});
+  assert.equal(characterRevisionSeen(record,'session',key),true);
+  assert.equal(characterRevisionSeen(record,'session',characterSettingsRevision({...original,character:'cat'})),false);
+  assert.equal(characterRevisionSeen(record,'daily',key,2000),true);
+  assert.equal(characterRevisionSeen(record,'daily',key,86401000),false);
+  assert.equal(characterRevisionSeen('1','session',key),false);
+});
+
+test('all nine mascot identities are selectable, recolourable and localized',()=>{for(const c of CHARACTERS){assert.equal(selectCharacter({character:c.id}).id,c.id);assert.equal(styledCharacter(c,{palette:{[c.id]:'#123456'}}).color,'#123456');for(const lang of ['ka','en','ru'])assert.ok(c.lines[lang].length>0);}});
+
+import {CHARACTER_MOTIONS} from '../src/utils/characterStudio.js';
+test('all motion modes including new articulated choreography survive normalization and calendar selection',()=>{assert.equal(CHARACTER_MOTIONS.length,13);for(const behavior of CHARACTER_MOTIONS){assert.equal(normalizeCharacterSettings({behavior}).behavior,behavior);assert.equal(normalizeCharacterSettings({events:[{id:'motion',behavior}]}).events[0].behavior,behavior);}assert.equal(normalizeCharacterSettings({behavior:'unsafe'}).behavior,'run-wave');});
+
+import {CHARACTER_GREETING_TONES,CHARACTER_INTERACTIONS,characterInteractionCopy} from '../src/utils/characterStudio.js';
+test('curated greeting tones are localized and explicit copy remains authoritative',()=>{for(const [mode,lines] of Object.entries(CHARACTER_GREETING_TONES)){assert.equal(normalizeCharacterSettings({greetingMode:mode}).greetingMode,mode);for(const lang of ['ka','en','ru']){for(let i=0;i<lines.length;i++){assert.equal(characterMessage({greetingMode:mode},CHARACTERS[0],lang,(i+.5)/lines.length),lines[i][lang]);assert.ok(lines[i][lang].length<=120);}assert.equal(characterMessage({greetingMode:mode,message:'Custom'},CHARACTERS[0],lang),'Custom');}}});
+test('all interaction modes are opt-in and produce localized, bounded gesture choices',()=>{for(const interaction of CHARACTER_INTERACTIONS){const settings=normalizeCharacterSettings({interaction,waveBack:true});assert.equal(settings.interaction,interaction);for(const lang of ['ka','en','ru']){const copy=characterInteractionCopy(interaction,lang);assert.ok(copy.button&&copy.reply);assert.ok(CHARACTER_MOTIONS.includes(copy.motion));}}assert.equal(normalizeCharacterSettings({interaction:'unknown'}).interaction,'wave');assert.equal(normalizeCharacterSettings({interaction:'cheer'}).waveBack,false);});
+
+test('product and empty-search scenes are opt-in, localized and device/eligibility gated',()=>{for(const key of ['product','searchEmpty']){const settings={enabled:true,scenarios:{[key]:{enabled:true}}};assert.equal(getCharacterScenario({},key,{eligible:true}),null);assert.equal(getCharacterScenario(settings,key,{eligible:false}),null);assert.equal(getCharacterScenario({...settings,mobile:false},key,{eligible:true,mobile:true}),null);const scene=getCharacterScenario(settings,key,{eligible:true});assert.ok(scene.character);for(const lang of ['ka','en','ru'])assert.ok(scene.lines[lang].length<=120&&scene.lines[lang].length>0);}});
+
+import {characterDisplayReason} from '../src/utils/characterStudio.js';
+test('published visibility diagnostic and actual rendering share the same gates',()=>{assert.equal(characterDisplayReason(null),'unconfirmed');assert.equal(characterDisplayReason({enabled:false}),'disabled');assert.equal(characterDisplayReason({enabled:true,mobile:false},{mobile:true}),'device');assert.equal(characterDisplayReason({enabled:true},{blocked:true}),'blocked');assert.equal(characterDisplayReason({enabled:true},{route:'product'}),'page');assert.equal(characterDisplayReason({enabled:true},{route:'home'}),'ready');assert.equal(canDisplayCharacter({enabled:true},{}),false);});
+
+import {sphereMesh,mascotRgb,foxPose} from '../src/utils/mascot3DGeometry.js';
+test('flagship mesh is bounded, depth-bearing and has valid triangle indices',()=>{const mesh=sphereMesh();assert.equal(mesh.positions.length,19*25*3);assert.equal(mesh.indices.length,18*24*6);assert.ok(mesh.indices.every(i=>i<mesh.positions.length/3));assert.ok(mesh.positions.some(x=>x<-.9)&&mesh.positions.some(x=>x>.9));assert.deepEqual(mascotRgb('#ff0000'),[1,0,0]);assert.deepEqual(foxPose(8,'wave',true),foxPose(0,'wave',true));assert.notDeepEqual(foxPose(.2,'run-wave'),foxPose(.8,'run-wave'));assert.equal(normalizeCharacterAppearance({renderMode:'unsafe'}).renderMode,'auto');assert.equal(normalizeCharacterAppearance({renderMode:'vector'}).renderMode,'vector');});
+
+import {MASCOT_3D_IDS,drawMascot3DModel} from '../src/utils/mascot3DModels.js';
+test('all nine characters have supported 3D identities and bounded distinct model geometry',()=>{assert.deepEqual(MASCOT_3D_IDS,CHARACTERS.map(c=>c.id));const signatures=new Set();for(const id of MASCOT_3D_IDS.filter(id=>id!=='fox')){const parts=[];drawMascot3DModel(id,(...args)=>parts.push(args),[.6,.4,.2],{step:.2,wave:.1,tail:.1,breath:.01},{emotion:'happy'});assert.ok(parts.length>=15&&parts.length<=65);for(const [center,scale,tint,tilt,gloss,fur] of parts){assert.ok(center.every(Number.isFinite));assert.ok(scale.every(v=>Number.isFinite(v)&&v>0));assert.ok(tint.every(v=>Number.isFinite(v)&&v>=0&&v<=1));assert.ok([tilt,gloss,fur].every(Number.isFinite));}signatures.add(JSON.stringify(parts));}assert.equal(signatures.size,8);});
+
+import {mascotPose,mascotLimb} from '../src/utils/mascot3DGeometry.js';
+test('species-specific pose timing, finite gestures and connected limb pivots',()=>{for(const id of MASCOT_3D_IDS){const motions=new Set();for(const behavior of CHARACTER_MOTIONS){const pose=mascotPose(id,.61,behavior);assert.ok(Object.values(pose).every(Number.isFinite));assert.ok(pose.lift>=0&&pose.lift<=.20);assert.ok(Object.values(mascotPose(id,2,behavior,true)).every(v=>v===0));motions.add(JSON.stringify(pose));}assert.ok(motions.size>=10);assert.equal(mascotPose(id,4,'run-wave').step,0);}assert.notDeepEqual(mascotPose('rabbit',.6,'run-wave'),mascotPose('bear',.6,'run-wave'));const limb=mascotLimb([.4,.1,.2],.7,1.5);assert.ok(Math.abs(Math.hypot(...limb.tip.map((v,i)=>v-[.4,.1,.2][i]))-.7)<1e-8);assert.ok(limb.center.every((v,i)=>Math.abs(v-(limb.tip[i]+[.4,.1,.2][i])*.5)<1e-8));});
+
+import {MASCOT_LIGHTING,mascotLighting} from '../src/utils/mascot3DLighting.js';
+test('lighting presets are distinct, finite and restricted to known safe values',()=>{assert.equal(normalizeCharacterAppearance({lighting:'invalid'}).lighting,'studio');assert.equal(mascotLighting('__proto__'),MASCOT_LIGHTING.studio);const seen=new Set();for(const [name,light] of Object.entries(MASCOT_LIGHTING)){assert.equal(normalizeCharacterAppearance({lighting:name}).lighting,name);assert.equal(mascotLighting(name),light);assert.ok([light.ambient,...light.key,...light.fill,...light.rim,...light.strength].every(x=>Number.isFinite(x)&&x>=0&&x<=1));seen.add(JSON.stringify(light));}assert.equal(seen.size,3);});

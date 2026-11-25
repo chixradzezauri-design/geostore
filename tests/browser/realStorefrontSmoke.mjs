@@ -7,7 +7,7 @@ import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
 import {runCatalogueSeoHttpSmoke} from './catalogueSeoHttpSmoke.mjs';
 import {runPwaOfflineSmoke} from './pwaOfflineSmoke.mjs';
 import {runSignatureStorefrontSmoke} from './signatureStorefrontSmoke.mjs';
-import {runCharacterStudioSmoke} from './characterStudioSmoke.mjs';
+import {runCharacterStudioSmoke,runFlagship3DSmoke} from './characterStudioSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -144,11 +144,22 @@ try {
       
       // Stage 39 — integrated client-side search and filter recovery.
       const search = page.locator('.gs-header-search input[type="search"]');
-      if (!(await search.isVisible())) {
-        await page.locator('.gs-signature-actions button').first().click();
-        await search.waitFor({state:'visible'});
+      // A slow public config response may switch the legacy header to Signature
+      // between isVisible() and fill(). Only retry for that observable transition.
+      const openSignatureSearch = async () => {
+        const trigger=page.locator('.gs-signature-actions button[aria-controls]').first();
+        await trigger.click({timeout:5000});
+        await search.waitFor({state:'visible',timeout:5000});
+      };
+      if (!(await search.isVisible())) await openSignatureSearch();
+      try {
+        await search.fill('stage39-no-results',{timeout:5000});
+      } catch(error) {
+        if(await search.isVisible() || !(await page.locator('.gs-signature-header .gs-header-search-row[data-signature-search-closed="true"]').count())) throw error;
+        await openSignatureSearch();
+        await search.fill('stage39-no-results',{timeout:5000});
       }
-      await search.fill('stage39-no-results');
+      assert.equal(await search.inputValue(),'stage39-no-results','Search query entered at '+width+'px');
       const searchClear = page.locator('.gs-header-search-clear');
       await searchClear.waitFor({ state: 'visible', timeout: 10000 });
       assert.ok(await searchClear.evaluate(node => node.getBoundingClientRect().height >= 43),
@@ -257,6 +268,8 @@ try {
   await runAdminWorkspaceSmoke(browser, host);
   await runCharacterStudioSmoke(browser,host,[320,1440]);
   await runPwaOfflineSmoke(browser);
+  const gpuBrowser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  try{await runFlagship3DSmoke(gpuBrowser,host);}finally{await gpuBrowser.close();}
 
   // Stage 48: exercise Safari's WebKit engine with the exact same fully
   // intercepted catalogue. This is not a native iPhone Safari test.

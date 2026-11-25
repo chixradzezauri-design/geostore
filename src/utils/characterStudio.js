@@ -5,15 +5,22 @@ export const CHARACTERS = Object.freeze([
   { id:'rabbit', name:'Flash Rabbit', label:'კურდღელი', color:'#a78bfa', lines:{ka:'ჰოპ! აქციების ნახვა არ დაგავიწყდეს!',en:'Hop! Don’t miss the offers!',ru:'Прыг! Не пропусти акции!'} },
   { id:'robot', name:'Mini Robot', label:'რობოტი', color:'#22d3ee', lines:{ka:'ბიპ-ბუპ! კარგი არჩევანი გელოდება.',en:'Beep boop! Great finds await.',ru:'Бип-буп! Отличные находки ждут.'} },
   { id:'cat', name:'Style Cat', label:'კატა', color:'#f472b6', lines:{ka:'მიაუ! დღეს სტილურად გამოვიყურებით!',en:'Meow! Let’s find your style.',ru:'Мяу! Найдём твой стиль!'} },
+  { id:'monkey', name:'Trend Monkey', label:'მაიმუნი', color:'#a8764e', lines:{ka:'ჰეი! მოდი, ერთად აღმოვაჩინოთ ახალი ამბები.',en:'Hey! Let’s discover something new.',ru:'Привет! Давай найдём что-нибудь новое.'} },
+  { id:'bear', name:'Luxury Bear', label:'დათვი', color:'#926b48', lines:{ka:'კეთილი იყოს შენი მობრძანება. საუკეთესო არჩევანს დრო სჭირდება.',en:'Welcome. Take your time finding your favourite.',ru:'Добро пожаловать. Выбирай с удовольствием.'} },
+  { id:'owl', name:'Smart Owl', label:'ბუ', color:'#8c735e', lines:{ka:'გამარჯობა! კარგი აღმოჩენა პატარა დეტალით იწყება.',en:'Hello! Great finds start with the little details.',ru:'Привет! Отличные находки начинаются с мелочей.'} },
+  { id:'cheetah', name:'Speed Cheetah', label:'გეპარდი', color:'#dca94f', lines:{ka:'მოვირბინე, რომ სასიამოვნო აღმოჩენები გისურვო!',en:'I dashed over to wish you happy browsing!',ru:'Прибежал пожелать приятных находок!'} },
 ]);
+export const CHARACTER_MOTIONS=Object.freeze(['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak','walk-wave','look-around','point','patrol']);
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
 const bounded=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.min(max,Math.max(min,Math.round(value))):fallback;
 export const CHARACTER_SCENARIOS=Object.freeze({
-  flash:{character:'rabbit',label:'ფლეშ აქციები',lines:{ka:'ჰოპ! მოქმედი აქციები აქაა!',en:'Hop! Explore the current offers!',ru:'Прыг! Здесь действующие акции!'}},
-  cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'ბიპ-ბუპ! კალათა ჯერ ცარიელია.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
-  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'მიაუ! აქ შენი რჩეულები შეინახება.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}},
-  cartAdded:{character:'fox',label:'კალათაში დამატება',lines:{ka:'ვაშა! კარგი არჩევანია!',en:'Hooray! Great choice!',ru:'Ура! Отличный выбор!'}},
-  wishlistAdded:{character:'cat',label:'ფავორიტებში დამატება',lines:{ka:'მიაუ! რჩეული შენახულია!',en:'Meow! Favourite saved!',ru:'Мяу! Избранное сохранено!'}}
+  flash:{character:'rabbit',label:'ფლეშ აქციები',lines:{ka:'აღმოაჩინე მიმდინარე შეთავაზებები — იქნებ შენი რჩეულიც აქაა.',en:'Hop! Explore the current offers!',ru:'Прыг! Здесь действующие акции!'}},
+  cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'შენი კალათა ჯერ ცარიელია. მოდი, სასურველი ნივთები აღმოვაჩინოთ.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
+  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'რაც მოგეწონება, აქ შეინახე და ნებისმიერ დროს დაუბრუნდი.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}},
+  cartAdded:{character:'fox',label:'კალათაში დამატება',lines:{ka:'შესანიშნავია! შენი ნივთი კალათაშია.',en:'Hooray! Great choice!',ru:'Ура! Отличный выбор!'}},
+  product:{character:'owl',label:'პროდუქტის დათვალიერება',lines:{ka:'დააკვირდი დეტალებს და შეარჩიე შენთვის შესაფერისი ვარიანტი.',en:'Explore the details and choose the option that suits you.',ru:'Посмотри детали и выбери подходящий вариант.'}},
+  searchEmpty:{character:'fox',label:'ძიება შედეგის გარეშე',lines:{ka:'ჯერ ვერ ვიპოვეთ. სხვა სიტყვით ან ნაკლები ფილტრით ვცადოთ?',en:'Nothing found yet. Try a different word or fewer filters?',ru:'Пока ничего не нашли. Попробуем другое слово или меньше фильтров?'}},
+  wishlistAdded:{character:'cat',label:'ფავორიტებში დამატება',lines:{ka:'შენი რჩეული შენახულია — კარგი აღმოჩენაა!',en:'Meow! Favourite saved!',ru:'Мяу! Избранное сохранено!'}}
 });
 function normalizeScenarios(raw){
   const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -23,12 +30,12 @@ function normalizeScenarios(raw){
   }));
 }
 const hexColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():fallback;
-export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13});
+export const DEFAULT_CHARACTER_APPEARANCE=Object.freeze({desktopSize:116,mobileSize:76,lift:0,bubbleColor:'#fffdf7',bubbleShape:'rounded',fontSize:13,renderMode:'auto',lighting:'studio'});
 export function normalizeCharacterAppearance(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return {desktopSize:bounded(v.desktopSize,80,144,116),mobileSize:bounded(v.mobileSize,56,100,76),
     lift:bounded(v.lift,0,48,0),bubbleColor:hexColor(v.bubbleColor,'#fffdf7'),
-    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13)};
+    bubbleShape:pick(v.bubbleShape,['rounded','pill','square'],'rounded'),fontSize:bounded(v.fontSize,12,15,13),renderMode:pick(v.renderMode,['auto','vector'],'auto'),lighting:pick(v.lighting,['studio','daylight','cinematic'],'studio')};
 }
 export function normalizeCharacterPalette(raw){
   const v=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -59,6 +66,27 @@ export const FUNNY_GREETINGS=Object.freeze([
   {ka:'გამარჯობა! დღეს ოფიციალურად კარგი განწყობის დღეა.',en:'Hello! Today is officially a good-mood day.',ru:'Привет! Сегодня официально день хорошего настроения.'},
   {ka:'არ შეგეშინდეს, უბრალოდ მეგობარი პერსონაჟი ვარ!',en:'Don’t mind me, I’m just your friendly mascot!',ru:'Не пугайся, я просто дружелюбный талисман!'}
 ]);
+export const CHARACTER_GREETING_TONES=Object.freeze({
+  friendly:[
+    {ka:'რა კარგია, რომ შემოიარე! აქ შენი შემდეგი საყვარელი ნივთი გელოდება.',en:'Lovely to see you! Your next favourite might be right here.',ru:'Как здорово, что ты заглянул! Возможно, здесь твоя новая любимая вещь.'},
+    {ka:'კეთილი იყოს შენი მობრძანება! დაათვალიერე ყველაფერი შენს ტემპში.',en:'Welcome! Explore at your own pace.',ru:'Добро пожаловать! Выбирай в своём темпе.'},
+    {ka:'მიხარია შენი ნახვა! სასიამოვნო აღმოჩენებს გისურვებ.',en:'Glad you’re here! Enjoy discovering something new.',ru:'Рад тебя видеть! Приятных открытий!'},
+    {ka:'დღეს რა განწყობაზე ხარ? იქნებ რაღაც განსაკუთრებულს გადააწყდე.',en:'What are you in the mood for today? Something special might catch your eye.',ru:'Какое сегодня настроение? Вдруг найдётся что-то особенное.'}
+  ],
+  premium:[
+    {ka:'აღმოაჩინე დეტალები, რომლებიც შენს ყოველდღიურობას განსაკუთრებულს ხდის.',en:'Discover details that make every day feel special.',ru:'Открой детали, которые делают каждый день особенным.'},
+    {ka:'კარგი არჩევანი შენი სტილით იწყება. კეთილი იყოს შენი მობრძანება.',en:'Great choices begin with your own style. Welcome.',ru:'Хороший выбор начинается с твоего стиля. Добро пожаловать.'},
+    {ka:'შეარჩიე ის, რაც ნამდვილად შენია. სასიამოვნო შოპინგს გისურვებ.',en:'Find what truly feels like you. Enjoy browsing.',ru:'Найди то, что подходит именно тебе. Приятного выбора.'},
+    {ka:'პატარა დეტალები, დიდი შთაბეჭდილებები. აღმოაჩინე შენი სტილი.',en:'Small details, lasting impressions. Discover your style.',ru:'Маленькие детали, яркие впечатления. Найди свой стиль.'}
+  ],
+  minimal:[
+    {ka:'კეთილი იყოს შენი მობრძანება!',en:'Welcome!',ru:'Добро пожаловать!'},
+    {ka:'აღმოაჩინე შენი რჩეული.',en:'Discover your favourite.',ru:'Найди своё любимое.'},
+    {ka:'სასიამოვნო შოპინგს გისურვებ!',en:'Enjoy exploring!',ru:'Приятного выбора!'},
+    {ka:'მიხარია შენი ნახვა.',en:'Lovely to see you.',ru:'Рад тебя видеть.'}
+  ]
+});
+export const CHARACTER_INTERACTIONS=Object.freeze(['wave','high-five','cheer']);
 function normalizeGreetingLibrary(raw){
   const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,Array.isArray(source[lang])?[...new Set(source[lang].slice(0,8).filter(x=>typeof x==='string').map(x=>x.trim().slice(0,120)).filter(Boolean))]:[]]));
@@ -95,7 +123,7 @@ export function normalizeCharacterEvents(raw){
       character:pick(event.character,CHARACTERS.map(c=>c.id),preset.character),
       season:pick(event.season,['none','auto','winter','hearts','summer','autumn'],preset.season),
       effect:pick(event.effect,['none','sparkles','hearts','confetti'],preset.effect),
-      behavior:pick(event.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],preset.behavior),
+      behavior:pick(event.behavior,CHARACTER_MOTIONS,preset.behavior),
       messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof event.messages?.[lang]==='string'?event.messages[lang].trim().slice(0,120):'']))}];
   });
 }
@@ -120,11 +148,12 @@ export function normalizeCharacterSettings(raw){
   return {
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
     rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
-    behavior:pick(s.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],'run-wave'),
-    greetingMode:pick(s.greetingMode,['character','funny','time','library'],'character'),
+    behavior:pick(s.behavior,CHARACTER_MOTIONS,'run-wave'),
+    greetingMode:pick(s.greetingMode,['character','funny','time','library',...Object.keys(CHARACTER_GREETING_TONES)],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
     effect:pick(s.effect,['none','sparkles','hearts','confetti'],'none'),waveBack:s.waveBack===true,
+    interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right'],'left'),
@@ -162,6 +191,7 @@ export function characterMessage(settings,character,lang='ka',variant=0,date=new
   if(s.message)return s.message;
   const index=Number.isFinite(variant)?Math.max(0,Math.min(.999999,variant)):0;
   if(s.greetingMode==='funny')return FUNNY_GREETINGS[Math.floor(index*FUNNY_GREETINGS.length)][locale];
+  if(Object.hasOwn(CHARACTER_GREETING_TONES,s.greetingMode)){const lines=CHARACTER_GREETING_TONES[s.greetingMode];return lines[Math.floor(index*lines.length)][locale];}
   if(s.greetingMode==='library'&&s.greetingLibrary[locale].length){
     const lines=s.greetingLibrary[locale];return lines[Math.floor(index*lines.length)];
   }
@@ -175,14 +205,50 @@ export function characterMessage(settings,character,lang='ka',variant=0,date=new
 export function characterWaveCopy(lang='ka'){
   return ({ka:{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'},en:{button:'Wave back',reply:'Yay! Hello to you too!'},ru:{button:'Помахать в ответ',reply:'Ура! И тебе привет!'}})[CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka'];
 }
-export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
+export function characterInteractionCopy(mode,lang='ka'){
+  const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+  if(mode==='high-five')return {
+    ka:{button:'მომეცი ხუთიანი',reply:'ხუთიანი! მშვენიერი გუნდი ვართ.',emoji:'✋',motion:'celebrate',effect:'confetti'},
+    en:{button:'High five',reply:'High five! We make a great team.',emoji:'✋',motion:'celebrate',effect:'confetti'},
+    ru:{button:'Дай пять',reply:'Дай пять! Отличная команда!',emoji:'✋',motion:'celebrate',effect:'confetti'}
+  }[locale];
+  if(mode==='cheer')return {
+    ka:{button:'გამამხნევე',reply:'დღეს შენს მხარეს ვარ! კარგ განწყობას გისურვებ.',emoji:'✨',motion:'dance',effect:'hearts'},
+    en:{button:'Cheer me up',reply:'I’m on your team today! Sending good vibes.',emoji:'✨',motion:'dance',effect:'hearts'},
+    ru:{button:'Подбодри меня',reply:'Сегодня я на твоей стороне! Отличного настроения.',emoji:'✨',motion:'dance',effect:'hearts'}
+  }[locale];
+  return {...characterWaveCopy(locale),emoji:'👋',motion:'celebrate',effect:'sparkles'};
+}
+export function characterDisplayReason(settings,{route='home',mobile=false,blocked=false}={}){
+  if(settings==null)return 'unconfirmed';
   const s=normalizeCharacterSettings(settings);
-  return s.enabled&&!blocked&&(mobile?s.mobile:s.desktop)&&(route==='home'||(s.pages==='catalogue'&&route==='category'));
+  if(!s.enabled)return 'disabled';
+  if(!(mobile?s.mobile:s.desktop))return 'device';
+  if(blocked)return 'blocked';
+  if(!(route==='home'||(s.pages==='catalogue'&&route==='category')))return 'page';
+  return 'ready';
+}
+export function canDisplayCharacter(settings,options={}){
+  return characterDisplayReason(settings,{...options,route:options.route??'unknown'})==='ready';
 }
 export function getCharacterScenario(settings,key,{mobile=false,eligible=false}={}){
   const s=normalizeCharacterSettings(settings);
   if(!Object.hasOwn(CHARACTER_SCENARIOS,key)||!s.enabled||!eligible||!(mobile?s.mobile:s.desktop)||!s.scenarios[key].enabled)return null;
   return {character:styledCharacter(CHARACTERS.find(c=>c.id===s.scenarios[key].character),s),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines,emotion:s.emotion,season:s.season,appearance:s.appearance};
+}
+// A new published configuration can greet again; identical refreshes cannot.
+export function characterSettingsRevision(settings){
+  const input=JSON.stringify(normalizeCharacterSettings(settings));
+  let hash=2166136261;
+  for(let i=0;i<input.length;i++){hash^=input.charCodeAt(i);hash=Math.imul(hash,16777619);}
+  return (hash>>>0).toString(36)+'-'+input.length;
+}
+export function characterRevisionSeen(value,frequency,revision,now=Date.now()){
+  try{
+    const record=typeof value==='string'?JSON.parse(value):value;
+    if(!record||record.revision!==revision)return false;
+    return frequency==='session'?record.seen===true:characterAlreadySeen(record.at,frequency,now);
+  }catch{return false;}
 }
 export const CHARACTER_SESSION_KEY='geostore_character_seen_v1';
 export function characterAlreadySeen(value,frequency,now=Date.now()){

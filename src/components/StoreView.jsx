@@ -598,6 +598,8 @@ export default function StoreView({
     : hasCustomProductVariants(selectedProduct) && !selectedCustomVariant ? storeText.variant
     : hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant ? storeText.sizePrompt
     : currentAvailableStock <= 0 ? storeText.outOfStock : '';
+  const productCharacter=getCharacterScenario(publishedCharacterSettings,'product',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&!!selectedProduct&&currentAvailableStock>0&&!purchaseUnavailableReason});
+  const searchEmptyCharacter=getCharacterScenario(publishedCharacterSettings,'searchEmpty',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&Boolean(String(searchQuery||'').trim())&&processedProducts.length===0});
   const activeGalleryIndex = selectedProduct && Array.isArray(selectedProduct.gallery)
     ? selectedProduct.gallery.indexOf(activeImage) : -1;
 
@@ -1031,6 +1033,7 @@ export default function StoreView({
       {processedProducts.length === 0 ? (
         <div id="gs-catalog-products" {...sectionGeometryProps('products')} className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
+          {searchEmptyCharacter&&<div className="gs-character-search-context"><React.Suspense fallback={null}><CharacterContextCard scenario={searchEmptyCharacter} lang={currentLang}/></React.Suspense></div>}
           {hasActiveCatalogFilters && (
             <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
               {currentLang === 'en' ? 'Show all products' : currentLang === 'ru' ? 'Показать все товары' : 'ყველა პროდუქტის ნახვა'}
@@ -1203,6 +1206,7 @@ export default function StoreView({
             </div>
 
             <div className="gs-product-modal-body p-4 sm:p-7 overflow-y-auto space-y-6 scrollbar-thin pb-28">
+              {productCharacter&&<div className="gs-character-product-context"><React.Suspense fallback={null}><CharacterContextCard key={String(selectedProduct.id)} scenario={productCharacter} lang={currentLang}/></React.Suspense></div>}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 <div className="gs-product-gallery space-y-4" aria-label={selectedProduct.name || storeText.productDetails}>

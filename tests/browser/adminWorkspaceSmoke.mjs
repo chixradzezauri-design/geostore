@@ -118,7 +118,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});
-          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),7,'five character cards and two viewport buttons');
+          assert.equal(await studio.locator('button[aria-pressed][type="button"]').count(),11,'nine character cards and two viewport buttons');
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
@@ -142,7 +142,11 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await live.locator('svg[data-character-render="dimensional"][data-character-model="robot"]').count(),1);
           const gradientIds=await studio.locator('svg.gs-character-art defs [id]').evaluateAll(nodes=>nodes.map(n=>n.id));
           assert.equal(new Set(gradientIds).size,gradientIds.length,'Every character preview has independent lighting definitions');
-          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),5);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),9);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="metal"]').count(),1);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="feathers"]').count(),1);
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-material="fur"]').count(),7);
+          assert.equal(await studio.locator('button[aria-pressed] .gs-character-head').count(),9);
           await appearance.getByRole('button',{name:'ვიზუალური პარამეტრების აღდგენა'}).click();
           assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'76px');
           const greetings=studio.locator('[data-character-greetings]');
@@ -173,7 +177,11 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           const eventScene=calendar.locator('.gs-character-preview-scene');
           await eventScene.waitFor({state:'visible',timeout:12000});
           assert.match(await eventScene.innerText(),/Fixture calendar greeting/);
-          assert.equal(await eventScene.locator('svg[data-character-model="panda"]').count(),1);
+          // The loading/fallback state deliberately keeps the hidden canvas mounted.
+          // Count only the visible renderer and still require the selected Panda identity.
+          const visiblePanda=eventScene.locator('svg[data-character-model="panda"]:visible, [data-character-3d-model="panda"][data-character-3d="ready"] canvas:visible');
+          await visiblePanda.waitFor({state:'visible'});
+          assert.equal(await visiblePanda.count(),1);
           await calendar.locator('summary').click();
           await eventScene.waitFor({state:'detached'});
           const scenarios=studio.locator('[data-character-scenarios]');
