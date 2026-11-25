@@ -42,6 +42,8 @@ import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 import AdminFlashSchedule from './AdminFlashSchedule.jsx';
+import AdminFlashPricePreview from './AdminFlashPricePreview.jsx';
+import {previewFlashPrices} from '../utils/adminFlashPricePreview.js';
 import { classifyAdminFlashSales, previewFlashSaleWindow, formatFlashSaleTime, FLASH_SALE_HOURS } from '../utils/adminFlashSalePlanning.js';
 import { compareBusinessPeriods, forecastBusinessSales, georgianBusinessDay } from '../utils/businessPeriodComparison.js';
 import { analyzeBusinessCustomers } from '../utils/businessCustomerAnalytics.js';
@@ -3978,7 +3980,8 @@ export default function AdminDashboardPro({
     if (!isOwner || !isCurrentAdminSession(sessionVersion) || isApplyingFlashSale || flashSaleMutationRef.current === sessionVersion) return;
     const immediateWindow = previewFlashSaleWindow(durationHours, '', Date.now());
     const overlap = classifyAdminFlashSales(products, Date.now()).activeProducts.filter(product => category === 'ყველა' || product.category === category).length;
-    if (!window.confirm(`გააქტიურდეს ${percent}% ფასდაკლება კატეგორიაზე „${category}“ ${durationHours} საათით?\nსავარაუდო დასრულება (თბილისი): ${formatFlashSaleTime(immediateWindow.endsAt)}${overlap ? '\nარჩეულ კატეგორიაში უკვე აქტიურია ' + overlap + ' პროდუქტი; მათ აქციას ახალი პირობები ჩაანაცვლებს.' : ''}`)) return;
+    const pricePreview = previewFlashPrices(products, flashSaleForm);
+    if (!window.confirm(`გააქტიურდეს ${percent}% ფასდაკლება კატეგორიაზე „${category}“ ${durationHours} საათით?\nსავარაუდო დასრულება (თბილისი): ${formatFlashSaleTime(immediateWindow.endsAt)}${pricePreview?.raisesPrice ? '\nყურადღება: ჩატვირთული პროდუქტებიდან ' + pricePreview.raisesPrice + ' პროდუქტზე ახალი ფასი მიმდინარე ფასზე მაღალია.' : ''}${overlap ? '\nარჩეულ კატეგორიაში უკვე აქტიურია ' + overlap + ' პროდუქტი; მათ აქციას ახალი პირობები ჩაანაცვლებს.' : ''}`)) return;
     flashSaleMutationRef.current = sessionVersion;
     setIsApplyingFlashSale(true);
 
@@ -7508,6 +7511,7 @@ export default function AdminDashboardPro({
                 </div> : <p role="alert" className="text-amber-200">აირჩიეთ მომავალი დრო.</p>}
                 <p className="text-[11px] leading-relaxed text-slate-400">თარიღის არჩევისას გამოიყენეთ ქვემოთ მოცემული დაგეგმვის ღილაკი. თარიღის გარეშე აქცია დაუყოვნებლივ დაიწყება დადასტურების შემდეგ.</p>
               </div>
+              <AdminFlashPricePreview products={products} form={flashSaleForm} scheduled={Boolean(flashSalePlannedStart)} />
               <button type="submit" disabled={isApplyingFlashSale || Boolean(flashSalePlannedStart)} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
               </button>
