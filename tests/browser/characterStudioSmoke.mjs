@@ -10,7 +10,7 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       let activeSale=true;
       await context.route(backend+'/**',async route=>{
         const path=new URL(route.request().url()).pathname;
-        const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
+        const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
         return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
       });
       await context.routeWebSocket('wss://xmtnszxtnfxnrojionoa.supabase.co/**',socket=>socket.close());
@@ -44,6 +44,20 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       const wishlistScene=page.locator('.gs-video-wishlist-empty .gs-character-context');
       await wishlistScene.waitFor({state:'visible',timeout:10000});
       assert.match(await wishlistScene.innerText(),/Wishlist scene fixture/);
+      await page.locator('.gs-video-wishlist-empty .gs-video-continue-shopping').click();
+      const card=page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'});
+      await card.locator('.gs-catalog-product-title-action').click();
+      const dialog=page.locator('.gs-product-dialog');
+      await dialog.waitFor({state:'visible'});
+      await dialog.locator('.gs-modal-add-to-cart').click();
+      await dialog.waitFor({state:'detached'});
+      const reaction=page.locator('[role="status"] .gs-character-reaction');
+      await reaction.waitFor({state:'visible'});
+      assert.match(await reaction.innerText(),/Cart reaction fixture/);
+      assert.equal(await reaction.locator('.gs-character-reaction-art').evaluate(n=>getComputedStyle(n).animationName),'none');
+      await card.locator('.gs-catalog-wishlist-toggle').click();
+      await reaction.waitFor({state:'detached'});
+      assert.equal(await card.locator('.gs-catalog-wishlist-toggle').getAttribute('aria-pressed'),'true','Cooldown never blocks commerce');
       activeSale=false;
       await page.reload({waitUntil:'domcontentloaded'});
       await page.locator('.geostore-storefront').waitFor({state:'visible'});
