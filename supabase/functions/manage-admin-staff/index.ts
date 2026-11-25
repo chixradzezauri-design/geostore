@@ -112,6 +112,16 @@ Deno.serve(async (request: Request) => {
       return json({ error: 'თანამშრომლების მართვა მხოლოდ მთავარ ადმინისტრატორს შეუძლია.' }, 403);
     }
 
+    // Staged rollout only. The RPC checks the same caller JWT against Auth's
+    // live session, prior to obtaining a privileged service client.
+    // Enable only after the MFA SQL release and owner enrollment are verified.
+    if (Deno.env.get('ADMIN_MFA_REQUIRED') === 'true') {
+      const { data: mfaVerified, error: mfaError } = await userClient.rpc('admin_staff_mfa_verified');
+      if (mfaError || mfaVerified !== true) {
+        return json({ error: 'საჭიროა ორფაქტორიანი ავტორიზაციის დადასტურება.' }, 403);
+      }
+    }
+
     // Enforce the limit on the actual body bytes; Content-Length may be absent
     // or untrusted on streamed requests.
     const rawBody = await request.text();

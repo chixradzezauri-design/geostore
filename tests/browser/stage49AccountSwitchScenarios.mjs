@@ -93,7 +93,7 @@ const openCheckout = async page => {
 // No real Supabase requests are ever forwarded. Only fixture auth token/logout
 // requests may be "writes"; all database mutations are categorically blocked.
 export async function runStage49AccountSwitchScenario(browser, host) {
-  const context = await browser.newContext({
+  const context = await browser.newContext({ serviceWorkers: 'block',
     viewport: { width: 390, height: 844 }, reducedMotion: 'reduce'
   });
   const intercepted = [];

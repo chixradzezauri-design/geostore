@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/product/:id",
+      "destination": "/api/catalogue-page?kind=product&value=:id"
+    },
+    {
+      "source": "/category/:name",
+      "destination": "/api/catalogue-page?kind=category&value=:name"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
@@ -52,6 +64,28 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/geostore-sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/offline.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ],
   "git": {
@@ -59,7 +93,16 @@
       "internal-admin-video-redesign-2026-11-24": false,
       "internal-storefront-video-redesign-2026-11-24": false,
       "internal-admin-workspace-audit-2026-11-24": false,
-      "internal-admin-advanced-capabilities-2026-11-24": false
+      "internal-admin-advanced-capabilities-2026-11-24": false,
+      "internal-technical-excellence-2026-11-25": false
+    }
+  },
+  "functions": {
+    "api/sitemap.js": {
+      "includeFiles": "src/supabaseClient.js"
+    },
+    "api/catalogue-page.js": {
+      "includeFiles": "{dist/index.html,src/supabaseClient.js}"
     }
   }
 }

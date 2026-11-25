@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/splitAdminCss.mjs",
     "vercel-build": "npm test && npm run build",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --test",
+    "build:measure": "npm run build && node scripts/reportBuildPerformance.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

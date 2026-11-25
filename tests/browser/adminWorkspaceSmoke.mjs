@@ -25,7 +25,7 @@ const modules = {
 
 export async function runAdminWorkspaceSmoke(browser, host) {
   for (const width of [390, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const errors = [];
     const writes = [];
     try {
@@ -71,7 +71,16 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       await context.addInitScript(() => localStorage.setItem('geostore_lang', 'ka'));
       const page = await context.newPage();
       page.on('pageerror', error => errors.push(String(error.message || error)));
+      const moduleRequests=new Set();
+      page.on('request',request=>{
+        const file=new URL(request.url()).pathname.split('/').pop();
+        if(file&&/^(AdminPanelVisualEditor|AdminSupplierWorkspace|AdminPurchaseWorkspace|AdminMarketingSegments)-[\w-]+\.js$/.test(file))moduleRequests.add(file.split('-')[0]);
+      });
       await page.goto(host, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.locator('.geostore-storefront').waitFor({state:'visible'});
+      const adminCss=await page.locator('meta[name="gs-admin-css-slot"]').getAttribute('content');
+      assert.ok(adminCss?.includes('/assets/admin-core-'));
+      assert.equal(await page.locator('link[data-gs-admin-core]').count(),0,'Admin CSS must not load for the anonymous storefront');
       await page.locator('.gs-menu-toggle').click();
       await page.locator('.gs-menu-login').click();
       const auth = page.locator('.gs-commerce-dialog--account');
@@ -80,9 +89,14 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       await auth.locator('form button[type="submit"]').click();
       const shortcut = page.locator('.geostore-admin-shortcut button');
       await shortcut.waitFor({ state: 'visible', timeout: 20000 });
+      // Owner authentication intentionally opens the admin tab automatically.
+      // The stylesheet can already be loading by the time the shortcut appears.
       await shortcut.click();
       const shell = page.locator('.admin-dashboard-shell');
       await shell.waitFor({ state: 'visible', timeout: 20000 });
+      assert.equal(await page.locator('link[data-gs-admin-core]').count(),1,'Admin CSS loads once on entry');
+      assert.ok(await page.locator('link[data-gs-admin-core]').evaluate(node=>Boolean(node.sheet)&&node.nextElementSibling?.getAttribute('name')==='gs-admin-css-slot'),'Loaded stylesheet stays in original cascade slot');
+      assert.equal(moduleRequests.size,0,'Dedicated admin modules must not load on the initial command center');
       const picker = page.locator('#geostore-admin-mobile-section');
       for (const [tab, selector] of Object.entries(modules)) {
         // Desktop and phone use the real exposed navigation controls.
@@ -101,6 +115,72 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           throw new Error(width + 'px: expected module ' + tab + ', active ' + selected + ', errors: ' + errors.join('; ') + '; ' + error.message);
         }
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
+        if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
+        if(tab==='products'){
+          const gallery=shell.locator('#admin-workspace-product-gallery');
+          // Deterministic large JPEG, locally generated; no actual Storage writes.
+          const bytes=await page.evaluate(async()=>{
+            const canvas=document.createElement('canvas');canvas.width=2400;canvas.height=1600;
+            const ctx=canvas.getContext('2d'),data=ctx.createImageData(canvas.width,canvas.height);
+            let state=123456;
+            for(let i=0;i<data.data.length;i+=4){
+              state=(Math.imul(state,1664525)+1013904223)>>>0;
+              const v=(state>>>24)&255;
+              data.data[i]=v;data.data[i+1]=v;data.data[i+2]=v;data.data[i+3]=255;
+            }
+            ctx.putImageData(data,0,0);
+            const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.92));
+            return Array.from(new Uint8Array(await blob.arrayBuffer()));
+          });
+          assert.ok(bytes.length>128*1024&&bytes.length<=5*1024*1024);
+          // Chromium canvas JPEGs may contain an ICC APP2 segment. The production
+          // optimizer deliberately preserves those. Strip APP2 only from this
+          // synthetic sRGB fixture, never from a user's uploaded image.
+          const original=Buffer.from(bytes);
+          assert.equal(original.readUInt16BE(0),0xffd8);
+          const parts=[original.subarray(0,2)];
+          let offset=2, app2Count=0, scanFound=false;
+          while(offset<original.length){
+            const start=offset;
+            assert.equal(original[offset++],0xff);
+            while(original[offset]===0xff)offset++;
+            const marker=original[offset++];
+            if(marker===0xda){parts.push(original.subarray(start));scanFound=true;break;}
+            assert.ok(marker!==0xd9&&offset+2<=original.length);
+            const length=original.readUInt16BE(offset);
+            assert.ok(length>=2&&offset+length<=original.length);
+            offset+=length;
+            if(marker===0xe2)app2Count++;
+            else parts.push(original.subarray(start,offset));
+          }
+          assert.ok(scanFound,'Synthetic JPEG contains a scan');
+          const eligible=Buffer.concat(parts);
+          assert.ok(eligible.length>128*1024&&eligible.length<=5*1024*1024);
+          const thumbnail=shell.locator('.admin-product-gallery-thumbnail img').first();
+          const remove=()=>shell.getByRole('button',{name:'ფოტო 1 — წაშლა',exact:true}).click();
+          if(app2Count){
+            await gallery.setInputFiles({name:'profiled.jpg',mimeType:'image/jpeg',buffer:original});
+            await thumbnail.waitFor({state:'visible',timeout:20000});
+            const preserved=await thumbnail.getAttribute('src');
+            assert.ok(preserved==='data:image/jpeg;base64,'+original.toString('base64'),'ICC JPEG must be retained byte for byte');
+            await remove();
+            await thumbnail.waitFor({state:'detached'});
+          }
+          await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:eligible});
+          await thumbnail.waitFor({state:'visible',timeout:20000});
+          const optimized=await thumbnail.getAttribute('src');
+          assert.ok(optimized?.startsWith('data:image/webp;base64,'),'Eligible JPEG must convert to WebP');
+          const encoded=Buffer.from(optimized.split(',')[1],'base64');
+          assert.ok(encoded.length<=eligible.length*0.85,'WebP must save at least 15%');
+          await page.waitForFunction(()=>{const img=document.querySelector('.admin-product-gallery-thumbnail img');return img?.naturalWidth===2048&&img?.naturalHeight===1365;});
+          await remove();
+          await thumbnail.waitFor({state:'detached'});
+          const gif=Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7','base64');
+          await gallery.setInputFiles({name:'fixture.gif',mimeType:'image/gif',buffer:gif});
+          await thumbnail.waitFor({state:'visible'});
+          assert.equal(await thumbnail.getAttribute('src'),'data:image/gif;base64,'+gif.toString('base64'));
+          await shell.getByRole('button',{name:'ფოტო 1 — წაშლა',exact:true}).click();
+        }
         if (tab === 'settings') {
           const fee = page.locator('#admin-workspace-delivery-tbilisi');
           const before = await fee.inputValue();
@@ -115,6 +195,8 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await purchase.getByRole('combobox',{name:'შესყიდვის სტატუსი',exact:true}).selectOption('partial');
           const supplier = shell.locator('.admin-supplier-workspace');
           await supplier.locator('[data-supplier-state="ready"]').waitFor({state:'visible'});
+          assert.ok(moduleRequests.has('AdminSupplierWorkspace')&&moduleRequests.has('AdminPurchaseWorkspace'),'Vendor modules load on entering vendors');
+          assert.equal(moduleRequests.has('AdminMarketingSegments'),false,'Marketing code still deferred');
           await supplier.getByRole('button',{name:'სერვერული საკომისიოს შეცვლა: Fixture supplier',exact:true}).click();
           const commission=supplier.getByRole('spinbutton',{name:'სერვერული საკომისიო'});
           await commission.fill('12.50');
@@ -130,6 +212,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           const segments=shell.locator('.admin-marketing-segments');
           await segments.getByRole('combobox',{name:'სეგმენტის ფილტრი'}).selectOption('vip');
           await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
+          assert.ok(moduleRequests.has('AdminMarketingSegments'),'Marketing module loads on entering users');
           assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
         }
         if (tab === 'visual_editor') {

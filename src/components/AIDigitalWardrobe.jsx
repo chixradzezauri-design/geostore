@@ -1,40 +1,21 @@
 // src/components/AIDigitalWardrobe.jsx - Full AI Digital Wardrobe & Personal Stylist
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import {WARDROBE_SYNC_ENABLED} from '../utils/wardrobeAccountReview.js';
+const WardrobeAccountPanel=React.lazy(()=>import('./WardrobeAccountPanel.jsx'));
+import {readCurrentWardrobe,writeWardrobe} from '../utils/wardrobeStorage.js';
 import { validateImageFile, isSafeImageUrl, isValidImageDataUrl } from '../utils/imageSafety';
 import { 
   Sparkles, Shirt, Footprints, Camera, Plus, Trash2, Zap, CloudSun, 
   Calendar, Check, ShoppingBag, Eye, RefreshCw, Tag, Heart, ArrowRight, Layers
 } from 'lucide-react';
 
-export default function AIDigitalWardrobe({ products = [], addToCart, formatPrice }) {
+export default function AIDigitalWardrobe({ products = [], addToCart, formatPrice, wardrobeOwnerId = null, syncClient, getSyncScope, syncLang='ka' }) {
   // 🌟 მომხმარებლის გარდერობის სახელმწიფო (Local Storage ინტეგრაციით)
-  const [wardrobe, setWardrobe] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_digital_wardrobe');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'w1',
-          name: 'შავი ქურთუკი',
-          category: 'ტანსაცმელი',
-          subCategory: 'ქურთუკი',
-          color: 'შავი',
-          season: 'ზამთარი / შემოდგომა',
-          image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600'
-        },
-        {
-          id: 'w2',
-          name: 'თეთრი სპორტული ბოტასი',
-          category: 'ფეხსაცმელი',
-          subCategory: 'ბოტასი',
-          color: 'თეთრი',
-          season: 'ყველა სეზონი',
-          image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=600'
-        }
-      ];
-    } catch {
-      return [];
-    }
-  });
+  const [wardrobe, setWardrobe] = useState(() => readCurrentWardrobe(wardrobeOwnerId));
+  const initialWardrobe=useRef(wardrobe);
+  const imageGeneration=useRef(0);
+  const [storageError,setStorageError]=useState(false);
+  useEffect(()=>()=>{imageGeneration.current+=1;},[]);
 
   // 🌟 ახალი ნივთის დამატების ფორმის სახელმწიფო
   const [newItem, setNewItem] = useState({
@@ -54,24 +35,29 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   const [generatedOutfit, setGeneratedOutfit] = useState(null);
 
   useEffect(() => {
+    if(wardrobe===initialWardrobe.current)return;
     try {
-      localStorage.setItem('geostore_digital_wardrobe', JSON.stringify(wardrobe));
-    } catch {}
-  }, [wardrobe]);
+      writeWardrobe(globalThis.localStorage,wardrobeOwnerId,wardrobe);
+      setStorageError(false);
+    } catch {setStorageError(true);}
+  }, [wardrobe,wardrobeOwnerId]);
 
   // 📸 ფოტოს ატვირთვა Base64 ფორმატში
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    const generation=++imageGeneration.current;
+    const isCurrent=()=>imageGeneration.current===generation;
     try {
       await validateImageFile(file);
+      if(!isCurrent())return;
       const reader = new FileReader();
-      reader.onload = () => setNewItem(prev => ({ ...prev, image: reader.result }));
-      reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
+      reader.onload = () => {if(isCurrent())setNewItem(prev => ({ ...prev, image: reader.result }));};
+      reader.onerror = () => {if(isCurrent())alert('ფოტოს წაკითხვა ვერ მოხერხდა.');};
       reader.readAsDataURL(file);
     } catch (error) {
-      alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+      if(isCurrent())alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
     }
   };
 
@@ -94,6 +80,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       image: newItem.image || null
     };
 
+    imageGeneration.current+=1;
     setWardrobe(prev => [createdItem, ...prev]);
     setNewItem({ name: '', category: 'ტანსაცმელი', subCategory: 'მაისური', color: 'შავი', season: 'ყველა სეზონი', image: '' });
     setIsAddModalOpen(false);
@@ -156,6 +143,8 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   return (
     <div className="gs-digital-wardrobe space-y-8 w-full pb-16 animate-in fade-in duration-500 text-white">
       
+      {storageError && <p role="alert" className="text-sm text-amber-300">გარდერობის ცვლილება მოწყობილობაზე ვერ შეინახა. შეამოწმეთ თავისუფალი მეხსიერება.</p>}
+      {WARDROBE_SYNC_ENABLED&&wardrobeOwnerId&&syncClient&&getSyncScope&&<React.Suspense fallback={null}><WardrobeAccountPanel key={wardrobeOwnerId} client={syncClient} getScope={getSyncScope} ownerId={wardrobeOwnerId} lang={syncLang}/></React.Suspense>}
       {/* 🌟 HERO BANNER */}
       <div className="gs-wardrobe-hero relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-xl text-center md:text-left z-10">
@@ -356,7 +345,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       {isAddModalOpen && (
         <div className="gs-wardrobe-add-modal fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
           <form onSubmit={handleAddItem} className="gs-wardrobe-add-form bg-slate-900 border border-emerald-500/40 rounded-[2.5rem] p-6 sm:p-8 max-w-md w-full space-y-4 text-xs shadow-2xl relative">
-            <button type="button" onClick={() => setIsAddModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer">✕</button>
+            <button type="button" onClick={() => {imageGeneration.current+=1;setIsAddModalOpen(false);}} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer">✕</button>
 
             <h3 className="text-base font-black text-white border-b border-emerald-500/20 pb-3">ახალი ნივთის დამატება გარდერობში</h3>
 
@@ -392,7 +381,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
             <div className="space-y-1.5">
               <label className="text-slate-300 font-bold">ატვირთეთ ფოტო ან ჩასვით URL</label>
               <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageUpload} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-black hover:file:bg-emerald-400 cursor-pointer" />
-              <input type="text" placeholder="ან ფოტოს URL..." value={newItem.image} onChange={e => setNewItem({...newItem, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400 mt-2" />
+              <input type="text" placeholder="ან ფოტოს URL..." value={newItem.image} onChange={e => {imageGeneration.current+=1;setNewItem({...newItem, image: e.target.value});}} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400 mt-2" />
             </div>
 
             <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-xl transition cursor-pointer">

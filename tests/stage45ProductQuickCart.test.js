@@ -10,7 +10,8 @@ const css = readFileSync(new URL('../src/designSystemV2.css', import.meta.url), 
 test('stage45 quick-view actions are keyboard reachable and preserve modal failure state', () => {
  assert.match(store, /<button type="button" onClick={event => handleOpenProduct\(prod, event\.currentTarget\)} aria-label=/);
  assert.match(store, /className="gs-flash-sale-title-action"/);
- assert.match(store, /if \(added !== false\) setSelectedProduct\(null\)/);
+ assert.match(store, /if \(added !== false\) closeProductDetails\(\)/);
+ assert.match(store, /const closeProductDetails = \(fromRoute=false\) => \{[\s\S]*?setSelectedProduct\(null\)/);
  assert.match(store, /returnTarget\?\.isConnected/);
  assert.match(store, /gs-custom-variant-name font-bold/);
  assert.match(css, /Stage 45 — accessible Flash Sale quick-view/);

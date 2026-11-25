@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://geostore.ge/sitemap.xml
+Disallow: /api/
+Sitemap: https://geostore.vercel.app/sitemap.xml

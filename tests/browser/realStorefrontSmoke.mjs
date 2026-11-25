@@ -4,6 +4,8 @@ import { chromium, webkit } from 'playwright';
 import { runStage46ProductPurchaseScenarios } from './stage46PurchaseScenarios.mjs';
 import { runStage49AccountSwitchScenario } from './stage49AccountSwitchScenarios.mjs';
 import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
+import {runCatalogueSeoHttpSmoke} from './catalogueSeoHttpSmoke.mjs';
+import {runPwaOfflineSmoke} from './pwaOfflineSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -31,7 +33,7 @@ try {
   await awaitServer();
   browser = await chromium.launch({ headless: true });
   for (const width of [320, 375, 430, 768, 1024, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const page = await context.newPage();
     try {
       const pageErrors = [];
@@ -196,7 +198,7 @@ try {
   // anonymous browser access. Supabase auth restore deliberately redirects the
   // route back to the storefront; it does not render a private admin fallback.
   for (const width of [375, 768, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const page = await context.newPage();
     try {
       const pageErrors = [];
@@ -236,10 +238,13 @@ try {
       await context.close();
     }
   }
+  // Phase 4: HTTP handler integration with the actual built shell, no live Supabase.
+  await runCatalogueSeoHttpSmoke(browser,host);
   // Stage 46: actual built SPA with a fully intercepted, deterministic catalogue.
   await runStage46ProductPurchaseScenarios(browser, host);
   await runStage49AccountSwitchScenario(browser, host);
   await runAdminWorkspaceSmoke(browser, host);
+  await runPwaOfflineSmoke(browser);
 
   // Stage 48: exercise Safari's WebKit engine with the exact same fully
   // intercepted catalogue. This is not a native iPhone Safari test.

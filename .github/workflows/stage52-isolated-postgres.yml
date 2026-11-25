@@ -110,6 +110,33 @@ on:
       - 'release/staged-marketing-preflight.sql'
       - 'tests/sql/admin_marketing_consent_contract.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'
+      - 'release/phase4-wishlist-sync-draft.sql'
+      - 'tests/sql/phase4_wishlist_sync_contract.sql'
+      - 'release/phase4-cart-sync-draft.sql'
+      - 'tests/sql/phase4_cart_sync_contract.sql'
+      - 'release/phase4-wardrobe-storage-draft.sql'
+      - 'release/phase4-wardrobe-items-draft.sql'
+      - 'release/phase4-wardrobe-reservations-draft.sql'
+      - 'release/phase4-wardrobe-erasure-worker-draft.sql'
+      - 'release/phase4-wardrobe-remove-item-draft.sql'
+      - 'release/phase4-wardrobe-recovery-status-draft.sql'
+      - 'tests/sql/phase4_wardrobe_contract.sql'
+      - 'release/phase4-admin-mfa-guard-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_guard_contract.sql'
+      - 'release/phase4-admin-mfa-owner-rpcs-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_owner_original_fixture.sql'
+      - 'tests/sql/phase4_admin_mfa_owner_contract.sql'
+      - 'release/phase4-admin-mfa-commerce-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_commerce_original_fixture.sql'
+      - 'tests/sql/phase4_admin_mfa_commerce_contract.sql'
+      - 'release/phase4-admin-mfa-session-rls-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_session_rls_contract.sql'
+      - 'release/phase4-admin-mfa-eligibility-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_eligibility_contract.sql'
+      - 'release/phase4-system-error-history-draft.sql'
+      - 'tests/sql/phase4_system_error_history_contract.sql'
+      - 'release/phase4-system-error-budget-draft.sql'
+      - 'tests/sql/phase4_system_error_budget_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -199,3 +226,27 @@ jobs:
           node tests/advancedAdminHttpContract.mjs || { docker logs advanced-admin-http-fixture; exit 1; }
           PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_http_inventory_verify.sql
           PGDATABASE=advanced_admin_release_bundle psql -v ON_ERROR_STOP=1 -f tests/sql/advanced_admin_acl_verify.sql
+
+          createdb phase4_wishlist_sync
+          PGDATABASE=phase4_wishlist_sync psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_wishlist_sync_contract.sql
+
+          createdb phase4_cart_sync
+          PGDATABASE=phase4_cart_sync psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_cart_sync_contract.sql
+
+          createdb phase4_wardrobe
+          PGDATABASE=phase4_wardrobe psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_wardrobe_contract.sql
+
+          createdb phase4_admin_mfa
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_guard_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_owner_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_commerce_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_session_rls_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_eligibility_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_system_error_history_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_system_error_budget_contract.sql

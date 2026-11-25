@@ -4,7 +4,9 @@ import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 
 const assets = resolve('dist/assets');
-const stylesheets = readdirSync(assets).filter(file => file.endsWith('.css'));
+const shell = readFileSync(resolve('dist/index.html'),'utf8');
+const ordered = [...shell.matchAll(/(?:<link\b[^>]*href|<meta name="gs-admin-css-slot" content)="\/assets\/([^" ]+\.css)"/g)].map(m=>m[1]);
+const stylesheets = [...ordered,...readdirSync(assets).filter(file=>file.endsWith('.css')&&!ordered.includes(file))];
 assert.ok(stylesheets.length, 'Production build must contain CSS');
 const css = stylesheets.map(file => readFileSync(resolve(assets, file), 'utf8')).join('\n');
 const stage6CssPresent = css.includes('.admin-products-panel .admin-product-controls');

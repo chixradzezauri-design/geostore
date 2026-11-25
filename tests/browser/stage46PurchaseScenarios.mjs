@@ -76,7 +76,7 @@ async function addSelectedProduct(page) {
 
 export async function runStage46ProductPurchaseScenarios(browser, host, widths = [320, 390, 768, 1440]) {
   for (const width of widths) {
-    const context = await browser.newContext({
+    const context = await browser.newContext({ serviceWorkers: 'block',
       viewport: { width, height: 850 }, reducedMotion: 'reduce'
     });
     const page = await context.newPage();
@@ -118,12 +118,36 @@ export async function runStage46ProductPurchaseScenarios(browser, host, widths =
       assert.equal(await page.locator('.gs-catalog-product-card').count(), 4,
         'All four deterministic catalogue products are visible');
 
+      // SEO direct links must resolve with real browser navigation and a fresh
+      // intercepted catalogue, never by relying on the pre-seeded cache.
+      const directPath='/product/stage46-simple';
+      const rootUrl=new URL(host).origin;
+      assert.equal(await page.locator('.gs-catalog-product-title-action').filter({hasText:'Stage46 Everyday Wallet'}).getAttribute('href'),directPath);
+      await page.goto(rootUrl+directPath,{waitUntil:'domcontentloaded'});
+      await page.locator('.gs-product-dialog .gs-product-detail-title').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible',timeout:20000});
+      await page.waitForFunction(()=>document.title==='Stage46 Everyday Wallet | GEOSTORE');
+      await page.locator('.gs-product-modal-close').click();
+      await page.locator('.gs-product-dialog').waitFor({state:'detached'});
+      await page.goto(rootUrl+'/product/stage46-not-present',{waitUntil:'domcontentloaded'});
+      await page.getByRole('alert').filter({hasText:'პროდუქტი ხელმისაწვდომი აღარ არის.'}).waitFor({state:'visible',timeout:20000});
+      assert.equal(await page.locator('.gs-product-dialog').count(),0);
+      await page.goto(rootUrl+'/category/'+encodeURIComponent('აქსესუარები'),{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>document.title==='აქსესუარები | GEOSTORE');
+      await page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
+      await page.waitForFunction(()=>!Array.from(document.querySelectorAll('.gs-catalog-product-card')).some(card=>card.textContent.includes('Stage46 Matrix Jacket')));
+      await page.goto(host,{waitUntil:'domcontentloaded'});
+      await page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Matrix Jacket'}).waitFor({state:'visible'});
       // Keyboard quick detail and return-to-launcher focus.
       const simpleTrigger = page.locator('.gs-catalog-product-card')
         .filter({ hasText: 'Stage46 Everyday Wallet' }).locator('.gs-catalog-product-title-action');
       await simpleTrigger.focus();
       await page.keyboard.press('Enter');
       await page.locator('.gs-product-dialog').waitFor({ state: 'visible' });
+      assert.equal(new URL(page.url()).pathname,directPath);
+      await page.goBack();
+      await page.locator('.gs-product-dialog').waitFor({state:'detached'});
+      await page.goForward();
+      await page.locator('.gs-product-dialog').waitFor({state:'visible'});
       assert.equal(await page.locator('.gs-product-modal-close').evaluate(node => document.activeElement === node), true,
         'Quick-view close control receives initial keyboard focus');
       await page.keyboard.press('Escape');

@@ -1,13 +1,31 @@
+import InstallAppDialog from './components/InstallAppDialog.jsx';
+import {captureCheckoutCart,planConfirmedLocalCartCleanup,checkoutCartUnchanged} from './utils/checkoutCartCleanup.js';
+import PwaStatusNotice from './components/PwaStatusNotice.jsx';
+import { WISHLIST_SYNC_ENABLED } from './utils/wishlistSyncReview.js';
+import { CART_SYNC_ENABLED, validateCartReviewStock, planCartReviewRestore, matchesCartRestorePreview } from './utils/cartSyncReview.js';
+const CartSyncPanel = React.lazy(()=>import('./components/CartSyncPanel.jsx'));
+import { projectWishlistIds } from './utils/wishlistSyncContract.js';
+const WishlistSyncPanel = React.lazy(()=>import('./components/WishlistSyncPanel.jsx'));
+import {getInstallPlatform,isStandaloneApp} from './utils/pwaInstall.js';
 // src/App.jsx
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
 import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
+import {systemMonitor} from './utils/systemMonitor.js';
+import { ADMIN_MFA_ROLLOUT_ENABLED, runAdminAuthExclusive } from './utils/adminAuthCoordinator.js';
+import { createDeferredAuthResolution, advanceMfaScope, isMfaScopeCurrent } from './utils/adminAuthEventSafety.js';
+import { createAdminMfaAccessResolver } from './utils/adminMfaAccessResolver.js';
+import { createAdminMfaTransport } from './utils/adminMfaTransport.js';
+const AdminMfaPanel = lazy(() => import('./components/AdminMfaPanel.jsx'));
+const AdminBackupMfaPanel = lazy(() => import('./components/AdminBackupMfaPanel.jsx'));
+import {createAdminBackupMfa} from './utils/adminBackupMfa.js';
 
 import Header from './components/Header';
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
+import {loadAdminCss} from './utils/loadAdminCss.js';
 import CustomerMarketingConsent from './components/CustomerMarketingConsent.jsx';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
@@ -43,10 +61,11 @@ import { getCartFeedbackMessage } from './utils/cartFeedback.js';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, hasProductVariantOptions, getProductAvailableStock, getProductStartingPrice } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 import { findCurrentSavedProduct } from './utils/savedProductNavigation.js';
+import { catalogueRouteFromLocation, catalogueNavigationTarget, categoryPath, catalogueMetadata } from './utils/catalogueSeo.js';
 import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
-const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
+const AdminDashboardPro = lazy(() => Promise.all([import('./components/AdminDashboardPro'),loadAdminCss()]).then(([module])=>module));
 const AIDigitalWardrobe = lazy(() => import('./components/AIDigitalWardrobe'));
 const ProductCompareModal = lazy(() => import('./components/ProductCompareModal'));
 const ImageSearchModal = lazy(() => import('./components/ImageSearchModal'));
@@ -57,20 +76,13 @@ const Modals = lazy(() => import('./components/Modals'));
 class AdminDashboardErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, errorMessage: '', componentStack: '' };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
-    return {
-      hasError: true,
-      errorMessage: String(error?.message || error || 'უცნობი React შეცდომა').slice(0, 1200)
-    };
-  }
+  static getDerivedStateFromError() { return { hasError: true }; }
 
-  componentDidCatch(error, info) {
-    const componentStack = String(info?.componentStack || '').slice(0, 4000);
-    this.setState({ componentStack });
-    console.error('GEOSTORE admin dashboard render failed:', error, info);
+  componentDidCatch() {
+    try { systemMonitor.record('react_admin_render_error'); } catch {}
   }
 
   handleRetry = () => {
@@ -83,16 +95,7 @@ class AdminDashboardErrorBoundary extends React.Component {
         <div role="alert" className="mx-auto my-10 w-full max-w-xl rounded-2xl border border-rose-500/30 bg-slate-950 p-6 text-left text-slate-100 shadow-xl">
           <h2 className="text-center text-lg font-black">ადმინ პანელი ვერ ჩაიტვირთა</h2>
           <p className="mt-2 text-center text-sm text-slate-300">ტექნიკური შეცდომა დაფიქსირდა. მაღაზიის დანარჩენი ნაწილი ხელმისაწვდომი რჩება.</p>
-          <div className="mt-4 rounded-xl border border-rose-500/20 bg-black/30 p-3">
-            <p className="text-xs font-bold text-rose-300">შეცდომის დეტალი</p>
-            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-200">{this.state.errorMessage || 'შეცდომის ტექსტი მიუწვდომელია'}</pre>
-            {this.state.componentStack && (
-              <details className="mt-3">
-                <summary className="cursor-pointer text-xs font-semibold text-slate-400">კომპონენტების კვალი</summary>
-                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-[10px] text-slate-400">{this.state.componentStack}</pre>
-              </details>
-            )}
-          </div>
+          <p className="mt-4 text-center text-xs text-slate-400">ტექნიკური კოდი: react_admin_render_error</p>
           <button type="button" onClick={this.handleRetry} className="mt-5 block w-full rounded-xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950">
             ხელახლა ცდა
           </button>
@@ -557,6 +560,37 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
   const [requestedSavedProductId, setRequestedSavedProductId] = useState(null);
+  const [catalogueRoute,setCatalogueRoute]=useState(()=>catalogueRouteFromLocation(window.location));
+  const [catalogueVerifiedEpoch,setCatalogueVerifiedEpoch]=useState(-1);
+  const catalogueRouteRef=useRef(catalogueRoute);
+  catalogueRouteRef.current=catalogueRoute;
+  const navigateCatalogue=(path,{replace=false}={})=>{
+    const target=catalogueNavigationTarget(window.location,path);
+    if(!target)return false;
+    if(window.location.pathname===path)return true;
+    window.history[replace?'replaceState':'pushState'](window.history.state,'',target);
+    const next=catalogueRouteFromLocation(window.location);
+    catalogueRouteRef.current=next;setCatalogueRoute(next);
+    return true;
+  };
+  useEffect(()=>{
+    const onPop=()=>{
+      const next=catalogueRouteFromLocation(window.location);
+      catalogueRouteRef.current=next;setCatalogueRoute(next);
+      if(next){setActiveTab('store');setSearchQuery('');}
+    };
+    window.addEventListener('popstate',onPop);
+    return()=>window.removeEventListener('popstate',onPop);
+  },[]);
+  useEffect(()=>{
+    if(activeTab!=='store'&&catalogueRouteRef.current?.kind!=='home'&&catalogueRouteRef.current){
+      navigateCatalogue('/',{replace:true});
+    }
+  },[activeTab]);
+  const selectHeaderCategory=name=>{
+    setSelectedCategory(name);
+    navigateCatalogue(categoryPath(name)||'/');
+  };
 
   const [cart, setCart] = useState(() =>
     sanitizeCartSnapshot(loadSafeStorage('geostore_cart:guest', loadSafeStorage('geostore_cart', [])))
@@ -608,6 +642,38 @@ export default function App() {
   // მომხმარებლის მდგომარეობა ახლა Supabase Auth-ის სესიიდან მოდის.
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const wishlistSyncScopeRef=useRef({ownerId:null,epoch:0,authLoading:true});
+  const suspendWishlistSync=()=>{const old=wishlistSyncScopeRef.current;wishlistSyncScopeRef.current={ownerId:null,epoch:old.epoch+1,authLoading:true};};
+  React.useLayoutEffect(()=>{
+    const owner=activeCartOwnerRef.current;
+    const old=wishlistSyncScopeRef.current;
+    const id=!authLoading&&owner.initialized&&owner.userId===currentUser?.id?currentUser?.id:null;
+    wishlistSyncScopeRef.current={ownerId:id||null,epoch:old.epoch,authLoading:!id};
+    return suspendWishlistSync;
+  },[currentUser?.id,authLoading]);
+  const mfaScopeRef = useRef({ownerId:null,epoch:0,authLoading:true,adminEligible:false});
+  const [mfaEntry,setMfaEntry] = useState(null);
+  const coordinatedAuth = (method,...args) => ADMIN_MFA_ROLLOUT_ENABLED
+    ? runAdminAuthExclusive(() => supabase.auth[method](...args))
+    : supabase.auth[method](...args);
+  const mfaTransport = useMemo(() => createAdminMfaTransport({
+    enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
+    getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
+  }),[]);
+  const backupMfa = useMemo(() => createAdminBackupMfa({
+    enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
+  }),[]);
+  const mfaResolve = useMemo(() => createAdminMfaAccessResolver({
+    enabled:ADMIN_MFA_ROLLOUT_ENABLED,client:supabase,
+    getContext:()=>mfaScopeRef.current,runAuthExclusive:runAdminAuthExclusive
+  }),[]);
+  const invalidateMfaScope = (userId,event) => {
+    if (!ADMIN_MFA_ROLLOUT_ENABLED) return;
+    mfaTransport.forgetEnrollment();
+    backupMfa.forget();
+    mfaScopeRef.current=advanceMfaScope(mfaScopeRef.current,userId,event);
+    setMfaEntry(null);
+  };
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
@@ -628,6 +694,16 @@ export default function App() {
   const hasSettingsAccess = hasAdminPermission('settings');
   const resolveAdminAccess = async (user) => {
     if (!user?.id) return EMPTY_ADMIN_ACCESS;
+    if (ADMIN_MFA_ROLLOUT_ENABLED) {
+      const scope=mfaScopeRef.current;
+      if(scope.ownerId!==user.id||scope.recovery===true) return EMPTY_ADMIN_ACCESS;
+      const resolved=await mfaResolve();
+      const now=mfaScopeRef.current;
+      if(!isMfaScopeCurrent(scope,now)) return EMPTY_ADMIN_ACCESS;
+      mfaScopeRef.current={...now,adminEligible:resolved.eligible===true};
+      setMfaEntry(resolved.eligible&&resolved.status!=='authorized'?{ownerId:scope.ownerId,epoch:scope.epoch}:null);
+      return resolved.status==='authorized'?resolved.access:EMPTY_ADMIN_ACCESS;
+    }
     if (isAuthorizedAdmin(user)) return OWNER_ADMIN_ACCESS;
     try {
       const { data, error } = await supabase.rpc('get_my_admin_access');
@@ -1086,13 +1162,17 @@ export default function App() {
     if (isAiAssistantOpen) setHasLoadedAiAssistant(true);
   }, [isAiAssistantOpen]);
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const deferredPromptRef = useRef(null);
+  const installBusyRef = useRef(false);
+  const [appInstalled,setAppInstalled]=useState(()=>isStandaloneApp(window));
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const installPlatform=getInstallPlatform(window.navigator);
 
   // Supabase Auth: სესიის აღდგენა და ცვლილებების მოსმენა.
   useEffect(() => {
     let mounted = true;
     let authEventVersion = 0;
+    const deferredAuth=createDeferredAuthResolution();
 
     // ძველი localStorage მომხმარებლის მონაცემი აღარ გამოიყენება.
     try {
@@ -1190,6 +1270,7 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       authEventVersion += 1;
+      suspendWishlistSync();
 
       if (event === 'PASSWORD_RECOVERY') {
         setAuthForm((current) => ({ ...current, email: session?.user?.email || current.email, password: '' }));
@@ -1199,12 +1280,14 @@ export default function App() {
 
       const eventVersion = authEventVersion;
       const authUser = session?.user || null;
+      invalidateMfaScope(authUser?.id,event);
       activateCartOwner(authUser?.id || null);
       setCurrentUser(normalizeAuthUser(authUser));
       setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setAuthLoading(Boolean(authUser));
 
+      deferredAuth.cancel();
       if (!authUser) {
         setActiveTab((current) => current === 'admin' ? 'store' : current);
         setAuthLoading(false);
@@ -1213,7 +1296,9 @@ export default function App() {
 
       // Supabase auth callbacks stay synchronous; resolve the database permission
       // after the callback returns, and discard stale results after account switches.
-      Promise.resolve().then(() => resolveAdminAccess(authUser)).then((access) => {
+      deferredAuth.schedule(async()=>{
+      if(!mounted||eventVersion!==authEventVersion)return;
+      await Promise.resolve().then(() => resolveAdminAccess(authUser)).then((access) => {
         if (!mounted || eventVersion !== authEventVersion) return;
         const authorized = hasAnyAdminAccess(access);
         setAdminAccess(access);
@@ -1230,6 +1315,7 @@ export default function App() {
         setActiveTab((current) => current === 'admin' ? 'store' : current);
         setAuthLoading(false);
       });
+      });
     });
 
     const restoreSession = async () => {
@@ -1244,6 +1330,8 @@ export default function App() {
         }
 
         const authUser = data?.user || null;
+        if (ADMIN_MFA_ROLLOUT_ENABLED && isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })
+          && mfaScopeRef.current.ownerId!==authUser?.id) invalidateMfaScope(authUser?.id);
         const access = await resolveAdminAccess(authUser);
         if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
           const authorized = hasAnyAdminAccess(access);
@@ -1261,6 +1349,7 @@ export default function App() {
           // Fail closed if the server cannot verify the restored session.
           // Clear every privilege-related UI state, not only the profile.
           activateCartOwner(null);
+          invalidateMfaScope(null,'SIGNED_OUT');
           setCurrentUser(null);
           setAdminAccess(EMPTY_ADMIN_ACCESS);
           setAdminLoggedIn(false);
@@ -1277,6 +1366,8 @@ export default function App() {
 
     return () => {
       mounted = false;
+      deferredAuth.cancel();
+      suspendWishlistSync();
       subscription.unsubscribe();
     };
   }, []);
@@ -1337,39 +1428,24 @@ export default function App() {
 
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener(
-      'beforeinstallprompt',
-      handleBeforeInstallPrompt
-    );
-
-    return () =>
-      window.removeEventListener(
-        'beforeinstallprompt',
-        handleBeforeInstallPrompt
-      );
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-
-        const { outcome } = await deferredPrompt.userChoice;
-
-        if (outcome === 'accepted') {
-          setDeferredPrompt(null);
-        }
-      } catch {
-        setShowInstallModal(true);
-      }
-    } else {
-      setShowInstallModal(true);
-    }
+    const media=window.matchMedia('(display-mode: standalone)');
+    const sync=()=>setAppInstalled(isStandaloneApp(window));
+    const onPrompt=e=>{e.preventDefault();deferredPromptRef.current=e;};
+    const onInstalled=()=>{deferredPromptRef.current=null;setAppInstalled(true);setShowInstallModal(false);};
+    window.addEventListener('beforeinstallprompt',onPrompt);
+    window.addEventListener('appinstalled',onInstalled);
+    media.addEventListener?.('change',sync);
+    return ()=>{window.removeEventListener('beforeinstallprompt',onPrompt);window.removeEventListener('appinstalled',onInstalled);media.removeEventListener?.('change',sync);};
+  },[]);
+  const handleInstallClick=async()=>{
+    if(installBusyRef.current)return;
+    if(appInstalled||isStandaloneApp(window)){setShowInstallModal(true);return;}
+    const prompt=deferredPromptRef.current;
+    deferredPromptRef.current=null;
+    if(!prompt){setShowInstallModal(true);return;}
+    installBusyRef.current=true;
+    try{await prompt.prompt();await prompt.userChoice;}catch{setShowInstallModal(true);}
+    finally{installBusyRef.current=false;}
   };
 
   const [toastMessage, setToastMessage] = useState('');
@@ -2049,7 +2125,7 @@ export default function App() {
             // Refresh once, then verify the refreshed identity with the Auth server
             // before retrying the privileged RPC. Never weaken the database guard.
             const { data: { session: refreshedSession } = {}, error: refreshError } =
-              await supabase.auth.refreshSession();
+              await coordinatedAuth('refreshSession');
 
             if (refreshError || !refreshedSession?.access_token) {
               setAdminAccess(EMPTY_ADMIN_ACCESS);
@@ -2158,8 +2234,10 @@ export default function App() {
 
         // The products state persistence effect below owns the local cache write.
         setProducts(formatted);
+        setCatalogueVerifiedEpoch(requestAccessEpoch);
       }
     } catch (error) {
+      if(requestAccessEpoch===productsAccessEpoch.current)setCatalogueVerifiedEpoch(-1);
       console.error('Products fetch error:', error);
     } finally {
       productsFetchLock.current = false;
@@ -2587,6 +2665,38 @@ export default function App() {
     setCart(nextCart);
   };
 
+  const planSyncedCartRestore=(line,scope)=>{
+    const now=wishlistSyncScopeRef.current;
+    if(!CART_SYNC_ENABLED||now.authLoading||now.ownerId!==scope.ownerId||now.epoch!==scope.epoch||activeCartOwnerRef.current.userId!==scope.ownerId||catalogueVerifiedEpoch!==productsAccessEpoch.current||orderSubmitLock.current||isCheckoutOpen||pendingCheckoutRef.current)return {status:'blocked'};
+    try{if(window.sessionStorage.getItem('geostore.pendingCheckout'))return {status:'blocked'};}catch{return {status:'blocked'};}
+    return planCartReviewRestore(cartRef.current,line,products);
+  };
+  const restoreSyncedCartLine=(line,scope,expected)=>{
+    const plan=planSyncedCartRestore(line,scope);
+    if(plan.status!=='ready'||!matchesCartRestorePreview(expected,plan.preview))return false;
+    try{
+      // Never silently replace a cart written by another tab since this view loaded.
+      const key=getCartStorageKey(scope.ownerId),raw=window.localStorage.getItem(key);
+      if(raw===null||JSON.stringify(sanitizeCartSnapshot(JSON.parse(raw)))!==JSON.stringify(sanitizeCartSnapshot(cartRef.current)))return false;
+      window.localStorage.setItem(key,JSON.stringify(plan.cart));
+    }catch{return false;}
+    cartRef.current=plan.cart;setCart(plan.cart);return true;
+  };
+  const importSyncedFavorite=(id,scope)=>{
+    if(!WISHLIST_SYNC_ENABLED)return false;
+    const now=wishlistSyncScopeRef.current;
+    if(now.authLoading||now.ownerId!==scope.ownerId||now.epoch!==scope.epoch||activeCartOwnerRef.current.userId!==scope.ownerId||catalogueVerifiedEpoch!==productsAccessEpoch.current)return false;
+    const current=wishlistRef.current;
+    if(current.some(item=>item.id===id))return true;
+    if(current.length>=100)return false;
+    const product=products.find(p=>p.id===id&&p.isPublished!==false&&p.is_published!==false);
+    if(!product)return false;
+    const next=sanitizeProductCollection([...current,product],100);
+    if(!next.some(p=>p.id===id))return false;
+    try{window.localStorage.setItem(getUserScopedCollectionStorageKey('geostore_wishlist',scope.ownerId),JSON.stringify(next));}
+    catch{return false;}
+    setWishlist(next);return true;
+  };
   const toggleWishlist = (product) => {
     setWishlist((prev) => {
       const exists = prev.some(
@@ -2714,7 +2824,7 @@ export default function App() {
       if (authSubmitLock.current) return;
       authSubmitLock.current = true;
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error } = await coordinatedAuth('resetPasswordForEmail', email, {
           redirectTo: 'https://geostore.vercel.app/'
         });
         if (error) throw error;
@@ -2759,9 +2869,9 @@ export default function App() {
           alert(currentLang === 'en' ? 'Choose a different password; this password is unsafe or could not be checked.' : currentLang === 'ru' ? 'Выберите другой пароль: этот пароль небезопасен или его не удалось проверить.' : 'აირჩიეთ სხვა პაროლი — ეს პაროლი არასაიმედოა ან მისი შემოწმება ვერ მოხერხდა.');
           return;
         }
-        const { error } = await supabase.auth.updateUser({ password });
+        const { error } = await coordinatedAuth('updateUser', { password });
         if (error) throw error;
-        const { error: signOutError } = await supabase.auth.signOut();
+        const { error: signOutError } = await coordinatedAuth('signOut');
         if (signOutError) throw signOutError;
         setCurrentUser(null);
         setAdminAccess(EMPTY_ADMIN_ACCESS);
@@ -2841,7 +2951,7 @@ export default function App() {
           return;
         }
 
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await coordinatedAuth('signUp', {
           email,
           password,
           options: {
@@ -2886,7 +2996,7 @@ export default function App() {
         }
       } else {
         const { data, error } =
-          await supabase.auth.signInWithPassword({
+          await coordinatedAuth('signInWithPassword', {
             email,
             password
           });
@@ -2957,7 +3067,7 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await coordinatedAuth('signOut');
 
       if (error) {
         throw error;
@@ -2987,12 +3097,15 @@ export default function App() {
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setAdminError('');
-
+    const start=mfaScopeRef.current;
+    const current=()=>!ADMIN_MFA_ROLLOUT_ENABLED||isMfaScopeCurrent(start,mfaScopeRef.current);
     try {
       const { data, error } = await supabase.auth.getUser();
+      if(!current())return;
       if (error) throw error;
 
       const access = await resolveAdminAccess(data?.user);
+      if(!current())return;
       if (!hasAnyAdminAccess(access)) {
         setAdminAccess(EMPTY_ADMIN_ACCESS);
         setAdminLoggedIn(false);
@@ -3007,6 +3120,7 @@ export default function App() {
         ? '🔓 მთავარი ადმინისტრატორის წვდომა დადასტურებულია.'
         : '🔓 თანამშრომლის წვდომა დადასტურებულია.');
     } catch (error) {
+      if(!current())return;
       setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setAdminError(error.message || 'ვერ მოხერხდა ანგარიშის შემოწმება.');
@@ -3021,6 +3135,9 @@ export default function App() {
     orderSubmitLock.current = true;
     const checkoutStartEpoch = checkoutOwnerEpochRef.current;
     const checkoutStartOwnerId = activeCartOwnerRef.current.userId;
+    const checkoutStartCart=captureCheckoutCart(cartRef.current);
+    const checkoutWasQuickBuy=Boolean(quickBuyProduct);
+    const cartChangedMessage=currentLang==='en'?'Your cart changed. Review it before placing the order.':currentLang==='ru'?'Корзина изменилась. Проверьте её перед оформлением.':'კალათა შეიცვალა. შეკვეთის გაფორმებამდე გადაამოწმეთ.';
     const abandonCheckoutIfOwnerChanged = () => {
       if (isCheckoutOwnerContextCurrent({
         startEpoch: checkoutStartEpoch,
@@ -3117,7 +3234,7 @@ export default function App() {
 
     const itemsToOrder = quickBuyProduct
       ? [buildOrderItemSnapshot(quickBuyProduct, 1)]
-      : cart.map(item => buildOrderItemSnapshot(item, item.quantity));
+      : cartRef.current.map(item => buildOrderItemSnapshot(item, item.quantity));
 
     if (itemsToOrder.length === 0) {
       const message = currentLang === 'en'
@@ -3195,7 +3312,8 @@ export default function App() {
       if (!Array.isArray(latestCatalogue)) {
         throw new Error('პროდუქტების მიმდინარე მონაცემები არასწორია. გთხოვთ, სცადოთ თავიდან.');
       }
-      const checkoutCart = quickBuyProduct ? [quickBuyProduct] : cart;
+      if(!checkoutWasQuickBuy&&!checkoutCartUnchanged(checkoutStartCart,cartRef.current))throw new Error(cartChangedMessage);
+      const checkoutCart = quickBuyProduct ? [quickBuyProduct] : cartRef.current;
       const reconciliation = reconcileCartWithCatalog(checkoutCart, latestCatalogue);
       if (reconciliation.hasChanges) {
         if (!quickBuyProduct) {
@@ -3385,6 +3503,7 @@ export default function App() {
         orderId = createSecureOrderId(window.crypto);
       }
 
+      if(!checkoutWasQuickBuy&&!checkoutCartUnchanged(checkoutStartCart,cartRef.current))throw new Error(cartChangedMessage);
       pendingCheckoutRef.current = { fingerprint: checkoutFingerprint, orderId };
       if (canPersistFingerprint) {
         try {
@@ -3502,8 +3621,19 @@ export default function App() {
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
-    cartRef.current = [];
-    setCart([]);
+    // Quick buy is independent of the saved cart. A normal checkout may
+    // clear only the exact submitted cart, never a later local or tab edit.
+    let persistedCart=null;
+    try{persistedCart=JSON.parse(window.localStorage.getItem(getCartStorageKey(checkoutStartOwnerId))||'null');}catch{}
+    const cleanup=planConfirmedLocalCartCleanup({
+      quickBuy:checkoutWasQuickBuy,submitted:checkoutStartCart,current:cartRef.current,persisted:persistedCart,
+      requestedItems:itemsToOrder,receipt:serverOrderResult,orderId
+    });
+    if(cleanup.status==='clear'){cartRef.current=[];setCart([]);}
+    else if(cleanup.status==='review'){
+      // Order already committed; never resubmit automatically or erase other changes.
+      setOrderConfirmation({id:orderId,email:orderUserEmail,totalGEL:safeConfirmedTotal,cartReviewRequired:true});
+    }
     setAppliedCoupon(null);
 
     // The confirmation dialog is the single success surface and displays the full order code.
@@ -3523,6 +3653,7 @@ export default function App() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      if(p?.isPublished===false||p?.is_published===false)return false;
       const matchesVendor =
         selectedVendorFilter === t.allVendors ||
         selectedVendorFilter === 'ყველა' ||
@@ -3536,6 +3667,35 @@ export default function App() {
     searchQuery,
     t
   ]);
+
+  // Client metadata supplements crawlable HTML; server-side metadata/status and
+  // the verified canonical domain are a separate SEO release gate.
+  useEffect(()=>{
+    const ready=catalogueVerifiedEpoch===productsAccessEpoch.current;
+    const existingCanonical=document.head.querySelector('link[data-gs-canonical]');
+    const routePath=catalogueRoute?.kind==='home'?'/':catalogueRoute?window.location.pathname:null;
+    // Do not transiently noindex a valid server-rendered page while data loads.
+    if(activeTab==='store'&&catalogueRoute?.kind!=='home'&&catalogueRoute&&!ready&&existingCanonical?.getAttribute('href')==='https://geostore.vercel.app'+routePath)return;
+    const meta=catalogueMetadata(catalogueRoute,products,ready,categories);
+    document.title=meta.title;
+    document.querySelector('meta[name="description"]')?.setAttribute('content',meta.description);
+    let robots=document.head.querySelector('meta[data-gs-route-robots]');
+    const noIndex=activeTab!=='store'||!catalogueRoute||!meta.indexable;
+    for(const [property,content] of [['og:title',meta.title],['og:description',meta.description]]){
+      let node=document.head.querySelector('meta[property="'+property+'"]');
+      if(!node){node=document.createElement('meta');node.setAttribute('property',property);document.head.appendChild(node);}
+      node.setAttribute('content',content);
+    }
+    if(activeTab==='store'&&routePath&&meta.indexable){
+      let canonical=existingCanonical;
+      if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';canonical.dataset.gsCanonical='true';document.head.appendChild(canonical);}
+      canonical.href='https://geostore.vercel.app'+routePath;
+    }else existingCanonical?.remove();
+    if(noIndex){
+      if(!robots){robots=document.createElement('meta');robots.name='robots';robots.dataset.gsRouteRobots='true';document.head.appendChild(robots);}
+      robots.content='noindex, follow';
+    }else robots?.remove();
+  },[activeTab,catalogueRoute,products,catalogueVerifiedEpoch,categories,adminAccess]);
 
   const formatPrice = (p) =>
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
@@ -3587,12 +3747,14 @@ export default function App() {
           setSearchQuery={setSearchQuery}
           categories={categories}
           selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+          setSelectedCategory={selectHeaderCategory}
           handleInstallClick={handleInstallClick}
           currentLang={currentLang}
           setCurrLang={setCurrLang}
         />
       </div>
+
+      <PwaStatusNotice lang={currentLang}/>
 
       {adminLoggedIn && !authLoading && (
         <div className="geostore-admin-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 flex justify-end box-border">
@@ -3608,6 +3770,22 @@ export default function App() {
       )}
 
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
+        {ADMIN_MFA_ROLLOUT_ENABLED && mfaEntry && !authLoading && !adminLoggedIn && !isAuthOpen && currentUser?.id===mfaEntry.ownerId && (
+          <Suspense fallback={<p role="status">იტვირთება...</p>}>
+            <AdminMfaPanel enabled transport={mfaTransport} ownerId={mfaEntry.ownerId} epoch={mfaEntry.epoch}
+              lang={currentLang} onSignOut={handleLogout} onRecheck={async()=>{
+                const scope=mfaScopeRef.current;
+                const access=await resolveAdminAccess({id:scope.ownerId});
+                if(!isMfaScopeCurrent(scope,mfaScopeRef.current))return;
+                setAdminAccess(access);
+                setAdminLoggedIn(hasAnyAdminAccess(access));
+                if(hasAnyAdminAccess(access))setActiveTab('admin');
+              }}/>
+          </Suspense>
+        )}
+        {ADMIN_MFA_ROLLOUT_ENABLED && activeTab==='admin' && adminLoggedIn && !authLoading && !isAuthOpen && currentUser?.id===mfaScopeRef.current.ownerId && (
+          <Suspense fallback={null}><AdminBackupMfaPanel key={currentUser.id+':'+mfaScopeRef.current.epoch} transport={backupMfa} lang={currentLang}/></Suspense>
+        )}
         {activeTab === 'store' && (
           <Suspense
             fallback={(
@@ -3626,6 +3804,11 @@ export default function App() {
             filteredProducts={filteredProducts}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            catalogueNavigation
+            catalogueRoute={catalogueRoute}
+            catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current}
+            catalogueProducts={products}
+            onCatalogueNavigate={navigateCatalogue}
             requestedSavedProductId={requestedSavedProductId}
             onSavedProductRequestHandled={setRequestedSavedProductId}
             wishlist={wishlist}
@@ -3652,9 +3835,15 @@ export default function App() {
           </Suspense>
         )}
 
-        {activeTab === 'wardrobe' && (
+        {activeTab === 'wardrobe' && authLoading && <p role="status">გარდერობი იტვირთება...</p>}
+        {activeTab === 'wardrobe' && !authLoading && (
           <Suspense fallback={null}>
             <AIDigitalWardrobe
+              key={currentUser?.id ? 'user:'+currentUser.id : 'guest'}
+              wardrobeOwnerId={currentUser?.id || null}
+              syncClient={supabase}
+              getSyncScope={()=>wishlistSyncScopeRef.current}
+              syncLang={currentLang}
               products={products}
               addToCart={addToCart}
               formatPrice={formatPrice}
@@ -3662,7 +3851,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && (!ADMIN_MFA_ROLLOUT_ENABLED || (adminLoggedIn && !authLoading && hasAnyAdminAccess(adminAccess))) && (
           <AdminDashboardErrorBoundary>
           <Suspense
             fallback={(
@@ -3675,6 +3864,7 @@ export default function App() {
             key={`${currentUser?.id || 'anonymous'}-${adminAccess.is_admin ? 'owner' : Object.keys(adminAccess.permissions || {}).filter((permission) => adminAccess.permissions[permission]).sort().join('-')}`}
             adminLoggedIn={adminLoggedIn}
             adminUserId={currentUser?.id || null}
+            currentLang={currentLang}
             adminAccess={adminAccess}
             setAdminLoggedIn={setAdminLoggedIn}
             adminLoginForm={
@@ -3740,6 +3930,7 @@ export default function App() {
               )}
             </div>
 
+            {WISHLIST_SYNC_ENABLED && !authLoading && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><WishlistSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getLocalIds={()=>projectWishlistIds(wishlistRef.current)} importFavorite={importSyncedFavorite} lang={currentLang}/></Suspense>}
             {wishlist.length === 0 ? (
               <div className="gs-video-wishlist-empty"><p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
             ) : (
@@ -3806,6 +3997,7 @@ export default function App() {
               {t.cart}
             </h2>
 
+            {CART_SYNC_ENABLED && !authLoading && !adminLoggedIn && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><CartSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getCart={()=>cartRef.current} validateStock={lines=>catalogueVerifiedEpoch===productsAccessEpoch.current&&validateCartReviewStock(lines,products)} planRestore={planSyncedCartRestore} restoreLine={restoreSyncedCartLine} lang={currentLang}/></Suspense>}
             {cart.length === 0 ? (
               <div className="gs-cart-empty flex flex-col items-center justify-center gap-3 text-center px-5 py-12 sm:py-16">
                 <span className="gs-cart-empty-icon flex items-center justify-center w-14 h-14 rounded-full border border-slate-200 bg-slate-50 text-slate-500">
@@ -4827,9 +5019,11 @@ export default function App() {
         </Suspense>
       )}
 
-      {hasLoadedAiAssistant && (
+      {hasLoadedAiAssistant && !authLoading && (
         <Suspense fallback={null}>
           <AiAssistantModal
+        key={currentUser?.id ? 'user:'+currentUser.id : 'guest'}
+        wardrobeOwnerId={currentUser?.id || null}
         currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
@@ -4862,41 +5056,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {showInstallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1"
-            >
-              ✕
-            </button>
-
-            <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
-              <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
-                <Smartphone className="w-6 h-6 text-amber-400" />
-              </div>
-
-              <div>
-                <h3 className="font-black text-sm text-white">
-                  App Installation
-                </h3>
-
-                <p className="text-[11px] text-slate-400">
-                  Follow simple instructions:
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
+      {showInstallModal && <InstallAppDialog platform={installPlatform} installed={appInstalled} lang={currentLang} onClose={()=>setShowInstallModal(false)}/>}
 
       <StorefrontFooter
         siteSettings={siteSettings}

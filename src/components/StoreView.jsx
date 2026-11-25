@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
+import {productPath,categoryPath,findPublishedRouteProduct,resolveCatalogueCategory,shouldHandleCatalogueClick} from '../utils/catalogueSeo.js';
 import { buildStorefrontElementStyle, withStorefrontVideoTokens, normalizeStorefrontCustomSections, getStorefrontSectionOrder, storefrontViewportForWidth, buildStorefrontSectionGeometryProps } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
@@ -56,7 +57,12 @@ export default function StoreView({
   toggleComparison,
   addToCart,
   formatPrice,
-  onProductOrderChange
+  onProductOrderChange,
+  catalogueNavigation=false,
+  catalogueRoute=null,
+  catalogueReady=false,
+  catalogueProducts=[],
+  onCatalogueNavigate
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -117,9 +123,7 @@ export default function StoreView({
     Boolean(selectedSubCategory) || minPrice !== '' || maxPrice !== '' || sortBy !== 'default';
   const resetCatalogFilters = () => {
     setSearchQuery?.('');
-    setSelectedCategory?.('ყველა');
-    setSelectedSubCategory(null);
-    setOpenParentCatId(null);
+    selectCatalogueCategory('ყველა');
     setMinPrice('');
     setMaxPrice('');
     setSortBy('default');
@@ -179,7 +183,8 @@ export default function StoreView({
       supportsSizeColorInventoryCategory(prod.name);
   };
 
-  const handleOpenProduct = (prod, triggerNode = null) => {
+  const handleOpenProduct = (prod, triggerNode = null, fromRoute=false) => {
+    if(catalogueNavigation&&!fromRoute&&productPath(prod.id))onCatalogueNavigate?.(productPath(prod.id));
     // Keep a stable keyboard return target without changing any product data.
     productReturnFocusRef.current = triggerNode || (typeof document !== 'undefined' ? document.activeElement : null);
     setSelectedProduct(prod);
@@ -213,11 +218,40 @@ export default function StoreView({
     onSavedProductRequestHandled?.(null);
   }, [requestedSavedProductId, activeProducts, onSavedProductRequestHandled]);
 
-  const closeProductDetails = () => {
+  const closeProductDetails = (fromRoute=false) => {
+    if(catalogueNavigation&&fromRoute!==true&&catalogueRoute?.kind==='product')onCatalogueNavigate?.(categoryPath(selectedSubCategory||selectedCategory)||'/',{replace:true});
     setSelectedProduct(null);
     setIsSmartSizeModalOpen(false);
     setIsSizeGuideOpen(false);
   };
+
+  // Direct route resolution waits for a verified server catalogue, never cached
+  // or hidden products. Editor instances opt out of browser navigation.
+  useEffect(()=>{
+    if(!catalogueNavigation||catalogueRoute?.kind!=='product')return;
+    const product=findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,catalogueReady);
+    if(product&&String(selectedProduct?.id)!==String(product.id)){
+      const trigger=Array.from(document.querySelectorAll('.gs-catalog-product-title-action[href]')).find(node=>node.getAttribute('href')===productPath(product.id));
+      handleOpenProduct(product,trigger||null,true);
+    }
+    else if(!product&&selectedProduct&&catalogueReady)closeProductDetails(true);
+  },[catalogueNavigation,catalogueRoute,catalogueReady,catalogueProducts]);
+  // Product refreshes must not reopen a manually collapsed category panel.
+  useEffect(()=>{
+    if(!catalogueNavigation||!catalogueRoute||catalogueRoute.kind==='product')return;
+    if(selectedProduct)closeProductDetails(true);
+    if(catalogueRoute.kind==='category'){
+      const target=resolveCatalogueCategory(categories,catalogueRoute.value);
+      setSelectedCategory(target.category);setSelectedSubCategory(target.subcategory);setOpenParentCatId(target.parentId);
+    }else{
+      setSelectedCategory('ყველა');setSelectedSubCategory(null);setOpenParentCatId(null);
+    }
+  },[catalogueNavigation,catalogueRoute,categories]);
+  const selectCatalogueCategory=(name,subcategory=null,parentId=null)=>{
+    if(catalogueNavigation)onCatalogueNavigate?.(categoryPath(subcategory||name)||'/');
+    setSelectedCategory(name);setSelectedSubCategory(subcategory);setOpenParentCatId(parentId);
+  };
+  const unavailableRoute=catalogueNavigation&&catalogueReady&&catalogueRoute?.kind==='product'&&!findPublishedRouteProduct(catalogueProducts,catalogueRoute.value,true);
 
   useEffect(() => {
     if (!selectedProduct) return undefined;
@@ -569,7 +603,7 @@ export default function StoreView({
           <h1 data-visual-editor-target="hero.title" style={videoElementStyle('hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
           <p data-visual-editor-target="hero.description" style={videoElementStyle('hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
+            <button data-visual-editor-target="hero.button" style={videoElementStyle('hero.button')} type="button" onClick={() => { selectCatalogueCategory('ყველა'); const target = ['gs-video-collections', 'gs-video-catalog-anchor', 'gs-catalog-products'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0); target?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
           </div>
         </div>
@@ -672,7 +706,7 @@ export default function StoreView({
                     <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </button>
                   <div className="gs-video-flash-copy py-3 space-y-1.5">
-                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300"><button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button></h4>
+                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300">{catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-flash-sale-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}</h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
                       {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
@@ -712,7 +746,7 @@ export default function StoreView({
           <div className="gs-category-breadcrumb flex items-center gap-2 text-xs bg-[#121216] px-4 py-3 rounded-2xl border border-amber-500/30 shadow">
             <span className="text-slate-400 font-bold">{storeText.navigation}</span>
             <button 
-              onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
+              onClick={() => { selectCatalogueCategory('ყველა'); }}
               className="text-amber-400 hover:underline font-black cursor-pointer"
             >
               {storeText.allCategories}
@@ -726,7 +760,7 @@ export default function StoreView({
               </>
             )}
             <button 
-              onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
+              onClick={() => { selectCatalogueCategory('ყველა'); }}
               className="ml-auto text-rose-400 hover:text-rose-300 font-bold text-[11px] underline cursor-pointer"
             >
               {storeText.clear} ✕
@@ -743,8 +777,8 @@ export default function StoreView({
             tabIndex={0}
             aria-label={storeText.allCategories}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
-            onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCatalogueCategory('ყველა'); } }}
+            onClick={() => { selectCatalogueCategory('ყველა'); }}
             className={`gs-category-card gs-editorial-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
                 ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
@@ -772,9 +806,11 @@ export default function StoreView({
             const isSelected = selectedCategory === catName;
             const isOpen = openParentCatId === catId;
             const pCount = getCategoryProductCount(catName, false);
+            const CategoryControl=catalogueNavigation&&categoryPath(catName)?'a':'div';
 
             return (
-              <div
+              <CategoryControl
+                href={CategoryControl==='a'?categoryPath(catName):undefined}
                 key={catId}
                 data-visual-editor-target="category.card"
                 style={videoElementStyle('category.card')}
@@ -784,11 +820,10 @@ export default function StoreView({
                 aria-pressed={isSelected}
                 aria-expanded={subCats.length > 0 ? isOpen : undefined}
                 aria-controls={subCats.length > 0 && isOpen ? 'gs-subcategory-panel' : undefined}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory(catName); setSelectedSubCategory(null); setOpenParentCatId(isOpen ? null : catId); } }}
-                onClick={() => { 
-                  setSelectedCategory(catName); 
-                  setSelectedSubCategory(null);
-                  setOpenParentCatId(isOpen ? null : catId);
+                onKeyDown={(e) => { if (e.key === ' ' || (e.key === 'Enter'&&CategoryControl==='div')) { e.preventDefault(); selectCatalogueCategory(catName,null,isOpen ? null : catId); } }}
+                onClick={(event) => {
+                  if(CategoryControl==='a'){if(!shouldHandleCatalogueClick(event))return;event.preventDefault();}
+                  selectCatalogueCategory(catName,null,isOpen ? null : catId);
                 }}
                 className={`gs-category-card gs-editorial-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
                   isSelected 
@@ -810,7 +845,7 @@ export default function StoreView({
                   <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
                   <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                 </div>
-              </div>
+              </CategoryControl>
             );
           })}
         </div>
@@ -828,7 +863,7 @@ export default function StoreView({
               <button
                 type="button"
                 aria-pressed={!selectedSubCategory}
-                onClick={() => setSelectedSubCategory(null)}
+                onClick={() => selectCatalogueCategory(selectedCategory,null,openParentCatId)}
                 className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
               >
                 {storeText.allItems} ({selectedCategory})
@@ -836,17 +871,21 @@ export default function StoreView({
               {getSubCategories(openParentCatId).map(sub => {
                 const subCount = getCategoryProductCount(sub.name, true);
                 const isSubSel = selectedSubCategory === sub.name;
+                const SubcategoryControl=catalogueNavigation&&categoryPath(sub.name)?'a':'button';
                 return (
-                  <button
+                  <SubcategoryControl
                     key={sub.id || sub.name}
-                    type="button"
+                    href={SubcategoryControl==='a'?categoryPath(sub.name):undefined}
+                    type={SubcategoryControl==='button'?'button':undefined}
+                    role={SubcategoryControl==='a'?'button':undefined}
                     aria-pressed={isSubSel}
-                    onClick={() => setSelectedSubCategory(sub.name)}
+                    onKeyDown={event=>{if(SubcategoryControl==='a'&&event.key===' '){event.preventDefault();selectCatalogueCategory(selectedCategory,sub.name,openParentCatId);}}}
+                    onClick={event=>{if(SubcategoryControl==='a'){if(!shouldHandleCatalogueClick(event))return;event.preventDefault();}selectCatalogueCategory(selectedCategory,sub.name,openParentCatId);}}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
                     <span>{sub.name}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
-                  </button>
+                  </SubcategoryControl>
                 );
               })}
             </div>
@@ -1019,7 +1058,7 @@ export default function StoreView({
                     </div>
                   </div>
                   <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
-                    <button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>
+                    {catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-catalog-product-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}
                   </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
@@ -1085,6 +1124,10 @@ export default function StoreView({
       {sectionOrder.map(id=><React.Fragment key={id}>{sectionGroups[id]}</React.Fragment>)}
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
+      {unavailableRoute&&<div role="alert" className="rounded-xl border border-amber-500/30 p-4 text-sm text-slate-200">
+        {currentLang==='en'?'This product is not available.':currentLang==='ru'?'Товар недоступен.':'პროდუქტი ხელმისაწვდომი აღარ არის.'}
+        <button type="button" className="ml-3 underline font-bold" onClick={()=>selectCatalogueCategory('ყველა')}>{storeText.fullCollection}</button>
+      </div>}
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
@@ -1111,7 +1154,7 @@ export default function StoreView({
                 
                 <div className="gs-product-gallery space-y-4" aria-label={selectedProduct.name || storeText.productDetails}>
                   <div data-visual-editor-target="product.detail.image" style={videoElementStyle('product.detail.image')} className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
-                    {(activeImage || selectedProduct.image) ? <img data-visual-editor-target="product.detail.image" style={videoElementStyle('product.detail.image')} src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
+                    {(activeImage || selectedProduct.image) ? <img data-visual-editor-target="product.detail.image" style={videoElementStyle('product.detail.image')} src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} loading="eager" fetchPriority={catalogueNavigation && !visualEditorViewport ? "high" : "auto"} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
@@ -1465,7 +1508,7 @@ export default function StoreView({
                     customVariantName: selectedInventoryVariant?.name || '',
                     stock: selectedInventoryVariant ? selectedInventoryVariant.stock : selectedProduct.stock
                   }); 
-                  if (added !== false) setSelectedProduct(null); 
+                  if (added !== false) closeProductDetails(); 
                 }} 
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >

@@ -43,3 +43,6 @@ jobs:
         run: node tests/browser/responsiveLayout.mjs
       - name: Open the built GEOSTORE SPA and verify navigation across devices
         run: node tests/browser/realStorefrontSmoke.mjs
+
+      - name: Verify enabled MFA panel in isolated browser fixture
+        run: node tests/browser/adminMfaEnabledSmoke.mjs
