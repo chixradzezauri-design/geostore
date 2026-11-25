@@ -1275,3 +1275,48 @@
 .gs-visual-preview-frame--mobile.geostore-fashion-store .gs-main-menu .gs-menu-section { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links { display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important; }
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links > button:last-child:nth-of-type(odd) { grid-column:1 / -1; }
+
+/* Signature video follow-up 01 — intrinsic catalog rows and aligned price range.
+   The section heading is a grid child, not a product card. Legacy 1fr rows
+   made it as tall as a product row. Keep product cards stretched within each row. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {
+  grid-auto-rows: auto !important;
+  align-content: start !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) > .gs-signature-products-heading {
+  grid-column: 1 / -1;
+  align-self: start;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* The existing visually hidden separator must not consume a third grid track.
+   Explicit field columns also keep Safari and the mobile editor in agreement. */
+@media (max-width: 640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-controls .gs-price-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-controls .gs-price-filter > input.gs-price-input {
+    grid-column: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-controls .gs-price-filter > span[aria-hidden="true"] {
+    display: none !important;
+  }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-catalog-controls .gs-price-filter {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-catalog-controls .gs-price-filter > input.gs-price-input {
+  grid-column: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .gs-catalog-controls .gs-price-filter > span[aria-hidden="true"] {
+  display: none !important;
+}
