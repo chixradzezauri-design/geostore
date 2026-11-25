@@ -101,8 +101,8 @@ export const CHARACTER_EVENT_LIMIT=12;
 export const CHARACTER_EVENT_THEMES=Object.freeze({
   custom:{label:'ინდივიდუალური',character:'fox',season:'none',effect:'none',behavior:'wave',lines:{}},
   newyear:{label:'ახალი წელი',character:'panda',season:'winter',effect:'confetti',behavior:'celebrate',lines:{ka:'გილოცავ ახალ წელს!',en:'Happy New Year!',ru:'С Новым годом!'}},
-  santa:{label:'სანტას სადღესასწაულო მისალმება',character:'santa',season:'winter',effect:'sparkles',behavior:'wave',lines:{ka:'სადღესასწაულო საჩუქრის იდეებს გაეცანი!',en:'Explore festive gift ideas!',ru:'Открой идеи праздничных подарков!'}},
-  snowman:{label:'თოვლის კაცის მისალმება',character:'snowman',season:'winter',effect:'sparkles',behavior:'jump',lines:{ka:'ზამთრის ჯადოსნურ განწყობას გისურვებ!',en:'Wishing you a magical winter!',ru:'Желаю волшебной зимы!'}},
+  santa:{label:'სანტას სადღესასწაულო მისალმება',character:'santa',season:'winter',effect:'festive',behavior:'wave',lines:{ka:'სადღესასწაულო საჩუქრის იდეებს გაეცანი!',en:'Explore festive gift ideas!',ru:'Открой идеи праздничных подарков!'}},
+  snowman:{label:'თოვლის კაცის მისალმება',character:'snowman',season:'winter',effect:'snow',behavior:'jump',lines:{ka:'ზამთრის ჯადოსნურ განწყობას გისურვებ!',en:'Wishing you a magical winter!',ru:'Желаю волшебной зимы!'}},
   blackfriday:{label:'შავი პარასკევი',character:'deal',season:'none',effect:'sparkles',behavior:'point',lines:{ka:'დაათვალიერე მიმდინარე ფასები და შეარჩიე სასურველი ნივთი.',en:'Explore current prices and find your favourite.',ru:'Посмотри текущие цены и выбери любимый товар.'}},
   valentine:{label:'ვალენტინობა',character:'cat',season:'hearts',effect:'hearts',behavior:'wave',lines:{ka:'სიყვარულით, GEOSTORE!',en:'With love, GEOSTORE!',ru:'С любовью, GEOSTORE!'}},
   summer:{label:'ზაფხული',character:'rabbit',season:'summer',effect:'sparkles',behavior:'dance',lines:{ka:'მზიანი განწყობა გელოდება!',en:'Sunny vibes await!',ru:'Солнечное настроение ждёт!'}},
@@ -131,7 +131,7 @@ export function normalizeCharacterEvents(raw){
     return [{id,title:typeof event.title==='string'?event.title.trim().slice(0,60):'',enabled:event.enabled===true,start,end,theme,
       character:pick(event.character,CHARACTERS.map(c=>c.id),preset.character),
       season:pick(event.season,['none','auto','winter','hearts','summer','autumn'],preset.season),
-      effect:pick(event.effect,['none','sparkles','hearts','confetti'],preset.effect),
+      effect:pick(event.effect,['none','sparkles','hearts','confetti','snow','festive'],preset.effect),
       behavior:pick(event.behavior,CHARACTER_MOTIONS,preset.behavior),
       messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof event.messages?.[lang]==='string'?event.messages[lang].trim().slice(0,120):'']))}];
   });
@@ -161,7 +161,8 @@ export function normalizeCharacterSettings(raw){
     greetingMode:pick(s.greetingMode,['character','funny','time','library',...Object.keys(CHARACTER_GREETING_TONES)],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
-    effect:pick(s.effect,['none','sparkles','hearts','confetti'],'none'),waveBack:s.waveBack===true,
+    winterCelebration:s.winterCelebration===true,winterStyle:pick(s.winterStyle,['alternate','santa','snowman'],'alternate'),winterEffects:s.winterEffects!==false,
+    effect:pick(s.effect,['none','sparkles','hearts','confetti','snow','festive'],'none'),waveBack:s.waveBack===true,
     interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
@@ -316,4 +317,19 @@ export function chooseConciergeTarget(available,index=0){
  if(!allowed.length)return null;
  const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
  return allowed[n%allowed.length];
+}
+
+// Recurring winter celebration uses the store's calendar, not a visitor's timezone.
+// Explicit calendar events always have higher priority.
+export function winterConciergePresentation(settings,{now=new Date(),index=0,lang='ka',event=null}={}){
+ const s=normalizeCharacterSettings(settings);
+ const day=characterCalendarDay(now);
+ if(!s.enabled||!s.winterCelebration||event||!day)return null;
+ const mmdd=day.slice(5);
+ if(!(mmdd>='12-01'||mmdd<='01-14'))return null;
+ const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
+ const id=s.winterStyle==='alternate'?(n%2?'snowman':'santa'):s.winterStyle;
+ const preset=CHARACTER_EVENT_THEMES[id];
+ const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+ return {...s,character:id,rotation:'fixed',season:'winter',effect:s.winterEffects?preset.effect:'none',behavior:preset.behavior,message:preset.lines[locale]};
 }

@@ -9,7 +9,7 @@ const choices={
   behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა'],['walk-wave','მოსეირნება და მისალმება'],['look-around','დათვალიერება'],['point','მინიშნება'],['patrol','გადაადგილება, გაჩერება და მისალმება']],
   greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა'],['friendly','მეგობრული'],['premium','დახვეწილი / პრემიუმ'],['minimal','მოკლე და მინიმალისტური']],
   interaction:[['wave','საპასუხო მისალმება'],['high-five','ხუთიანი'],['cheer','გამხნევება']],
-  effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი']],
+  effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი'],['snow','მსუბუქი თოვა'],['festive','სადღესასწაულო ნათება']],
   emotion:[['happy','ღიმილი'],['wink','თვალის ჩაკვრა'],['surprise','გაკვირვება']],
   season:[['none','გამორთული'],['auto','ავტომატურად სეზონის მიხედვით'],['winter','ზამთარი'],['hearts','გულები'],['summer','ზაფხული'],['autumn','შემოდგომა']],
   side:[['left','მარცხნიდან'],['right','მარჯვნიდან'],['alternate','მხარეების მონაცვლეობა']],
@@ -97,6 +97,13 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">ხანგრძლივობა: {s.duration} წმ</span><input className="w-full" type="range" min="3" max="12" value={s.duration} disabled={busy} onChange={e=>update({duration:Number(e.target.value)})}/></label>
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
       </div>
+    </details>
+    <details className="gs-character-admin-section" data-character-winter-settings>
+      <summary>საახალწლო განწყობა — Santa & Snowy</summary>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterCelebration} disabled={busy} onChange={e=>update({winterCelebration:e.target.checked})}/> ყოველწლიური საახალწლო რეჟიმი (1 დეკემბერი – 14 იანვარი)</label>
+      <label className="block text-xs text-slate-300">საახალწლო პერსონაჟი<select aria-label="საახალწლო პერსონაჟი" className={field} value={s.winterStyle} disabled={busy} onChange={e=>update({winterStyle:e.target.value})}><option value="alternate">Santa და Snowy მონაცვლეობით</option><option value="santa">მხოლოდ Santa</option><option value="snowman">მხოლოდ Snowy</option></select></label>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterEffects} disabled={busy} onChange={e=>update({winterEffects:e.target.checked})}/> თოვლისა და სადღესასწაულო ნათების ეფექტები</label>
+      <p className="text-xs text-slate-300">თბილისის დროით მოქმედებს. ინდივიდუალური კალენდრის ღონისძიებას უპირატესობა აქვს. ეფექტები მხოლოდ პერსონაჟთან ჩნდება და შემცირებული მოძრაობის რეჟიმში არ მუშაობს.</p>
     </details>
     <details className="gs-character-admin-section" data-character-sale-settings>
       <summary>Deal Hunter — აქციების დამხმარე</summary>
