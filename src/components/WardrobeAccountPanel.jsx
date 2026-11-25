@@ -3,6 +3,7 @@ import {createWardrobeAccountReader} from '../utils/wardrobeAccountReview.js';
 import {createWardrobePhotoTransport} from '../utils/wardrobePhotoTransport.js';
 import CustomerSyncStatus from './CustomerSyncStatus.jsx';
 import WardrobeAccountAdd from './WardrobeAccountAdd.jsx';
+import WardrobeRecoveryPanel from './WardrobeRecoveryPanel.jsx';
 import {removeWardrobeAccountItem} from '../utils/wardrobeAccountRemove.js';
 const copy={
  ka:['ანგარიშის გარდერობი','ანგარიშის ნივთების ნახვა','ფოტოს გახსნა','ფოტოს დახურვა','ფოტო მიუწვდომელია','ფოტოები მხოლოდ მოთხოვნით იტვირთება. ამ მოწყობილობის გარდერობი უცვლელია.','ანგარიშზე ნივთები ჯერ არ არის.'],
@@ -63,6 +64,7 @@ export default function WardrobeAccountPanel({client,getScope,ownerId,lang='ka'}
  {status==='unavailable'?<p role="status" className="text-xs text-amber-700">{t[4]}</p>:status&&<CustomerSyncStatus status={status} lang={lang}/>}
  {removed&&<p role="status" className="text-xs">{removed==='pending'?del[3]:del[4]}</p>}
  {confirm&&<div className="rounded-lg border border-rose-300 p-3 text-xs space-y-2"><p>{del[1]}: {confirm.name}</p><button type="button" disabled={busy||writing} onClick={remove} className="rounded-lg border px-3 py-2 mr-2">{del[1]}</button><button type="button" onClick={()=>setConfirm(null)} className="rounded-lg border px-3 py-2">{del[2]}</button></div>}
+ <WardrobeRecoveryPanel client={client} getScope={scope} lang={lang} disabled={busy||writing} onBusy={setWriting} onSnapshot={next=>{known.current=next;setSnapshot(next);clearPhoto();setConfirm(null);}}/>
  {snapshot&&<WardrobeAccountAdd client={client} getScope={scope} base={snapshot} lang={lang} onBusy={setWriting} onSaved={next=>{known.current=next;setSnapshot(next);clearPhoto();}}/>}
  {snapshot&&snapshot.items.length===0&&<p className="text-xs">{t[6]}</p>}
  {snapshot&&<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{snapshot.items.map(item=><article key={item.id} className="min-w-0 rounded-lg border p-3 space-y-2 text-xs"><h4 className="font-semibold break-words">{item.name}</h4><p className="break-words">{[item.category,item.subCategory,item.color,item.season].filter(Boolean).join(' · ')}</p>{item.photoPath&&(photo?.path===item.photoPath?<><img src={photo.url} alt={item.name} className="max-h-48 w-full object-contain"/><button type="button" onClick={clearPhoto} className="rounded-lg border px-3 py-2">{t[3]}</button></>:<button type="button" disabled={busy||writing} onClick={()=>run(item.photoPath)} className="rounded-lg border px-3 py-2">{t[2]}</button>)}<button type="button" disabled={busy||writing} onClick={()=>setConfirm({id:item.id,name:item.name,base:snapshot})} className="rounded-lg border border-rose-300 px-3 py-2 text-rose-700">{del[0]}</button></article>)}</div>}

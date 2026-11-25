@@ -27,6 +27,7 @@ insert into storage.objects values('customer-wardrobe-private','00000000-0000-40
 \ir ../../release/phase4-wardrobe-reservations-draft.sql
 \ir ../../release/phase4-wardrobe-erasure-worker-draft.sql
 \ir ../../release/phase4-wardrobe-remove-item-draft.sql
+\ir ../../release/phase4-wardrobe-recovery-status-draft.sql
 set role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","is_anonymous":false}',false);
 do $test$
@@ -148,3 +149,18 @@ do $$ begin
  if has_function_privilege('anon','public.customer_wardrobe_remove_item(uuid,bigint,uuid)','EXECUTE') then raise exception 'anonymous removal';end if;
 end $$;
 \echo 'PASS phase4 atomic wardrobe removal and retirement'
+
+set role authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000002","is_anonymous":false}',false);
+do $test$
+declare b uuid:='00000000-0000-4000-8000-000000000002'; a uuid:='00000000-0000-4000-8000-000000000001';p text:=b::text||'/00000000-0000-4000-8000-000000000003.png';r jsonb;
+begin
+ r:=public.customer_wardrobe_recovery_status(b,p);
+ if r is distinct from '{"snapshot":{"revision":5,"items":[]},"photoState":"pending","reserved":0,"pending":1}'::jsonb then raise exception 'recovery observation mismatch: %',r;end if;
+ if public.customer_wardrobe_recovery_status(b,null)->>'photoState' is distinct from 'none' then raise exception 'quota read';end if;
+ begin perform public.customer_wardrobe_recovery_status(a,null);raise exception 'cross owner read';exception when insufficient_privilege then null;end;
+ begin perform public.customer_wardrobe_recovery_status(b,a::text||'/00000000-0000-4000-8000-000000000003.png');raise exception 'cross owner path';exception when invalid_parameter_value then null;end;
+end $test$;
+reset role;
+do $$ begin if has_function_privilege('anon','public.customer_wardrobe_recovery_status(uuid,text)','EXECUTE') then raise exception 'anonymous recovery';end if;end $$;
+\echo 'PASS phase4 wardrobe recovery status and quota boundary'
