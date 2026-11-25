@@ -1,3 +1,4 @@
+import {mascotLimb} from './mascot3DGeometry.js';
 // Eight additional original procedural models, sharing the bounded sphere mesh.
 // Each part has a real position, scale, orientation and material in three dimensions.
 export const MASCOT_3D_IDS=Object.freeze(['fox','panda','rabbit','robot','cat','monkey','bear','owl','cheetah']);
@@ -8,7 +9,7 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
   const broad=bear||panda?.65:cheetah||monkey?.43:.52;
   const material=robot?.75:.12,fur=robot?0:1;
   const part=(c,s,color=body,tilt=0,gloss=material,texture=fur)=>draw(c,s,color,tilt,gloss,texture);
-  const {step=0,wave=0,tail=0,breath=0}=pose;
+  const {step=0,wave=0,tail=0,breath=0,ear=0,wing=0,head=0}=pose;
   if(cat||monkey||cheetah){
     part([-.62,-.65,-.30],[.15,.56,.16],base,-.70+tail);
     part([-.92,-.28,-.32],[.13,.31,.14],cheetah?black:base,-.25+tail);
@@ -28,14 +29,17 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     if(owl)for(let row=0;row<3;row++)for(const sign of [-1,1])part([sign*.13,-.38-row*.16,.48],[.10,.095,.04],base,sign*.25,.08,1);
   }
   if(owl){
-    part([-.50,-.42,.02],[.22,.53,.20],base,-.40-step*.15);
-    part([.62,-.24,.02],[.24,.52,.20],base,-.92-wave);
-    for(let i=0;i<3;i++)part([.78+i*.07,-.06+i*.055,.06],[.09,.25,.08],base,-.94-wave+i*.08);
+    const left=mascotLimb([-.40,-.06,.02],.86,-.42-wing-step*.15),right=mascotLimb([.40,-.06,.02],.86,1.75+wave+wing);
+    part(left.center,[.22,.53,.20],base,left.tilt);
+    part(right.center,[.24,.52,.20],base,right.tilt);
+    for(let i=0;i<3;i++)part([right.tip[0]-.06*i,right.tip[1]-.04*i,.06],[.09,.25,.08],base,right.tilt+i*.08);
   }else{
-    part([-.53,-.45,0],[.17,.45,.18],limb,-.27-step*.20);
-    part([-.65,-.79,.09],[.16,.17,.17],limb);
-    part([.58,-.15,.01],[.17,.44,.19],limb,-.84-wave);
-    part([.88,.15,.12],[.17,.19,.17],limb,-wave);
+    const armLength=monkey?.82:bear?.65:.70;
+    const left=mascotLimb([-.42,-.13,.07],armLength,-.30-step*.26),right=mascotLimb([.42,-.13,.07],armLength,1.87+wave);
+    part(left.center,[.17,armLength*.62,.18],limb,left.tilt);
+    part(left.tip,[.16,.17,.17],limb,left.tilt);
+    part(right.center,[.17,armLength*.62,.19],limb,right.tilt);
+    part(right.tip,[.17,.19,.17],limb,right.tilt);
     if(robot)for(const sign of [-1,1])part([sign*.55,-.39,.02],[.20,.16,.20],cyan,0,.8,0);
   }
   if(panda||bear||monkey||cheetah){
@@ -46,8 +50,8 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     }
   }
   if(rabbit)for(const sign of [-1,1]){
-    part([sign*.31,1.40,-.08],[.18,.61,.18],base,-sign*.13);
-    part([sign*.31,1.45,.06],[.09,.45,.08],pink,-sign*.13);
+    part([sign*.31,1.40,-.08],[.18,.61,.18],base,-sign*.13+ear);
+    part([sign*.31,1.45,.06],[.09,.45,.08],pink,-sign*.13+ear);
   }
   if(cat||owl)for(const sign of [-1,1]){
     part([sign*.49,1.17,-.07],[.20,.42,.18],base,-sign*.36);
@@ -58,7 +62,7 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     part([0,1.46,0],[.13,.13,.13],gold,0,.9,0);
     for(const sign of [-1,1])part([sign*.77,.57,0],[.19,.30,.24],metal,0,.85,0);
   }
-  const hy=.56+breath*.4,headX=bear?.80:monkey?.70:.75;
+  const hy=.56+breath*.4-head*.12,headX=bear?.80:monkey?.70:.75;
   part([0,hy,0],[headX,.65,.57],body);
   if(robot){
     part([0,hy,.35],[.65,.47,.30],black,0,.9,0);

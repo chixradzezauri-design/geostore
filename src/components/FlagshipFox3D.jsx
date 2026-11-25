@@ -1,18 +1,18 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {sphereMesh,mascotRgb,foxPose} from '../utils/mascot3DGeometry.js';
+import {sphereMesh,mascotRgb,mascotPose,mascotLimb} from '../utils/mascot3DGeometry.js';
 import {drawMascot3DModel} from '../utils/mascot3DModels.js';
 
 // Actual depth-tested geometry, with no external scripts, downloads, or dependencies.
 const vertex=`
 attribute vec3 p;
 uniform vec3 center,scale;
-uniform float tilt,yaw,aspect;
+uniform float tilt,yaw,aspect,rootLean,rootLift;
 varying vec3 normal,local;
 vec3 rz(vec3 v,float a){float c=cos(a),s=sin(a);return vec3(c*v.x-s*v.y,s*v.x+c*v.y,v.z);}
 vec3 ry(vec3 v,float a){float c=cos(a),s=sin(a);return vec3(c*v.x+s*v.z,v.y,-s*v.x+c*v.z);}
 void main(){
-  vec3 world=ry(rz(p*scale,tilt)+center,yaw);
-  normal=normalize(ry(rz(p/scale,tilt),yaw));
+  vec3 world=ry(rz(rz(p*scale,tilt)+center,rootLean),yaw)+vec3(0.,rootLift,0.);
+  normal=normalize(ry(rz(rz(p/scale,tilt),rootLean),yaw));
   local=p;
   float w=7.0-world.z;
   gl_Position=vec4(world.x*3.15/aspect,(world.y-.12)*3.15,1.01005*w-.201005,w);
@@ -71,7 +71,7 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);
       gl.useProgram(program);
       const pos=gl.getAttribLocation(program,'p');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,3,gl.FLOAT,false,0,0);
-      const names=['center','scale','tilt','yaw','aspect','tint','gloss','fur'];
+      const names=['center','scale','tilt','yaw','aspect','tint','gloss','fur','rootLean','rootLift'];
       const loc=Object.fromEntries(names.map(name=>[name,gl.getUniformLocation(program,name)]));
       gl.enable(gl.DEPTH_TEST);gl.clearColor(0,0,0,0);
       const base=mascotRgb(color),cream=[.97,.90,.76],dark=[.19,.11,.09],pink=[.82,.49,.43],white=[.99,.98,.91],iris=[.38,.20,.08],black=[.055,.04,.035];
@@ -92,8 +92,8 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
             const width=Math.min(256,Math.max(64,Math.round(node.clientWidth*dpr))),height=Math.round(width*1.13);
             if(node.width!==width||node.height!==height){node.width=width;node.height=height;}
             gl.viewport(0,0,width,height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-            const pose=foxPose(elapsed,behavior,motion.matches);
-            gl.uniform1f(loc.aspect,width/height);gl.uniform1f(loc.yaw,pose.yaw);
+            const pose=mascotPose(characterId,elapsed,behavior,motion.matches);
+            gl.uniform1f(loc.aspect,width/height);gl.uniform1f(loc.yaw,pose.yaw);gl.uniform1f(loc.rootLean,pose.lean);gl.uniform1f(loc.rootLift,pose.lift);
             if(characterId!=='fox')drawMascot3DModel(characterId,draw,base,pose,{emotion,blink:!motion.matches&&elapsed%3.1>2.92,season});
             else{
             // Tail, feet, trunk and limbs are independently posed ellipsoid meshes.
@@ -104,10 +104,11 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
             }
             draw([0,-.47+pose.breath,0],[.54,.69,.39],base);
             draw([0,-.55,.29],[.36,.49,.20],cream);
-            draw([-.54,-.48,.03],[.18,.46,.19],base,-.26-pose.step*.18);
-            draw([-.66,-.82,.10],[.18,.17,.18],cream);
-            draw([.60,-.16,.02],[.18,.46,.19],base,-.85-pose.wave);
-            draw([.91,.15,.12],[.18,.19,.18],cream,-pose.wave);
+            const left=mascotLimb([-.43,-.12,.07],.72,-.26-pose.step*.25),right=mascotLimb([.43,-.12,.07],.72,1.87+pose.wave);
+            draw(left.center,[.18,.45,.19],base,left.tilt);
+            draw(left.tip,[.18,.17,.18],cream,left.tilt);
+            draw(right.center,[.18,.45,.19],base,right.tilt);
+            draw(right.tip,[.18,.19,.18],cream,right.tilt);
             // Distinct pointed ears and a projecting muzzle, not a flat picture.
             for(const sign of [-1,1]){
               draw([sign*.48,1.32,-.06],[.23,.52,.21],base,-sign*.35);
