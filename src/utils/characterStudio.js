@@ -378,6 +378,8 @@ export function normalizeCharacterProfiles(raw){
   if(!p||typeof p!=='object'||Array.isArray(p))return [];
   return [[id,{enabled:p.enabled===true,topic:pick(p.topic,['inherit','auto','style','gifts','details','prices','favourites'],'inherit'),
    behavior:pick(p.behavior,['inherit',...CHARACTER_MOTIONS],'inherit'),
+   effect:pick(p.effect,['inherit','none','sparkles','hearts','confetti','snow','festive'],'inherit'),
+   emotion:pick(p.emotion,['inherit','happy','wink','surprise'],'inherit'),
    side:pick(p.side,['inherit','left','right','alternate'],'inherit'),
    placement:pick(p.placement,['inherit','bottom','middle','roam'],'inherit'),
    target:pick(p.target,['inherit','categories','products','flash'],'inherit'),
@@ -395,7 +397,7 @@ export function applyCharacterProfile(settings,id,lang='ka',{preserveEvent=false
   advice:{...s.advice,enabled:s.advice.enabled&&p.tips,topic:p.topic==='inherit'?s.advice.topic:p.topic},
   recommendProducts:s.recommendProducts&&p.products,saleGuide:s.saleGuide&&p.sales,guideLinks:s.guideLinks&&p.guides,
   interactiveGuide:s.interactiveGuide&&p.interactions,waveBack:s.waveBack&&p.interactions};
- if(!preserveEvent){next.behavior=p.behavior==='inherit'?s.behavior:p.behavior;next.message=p.messages[locale]||s.message;}
+ if(!preserveEvent){next.behavior=p.behavior==='inherit'?s.behavior:p.behavior;next.effect=p.effect==='inherit'?s.effect:p.effect;next.emotion=p.emotion==='inherit'?s.emotion:p.emotion;next.message=p.messages[locale]||s.message;}
  return next;
 }
 
