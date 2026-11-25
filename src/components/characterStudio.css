@@ -71,3 +71,20 @@
 @keyframes gs-character-ground-pulse{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.76);opacity:.6}}
 @keyframes gs-character-blink{0%,66%,75%,100%{transform:scaleY(1)}70%{transform:scaleY(.12)}}
 @media(prefers-reduced-motion:reduce){.gs-character-scene .gs-character-leg,.gs-character-scene .gs-character-ground,.gs-character-scene .gs-character-eyes{animation:none!important}}
+
+.gs-character-scene[data-motion="celebrate"] .gs-character-figure{animation:gs-character-celebrate .6s ease-in-out 3}
+.gs-character-scene[data-motion="sneak"] .gs-character-figure{animation:gs-character-sneak 1.4s cubic-bezier(.2,.75,.3,1) both}
+@keyframes gs-character-celebrate{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-16px) scale(1.06)}85%{transform:translateY(1px) scale(.96,1.03)}}
+@keyframes gs-character-sneak{0%{opacity:0;transform:translateX(calc(var(--gs-character-enter) / 6)) scale(.85)}60%{opacity:1;transform:translateX(5px) rotate(-7deg)}100%{transform:translateX(0) rotate(0)}}
+.gs-character-figure{position:relative}
+.gs-character-effects{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.gs-character-effects>span{position:absolute;left:calc(12% + var(--gs-effect-i)*18%);top:24%;color:#e6a42c;font-size:14px;opacity:0;text-shadow:0 1px 2px #17233b55;animation:gs-character-particle 1.15s ease-out calc(var(--gs-effect-i)*.11s) 1 both}
+.gs-character-effects[data-effect="hearts"]>span{color:#ec4899}
+.gs-character-effects[data-effect="confetti"]>span:nth-child(2n){color:#38bdf8}
+.gs-character-effects[data-effect="confetti"]>span:nth-child(3n){color:#a78bfa}
+@keyframes gs-character-particle{0%{opacity:0;transform:translateY(5px) scale(.45)}25%{opacity:1}100%{opacity:0;transform:translateY(-21px) rotate(30deg) scale(.8)}}
+.gs-character-wave-back{pointer-events:auto;margin-top:6px;padding:4px 8px;min-height:28px;max-width:100%;border:1px solid currentColor;border-radius:10px;background:transparent;color:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.gs-character-wave-back:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.gs-character-effects{display:none!important}.gs-character-scene .gs-character-figure{animation:none!important}}
+
+.gs-character-effects>span:nth-child(even){top:12%}

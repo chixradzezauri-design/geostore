@@ -50,6 +50,19 @@ export function characterAppearanceStyle(raw){
     '--gs-mascot-radius':{rounded:'16px',pill:'28px',square:'6px'}[a.bubbleShape],
     '--gs-mascot-font':a.fontSize+'px'};
 }
+export const CHARACTER_GREETING_LANGS=['ka','en','ru'];
+export const FUNNY_GREETINGS=Object.freeze([
+  {ka:'ჰეი! დღეს განსაკუთრებით კარგ ხასიათზე ვარ.',en:'Hey! I’m in an especially good mood today.',ru:'Привет! Сегодня у меня отличное настроение.'},
+  {ka:'ჩემი მისიაა: ერთი ღიმილი მაინც მოგგვარო!',en:'My mission: make you smile at least once!',ru:'Моя миссия — вызвать хотя бы одну улыбку!'},
+  {ka:'ვცადე სერიოზულად შემოსვლა… არ გამომივიდა!',en:'I tried to make a serious entrance… didn’t work!',ru:'Хотел появиться серьёзно… не получилось!'},
+  {ka:'ფეხები დავიღალე, მაგრამ მისალმება ღირდა!',en:'My feet are tired, but saying hello was worth it!',ru:'Лапки устали, но поздороваться стоило!'},
+  {ka:'გამარჯობა! დღეს ოფიციალურად კარგი განწყობის დღეა.',en:'Hello! Today is officially a good-mood day.',ru:'Привет! Сегодня официально день хорошего настроения.'},
+  {ka:'არ შეგეშინდეს, უბრალოდ მეგობარი პერსონაჟი ვარ!',en:'Don’t mind me, I’m just your friendly mascot!',ru:'Не пугайся, я просто дружелюбный талисман!'}
+]);
+function normalizeGreetingLibrary(raw){
+  const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  return Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,Array.isArray(source[lang])?[...new Set(source[lang].slice(0,8).filter(x=>typeof x==='string').map(x=>x.trim().slice(0,120)).filter(Boolean))]:[]]));
+}
 export const DEFAULT_CHARACTER_SETTINGS=Object.freeze({
   enabled:false, character:'fox', rotation:'fixed', behavior:'run-wave', side:'left',
   delay:2, duration:6, frequency:'session', pages:'home', mobile:true, desktop:true, message:''
@@ -59,7 +72,10 @@ export function normalizeCharacterSettings(raw){
   return {
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
     rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
-    behavior:pick(s.behavior,['run-wave','wave','jump','slide','dance','peek','bow'],'run-wave'),
+    behavior:pick(s.behavior,['run-wave','wave','jump','slide','dance','peek','bow','celebrate','sneak'],'run-wave'),
+    greetingMode:pick(s.greetingMode,['character','funny','time','library'],'character'),
+    greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
+    effect:pick(s.effect,['none','sparkles','hearts','confetti'],'none'),waveBack:s.waveBack===true,
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right'],'left'),
@@ -92,8 +108,23 @@ export function resolveCharacterSeason(value,date=new Date()){
 export function canShowCharacterReaction(lastAt,now=Date.now()){
   return Number.isFinite(now)&&(!Number.isFinite(lastAt)||now<lastAt||now-lastAt>=15000);
 }
-export function characterMessage(settings,character,lang='ka'){
-  return normalizeCharacterSettings(settings).message||character.lines[lang]||character.lines.ka;
+export function characterMessage(settings,character,lang='ka',variant=0,date=new Date()){
+  const s=normalizeCharacterSettings(settings),locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+  if(s.message)return s.message;
+  const index=Number.isFinite(variant)?Math.max(0,Math.min(.999999,variant)):0;
+  if(s.greetingMode==='funny')return FUNNY_GREETINGS[Math.floor(index*FUNNY_GREETINGS.length)][locale];
+  if(s.greetingMode==='library'&&s.greetingLibrary[locale].length){
+    const lines=s.greetingLibrary[locale];return lines[Math.floor(index*lines.length)];
+  }
+  if(s.greetingMode==='time'){
+    const hour=date.getHours();
+    const group=hour<12?{ka:'დილა მშვიდობისა! კარგი დღე გქონდეს.',en:'Good morning! Have a lovely day.',ru:'Доброе утро! Хорошего дня!'}:hour<18?{ka:'გამარჯობა! სასიამოვნო დღე გქონდეს.',en:'Good afternoon! Enjoy your day.',ru:'Добрый день! Приятного дня!'}:{ka:'საღამო მშვიდობისა! მიხარია შენი ნახვა.',en:'Good evening! Lovely to see you.',ru:'Добрый вечер! Рад тебя видеть.'};
+    return group[locale];
+  }
+  return character.lines[locale]||character.lines.ka;
+}
+export function characterWaveCopy(lang='ka'){
+  return ({ka:{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'},en:{button:'Wave back',reply:'Yay! Hello to you too!'},ru:{button:'Помахать в ответ',reply:'Ура! И тебе привет!'}})[lang]||{button:'ხელის დაქნევა',reply:'ვაშა! მეც გესალმები!'};
 }
 export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
   const s=normalizeCharacterSettings(settings);

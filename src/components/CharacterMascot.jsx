@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterAlreadySeen,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterWaveCopy} from '../utils/characterStudio.js';
 import './characterStudio.css';
 
 let seenInMemory=false;
@@ -74,11 +74,21 @@ export function CharacterArt({character,emotion='happy',season='none'}){
     {theme==='autumn'&&<path d="M136 10Q159 6 151 28Q132 33 136 10Z" fill={g('gold')}/>}
   </svg>;
 }
+function CharacterEffects({effect}){
+  if(!['sparkles','hearts','confetti'].includes(effect))return null;
+  return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:5},(_,i)=><span key={i} style={{'--gs-effect-i':i}}>{effect==='hearts'?'♥':effect==='sparkles'?'✦':'●'}</span>)}</span>;
+}
 export function CharacterScene({character,settings,lang='ka',preview=false,onClose}){
-  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
-    <div className="gs-character-figure"><CharacterArt character={styledCharacter(character,settings)} emotion={settings.emotion} season={settings.season}/></div>
+  const [variant]=useState(()=>Math.random());
+  const [greetingDate]=useState(()=>new Date());
+  const [waved,setWaved]=useState(false);
+  const wave=characterWaveCopy(lang);
+  const interactive=settings.waveBack&&settings.behavior!=='still';
+  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-side={settings.side} data-motion={waved?'celebrate':settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
+    <div className="gs-character-figure" key={waved?'reply':'greeting'}><CharacterArt character={styledCharacter(character,settings)} emotion={waved?'happy':settings.emotion} season={settings.season}/>{settings.behavior!=='still'&&<CharacterEffects effect={waved?'sparkles':settings.effect}/>}</div>
     <div className="gs-character-bubble">
-      <strong>{character.name}</strong><span>{characterMessage(settings,character,lang)}</span>
+      <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>
+      {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} 👋</button>}
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
     </div>
   </div>;

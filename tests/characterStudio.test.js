@@ -95,3 +95,22 @@ test('individual character colors survive selection and contextual scenes',()=>{
   assert.equal(styledCharacter(CHARACTERS.find(c=>c.id==='cat'),s).color,'#f472b6');
   assert.equal(getCharacterScenario(s,'cart',{eligible:true}).character.color,'#aabbcc');
 });
+
+test('greeting library is bounded, locale-aware and preserves explicit greeting priority',()=>{
+  const c=CHARACTERS[0],s={greetingMode:'library',greetingLibrary:{ka:[' ერთი ','ორი','ერთი','','x'.repeat(200)],en:['Hi there'],ru:[],other:['ignored']}};
+  const normalized=normalizeCharacterSettings(s);
+  assert.equal(normalized.greetingLibrary.ka.length,3);
+  assert.equal(normalized.greetingLibrary.ka[2].length,120);
+  assert.equal(characterMessage(s,c,'ka',0),'ერთი');
+  assert.equal(characterMessage(s,c,'en',.9),'Hi there');
+  assert.equal(characterMessage(s,c,'ru'),c.lines.ru);
+  assert.equal(characterMessage({...s,message:'Override'},c,'ka'),'Override');
+  assert.equal(characterMessage({greetingMode:'funny'},c,'en',.99),'Don’t mind me, I’m just your friendly mascot!');
+  assert.match(characterMessage({greetingMode:'time'},c,'en',0,new Date(2026,10,25,9)),/Good morning/);
+});
+test('interaction and effects are opt-in and validated',()=>{
+  assert.equal(normalizeCharacterSettings({}).waveBack,false);
+  assert.equal(normalizeCharacterSettings({waveBack:'true',effect:'bad'}).effect,'none');
+  assert.equal(normalizeCharacterSettings({waveBack:true,effect:'hearts',behavior:'celebrate'}).waveBack,true);
+  assert.equal(normalizeCharacterSettings({behavior:'sneak'}).behavior,'sneak');
+});

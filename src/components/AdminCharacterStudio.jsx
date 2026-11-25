@@ -1,11 +1,13 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
 const choices={
   rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური']],
-  behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა']],
+  behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა']],
+  greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა']],
+  effect:[['none','ეფექტის გარეშე'],['sparkles','ვარსკვლავები'],['hearts','გულები'],['confetti','კონფეტი']],
   emotion:[['happy','ღიმილი'],['wink','თვალის ჩაკვრა'],['surprise','გაკვირვება']],
   season:[['none','გამორთული'],['auto','ავტომატურად სეზონის მიხედვით'],['winter','ზამთარი'],['hearts','გულები'],['summer','ზაფხული'],['autumn','შემოდგომა']],
   side:[['left','მარცხნიდან'],['right','მარჯვნიდან']],
@@ -17,6 +19,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const [preview,setPreview]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
+  const [libraryLang,setLibraryLang]=useState('ka');
   const scenario=s.scenarios[scenarioKey];
   const updateScenario=(patch)=>{
     setSiteSettings(previous=>{
@@ -27,7 +30,7 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const scenarioPreview=getCharacterScenario({...s,enabled:true,mobile:true,desktop:true,scenarios:{...s.scenarios,[scenarioKey]:{...scenario,enabled:true}}},scenarioKey,{mobile:previewMobile,eligible:true});
   const update=(patch)=>{
     setPreview(null);
-    setSiteSettings(previous=>({...previous,characterStudio:normalizeCharacterSettings({...previous?.characterStudio,...patch})}));
+    setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings({...previous?.characterStudio,...patch}),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary}}));
   };
   const updateAppearance=(patch)=>update({appearance:{...s.appearance,...patch}});
   const updatePalette=(color)=>update({palette:{...s.palette,[s.character]:color}});
@@ -52,6 +55,24 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
     </div>
     <label className="block space-y-1"><span className="text-xs font-semibold text-slate-300">მისალმების ტექსტი (ცარიელი = პერსონაჟის ტექსტი)</span><textarea className={field} rows="2" maxLength={120} value={siteSettings?.characterStudio?.message??''} disabled={busy} onChange={e=>{setPreview(null);const message=e.target.value;setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings(previous?.characterStudio),message}}));}}/></label>
+    <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-greetings>
+      <summary className="cursor-pointer text-sm font-bold text-white">მისალმებების ბიბლიოთეკა და ეფექტები</summary>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        {choose('greetingMode','მისალმების რეჟიმი')}{choose('effect','ვიზუალური ეფექტი')}
+        <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.waveBack} disabled={busy} onChange={e=>update({waveBack:e.target.checked})}/> მომხმარებელს შეუძლია საპასუხოდ ხელი დაუქნიოს</label>
+      </div>
+      {s.message&&<p className="text-xs text-amber-300">ზემოთ ჩაწერილი ინდივიდუალური ტექსტი უპირატესია ყველა რეჟიმზე. ბიბლიოთეკის გამოსაყენებლად გაასუფთავეთ ის ველი.</p>}
+      {s.greetingMode==='funny'&&<div className="space-y-1 text-xs text-slate-300">{FUNNY_GREETINGS.map((line,i)=><p key={i}>{line[lang]||line.ka}</p>)}</div>}
+      {s.greetingMode==='library'&&<div className="space-y-3">
+        <label className="block text-xs text-slate-300">ფრაზების ენა<select className={field} value={libraryLang} onChange={e=>setLibraryLang(e.target.value)}>{CHARACTER_GREETING_LANGS.map(code=><option key={code} value={code}>{({ka:'ქართული',en:'English',ru:'Русский'})[code]}</option>)}</select></label>
+        {Array.from({length:8},(_,i)=><label key={i} className="block text-xs text-slate-300">ფრაზა {i+1}<input className={field} type="text" maxLength={120} disabled={busy} value={siteSettings?.characterStudio?.greetingLibrary?.[libraryLang]?.[i]??''} onChange={e=>{
+          const value=e.target.value;setPreview(null);
+          setSiteSettings(previous=>{const current=normalizeCharacterSettings(previous?.characterStudio);const list=Array.from({length:8},(_,j)=>previous?.characterStudio?.greetingLibrary?.[libraryLang]?.[j]??'');list[i]=value;return {...previous,characterStudio:{...current,greetingLibrary:{...current.greetingLibrary,[libraryLang]:list}}};});
+        }}/></label>)}
+        <p className="text-xs text-slate-400">თითოეულ ენაზე მაქსიმუმ 8 ფრაზა. ცარიელი ველები გამოქვეყნებისას გამოტოვებულია. შერჩევა შემთხვევითია და ენის მიხედვით ხდება.</p>
+      </div>}
+      <p className="text-xs text-slate-400">ეფექტები მოკლეა და მხოლოდ პერსონაჟთან ჩნდება. სისტემის შემცირებული მოძრაობის პარამეტრს პატივს სცემს.</p>
+    </details>
     <details className="rounded-xl border border-slate-700 p-3 space-y-3" data-character-appearance>
       <summary className="cursor-pointer text-sm font-bold text-white">ვიზუალური დიზაინი — ზომები და ფერები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
