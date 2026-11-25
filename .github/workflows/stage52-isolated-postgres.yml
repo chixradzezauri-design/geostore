@@ -119,6 +119,8 @@ on:
       - 'release/phase4-wardrobe-reservations-draft.sql'
       - 'release/phase4-wardrobe-erasure-worker-draft.sql'
       - 'tests/sql/phase4_wardrobe_contract.sql'
+      - 'release/phase4-admin-mfa-guard-draft.sql'
+      - 'tests/sql/phase4_admin_mfa_guard_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -217,3 +219,6 @@ jobs:
 
           createdb phase4_wardrobe
           PGDATABASE=phase4_wardrobe psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_wardrobe_contract.sql
+
+          createdb phase4_admin_mfa
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_guard_contract.sql
