@@ -1002,7 +1002,8 @@ export default function StoreView({
           )}
         </div>
       ) : (
-        <div id="gs-catalog-products" {...sectionGeometryProps('products')} className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
+        <div id="gs-catalog-products" {...sectionGeometryProps('products')} data-signature-products={signatureHero ? "true" : undefined} className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
+          {signatureHero && <h2 className="gs-signature-products-heading">{currentLang === 'en' ? 'Products' : currentLang === 'ru' ? 'Товары' : 'პროდუქტები'} <span>{processedProducts.length}</span></h2>}
           {paginatedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);

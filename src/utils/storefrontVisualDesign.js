@@ -222,7 +222,7 @@ const normalizeResponsiveLayout = rawLayout => {
   const layout = isPlainObject(rawLayout) ? rawLayout : {};
   const fields = {
     contentWidth: [960, 1600], sectionGap: [16, 72], heroHeight: [320, 680],
-    categoryCardHeight: [110, 260], categoryColumns: [2, 6], productColumns: [2, 5],
+    categoryCardHeight: [110, 260], categoryColumns: [2, 6], productColumns: [2, 6],
     heroContentWidth: [40, 90], bannerHeight: [150, 340], productImageRatio: [0.7, 1.2],
     cardRadius: [0, 28], buttonRadius: [0, 28]
   };
@@ -283,7 +283,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       heroHeight: clamp(layout.heroHeight, 320, 680, defaults.layout.heroHeight),
       categoryCardHeight: clamp(layout.categoryCardHeight, 110, 260, defaults.layout.categoryCardHeight),
       categoryColumns: Math.round(clamp(layout.categoryColumns, 2, 6, defaults.layout.categoryColumns)),
-      productColumns: Math.round(clamp(layout.productColumns, 2, 5, defaults.layout.productColumns)),
+      productColumns: Math.round(clamp(layout.productColumns, 2, 6, defaults.layout.productColumns)),
       heroContentWidth: clamp(layout.heroContentWidth, 40, 90, defaults.layout.heroContentWidth),
       bannerHeight: clamp(layout.bannerHeight, 150, 340, defaults.layout.bannerHeight),
       productImageRatio: clamp(layout.productImageRatio, 0.7, 1.2, defaults.layout.productImageRatio),

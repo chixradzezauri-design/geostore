@@ -18,8 +18,8 @@ const typography = {
 };
 const layout = {
   contentWidth: 1440, sectionGap: 20, heroHeight: 420,
-  categoryCardHeight: 150, categoryColumns: 4, productColumns: 5,
-  heroContentWidth: 48, bannerHeight: 220, productImageRatio: 1.05,
+  categoryCardHeight: 150, categoryColumns: 4, productColumns: 6,
+  heroContentWidth: 48, bannerHeight: 220, productImageRatio: 0.85,
   cardRadius: 12, buttonRadius: 8
 };
 

@@ -6,7 +6,9 @@ import { getStorefrontSectionOrder, normalizeStorefrontVisualDesign } from './st
 test('Signature preset uses the supported compact layout and editorial section sequence on all viewports', () => {
   const result = applySignature2026Design({});
   assert.equal(result.theme.canvas, '#f6f3ef');
-  assert.equal(result.layout.productColumns, 5);
+  assert.equal(result.layout.productColumns, 6);
+  assert.equal(result.layout.productImageRatio, 0.85);
+  assert.equal(normalizeStorefrontVisualDesign({layout:{productColumns:99}}).layout.productColumns, 6);
   assert.equal(result.responsive.mobile.layout.productColumns, 2);
   assert.equal(result.responsive.tablet.layout.productColumns, 3);
   for (const viewport of ['desktop', 'tablet', 'mobile']) {
