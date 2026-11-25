@@ -1,4 +1,5 @@
 import InstallAppDialog from './components/InstallAppDialog.jsx';
+import {captureCheckoutCart,planConfirmedLocalCartCleanup,checkoutCartUnchanged} from './utils/checkoutCartCleanup.js';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
 import { WISHLIST_SYNC_ENABLED } from './utils/wishlistSyncReview.js';
 import { CART_SYNC_ENABLED, validateCartReviewStock, planCartReviewRestore, matchesCartRestorePreview } from './utils/cartSyncReview.js';
@@ -3134,6 +3135,9 @@ export default function App() {
     orderSubmitLock.current = true;
     const checkoutStartEpoch = checkoutOwnerEpochRef.current;
     const checkoutStartOwnerId = activeCartOwnerRef.current.userId;
+    const checkoutStartCart=captureCheckoutCart(cartRef.current);
+    const checkoutWasQuickBuy=Boolean(quickBuyProduct);
+    const cartChangedMessage=currentLang==='en'?'Your cart changed. Review it before placing the order.':currentLang==='ru'?'Корзина изменилась. Проверьте её перед оформлением.':'კალათა შეიცვალა. შეკვეთის გაფორმებამდე გადაამოწმეთ.';
     const abandonCheckoutIfOwnerChanged = () => {
       if (isCheckoutOwnerContextCurrent({
         startEpoch: checkoutStartEpoch,
@@ -3230,7 +3234,7 @@ export default function App() {
 
     const itemsToOrder = quickBuyProduct
       ? [buildOrderItemSnapshot(quickBuyProduct, 1)]
-      : cart.map(item => buildOrderItemSnapshot(item, item.quantity));
+      : cartRef.current.map(item => buildOrderItemSnapshot(item, item.quantity));
 
     if (itemsToOrder.length === 0) {
       const message = currentLang === 'en'
@@ -3308,7 +3312,8 @@ export default function App() {
       if (!Array.isArray(latestCatalogue)) {
         throw new Error('პროდუქტების მიმდინარე მონაცემები არასწორია. გთხოვთ, სცადოთ თავიდან.');
       }
-      const checkoutCart = quickBuyProduct ? [quickBuyProduct] : cart;
+      if(!checkoutWasQuickBuy&&!checkoutCartUnchanged(checkoutStartCart,cartRef.current))throw new Error(cartChangedMessage);
+      const checkoutCart = quickBuyProduct ? [quickBuyProduct] : cartRef.current;
       const reconciliation = reconcileCartWithCatalog(checkoutCart, latestCatalogue);
       if (reconciliation.hasChanges) {
         if (!quickBuyProduct) {
@@ -3498,6 +3503,7 @@ export default function App() {
         orderId = createSecureOrderId(window.crypto);
       }
 
+      if(!checkoutWasQuickBuy&&!checkoutCartUnchanged(checkoutStartCart,cartRef.current))throw new Error(cartChangedMessage);
       pendingCheckoutRef.current = { fingerprint: checkoutFingerprint, orderId };
       if (canPersistFingerprint) {
         try {
@@ -3615,8 +3621,19 @@ export default function App() {
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
-    cartRef.current = [];
-    setCart([]);
+    // Quick buy is independent of the saved cart. A normal checkout may
+    // clear only the exact submitted cart, never a later local or tab edit.
+    let persistedCart=null;
+    try{persistedCart=JSON.parse(window.localStorage.getItem(getCartStorageKey(checkoutStartOwnerId))||'null');}catch{}
+    const cleanup=planConfirmedLocalCartCleanup({
+      quickBuy:checkoutWasQuickBuy,submitted:checkoutStartCart,current:cartRef.current,persisted:persistedCart,
+      requestedItems:itemsToOrder,receipt:serverOrderResult,orderId
+    });
+    if(cleanup.status==='clear'){cartRef.current=[];setCart([]);}
+    else if(cleanup.status==='review'){
+      // Order already committed; never resubmit automatically or erase other changes.
+      setOrderConfirmation({id:orderId,email:orderUserEmail,totalGEL:safeConfirmedTotal,cartReviewRequired:true});
+    }
     setAppliedCoupon(null);
 
     // The confirmation dialog is the single success surface and displays the full order code.
