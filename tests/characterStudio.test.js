@@ -11,8 +11,8 @@ test('invalid settings are constrained and unknown properties dropped',()=>{
   assert.equal(s.character,'fox');assert.equal(s.behavior,'run-wave');assert.equal(s.side,'left');assert.equal(s.delay,0);assert.equal(s.duration,12);assert.equal(s.message.length,120);assert.equal(s.unknown,undefined);
 });
 test('rotation selects only the five original characters',()=>{
-  assert.equal(new Set(CHARACTERS.map(c=>c.id)).size,5);
-  for(let i=0;i<5;i++)assert.equal(selectCharacter({rotation:'random'},new Date(),()=>i/5).id,CHARACTERS[i].id);
+  assert.equal(new Set(CHARACTERS.map(c=>c.id)).size,9);
+  for(let i=0;i<CHARACTERS.length;i++)assert.equal(selectCharacter({rotation:'random'},new Date(),()=>(i+.5)/CHARACTERS.length).id,CHARACTERS[i].id);
   assert.equal(selectCharacter({rotation:'fixed',character:'cat'}).id,'cat');
   assert.equal(selectCharacter({rotation:'daypart'},new Date(2026,5,1,9)).id,'fox');
   assert.equal(selectCharacter({rotation:'seasonal'},new Date(2026,11,1)).id,'panda');
@@ -154,3 +154,5 @@ test('new published character configurations can greet without repeating identic
   assert.equal(characterRevisionSeen(record,'daily',key,86401000),false);
   assert.equal(characterRevisionSeen('1','session',key),false);
 });
+
+test('all nine mascot identities are selectable, recolourable and localized',()=>{for(const c of CHARACTERS){assert.equal(selectCharacter({character:c.id}).id,c.id);assert.equal(styledCharacter(c,{palette:{[c.id]:'#123456'}}).color,'#123456');for(const lang of ['ka','en','ru'])assert.ok(c.lines[lang].length>0);}});

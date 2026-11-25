@@ -16,9 +16,12 @@ test('admin editor loads only the shared draft through an authenticated request'
 
 test('public storefront loader reads only the published snapshot and never overwrites an admin draft', () => {
   const publicLoader = app.split('const loadPublishedStorefront = async () => {')[1]?.split('};')[0] || '';
-  assert.match(app, /if \(hasSettingsAccess\) return undefined;\s*let active = true;\s*const loadPublishedStorefront/);
+  assert.match(publicLoader, /if\(!hasSettingsAccess&&!appliedPublicSnapshot\)\{/);
+  assert.match(publicLoader, /setPublishedCharacterSettings\(previous=>/);
+  assert.match(publicLoader, /generation!==publishedCharacterGeneration\.current/);
+  assert.match(publicLoader, /if\(!hasSettingsAccess&&!appliedPublicSnapshot\)\{[\s\S]*setSiteSettings\(config\.siteSettings\)/);
   assert.match(publicLoader, /select=published_config,is_published/);
-  assert.match(publicLoader, /rows\?\.\[0\]\?\.is_published \? rows\[0\]\.published_config : null/);
+  assert.match(publicLoader, /rows\?\.\[0\]\?\.is_published\s*\?\s*rows\[0\]\.published_config\s*:\s*null/);
   assert.doesNotMatch(publicLoader, /draft_config/);
 });
 

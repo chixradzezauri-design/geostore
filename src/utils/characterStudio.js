@@ -5,6 +5,10 @@ export const CHARACTERS = Object.freeze([
   { id:'rabbit', name:'Flash Rabbit', label:'კურდღელი', color:'#a78bfa', lines:{ka:'ჰოპ! აქციების ნახვა არ დაგავიწყდეს!',en:'Hop! Don’t miss the offers!',ru:'Прыг! Не пропусти акции!'} },
   { id:'robot', name:'Mini Robot', label:'რობოტი', color:'#22d3ee', lines:{ka:'ბიპ-ბუპ! კარგი არჩევანი გელოდება.',en:'Beep boop! Great finds await.',ru:'Бип-буп! Отличные находки ждут.'} },
   { id:'cat', name:'Style Cat', label:'კატა', color:'#f472b6', lines:{ka:'მიაუ! დღეს სტილურად გამოვიყურებით!',en:'Meow! Let’s find your style.',ru:'Мяу! Найдём твой стиль!'} },
+  { id:'monkey', name:'Trend Monkey', label:'მაიმუნი', color:'#a8764e', lines:{ka:'ჰეი! მოდი, ერთად აღმოვაჩინოთ ახალი ამბები.',en:'Hey! Let’s discover something new.',ru:'Привет! Давай найдём что-нибудь новое.'} },
+  { id:'bear', name:'Luxury Bear', label:'დათვი', color:'#926b48', lines:{ka:'კეთილი იყოს შენი მობრძანება. საუკეთესო არჩევანს დრო სჭირდება.',en:'Welcome. Take your time finding your favourite.',ru:'Добро пожаловать. Выбирай с удовольствием.'} },
+  { id:'owl', name:'Smart Owl', label:'ბუ', color:'#8c735e', lines:{ka:'გამარჯობა! კარგი აღმოჩენა პატარა დეტალით იწყება.',en:'Hello! Great finds start with the little details.',ru:'Привет! Отличные находки начинаются с мелочей.'} },
+  { id:'cheetah', name:'Speed Cheetah', label:'გეპარდი', color:'#dca94f', lines:{ka:'მოვირბინე, რომ სასიამოვნო აღმოჩენები გისურვო!',en:'I dashed over to wish you happy browsing!',ru:'Прибежал пожелать приятных находок!'} },
 ]);
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
 const bounded=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.min(max,Math.max(min,Math.round(value))):fallback;
