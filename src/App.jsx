@@ -23,6 +23,10 @@ const AdminBackupMfaPanel = lazy(() => import('./components/AdminBackupMfaPanel.
 import {createAdminBackupMfa} from './utils/adminBackupMfa.js';
 
 import Header from './components/Header';
+import { normalizeCharacterSettings, canDisplayCharacter, getCharacterScenario, canShowCharacterReaction } from './utils/characterStudio.js';
+const CharacterMascot = lazy(() => import('./components/CharacterMascot.jsx'));
+const CharacterContextCard = lazy(() => import('./components/CharacterMascot.jsx').then(module=>({default:module.CharacterContextCard})));
+const CharacterReaction = lazy(() => import('./components/CharacterMascot.jsx').then(module=>({default:module.CharacterReaction})));
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
 import {loadAdminCss} from './utils/loadAdminCss.js';
@@ -346,6 +350,7 @@ const validateStorefrontSiteSettings = (rawSettings) => {
     throw new Error('საიტის პარამეტრების ფორმატი არასწორია.');
   }
   const settings = { ...DEFAULT_SITE_SETTINGS, ...rawSettings };
+  if (Object.hasOwn(rawSettings, 'characterStudio')) settings.characterStudio = normalizeCharacterSettings(rawSettings.characterStudio);
   const limits = { storeName: 60, topBarText: 160, heroTitle: 120, heroSubtitle: 240 };
   for (const [key, maxLength] of Object.entries(limits)) {
     if (typeof settings[key] !== 'string') settings[key] = String(settings[key] ?? '');
@@ -484,6 +489,14 @@ export default function App() {
 
   const t = translations[currentLang] || translations.ka;
 
+  const [publishedCharacterSettings, setPublishedCharacterSettings] = useState(null);
+  const [characterMobile, setCharacterMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setCharacterMobile(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [siteSettings, setSiteSettings] = useState(() => {
     const saved = loadSafeStorage('geostore_site_settings', DEFAULT_SITE_SETTINGS);
     const settings = {
@@ -1132,6 +1145,7 @@ export default function App() {
   }, [hasSettingsAccess, categories, bannersList, siteSettings]);
 
   useEffect(() => {
+    setPublishedCharacterSettings(null);
     // Settings-authorized staff load the private draft in the separate authenticated effect above.
     // Do not let a slower public-config request overwrite that draft after login.
     if (hasSettingsAccess) return undefined;
@@ -1146,6 +1160,7 @@ export default function App() {
         const rows = await response.json();
         const config = rows?.[0]?.is_published ? rows[0].published_config : null;
         if (!active || !config || typeof config !== 'object') return;
+        setPublishedCharacterSettings(normalizeCharacterSettings(config.siteSettings?.characterStudio));
         if (Array.isArray(config.categories)) setCategoriesList(config.categories);
         if (Array.isArray(config.banners)) setBannersList(config.banners);
         if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) setSiteSettings(config.siteSettings);
@@ -1455,11 +1470,18 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState('');
   const [toastTone, setToastTone] = useState('success');
+  const [toastCharacterKey,setToastCharacterKey]=useState(null);
+  const lastCharacterReactionRef=useRef(null);
   const toastTimerRef = useRef(null);
   useEffect(() => () => {
     if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
   }, []);
-  const showToast = (msg, tone = 'success') => {
+  const showToast = (msg, tone = 'success', characterKey = null) => {
+    const now=Date.now();
+    const reaction=tone==='success'&&['cartAdded','wishlistAdded'].includes(characterKey)&&getCharacterScenario(publishedCharacterSettings,characterKey,{mobile:characterMobile,eligible:!hasSettingsAccess&&['store','cart','wishlist'].includes(activeTab)});
+    const allowed=Boolean(reaction)&&canShowCharacterReaction(lastCharacterReactionRef.current,now);
+    if(allowed)lastCharacterReactionRef.current=now;
+    setToastCharacterKey(allowed?characterKey:null);
     if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
     setToastTone(tone);
     setToastMessage(msg);
@@ -2668,7 +2690,7 @@ export default function App() {
 
     cartRef.current = result.cart;
     setCart(result.cart);
-    showToast(getCartFeedbackMessage(currentLang, 'added', { name: product.name }));
+    showToast(getCartFeedbackMessage(currentLang, 'added', { name: product.name }), 'success', 'cartAdded');
     return true;
   };
 
@@ -2743,7 +2765,7 @@ export default function App() {
         );
       }
 
-      showToast('❤️ დაემატა სურვილების სიაში!');
+      showToast('❤️ დაემატა სურვილების სიაში!', 'success', 'wishlistAdded');
 
       return [...prev, product];
     });
@@ -3729,11 +3751,17 @@ export default function App() {
     }else robots?.remove();
   },[activeTab,catalogueRoute,products,catalogueVerifiedEpoch,categories,adminAccess]);
 
+  const toastCharacter=toastTone==='success'&&getCharacterScenario(publishedCharacterSettings,toastCharacterKey,{mobile:characterMobile,eligible:!hasSettingsAccess&&['store','cart','wishlist'].includes(activeTab)});
+  const emptyCartCharacter=getCharacterScenario(publishedCharacterSettings,'cart',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='cart'&&cart.length===0&&!authLoading});
+  const emptyWishlistCharacter=getCharacterScenario(publishedCharacterSettings,'wishlist',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='wishlist'&&wishlist.length===0&&!authLoading});
   const formatPrice = (p) =>
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
   return (
     <div data-signature-commerce={activeTab !== 'admin' && siteSettings?.visualDesign?.signature2026 === true ? "true" : undefined} className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
+      {!hasSettingsAccess && activeTab === 'store' && !searchQuery && canDisplayCharacter(publishedCharacterSettings, { route: catalogueRoute?.kind, mobile: characterMobile, blocked: Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal) }) && (
+        <Suspense fallback={null}><CharacterMascot settings={publishedCharacterSettings} lang={currentLang}/></Suspense>
+      )}
       {activeTab === 'admin' && hasSettingsAccess && storefrontRemoteConflict && (
         <div role="alert" className="fixed top-2 left-2 right-2 z-[60] mx-auto max-h-[35vh] max-w-2xl overflow-y-auto rounded-xl border border-amber-400 bg-amber-950 px-3 py-2 text-xs leading-relaxed text-amber-50 shadow-xl sm:top-3 sm:left-3 sm:right-3 sm:px-4 sm:py-3 sm:text-sm" aria-live="assertive">
           <strong className="block font-bold">სხვა მოწყობილობაზე ახალი მონახაზია შენახული</strong>
@@ -3746,7 +3774,7 @@ export default function App() {
           aria-live={toastTone === 'error' ? 'assertive' : 'polite'}
           className={`fixed ${storefrontRemoteConflict && activeTab === 'admin' ? 'bottom-4 right-3 left-3 sm:left-auto sm:right-6' : 'top-4 left-3 right-3 sm:left-auto sm:top-6 sm:right-6'} z-50 max-w-[min(480px,calc(100vw-24px))] break-words font-bold px-4 py-3 rounded-2xl shadow-2xl border motion-reduce:animate-none flex items-center gap-2.5 text-xs ${toastTone === 'error' ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-emerald-500 text-slate-950 border-emerald-300'}`}
         >
-          {toastMessage}
+          {toastCharacter?<><span className="min-w-0 flex-1">{toastMessage}</span><Suspense fallback={null}><CharacterReaction scenario={toastCharacter} lang={currentLang}/></Suspense></>:toastMessage}
         </div>
       )}
 
@@ -3842,6 +3870,8 @@ export default function App() {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             catalogueNavigation
+            publishedCharacterSettings={hasSettingsAccess?null:publishedCharacterSettings}
+            characterMobile={characterMobile}
             catalogueRoute={catalogueRoute}
             catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current}
             catalogueProducts={products}
@@ -3969,7 +3999,7 @@ export default function App() {
 
             {WISHLIST_SYNC_ENABLED && !authLoading && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><WishlistSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getLocalIds={()=>projectWishlistIds(wishlistRef.current)} importFavorite={importSyncedFavorite} lang={currentLang}/></Suspense>}
             {wishlist.length === 0 ? (
-              <div className="gs-video-wishlist-empty"><p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
+              <div className="gs-video-wishlist-empty">{emptyWishlistCharacter&&<Suspense fallback={null}><CharacterContextCard scenario={emptyWishlistCharacter} lang={currentLang}/></Suspense>}<p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
             ) : (
               <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map((savedProd) => {
@@ -4040,6 +4070,7 @@ export default function App() {
                 <span className="gs-cart-empty-icon flex items-center justify-center w-14 h-14 rounded-full border border-slate-200 bg-slate-50 text-slate-500">
                   <ShoppingBag className="w-6 h-6" aria-hidden="true" />
                 </span>
+                {emptyCartCharacter&&<Suspense fallback={null}><CharacterContextCard scenario={emptyCartCharacter} lang={currentLang}/></Suspense>}
                 <p className="text-slate-500 text-sm font-medium">{t.emptyCart}</p>
                 <button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button>
               </div>

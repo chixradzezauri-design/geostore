@@ -32,6 +32,7 @@ import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessageP
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { mergeCrmCustomersFromOrders } from '../utils/adminCrm.js';
 const StorefrontVisualEditor = React.lazy(() => import('./StorefrontVisualEditor'));
+const AdminCharacterStudio = React.lazy(() => import('./AdminCharacterStudio.jsx'));
 import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan, calculateReplenishmentDraftPreview } from '../utils/inventoryReplenishment.js';
 import { validateReplenishmentSettingsResponse, validateReplenishmentSaveResponse } from '../utils/replenishmentApiValidation.js';
@@ -8197,6 +8198,8 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'settings' || adminContentTab === 'settings') && (
           <div className="admin-settings-panel space-y-4">
+            {hasSettingsPermission && visibleAdminTab === 'settings' && <React.Suspense fallback={<AdminSectionLoading/>}><AdminCharacterStudio siteSettings={siteSettings} setSiteSettings={setSiteSettings} busy={storefrontDraftBusy || storefrontPublishBusy} lang={currentLang}/></React.Suspense>}
+
             {SYSTEM_HISTORY_ENABLED && ADMIN_MFA_ROLLOUT_ENABLED && isOwner && adminLoggedIn && adminUserId && visibleAdminTab==='settings' && (
               <React.Suspense fallback={<AdminSectionLoading/>}>
                 <SystemMonitoringPanel key={adminUserId+':'+adminSessionVersion.current} enabled read={readSystemHistory} lang={currentLang}/>
