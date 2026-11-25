@@ -23,8 +23,9 @@ const AdminBackupMfaPanel = lazy(() => import('./components/AdminBackupMfaPanel.
 import {createAdminBackupMfa} from './utils/adminBackupMfa.js';
 
 import Header from './components/Header';
-import { normalizeCharacterSettings, canDisplayCharacter } from './utils/characterStudio.js';
+import { normalizeCharacterSettings, canDisplayCharacter, getCharacterScenario } from './utils/characterStudio.js';
 const CharacterMascot = lazy(() => import('./components/CharacterMascot.jsx'));
+const CharacterContextCard = lazy(() => import('./components/CharacterMascot.jsx').then(module=>({default:module.CharacterContextCard})));
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
 import {loadAdminCss} from './utils/loadAdminCss.js';
@@ -3742,6 +3743,8 @@ export default function App() {
     }else robots?.remove();
   },[activeTab,catalogueRoute,products,catalogueVerifiedEpoch,categories,adminAccess]);
 
+  const emptyCartCharacter=getCharacterScenario(publishedCharacterSettings,'cart',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='cart'&&cart.length===0&&!authLoading});
+  const emptyWishlistCharacter=getCharacterScenario(publishedCharacterSettings,'wishlist',{mobile:characterMobile,eligible:!hasSettingsAccess&&activeTab==='wishlist'&&wishlist.length===0&&!authLoading});
   const formatPrice = (p) =>
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
@@ -3858,6 +3861,8 @@ export default function App() {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             catalogueNavigation
+            publishedCharacterSettings={hasSettingsAccess?null:publishedCharacterSettings}
+            characterMobile={characterMobile}
             catalogueRoute={catalogueRoute}
             catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current}
             catalogueProducts={products}
@@ -3985,7 +3990,7 @@ export default function App() {
 
             {WISHLIST_SYNC_ENABLED && !authLoading && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><WishlistSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getLocalIds={()=>projectWishlistIds(wishlistRef.current)} importFavorite={importSyncedFavorite} lang={currentLang}/></Suspense>}
             {wishlist.length === 0 ? (
-              <div className="gs-video-wishlist-empty"><p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
+              <div className="gs-video-wishlist-empty">{emptyWishlistCharacter&&<Suspense fallback={null}><CharacterContextCard scenario={emptyWishlistCharacter} lang={currentLang}/></Suspense>}<p className="gs-wishlist-empty text-slate-500 text-xs py-8">{t.emptyWishlist}</p><button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button></div>
             ) : (
               <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map((savedProd) => {
@@ -4056,6 +4061,7 @@ export default function App() {
                 <span className="gs-cart-empty-icon flex items-center justify-center w-14 h-14 rounded-full border border-slate-200 bg-slate-50 text-slate-500">
                   <ShoppingBag className="w-6 h-6" aria-hidden="true" />
                 </span>
+                {emptyCartCharacter&&<Suspense fallback={null}><CharacterContextCard scenario={emptyCartCharacter} lang={currentLang}/></Suspense>}
                 <p className="text-slate-500 text-sm font-medium">{t.emptyCart}</p>
                 <button type="button" className="gs-video-continue-shopping" onClick={() => setActiveTab('store')}>{currentLang === 'en' ? 'Continue shopping' : currentLang === 'ru' ? 'Продолжить покупки' : 'შეძენის გაგრძელება'}</button>
               </div>

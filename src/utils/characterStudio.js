@@ -8,6 +8,18 @@ export const CHARACTERS = Object.freeze([
 ]);
 const pick=(value,allowed,fallback)=>allowed.includes(value)?value:fallback;
 const bounded=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.min(max,Math.max(min,Math.round(value))):fallback;
+export const CHARACTER_SCENARIOS=Object.freeze({
+  flash:{character:'rabbit',label:'ფლეშ აქციები',lines:{ka:'ჰოპ! მოქმედი აქციები აქაა!',en:'Hop! Explore the current offers!',ru:'Прыг! Здесь действующие акции!'}},
+  cart:{character:'robot',label:'ცარიელი კალათა',lines:{ka:'ბიპ-ბუპ! კალათა ჯერ ცარიელია.',en:'Beep boop! Your basket is still empty.',ru:'Бип-буп! Корзина пока пуста.'}},
+  wishlist:{character:'cat',label:'ცარიელი ფავორიტები',lines:{ka:'მიაუ! აქ შენი რჩეულები შეინახება.',en:'Meow! Your favourites will live here.',ru:'Мяу! Здесь будут твои избранные товары.'}}
+});
+function normalizeScenarios(raw){
+  const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  return Object.fromEntries(Object.entries(CHARACTER_SCENARIOS).map(([key,preset])=>{
+    const value=source[key]&&typeof source[key]==='object'&&!Array.isArray(source[key])?source[key]:{};
+    return [key,{enabled:value.enabled===true,character:pick(value.character,CHARACTERS.map(c=>c.id),preset.character),message:typeof value.message==='string'?value.message.trim().slice(0,120):''}];
+  }));
+}
 export const DEFAULT_CHARACTER_SETTINGS=Object.freeze({
   enabled:false, character:'fox', rotation:'fixed', behavior:'run-wave', side:'left',
   delay:2, duration:6, frequency:'session', pages:'home', mobile:true, desktop:true, message:''
@@ -23,7 +35,8 @@ export function normalizeCharacterSettings(raw){
     frequency:pick(s.frequency,['session','daily'],'session'),
     pages:pick(s.pages,['home','catalogue'],'home'),
     mobile:s.mobile!==false, desktop:s.desktop!==false,
-    message:typeof s.message==='string'?s.message.trim().slice(0,120):''
+    message:typeof s.message==='string'?s.message.trim().slice(0,120):'',
+    scenarios:normalizeScenarios(s.scenarios)
   };
 }
 export function selectCharacter(settings,date=new Date(),random=Math.random){
@@ -40,6 +53,11 @@ export function characterMessage(settings,character,lang='ka'){
 export function canDisplayCharacter(settings,{route,mobile,blocked}={}){
   const s=normalizeCharacterSettings(settings);
   return s.enabled&&!blocked&&(mobile?s.mobile:s.desktop)&&(route==='home'||(s.pages==='catalogue'&&route==='category'));
+}
+export function getCharacterScenario(settings,key,{mobile=false,eligible=false}={}){
+  const s=normalizeCharacterSettings(settings);
+  if(!Object.hasOwn(CHARACTER_SCENARIOS,key)||!s.enabled||!eligible||!(mobile?s.mobile:s.desktop)||!s.scenarios[key].enabled)return null;
+  return {character:CHARACTERS.find(c=>c.id===s.scenarios[key].character),message:s.scenarios[key].message,lines:CHARACTER_SCENARIOS[key].lines};
 }
 export const CHARACTER_SESSION_KEY='geostore_character_seen_v1';
 export function characterAlreadySeen(value,frequency,now=Date.now()){

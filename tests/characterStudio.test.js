@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CHARACTERS,normalizeCharacterSettings,selectCharacter,characterMessage,canDisplayCharacter,characterAlreadySeen} from '../src/utils/characterStudio.js';
+import {CHARACTERS,normalizeCharacterSettings,selectCharacter,characterMessage,canDisplayCharacter,characterAlreadySeen,getCharacterScenario} from '../src/utils/characterStudio.js';
 test('mascot is opt-in and strict boolean',()=>{
   assert.equal(normalizeCharacterSettings(null).enabled,false);
   assert.equal(normalizeCharacterSettings({enabled:'true'}).enabled,false);
@@ -37,4 +37,25 @@ test('frequency guard handles invalid stamps and expiry',()=>{
   assert.equal(characterAlreadySeen('100','daily',86400100),false);
   assert.equal(characterAlreadySeen('300','daily',200),false);
   assert.equal(characterAlreadySeen('bad','daily',200),false);
+});
+
+test('contextual scenes are individually opt-in, device-gated and eligible only',()=>{
+  assert.equal(getCharacterScenario({enabled:true},'flash',{eligible:true}),null);
+  const s={enabled:true,scenarios:{flash:{enabled:true,character:'cat',message:'Sale!'},cart:{enabled:true}}};
+  assert.equal(getCharacterScenario(s,'flash',{eligible:true}).character.id,'cat');
+  assert.equal(getCharacterScenario(s,'flash',{eligible:true}).message,'Sale!');
+  assert.equal(getCharacterScenario(s,'flash',{eligible:false}),null);
+  assert.equal(getCharacterScenario({...s,mobile:false},'flash',{eligible:true,mobile:true}),null);
+  assert.equal(getCharacterScenario({...s,enabled:false},'cart',{eligible:true}),null);
+  assert.equal(getCharacterScenario(s,'cart',{eligible:true}).character.id,'robot');
+  assert.equal(getCharacterScenario(s,'wishlist',{eligible:true}),null);
+  assert.equal(getCharacterScenario(s,'__proto__',{eligible:true}),null);
+});
+test('scene normalization bounds text, drops unknown scene keys, preserves greeting',()=>{
+  const s=normalizeCharacterSettings({message:'Welcome',scenarios:{flash:{enabled:'true',character:'other',message:'a'.repeat(200)},other:{enabled:true}}});
+  assert.equal(s.message,'Welcome');
+  assert.equal(s.scenarios.flash.enabled,false);
+  assert.equal(s.scenarios.flash.character,'rabbit');
+  assert.equal(s.scenarios.flash.message.length,120);
+  assert.equal(s.scenarios.other,undefined);
 });

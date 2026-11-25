@@ -28,3 +28,11 @@
 @media(min-width:768px){.gs-character-scene:not(.gs-character-preview-scene){bottom:24px;left:24px;max-width:350px}.gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){left:auto;right:24px}.gs-character-figure{width:116px;flex-basis:116px}}
 @media(max-width:420px){.gs-character-figure{width:76px;flex-basis:76px}.gs-character-scene{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.gs-character-scene,.gs-character-scene *{animation:none!important;transition:none!important}}
+
+.gs-character-context{display:flex;align-items:center;justify-content:center;gap:10px;max-width:100%;width:fit-content;margin-inline:auto;padding:4px 12px;border:1px solid #e4d7bb;border-radius:16px;background:#fffdf7;color:#17233b;box-sizing:border-box;text-align:start;font:500 12px/1.45 system-ui,sans-serif;pointer-events:none}
+.gs-character-context-art{width:58px;flex:0 0 58px}
+.gs-character-context-copy{min-width:0;overflow-wrap:anywhere}
+.gs-character-context-copy strong,.gs-character-context-copy span{display:block}
+.gs-character-context-copy strong{font-size:11px;color:#7c4a0e}
+.gs-character-context .gs-character-hand{transform-box:fill-box;transform-origin:12% 85%;animation:gs-character-wave .65s ease-in-out 2}
+@media(prefers-reduced-motion:reduce){.gs-character-context .gs-character-hand{animation:none!important}}

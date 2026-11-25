@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 
 
+import {getCharacterScenario} from '../utils/characterStudio.js';
+const CharacterContextCard = React.lazy(()=>import('./CharacterMascot.jsx').then(module=>({default:module.CharacterContextCard})));
+
 const buildCustomSectionResponsiveCss = section => {
   const makeRule = viewport => {
     const value = section.responsive?.[viewport] || {};
@@ -42,6 +45,8 @@ const buildCustomSectionResponsiveCss = section => {
 
 export default function StoreView({
   campaignPreviewOnly=false,
+  publishedCharacterSettings=null,
+  characterMobile=false,
   currentLang = 'ka',
   siteSettings,
   visualEditorViewport = null,
@@ -538,6 +543,7 @@ export default function StoreView({
     () => getActiveFlashSaleProducts(activeProducts, flashSaleClock),
     [activeProducts, flashSaleClock]
   );
+  const flashCharacter=getCharacterScenario(publishedCharacterSettings,'flash',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&flashSaleProducts.length>0});
   const flashSaleEndAt = getEarliestFlashSaleEnd(flashSaleProducts);
   const timeLeft = getFlashSaleCountdown(flashSaleEndAt, flashSaleClock);
 
@@ -729,6 +735,7 @@ export default function StoreView({
             </div>
           </div>
 
+          {flashCharacter&&<React.Suspense fallback={null}><CharacterContextCard scenario={flashCharacter} lang={currentLang}/></React.Suspense>}
           {flashBannerAppearance.placement!=="above"&&flashBannerNode}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {flashSaleProducts.map(prod => {

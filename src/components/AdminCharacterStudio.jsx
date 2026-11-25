@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
-import {CHARACTERS,normalizeCharacterSettings,selectCharacter} from '../utils/characterStudio.js';
-import {CharacterArt,CharacterScene} from './CharacterMascot.jsx';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter} from '../utils/characterStudio.js';
+import {CharacterArt,CharacterScene,CharacterContextCard} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
 const choices={
@@ -14,6 +14,15 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
   const s=normalizeCharacterSettings(siteSettings?.characterStudio);
   const [preview,setPreview]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
+  const [scenarioKey,setScenarioKey]=useState('flash');
+  const scenario=s.scenarios[scenarioKey];
+  const updateScenario=(patch)=>{
+    setSiteSettings(previous=>{
+      const current=normalizeCharacterSettings(previous?.characterStudio);
+      return {...previous,characterStudio:{...current,scenarios:{...current.scenarios,[scenarioKey]:{...current.scenarios[scenarioKey],...patch}}}};
+    });
+  };
+  const scenarioPreview=getCharacterScenario({...s,enabled:true,mobile:true,desktop:true,scenarios:{...s.scenarios,[scenarioKey]:{...scenario,enabled:true}}},scenarioKey,{mobile:previewMobile,eligible:true});
   const update=(patch)=>{
     setPreview(null);
     setSiteSettings(previous=>({...previous,characterStudio:normalizeCharacterSettings({...previous?.characterStudio,...patch})}));
@@ -43,6 +52,15 @@ export default function AdminCharacterStudio({siteSettings,setSiteSettings,busy=
     <div className="gs-character-preview mx-auto w-full" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined}}>
       <span className="text-sm">GEOSTORE · გადახედვა</span>
       {preview&&<PreviewPlayback key={preview.key} preview={preview} lang={lang}/>}
+    </div>
+    <div className="border-t border-slate-700 pt-4 space-y-3" data-character-scenarios>
+      <h4 className="text-sm font-bold text-white">პერსონაჟების სპეციალური სცენარები</h4>
+      <label className="block space-y-1 text-xs text-slate-300">სცენარი<select className={field} value={scenarioKey} onChange={e=>setScenarioKey(e.target.value)}>{Object.entries(CHARACTER_SCENARIOS).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
+      <label className="flex items-center gap-2 text-sm text-white"><input type="checkbox" checked={scenario.enabled} disabled={busy} onChange={e=>updateScenario({enabled:e.target.checked})}/> ამ სცენარის ჩართვა</label>
+      <label className="block space-y-1 text-xs text-slate-300">სცენარის პერსონაჟი<select className={field} value={scenario.character} disabled={busy} onChange={e=>updateScenario({character:e.target.value})}>{CHARACTERS.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+      <label className="block space-y-1 text-xs text-slate-300">სცენარის ტექსტი<textarea className={field} rows={2} maxLength={120} value={siteSettings?.characterStudio?.scenarios?.[scenarioKey]?.message??''} disabled={busy} onChange={e=>updateScenario({message:e.target.value})}/></label>
+      <div className="gs-character-preview p-3" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}><CharacterContextCard key={scenarioKey+scenario.character} scenario={scenarioPreview} lang={lang}/></div>
+      <p className="text-xs text-slate-300">ფლეშ აქციების პერსონაჟი ჩანს მხოლოდ მოქმედ აქციებთან. კალათისა და ფავორიტების პერსონაჟები ჩანს მხოლოდ ცარიელ გვერდზე; დამატებით ფანჯარას არ ხსნის.</p>
     </div>
     <p className="text-xs text-slate-300 leading-relaxed">ცვლილებები საერთო მონახაზშია. გამოიყენეთ ქვემოთ მონახაზის შენახვა და შემდეგ გამოქვეყნება. გადახედვა საიტზე არ ჩანს.</p>
   </section>;

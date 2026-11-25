@@ -54,6 +54,14 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
     </div>
   </div>;
 }
+// Contextual characters are in-flow decorations, not additional floating popups.
+export function CharacterContextCard({scenario,lang='ka'}){
+  if(!scenario)return null;
+  return <div className="gs-character-context">
+    <div className="gs-character-context-art"><CharacterArt character={scenario.character}/></div>
+    <div className="gs-character-context-copy"><strong>{scenario.character.name}</strong><span>{scenario.message||scenario.lines[lang]||scenario.lines.ka}</span></div>
+  </div>;
+}
 export default function CharacterMascot({settings,lang}){
   const s=normalizeCharacterSettings(settings);
   const [character,setCharacter]=useState(null);
