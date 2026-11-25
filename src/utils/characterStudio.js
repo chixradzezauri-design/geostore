@@ -155,7 +155,7 @@ export function normalizeCharacterSettings(raw){
   const s=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   return {
     enabled:s.enabled===true, character:pick(s.character,CHARACTERS.map(c=>c.id),'fox'),
-    rotation:pick(s.rotation,['fixed','random','daypart','seasonal'],'fixed'),
+    rotation:pick(s.rotation,['fixed','random','daypart','seasonal','sequence'],'fixed'),
     behavior:pick(s.behavior,CHARACTER_MOTIONS,'run-wave'),
     greetingMode:pick(s.greetingMode,['character','funny','time','library',...Object.keys(CHARACTER_GREETING_TONES)],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
@@ -166,7 +166,8 @@ export function normalizeCharacterSettings(raw){
     season:pick(s.season,['none','auto','winter','hearts','summer','autumn'],'none'),
     side:pick(s.side,['left','right'],'left'),
     delay:bounded(s.delay,0,10,2), duration:bounded(s.duration,3,12,6),
-    frequency:pick(s.frequency,['session','daily'],'session'),
+    frequency:pick(s.frequency,['session','daily','repeat'],'session'),
+    repeatInterval:bounded(s.repeatInterval,30,180,45),repeatLimit:bounded(s.repeatLimit,2,8,5),
     pages:pick(s.pages,['home','catalogue'],'home'),
     mobile:s.mobile!==false, desktop:s.desktop!==false,
     message:typeof s.message==='string'?s.message.trim().slice(0,120):'',
@@ -177,6 +178,7 @@ export function selectCharacter(settings,date=new Date(),random=Math.random){
   const s=normalizeCharacterSettings(settings);
   let id=s.character;
   if(s.rotation==='random'){const pool=CHARACTERS.filter(c=>!c.special);id=pool[Math.max(0,Math.min(pool.length-1,Math.floor(random()*pool.length)))].id;}
+  if(s.rotation==='sequence')id=CHARACTERS.filter(c=>!c.special)[0].id;
   if(s.rotation==='daypart') id=date.getHours()<12?'fox':date.getHours()<18?'rabbit':'panda';
   if(s.rotation==='seasonal') id=[ 'snowman','panda','rabbit','rabbit','cat','cat','cat','fox','fox','robot','robot','santa' ][date.getMonth()];
   return styledCharacter(CHARACTERS.find(c=>c.id===id)||CHARACTERS[0],s);
@@ -263,4 +265,34 @@ export function characterAlreadySeen(value,frequency,now=Date.now()){
   if(frequency==='session') return value==='1';
   const stamp=Number(value);
   return value!=null&&value!==''&&Number.isFinite(stamp)&&stamp>0&&stamp<=now&&now-stamp<86400000;
+}
+
+// Repeated concierge appearances are bounded per browser session and publication.
+export const CHARACTER_REPEAT_KEY='geostore_character_repeat_v1';
+export function characterRepeatRecord(raw,revision){
+  try{
+    const r=typeof raw==='string'?JSON.parse(raw):raw;
+    if(r?.revision===revision&&Number.isInteger(r.count)&&r.count>=0&&r.count<=8&&Number.isFinite(r.at)&&r.at>=0){
+      return {revision,count:r.count,at:r.at,lastId:pick(r.lastId,CHARACTERS.map(c=>c.id),null),muted:r.muted===true};
+    }
+  }catch{}
+  return {revision,count:0,at:0,lastId:null,muted:false};
+}
+export function characterRepeatDelay(settings,record,now=Date.now()){
+  const s=normalizeCharacterSettings(settings);
+  if(!s.enabled||record.muted||record.count>=s.repeatLimit)return null;
+  if(!record.count)return s.delay*1000;
+  const elapsed=record.at<=now?now-record.at:0;
+  return Math.max(0,(s.duration+s.repeatInterval)*1000-elapsed);
+}
+export function nextConciergeCharacter(settings,record,date=new Date(),random=Math.random){
+  const s=normalizeCharacterSettings(settings);
+  if(s.rotation!=='sequence'&&s.rotation!=='random')return selectCharacter(s,date,random);
+  const pool=CHARACTERS.filter(c=>!c.special);
+  const previous=pool.findIndex(c=>c.id===record.lastId);
+  if(s.rotation==='sequence')return styledCharacter(pool[(previous+1)%pool.length],s);
+  const available=pool.filter(c=>c.id!==record.lastId);
+  const value=random();
+  const i=Number.isFinite(value)?Math.max(0,Math.min(available.length-1,Math.floor(value*available.length))):0;
+  return styledCharacter(available[i],s);
 }

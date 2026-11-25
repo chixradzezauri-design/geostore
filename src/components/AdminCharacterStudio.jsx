@@ -4,7 +4,7 @@ import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
 const choices={
-  rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური']],
+  rotation:[['fixed','არჩეული პერსონაჟი'],['random','შემთხვევითი'],['daypart','დღის მონაკვეთი'],['seasonal','სეზონური'],['sequence','მონაცვლეობით — სხვადასხვა პერსონაჟი']],
   behavior:[['run-wave','შემორბენა და მისალმება'],['wave','ხელის დაქნევა'],['jump','ხტუნვა'],['slide','მსუბუქი შემოსვლა'],['dance','ცეკვა'],['peek','გამოჭყეტა'],['bow','თავის დაკვრა'],['celebrate','სიხარულის ნახტომი'],['sneak','ჩუმად შემოპარვა'],['walk-wave','მოსეირნება და მისალმება'],['look-around','დათვალიერება'],['point','მინიშნება'],['patrol','გადაადგილება, გაჩერება და მისალმება']],
   greetingMode:[['character','პერსონაჟის სტანდარტული ფრაზა'],['funny','სახალისო ფრაზები'],['time','დღის დროის მიხედვით'],['library','ჩემი ფრაზების ბიბლიოთეკა'],['friendly','მეგობრული'],['premium','დახვეწილი / პრემიუმ'],['minimal','მოკლე და მინიმალისტური']],
   interaction:[['wave','საპასუხო მისალმება'],['high-five','ხუთიანი'],['cheer','გამხნევება']],
@@ -12,7 +12,7 @@ const choices={
   emotion:[['happy','ღიმილი'],['wink','თვალის ჩაკვრა'],['surprise','გაკვირვება']],
   season:[['none','გამორთული'],['auto','ავტომატურად სეზონის მიხედვით'],['winter','ზამთარი'],['hearts','გულები'],['summer','ზაფხული'],['autumn','შემოდგომა']],
   side:[['left','მარცხნიდან'],['right','მარჯვნიდან']],
-  frequency:[['session','ერთხელ სესიაში'],['daily','ერთხელ 24 საათში']],
+  frequency:[['session','ერთხელ სესიაში'],['daily','ერთხელ 24 საათში'],['repeat','განმეორებით — ინტერვალით']],
   pages:[['home','მხოლოდ მთავარი გვერდი'],['catalogue','მთავარი და კატეგორიები']]
 };
 export default function AdminCharacterStudio({siteSettings,publishedSettings=null,onTestPublishedCharacter,actualMobile=false,setSiteSettings,busy=false,lang='ka'}){
@@ -85,6 +85,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <summary>მოძრაობა, დრო და მოწყობილობები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
       {choose('rotation','პერსონაჟის შერჩევა')}{choose('behavior','მოძრაობა')}{choose('emotion','ემოცია')}{choose('season','სეზონური აქსესუარი')}{choose('side','გამოსვლის მხარე')}{choose('frequency','გამოჩენის სიხშირე')}{choose('pages','გვერდები')}
+      {s.frequency==='repeat'&&<><label className="space-y-1 block text-xs text-slate-300">შუალედი გამოჩენებს შორის: {s.repeatInterval} წმ<input aria-label="გამოჩენებს შორის შუალედი" type="range" className="w-full" min="30" max="180" step="15" value={s.repeatInterval} disabled={busy} onChange={e=>update({repeatInterval:Number(e.target.value)})}/></label><label className="space-y-1 block text-xs text-slate-300">მაქსიმუმ ერთ ვიზიტზე: {s.repeatLimit}<input aria-label="გამოჩენის ლიმიტი" type="range" className="w-full" min="2" max="8" value={s.repeatLimit} disabled={busy} onChange={e=>update({repeatLimit:Number(e.target.value)})}/></label><p className="text-xs text-slate-300 sm:col-span-2">მონაცვლეობითი რეჟიმი თითო ჯერზე სხვა პერსონაჟს აჩვენებს. დახურვა აჩერებს მიმდინარე მისალმებას, ხოლო ამ ვიზიტზე დამალვა — ყველა შემდგომ გამოჩენას.</p></>}
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">დაყოვნება: {s.delay} წმ</span><input className="w-full" type="range" min="0" max="10" value={s.delay} disabled={busy} onChange={e=>update({delay:Number(e.target.value)})}/></label>
       <label className="space-y-1 block"><span className="text-xs font-semibold text-slate-300">ხანგრძლივობა: {s.duration} წმ</span><input className="w-full" type="range" min="3" max="12" value={s.duration} disabled={busy} onChange={e=>update({duration:Number(e.target.value)})}/></label>
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>

@@ -1,5 +1,5 @@
-import React,{useEffect,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen} from '../utils/characterStudio.js';
+import React,{useEffect,useRef,useState} from 'react';
+import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter} from '../utils/characterStudio.js';
 import './characterStudio.css';
 import {MASCOT_3D_IDS} from '../utils/mascot3DModels.js';
 const FlagshipFox3D=React.lazy(()=>import('./FlagshipFox3D.jsx'));
@@ -12,6 +12,13 @@ class Mascot3DBoundary extends React.Component{
 
 const lastSeen={session:null,daily:null};
 let lastForcedReplay=null;
+let repeatMemory=null;
+function readRepeat(revision){
+  try{const stored=sessionStorage.getItem(CHARACTER_REPEAT_KEY);if(stored)return characterRepeatRecord(stored,revision);}catch{}
+  return characterRepeatRecord(repeatMemory,revision);
+}
+function saveRepeat(record){repeatMemory=record;try{sessionStorage.setItem(CHARACTER_REPEAT_KEY,JSON.stringify(record));}catch{}}
+function visitorBusy(){const el=document.activeElement;return document.visibilityState!=='visible'||Boolean(el?.matches?.('input,textarea,select,[contenteditable="true"]'));}
 function seen(frequency,revision){
   if(characterRevisionSeen(lastSeen[frequency],frequency,revision))return true;
   try{return characterRevisionSeen((frequency==='daily'?localStorage:sessionStorage).getItem(CHARACTER_SESSION_KEY),frequency,revision);}catch{return false;}
@@ -109,7 +116,7 @@ function CharacterEffects({effect}){
   if(!['sparkles','hearts','confetti'].includes(effect))return null;
   return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:5},(_,i)=><span key={i} style={{'--gs-effect-i':i}}>{effect==='hearts'?'♥':effect==='sparkles'?'✦':'●'}</span>)}</span>;
 }
-export function CharacterScene({character,settings,lang='ka',preview=false,onClose}){
+export function CharacterScene({character,settings,lang='ka',preview=false,onClose,onMute}){
   const [variant]=useState(()=>Math.random());
   const [greetingDate]=useState(()=>new Date());
   const [waved,setWaved]=useState(false);
@@ -124,6 +131,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
     <div className="gs-character-bubble">
       <strong>{character.name}</strong><span aria-live={interactive?'polite':undefined}>{waved?wave.reply:characterMessage(settings,character,lang,variant,greetingDate)}</span>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} {wave.emoji}</button>}
+      {!preview&&onMute&&<button type="button" className="gs-character-mute" onClick={onMute}>{lang==='en'?'Hide for this visit':lang==='ru'?'Скрыть на этот визит':'ამ ვიზიტზე დამალვა'}</button>}
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
     </div>
   </div>;
@@ -146,24 +154,56 @@ export function CharacterReaction({scenario,lang='ka'}){
 export default function CharacterMascot({settings,lang,forceReplay=null}){
   const s=normalizeCharacterSettings(settings);
   const [presentation,setPresentation]=useState(null);
+  const dismissRef=useRef(null);
   const settingsKey=JSON.stringify(s);
   useEffect(()=>{
     setPresentation(null);
     const current=JSON.parse(settingsKey);
     const revision=characterSettingsRevision(current);
-    const forced=forceReplay!=null&&forceReplay!==lastForcedReplay;
-    if(!current.enabled||(!forced&&seen(current.frequency,revision)))return;
-    let closeTimer;
-    const showTimer=setTimeout(()=>{
-      if(!forced&&seen(current.frequency,revision))return;
-      if(forced){if(lastForcedReplay===forceReplay)return;lastForcedReplay=forceReplay;}
-      markSeen(current.frequency,revision);
+    const repeat=current.frequency==='repeat';
+    let forced=forceReplay!=null&&forceReplay!==lastForcedReplay;
+    if(!current.enabled||(!repeat&&!forced&&seen(current.frequency,revision)))return;
+    let showTimer,closeTimer,disposed=false;
+    const clear=()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
+    const schedule=()=>{
+      if(disposed)return;
+      clear();
+      const wait=forced?current.delay*1000:repeat?characterRepeatDelay(current,readRepeat(revision)):current.delay*1000;
+      if(wait!==null)showTimer=setTimeout(show,wait);
+    };
+    const close=(mute=false)=>{
+      clear();setPresentation(null);
+      if(repeat&&mute){saveRepeat({...readRepeat(revision),muted:true});return;}
+      if(repeat)schedule();
+    };
+    dismissRef.current=close;
+    function show(){
+      if(disposed)return;
+      if(visitorBusy()){showTimer=setTimeout(show,5000);return;}
+      if(forced&&lastForcedReplay===forceReplay){forced=false;return;}
+      const record=readRepeat(revision);
+      if(!forced&&repeat){
+        const wait=characterRepeatDelay(current,record);
+        if(wait===null)return;
+        // First delay was already observed; subsequent appearances must respect persisted cooldown.
+        if(record.count>0&&wait>0){showTimer=setTimeout(show,wait);return;}
+      }
+      if(!forced&&!repeat&&seen(current.frequency,revision))return;
+      const wasForced=forced;
+      if(forced){lastForcedReplay=forceReplay;forced=false;}
       const now=new Date();
       const effective=applyCharacterEvent(current,activeCharacterEvent(current,now),lang);
-      setPresentation({character:selectCharacter(effective,now),settings:effective});
-      closeTimer=setTimeout(()=>setPresentation(null),current.duration*1000);
-    },current.delay*1000);
-    return()=>{clearTimeout(showTimer);clearTimeout(closeTimer);};
+      const character=repeat?nextConciergeCharacter(effective,record,now):selectCharacter(effective,now);
+      if(repeat){
+        if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id});
+      }else markSeen(current.frequency,revision);
+      setPresentation({character,settings:effective,key:now.getTime()});
+      closeTimer=setTimeout(()=>close(false),current.duration*1000);
+    }
+    schedule();
+    const visibility=()=>{if(document.visibilityState==='hidden'&&repeat){close(false);}};
+    document.addEventListener('visibilitychange',visibility);
+    return()=>{disposed=true;clear();dismissRef.current=null;document.removeEventListener('visibilitychange',visibility);};
   },[settingsKey,lang,forceReplay]);
-  return presentation?<CharacterScene character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>setPresentation(null)}/>:null;
+  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
 }
