@@ -1,5 +1,6 @@
 import React,{useState} from 'react';
 import {STOREFRONT_DESIGN_TEMPLATE_LIMIT,saveStorefrontDesignTemplate,applyStorefrontDesignTemplate,renameStorefrontDesignTemplate,deleteStorefrontDesignTemplate} from '../utils/storefrontVisualDesign.js';
+import {applySignature2026Design} from '../utils/signature2026Design.js';
 const button='min-h-11 rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50';
 const input='min-h-11 w-full min-w-0 rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white disabled:opacity-50';
 export default function StorefrontDesignTemplates({design,disabled,onChange}){
@@ -11,6 +12,12 @@ export default function StorefrontDesignTemplates({design,disabled,onChange}){
   <summary className="cursor-pointer text-sm font-bold text-white">მთავარი საიტის დიზაინის შაბლონები · {rows.length}/{STOREFRONT_DESIGN_TEMPLATE_LIMIT}</summary>
   <p className="text-xs leading-relaxed text-slate-300">შეინახეთ ფერები, შრიფტები და განლაგება კომპიუტერის, ტაბლეტისა და მობილურისთვის. ტექსტები, ფოტოები, პროდუქტები, სექციების რიგი და ინდივიდუალური სტილები უცვლელი დარჩება.</p>
   <p className="text-xs text-slate-400">შაბლონის გამოყენება ცვლის მხოლოდ მონახაზს. შეინახეთ მონახაზი სხვა მოწყობილობაზე გამოსაჩენად. საიტზე ცვლილების ასახვას ცალკე გამოქვეყნება სჭირდება. შაბლონის სახელი და ვიზუალური პარამეტრები გამოქვეყნებულ კონფიგურაციაშიც შეიძლება მოხვდეს — არ გამოიყენოთ პირადი ან საიდუმლო ინფორმაცია.</p>
+  <div className="rounded-lg border border-amber-500/40 p-3 space-y-2">
+    <p className="text-sm font-bold text-white">GEOSTORE Signature 2026</p>
+    <p className="text-xs leading-relaxed text-slate-300">პრემიუმ კრემისფერი პალიტრა, კომპაქტური განლაგება და ახალი სექციების მიმდევრობა. გამოიყენება მხოლოდ მონახაზზე; პროდუქტები, ფოტოები, ტექსტები და სექციების ხილვადობა შენარჩუნდება.</p>
+    <div className="flex gap-1" aria-label="Signature 2026 ფერები">{['#f6f3ef','#ebe5dd','#a38450','#201c19'].map(color=><span key={color} className="h-6 w-6 rounded border border-slate-500" style={{backgroundColor:color}}/>)}</div>
+    <button type="button" className={button} disabled={disabled} onClick={()=>{if(window.confirm('Signature 2026-ის ფერები, ზომები და სექციების რიგი სამივე მოწყობილობის მონახაზში გამოვიყენოთ?'))commit(applySignature2026Design(design),'Signature 2026 გამოყენებულია.');}}>Signature 2026-ის გამოყენება</button>
+  </div>
   <label className="block text-xs text-slate-300">შაბლონის სახელი<input className={input} value={name} maxLength={40} disabled={disabled} onChange={e=>setName(e.target.value)}/></label>
   <button type="button" className={button} disabled={disabled||!name.trim()||rows.length>=STOREFRONT_DESIGN_TEMPLATE_LIMIT} onClick={save}>მიმდინარე საიტის დიზაინის შენახვა</button>
   <label className="block text-xs text-slate-300">გამოსაყენებელი პარამეტრები<select className={input} value={scope} onChange={e=>setScope(e.target.value)}><option value="all">ყველა საერთო პარამეტრი</option><option value="theme">მხოლოდ ფერები</option><option value="typography">მხოლოდ შრიფტები</option><option value="layout">მხოლოდ ზომები და განლაგება</option></select></label>
