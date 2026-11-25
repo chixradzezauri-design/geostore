@@ -1396,3 +1396,71 @@
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-media > .gs-catalog-media-toggle { min-inline-size: 44px !important; min-block-size: 44px !important; box-sizing: border-box; }
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-product-media > .gs-catalog-wishlist-toggle[aria-pressed="true"] { color: #9f1239 !important; border-color: #9f1239 !important; }
 @media (hover: none) { :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) .gs-catalog-image-overlay { opacity: 0 !important; pointer-events: none; } }
+
+
+/* Signature video follow-up 05 — compact product gallery and purchase footer.
+   All stock, variant, pricing and purchase callbacks stay in StoreView. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body {
+  min-inline-size: 0;
+  padding-bottom: 16px !important;
+  overflow-x: hidden;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body > .grid {
+  gap: clamp(12px, 2vw, 24px) !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery {
+  min-inline-size: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery > * { margin-block: 0 !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-image-stage {
+  min-height: 0 !important;
+  height: clamp(240px, 32vw, 390px) !important;
+  padding: 10px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-thumbnails {
+  max-inline-size: 100%;
+  padding: 3px 2px 5px !important;
+  gap: 6px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-thumb {
+  flex: 0 0 56px !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  padding: 4px !important;
+  box-shadow: none !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-toolbar { min-width: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-gallery-step { flex-shrink: 0; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-price-panel { flex-wrap: wrap !important; gap: 8px !important; }
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-purchase-bar {
+  box-shadow: none !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-to-cart {
+  gap: 8px !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-label {
+  min-width: 0 !important;
+  flex: 1 1 100px;
+  text-align: start !important;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-price {
+  font-size: 13px !important;
+  max-inline-size: 100%;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog :is(.gs-size-option,.gs-color-option,.gs-custom-variant-option):focus-visible {
+  outline: 2px solid var(--gs-ink,#201c19);
+  outline-offset: 2px;
+}
+@media(max-width:767px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body > .grid { grid-template-columns: minmax(0,1fr) !important; }
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-image-stage { height: clamp(200px, 60vw, 300px) !important; }
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-modal-body > .grid { grid-template-columns: minmax(0,1fr) !important; }
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-image-stage { height: 230px !important; }

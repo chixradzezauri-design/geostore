@@ -78,6 +78,19 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    const card=page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'});
    await card.locator('.gs-catalog-product-title-action').click();
    await page.locator('.gs-product-dialog').waitFor({state:'visible'});
+   const modalGeometry=await page.locator('.gs-product-dialog').evaluate(dialog=>{
+     const box=dialog.getBoundingClientRect();
+     const body=dialog.querySelector('.gs-product-modal-body');
+     const bodyRect=body.getBoundingClientRect();
+     const bar=dialog.querySelector('.gs-product-modal-purchase-bar');
+     const barRect=bar.getBoundingClientRect();
+     const cta=bar.querySelector('.gs-modal-add-to-cart').getBoundingClientRect();
+     return {inside:barRect.bottom<=box.bottom+1 && bodyRect.bottom<=barRect.top+1,
+       scrollSafe:body.scrollWidth<=body.clientWidth+2,
+       touchSafe:cta.height>=47 && cta.left>=box.left-1 && cta.right<=box.right+1};
+   });
+   assert.ok(modalGeometry.inside && modalGeometry.scrollSafe && modalGeometry.touchSafe,
+     'Signature product dialog stays contained and purchase remains accessible at '+width+': '+JSON.stringify(modalGeometry));
    assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),false);
    await page.locator('.gs-product-dialog .gs-modal-add-to-cart').click();
    await page.locator('.gs-product-dialog').waitFor({state:'detached'});
