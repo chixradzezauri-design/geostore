@@ -62,3 +62,12 @@
 .gs-character-preview[data-device="mobile"] .gs-character-figure{width:var(--gs-mascot-mobile,76px);flex-basis:var(--gs-mascot-mobile,76px)}
 @media(min-width:768px){.gs-character-scene:not(.gs-character-preview-scene){bottom:calc(24px + var(--gs-mascot-lift,0px))}.gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{width:var(--gs-mascot-desktop,116px);flex-basis:var(--gs-mascot-desktop,116px)}}
 @media(max-height:480px){.gs-character-scene:not(.gs-character-preview-scene){bottom:calc(74px + env(safe-area-inset-bottom,0px));max-width:260px}.gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{width:56px;flex-basis:56px}}
+
+.gs-character-scene[data-motion="run-wave"] .gs-character-leg-left{transform-box:fill-box;transform-origin:top center;animation:gs-character-stride .28s ease-in-out 4}
+.gs-character-scene[data-motion="run-wave"] .gs-character-leg-right{transform-box:fill-box;transform-origin:top center;animation:gs-character-stride .28s ease-in-out 4 reverse}
+.gs-character-scene[data-motion="run-wave"] .gs-character-ground{transform-box:fill-box;transform-origin:center;animation:gs-character-ground-pulse .28s ease-in-out 4}
+.gs-character-scene:not([data-motion="still"]) .gs-character-eyes{transform-box:fill-box;transform-origin:center;animation:gs-character-blink 3s ease-in-out 1}
+@keyframes gs-character-stride{0%,100%{transform:rotate(-15deg) translateY(1px)}50%{transform:rotate(17deg) translateY(-5px)}}
+@keyframes gs-character-ground-pulse{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.76);opacity:.6}}
+@keyframes gs-character-blink{0%,66%,75%,100%{transform:scaleY(1)}70%{transform:scaleY(.12)}}
+@media(prefers-reduced-motion:reduce){.gs-character-scene .gs-character-leg,.gs-character-scene .gs-character-ground,.gs-character-scene .gs-character-eyes{animation:none!important}}

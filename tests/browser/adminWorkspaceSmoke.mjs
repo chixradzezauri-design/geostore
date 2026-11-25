@@ -138,7 +138,11 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await live.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(0, 0, 0)');
           assert.equal(await live.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).color),'rgb(255, 255, 255)');
           assert.equal(await live.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).borderTopLeftRadius),'28px');
-          assert.ok(await live.locator('svg [fill="#123456"]').count()>0);
+          assert.ok(await live.locator('svg stop[stop-color="#123456"]').count()>0);
+          assert.equal(await live.locator('svg[data-character-render="dimensional"][data-character-model="robot"]').count(),1);
+          const gradientIds=await studio.locator('svg.gs-character-art defs [id]').evaluateAll(nodes=>nodes.map(n=>n.id));
+          assert.equal(new Set(gradientIds).size,gradientIds.length,'Every character preview has independent lighting definitions');
+          assert.equal(await studio.locator('button[aria-pressed] svg[data-character-model]').count(),5);
           await appearance.getByRole('button',{name:'ვიზუალური პარამეტრების აღდგენა'}).click();
           assert.equal(await live.locator('.gs-character-figure').evaluate(n=>getComputedStyle(n).width),'76px');
           const scenarios=studio.locator('[data-character-scenarios]');
