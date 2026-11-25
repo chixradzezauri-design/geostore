@@ -69,6 +69,7 @@ export default function AdminFlashSchedule({client,form,plannedStart,immediateBu
   <header><div><h4><CalendarDays size={17} aria-hidden="true"/> აქციების განრიგი</h4><p>თბილისის დრო · სერვერზე შენახული ჩანაწერები</p></div><button type="button" disabled={busy} onClick={()=>void refreshRef.current?.()} aria-label="განრიგის განახლება"><RefreshCw size={16} aria-hidden="true"/> განახლება</button></header>
   <div className="gs-admin-flash-schedule-summary"><span>დაგეგმილი <strong>{ready?pending.length:'—'}</strong></span><span>უახლოესი დაწყება <strong>{pending.length?formatFlashSaleTime(Date.parse(pending[0].starts_at)):'—'}</strong></span></div>
   <button type="button" className="gs-admin-flash-schedule-create" disabled={!ready||!request||busy||immediateBusy} onClick={()=>void mutate('create')}>არჩეული აქციის დაგეგმვა</button>
+  {Array.isArray(form.selectedIds)&&<p role="status">ინდივიდუალური პროდუქტების დაგეგმვა ჯერ არ არის ხელმისაწვდომი. დაგეგმვისთვის აირჩიეთ მთელი კატეგორია.</p>}
   <p className="gs-admin-flash-schedule-note">აირჩიეთ ზემოთ პროცენტი, კატეგორია, ხანგრძლივობა და დაწყების დრო (მინიმუმ 1 წუთით ადრე). ფასები იცვლება მხოლოდ გაშვების სერვერული პროცესის მოქმედებისას.</p>
   {message&&<p role="status">{message}</p>}{error&&<p role="alert">{error}</p>}
   {busy&&!ready&&<p role="status">განრიგი იტვირთება…</p>}

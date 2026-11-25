@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {previewFlashPrices} from '../src/utils/adminFlashPricePreview.js';
+import {previewFlashPrices,selectedFlashRows} from '../src/utils/adminFlashPricePreview.js';
 const form={category:'bags',discountPercent:'20'};
 const rows=[{id:'a',category:'bags',priceGEL:100},{id:'b',category:'bags',priceGEL:50,oldPriceGEL:100},{id:'v',category:'bags',priceGEL:100,variants:[{}]},{id:'other',category:'shoes',priceGEL:100},{id:'small',category:'bags',priceGEL:.01},{id:'bad',category:'bags',priceGEL:null},{id:'expiry',category:'bags',priceGEL:30,flashSaleEndsAt:'2026-11-27T00:00Z'}];
 test('immediate preview matches original-price calculation and warns of price increases',()=>{
@@ -21,4 +21,10 @@ test('exact cent rounding matches positive PostgreSQL numeric and rejects invali
  for(const discountPercent of ['',100,-1,'2.345',true])assert.equal(previewFlashPrices(rows,{...form,discountPercent}),null);
  assert.equal(previewFlashPrices(rows,{...form,category:'ყველა'}).count,4);
  assert.equal(previewFlashPrices([...rows,rows[0]],form).count,3);
+});
+
+test('selected scope rejects empty, stale, duplicate and oversized IDs instead of falling back to all',()=>{
+ const preview=previewFlashPrices(rows,form);
+ assert.deepEqual(selectedFlashRows(preview,['b']).map(row=>row.id),['b']);
+ for(const ids of [[],['missing'],['a','a'],['a','other'],Array(501).fill('a'),null])assert.equal(selectedFlashRows(preview,ids),null);
 });

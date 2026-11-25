@@ -28,3 +28,12 @@ export function previewFlashPrices(products,form,scheduled=false){
  }
  return {rows,excluded,count:rows.length,raisesPrice:rows.filter(r=>r.raisesPrice).length,existing:rows.filter(r=>r.existing).length};
 }
+
+export const MAX_FLASH_SELECTION=500;
+// null/undefined means category mode; an empty array NEVER means all products.
+export function selectedFlashRows(preview, ids){
+ if(!Array.isArray(ids)||!ids.length||ids.length>MAX_FLASH_SELECTION||ids.some(id=>typeof id!=='string'||!id.trim()||id.length>200)||new Set(ids).size!==ids.length||!preview)return null;
+ const chosen=new Set(ids);
+ const rows=preview.rows.filter(row=>chosen.has(row.id));
+ return rows.length===ids.length?rows:null;
+}

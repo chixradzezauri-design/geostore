@@ -110,6 +110,7 @@ on:
       - 'release/staged-marketing-preflight.sql'
       - 'tests/sql/admin_marketing_consent_contract.sql'
       - 'release/staged-flash-sale-schedule.sql'
+      - 'release/staged-flash-sale-selected.sql'
       - 'release/staged-flash-sale-schedule-cron.sql'
       - 'tests/sql/flash_sale_schedule_contract.sql'
       - 'tests/sql/admin_supplier_purchase_contract.sql'

@@ -50,3 +50,24 @@ DO $$ BEGIN
  IF (SELECT price_gel FROM public.products WHERE id='other')<>100 THEN RAISE EXCEPTION 'missed schedule changed price'; END IF;
  IF NOT EXISTS(SELECT 1 FROM private.flash_sale_schedule WHERE status='cancelled') OR NOT EXISTS(SELECT 1 FROM private.flash_sale_schedule WHERE outcome='missed_window') THEN RAISE EXCEPTION 'terminal state missing'; END IF;
 END $$;
+
+-- Selected immediate sale uses the same product-level expiry metadata.
+\ir ../../release/staged-flash-sale-selected.sql
+INSERT INTO public.products(id,category,price_gel,variants) VALUES ('selected','bags',100,'[]'),('not-selected','bags',100,'[]');
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+DO $$ BEGIN
+ BEGIN PERFORM public.admin_apply_selected_flash_sale(20,'bags',1,ARRAY['selected']); RAISE EXCEPTION 'non-owner allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SELECT set_config('request.jwt.claim.sub','1060de3d-d28a-45f8-9a64-5e0368cffc4b',false);
+DO $$ BEGIN
+ BEGIN PERFORM public.admin_apply_selected_flash_sale(20,'ყველა',1,ARRAY[]::text[]); RAISE EXCEPTION 'empty allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ BEGIN PERFORM public.admin_apply_selected_flash_sale(20,'bags',1,ARRAY['selected','selected']); RAISE EXCEPTION 'duplicate allowed'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+ IF public.admin_apply_selected_flash_sale(20,'bags',1,ARRAY['selected','variant','other','legacy','missing'])<>1 THEN RAISE EXCEPTION 'wrong selected count'; END IF;
+END $$;
+RESET ROLE;
+DO $$ BEGIN
+ IF has_function_privilege('anon','public.admin_apply_selected_flash_sale(numeric,text,integer,text[])','EXECUTE') THEN RAISE EXCEPTION 'anon allowed'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.products WHERE id='selected' AND price_gel=80 AND old_price_gel=100 AND flash_sale_ends_at>now()) THEN RAISE EXCEPTION 'selected price/expiry wrong'; END IF;
+ IF EXISTS(SELECT 1 FROM public.products WHERE id IN ('not-selected','variant','other','legacy') AND price_gel<>100) THEN RAISE EXCEPTION 'nonselected product changed'; END IF;
+END $$;

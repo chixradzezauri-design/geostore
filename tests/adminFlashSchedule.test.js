@@ -26,3 +26,7 @@ test('history metrics count only returned schedule rows and count product update
  assert.deepEqual(filterFlashSchedule(rows,'pending','missing',now),[]);
  assert.equal(summarizeFlashSchedule([],now).productUpdates,0);
 });
+
+test('individual scope cannot silently schedule an entire category',()=>{
+ for(const selectedIds of [[],['a']])assert.equal(buildFlashScheduleRequest({...form,selectedIds},'2026-11-25T17:00',now),null);
+});

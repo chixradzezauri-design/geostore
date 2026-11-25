@@ -2,7 +2,7 @@ import {previewFlashSaleWindow} from './adminFlashSalePlanning.js';
 export function buildFlashScheduleRequest(form,plannedStart,now=Date.now()){
  const percent=Number(form?.discountPercent),category=String(form?.category??'').trim(),duration=Number(form?.durationHours);
  const window=previewFlashSaleWindow(duration,plannedStart,now);
- if(!plannedStart||!window||window.startsAt<now+60000||window.startsAt>now+180*86400000||
+ if(Array.isArray(form?.selectedIds)||!plannedStart||!window||window.startsAt<now+60000||window.startsAt>now+180*86400000||
  !/^\d+(?:\.\d{1,2})?$/.test(String(form?.discountPercent??'').trim())||!Number.isFinite(percent)||percent<=0||percent>=100||!category||category.length>200)return null;
  return {p_category:category,p_discount_percent:percent,p_duration_hours:duration,p_starts_at:new Date(window.startsAt).toISOString()};
 }
