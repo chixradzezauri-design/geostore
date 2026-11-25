@@ -209,6 +209,14 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await demo.getByRole('button',{name:'გამოცდის დახურვა'}).click();
           await presets.locator('[data-character-undo-preset]').click();
           assert.equal(await presets.locator('[data-character-undo-preset]').count(),0);
+          const profiles=studio.locator('[data-character-profiles]');
+          await profiles.locator('summary').click();
+          await profiles.getByLabel('ინდივიდუალური პერსონაჟი').selectOption('owl');
+          await profiles.getByRole('button',{name:'რეკომენდებული როლის გამოყენება'}).click();
+          assert.equal(await profiles.getByLabel('რჩევის მიმართულება').inputValue(),'details');
+          await profiles.getByLabel('ინდივიდუალური მისალმება',{exact:true}).fill('Fixture owl profile');
+          assert.match(await profiles.locator('.gs-character-preview-scene').innerText(),/Fixture owl profile/);
+          await profiles.locator('summary').click();
           assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
         }
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');

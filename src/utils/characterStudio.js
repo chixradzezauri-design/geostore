@@ -175,7 +175,7 @@ export function normalizeCharacterSettings(raw){
     pages:pick(s.pages,['home','catalogue'],'home'),
     mobile:s.mobile!==false, desktop:s.desktop!==false,
     message:typeof s.message==='string'?s.message.trim().slice(0,120):'',
-    scenarios:normalizeScenarios(s.scenarios),appearance:normalizeCharacterAppearance(s.appearance),palette:normalizeCharacterPalette(s.palette)
+    profiles:normalizeCharacterProfiles(s.profiles),scenarios:normalizeScenarios(s.scenarios),appearance:normalizeCharacterAppearance(s.appearance),palette:normalizeCharacterPalette(s.palette)
   };
 }
 export function selectCharacter(settings,date=new Date(),random=Math.random){
@@ -354,4 +354,46 @@ export function applyConciergePreset(raw,key){
  };
  const scenarioUpdates=Object.fromEntries(Object.entries(s.scenarios).map(([k,v])=>[k,{...v,enabled:key==='quiet'?false:key==='sale'?k==='flash':true}]));
  return normalizeCharacterSettings({...s,...common,...modes[key],enabled:s.enabled,mobile:s.mobile,desktop:s.desktop,advice:{...s.advice,enabled:key!=='quiet',topic:key==='sale'?'prices':key==='winter'?'gifts':'auto'},scenarios:scenarioUpdates,appearance:{...s.appearance,prominence:key==='quiet'?'compact':'enhanced'}});
+}
+
+// Individual profiles refine globally enabled functions; they cannot bypass the master switches.
+export const CHARACTER_PROFILE_ROLES=Object.freeze({
+ fox:{label:'აღმომჩენი',topic:'favourites',behavior:'walk-wave',recommendationMode:'variety'},
+ panda:{label:'ტექნიკის დამხმარე',topic:'details',behavior:'point',recommendationMode:'category'},
+ rabbit:{label:'საჩუქრების დამხმარე',topic:'gifts',behavior:'jump',recommendationMode:'variety'},
+ robot:{label:'პროდუქტის ექსპერტი',topic:'details',behavior:'point',recommendationMode:'featured'},
+ cat:{label:'სტილის მრჩეველი',topic:'style',behavior:'bow',recommendationMode:'category'},
+ monkey:{label:'მხიარული მეგზური',topic:'favourites',behavior:'dance',recommendationMode:'variety'},
+ bear:{label:'საჩუქრების მრჩეველი',topic:'gifts',behavior:'wave',recommendationMode:'featured'},
+ owl:{label:'ჭკვიანი მრჩეველი',topic:'details',behavior:'look-around',recommendationMode:'category'},
+ cheetah:{label:'სწრაფი მეგზური',topic:'prices',behavior:'patrol',recommendationMode:'variety'},
+ santa:{label:'სადღესასწაულო საჩუქრები',topic:'gifts',behavior:'wave',recommendationMode:'variety'},
+ snowman:{label:'ზამთრის განწყობა',topic:'gifts',behavior:'jump',recommendationMode:'variety'},
+ deal:{label:'აქციების ექსპერტი',topic:'prices',behavior:'point',recommendationMode:'featured'}
+});
+export function normalizeCharacterProfiles(raw){
+ const source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+ return Object.fromEntries(CHARACTERS.flatMap(({id})=>{
+  const p=Object.hasOwn(source,id)?source[id]:null;
+  if(!p||typeof p!=='object'||Array.isArray(p))return [];
+  return [[id,{enabled:p.enabled===true,topic:pick(p.topic,['inherit','auto','style','gifts','details','prices','favourites'],'inherit'),
+   behavior:pick(p.behavior,['inherit',...CHARACTER_MOTIONS],'inherit'),
+   side:pick(p.side,['inherit','left','right','alternate'],'inherit'),
+   placement:pick(p.placement,['inherit','bottom','middle','roam'],'inherit'),
+   recommendationMode:pick(p.recommendationMode,['inherit','featured','category','variety'],'inherit'),
+   tips:p.tips!==false,products:p.products!==false,sales:p.sales!==false,guides:p.guides!==false,interactions:p.interactions!==false,
+   messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof p.messages?.[lang]==='string'?p.messages[lang].trim().slice(0,120):'']))}]];
+ }));
+}
+export function applyCharacterProfile(settings,id,lang='ka',{preserveEvent=false}={}){
+ const s=normalizeCharacterSettings(settings),p=s.profiles[id];
+ if(!p?.enabled)return s;
+ const locale=CHARACTER_GREETING_LANGS.includes(lang)?lang:'ka';
+ const next={...s,side:p.side==='inherit'?s.side:p.side,placement:p.placement==='inherit'?s.placement:p.placement,
+  recommendationMode:p.recommendationMode==='inherit'?s.recommendationMode:p.recommendationMode,
+  advice:{...s.advice,enabled:s.advice.enabled&&p.tips,topic:p.topic==='inherit'?s.advice.topic:p.topic},
+  recommendProducts:s.recommendProducts&&p.products,saleGuide:s.saleGuide&&p.sales,guideLinks:s.guideLinks&&p.guides,
+  interactiveGuide:s.interactiveGuide&&p.interactions,waveBack:s.waveBack&&p.interactions};
+ if(!preserveEvent){next.behavior=p.behavior==='inherit'?s.behavior:p.behavior;next.message=p.messages[locale]||s.message;}
+ return next;
 }

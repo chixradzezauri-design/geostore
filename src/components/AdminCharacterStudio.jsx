@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {CONCIERGE_ADVICE,chooseConciergeAdvice,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY} from '../utils/characterAdvice.js';
-import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason,CONCIERGE_PRESETS,applyConciergePreset} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SCENARIOS,getCharacterScenario,normalizeCharacterSettings,selectCharacter,styledCharacter,DEFAULT_CHARACTER_APPEARANCE,CHARACTER_GREETING_LANGS,FUNNY_GREETINGS,CHARACTER_GREETING_TONES,CHARACTER_EVENT_LIMIT,CHARACTER_EVENT_THEMES,characterCalendarDay,activeCharacterEvent,applyCharacterEvent,characterDisplayReason,CONCIERGE_PRESETS,applyConciergePreset,CHARACTER_PROFILE_ROLES,applyCharacterProfile} from '../utils/characterStudio.js';
 import {CharacterArt,CharacterScene,CharacterContextCard,CharacterReaction} from './CharacterMascot.jsx';
 
 const field='w-full rounded-xl border border-slate-600 bg-slate-950 p-2.5 text-sm text-slate-100';
@@ -22,6 +22,8 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const [preview,setPreview]=useState(null);
   const [presetKey,setPresetKey]=useState('balanced');
   const [demoOpen,setDemoOpen]=useState(false);
+  const [profileId,setProfileId]=useState('fox');
+  const [profileLang,setProfileLang]=useState('ka');
   const [presetUndo,setPresetUndo]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
   const [scenarioKey,setScenarioKey]=useState('flash');
@@ -65,6 +67,11 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const undoPreset=()=>{
     if(!presetUndo||JSON.stringify(s)!==presetUndo.applied)return;
     setSiteSettings(value=>({...value,characterStudio:presetUndo.previous}));setPresetUndo(null);setPreview(null);setEventPreview(null);
+  };
+  const profile=s.profiles[profileId]||{enabled:false,topic:'inherit',behavior:'inherit',side:'inherit',placement:'inherit',recommendationMode:'inherit',tips:true,products:true,sales:true,guides:true,interactions:true,messages:{}};
+  const updateProfile=(patch)=>{
+    setPreview(null);setEventPreview(null);
+    setSiteSettings(previous=>{const raw=previous?.characterStudio||{};const normalized=normalizeCharacterSettings(raw);return {...previous,characterStudio:{...raw,profiles:{...normalized.profiles,[profileId]:{...profile,...patch}}}};});
   };
   const updateAppearance=(patch)=>update({appearance:{...s.appearance,...patch}});
   const updatePalette=(color)=>update({palette:{...s.palette,[s.character]:color}});
@@ -115,6 +122,21 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     <div className="gs-character-roster">
       {CHARACTERS.map(c=><button type="button" key={c.id} disabled={busy} aria-pressed={s.character===c.id} onClick={()=>update({character:c.id,rotation:'fixed'})} className={'gs-character-roster-card min-w-0 rounded-xl border p-2 text-center text-xs font-bold '+(s.character===c.id?'border-emerald-400 bg-emerald-950 text-emerald-100':'border-slate-700 bg-slate-950 text-slate-200')}><div className="gs-character-roster-art"><CharacterArt character={styledCharacter(c,s)} emotion={s.emotion} season={s.season}/></div><span className="block break-words">{c.name}</span><span className="block text-slate-400 font-normal">{c.label}</span></button>)}
     </div>
+    <details className="gs-character-admin-section" data-character-profiles>
+      <summary>პერსონაჟების ინდივიდუალური პროფილები · {Object.values(s.profiles).filter(p=>p.enabled).length}/12</summary>
+      <label className="block text-xs text-slate-300">პერსონაჟი<select aria-label="ინდივიდუალური პერსონაჟი" className={field} value={profileId} onChange={e=>setProfileId(e.target.value)}>{CHARACTERS.map(c=><option key={c.id} value={c.id}>{c.name} — {CHARACTER_PROFILE_ROLES[c.id]?.label}</option>)}</select></label>
+      <div className="gs-character-profile-heading"><div className="w-16 shrink-0"><CharacterArt character={styledCharacter(CHARACTERS.find(c=>c.id===profileId),s)}/></div><div className="min-w-0"><strong>{CHARACTER_PROFILE_ROLES[profileId]?.label}</strong><p>ამ პერსონაჟის დამოუკიდებელი ფუნქციები და ქცევა.</p></div></div>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={profile.enabled} disabled={busy} onChange={e=>updateProfile({enabled:e.target.checked})}/> დამოუკიდებელი პროფილის ჩართვა</label>
+      <button type="button" disabled={busy} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950 min-h-[44px]" onClick={()=>{const role=CHARACTER_PROFILE_ROLES[profileId];updateProfile({enabled:true,topic:role.topic,behavior:role.behavior,recommendationMode:role.recommendationMode});}}>რეკომენდებული როლის გამოყენება</button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      { [['topic','რჩევის მიმართულება',[['auto','ავტომატური'],...Object.entries(CONCIERGE_ADVICE).map(([key,value])=>[key,value.label])]],['behavior','ინდივიდუალური მოძრაობა',choices.behavior],['side','ინდივიდუალური მხარე',choices.side],['placement','ინდივიდუალური პოზიცია',choices.placement],['recommendationMode','ინდივიდუალური რეკომენდაცია',[['featured','გამორჩეული'],['category','კატეგორიის მიხედვით'],['variety','მრავალფეროვანი']]]].map(([key,label,options])=><label key={key} className="block text-xs text-slate-300">{label}<select aria-label={label} className={field} disabled={busy||!profile.enabled} value={profile[key]} onChange={e=>updateProfile({[key]:e.target.value})}><option value="inherit">საერთო პარამეტრი</option>{options.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>)}
+      </div>
+      <div className="gs-character-profile-functions">{[['tips','რჩევები'],['products','პროდუქტები'],['sales','აქციები'],['guides','მინიშნებები'],['interactions','ინტერაქცია']].map(([key,label])=><label key={key}><input type="checkbox" checked={profile[key]} disabled={busy||!profile.enabled} onChange={e=>updateProfile({[key]:e.target.checked})}/>{label}</label>)}</div>
+      <label className="block text-xs text-slate-300">მისალმების ენა<select aria-label="ინდივიდუალური მისალმების ენა" className={field} value={profileLang} onChange={e=>setProfileLang(e.target.value)}>{CHARACTER_GREETING_LANGS.map(code=><option key={code} value={code}>{({ka:'ქართული',en:'English',ru:'Русский'})[code]}</option>)}</select></label>
+      <label className="block text-xs text-slate-300">ინდივიდუალური მისალმება<textarea aria-label="ინდივიდუალური მისალმება" className={field} rows={2} maxLength={120} disabled={busy||!profile.enabled} value={siteSettings?.characterStudio?.profiles?.[profileId]?.messages?.[profileLang]??''} onChange={e=>updateProfile({messages:{...profile.messages,[profileLang]:e.target.value}})}/></label>
+      <div className="gs-character-preview p-3" data-device="mobile"><CharacterScene character={styledCharacter(CHARACTERS.find(c=>c.id===profileId),s)} settings={{...applyCharacterProfile(s,profileId,profileLang),behavior:'still'}} lang={profileLang} preview/></div>
+      <p className="text-xs text-slate-300">საერთო ჩართვა და ვიზიტის ლიმიტი კვლავ მოქმედებს. ინდივიდუალური პროფილი მხოლოდ ჩართულ ფუნქციებს აკონკრეტებს; კალენდრის ტექსტსა და ანიმაციას არ ცვლის.</p>
+    </details>
     <details className="gs-character-admin-section" data-character-motion>
       <summary>მოძრაობა, დრო და მოწყობილობები</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
@@ -250,17 +272,18 @@ function ConciergeFunctionalDemo({settings,lang}){
   const reset=(value=topic)=>{setTopic(value);setNumber(0);setAdvice(null);setNotice('');setActions(0);setRevision(v=>v+1);};
   const sale=topic==='sale',winter=topic==='winter';
   const character=selectCharacter({...settings,rotation:'fixed',character:sale?'deal':winter?'santa':settings.character});
-  const effective={...settings,appearance:{...settings.appearance,renderMode:'vector'},behavior:settings.behavior==='still'?'wave':settings.behavior};
-  const canProduct=sale?settings.saleGuide:settings.recommendProducts;
+  const configured=applyCharacterProfile(settings,character.id,lang);
+  const effective={...configured,appearance:{...configured.appearance,renderMode:'vector'},behavior:configured.behavior==='still'?'wave':configured.behavior};
+  const canProduct=sale?effective.saleGuide:effective.recommendProducts;
   const names=lang==='en'?['Sample wallet','Sample bag','Sample accessory']:lang==='ru'?['Пример кошелька','Пример сумки','Пример аксессуара']:['საცდელი საფულე','საცდელი ჩანთა','საცდელი აქსესუარი'];
   const recommendation=canProduct?{id:'demo-'+number,name:names[number%names.length],...(sale?{sale:true,price:35+number*5,oldPrice:45+number*5,savings:10}:{})}:null;
-  const firstAdvice=settings.advice.enabled?chooseConciergeAdvice(settings.advice,{characterId:character.id,lang,hasProduct:!!recommendation}):null;
+  const firstAdvice=effective.advice.enabled?chooseConciergeAdvice(effective.advice,{characterId:character.id,lang,hasProduct:!!recommendation}):null;
   const act=fn=>{if(actions>=4)return;setActions(v=>v+1);fn();};
   return <div className="gs-concierge-demo-content">
     <label className="block text-xs text-slate-300">სატესტო სიტუაცია<select aria-label="სატესტო სიტუაცია" className={field} value={topic} onChange={e=>reset(e.target.value)}><option value="normal">ჩვეულებრივი რეკომენდაცია</option><option value="sale">მოქმედი აქციის მაგალითი</option><option value="winter">საახალწლო რჩევა</option><option value="guide">განყოფილებაზე მინიშნება</option></select></label>
     <p className="text-xs text-slate-300">სატესტო მონაცემები და პირობითი ფასები. ღილაკები არ ხსნის ნამდვილ პროდუქტს და არ ცვლის საიტის მონაცემებს.</p>
     {((sale&&!settings.saleGuide)||(winter&&!settings.winterCelebration)||(topic==='guide'&&!settings.guideLinks))&&<p role="status" className="text-xs text-amber-300">ეს შესაძლებლობა მონახაზში გამორთულია — ჩართე შესაბამისი ფუნქციის ღილაკით.</p>}
-    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||firstAdvice} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(settings.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))}/></div>
+    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||firstAdvice} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(effective.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))}/></div>
     <div className="flex items-center justify-between gap-2"><span className="text-xs text-slate-300">მოქმედება: {actions}/4</span><button type="button" className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white min-h-[44px]" onClick={()=>reset()}>გამოცდის თავიდან დაწყება</button></div>
   </div>;
 }

@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS} from '../utils/characterStudio.js';
+import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS,applyCharacterProfile} from '../utils/characterStudio.js';
 import './characterStudio.css';
 import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeInteractionDeadline} from '../utils/characterAdvice.js';
 import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY,conciergeSaleProducts,chooseConciergeSale,CONCIERGE_SALE_COPY} from '../utils/characterRecommendations.js';
@@ -252,12 +252,17 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       const now=new Date();
       const event=activeCharacterEvent(current,now);
       const winter=winterConciergePresentation(current,{now,index:repeat?record.count:0,lang,event});
-      const effective=winter||applyCharacterEvent(current,event,lang);
-      let character=repeat?nextConciergeCharacter(effective,record,now):selectCharacter(effective,now);
+      const baseEffective=winter||applyCharacterEvent(current,event,lang);
+      let character=repeat?nextConciergeCharacter(baseEffective,record,now):selectCharacter(baseEffective,now);
+      let effective=applyCharacterProfile(baseEffective,character.id,lang,{preserveEvent:!!(event||winter)});
       const catalogue=catalogueRef.current;
       const saleEligible=effective.saleGuide&&typeof catalogue.onOpenProduct==='function'&&(effective.saleGuidePriority==='always'||character.id==='deal'||(effective.saleGuidePriority==='alternate'&&repeat&&record.count%2===1));
-      const sale=saleEligible?chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current}):null;
-      if(sale&&!event&&!winter)character=selectCharacter({...effective,rotation:'fixed',character:'deal'},now);
+      let sale=saleEligible?chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current}):null;
+      if(sale&&!event&&!winter){
+        const dealSettings=applyCharacterProfile(baseEffective,'deal',lang);
+        if(dealSettings.saleGuide){character=selectCharacter({...dealSettings,rotation:'fixed',character:'deal'},now);effective=dealSettings;}
+        else sale=null;
+      }
       if(repeat){
         if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id});
       }else markSeen(current.frequency,revision);
