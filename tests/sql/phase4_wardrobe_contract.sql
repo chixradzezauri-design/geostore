@@ -24,6 +24,7 @@ create policy fixture_existing_access on storage.objects for all to authenticate
 insert into storage.objects values('customer-wardrobe-private','00000000-0000-4000-8000-000000000002/00000000-0000-4000-8000-000000000003.png'),('storefront-media','products/p1.png');
 \ir ../../release/phase4-wardrobe-storage-draft.sql
 \ir ../../release/phase4-wardrobe-items-draft.sql
+\ir ../../release/phase4-wardrobe-reservations-draft.sql
 set role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","is_anonymous":false}',false);
 do $test$
@@ -33,6 +34,10 @@ declare a uuid:='00000000-0000-4000-8000-000000000001'; b uuid:='00000000-0000-4
 begin
  if exists(select 1 from storage.objects where bucket_id='customer-wardrobe-private') then raise exception 'Other photo visible';end if;
  if not exists(select 1 from storage.objects where bucket_id='storefront-media') then raise exception 'Storefront access changed';end if;
+ begin insert into storage.objects values('customer-wardrobe-private',p);
+ raise exception 'Unreserved upload accepted';exception when insufficient_privilege then null;end;
+ if public.customer_wardrobe_reserve_photo(a,p) is distinct from '{"status":"reserved"}'::jsonb then raise exception 'Reservation failed';end if;
+ if public.customer_wardrobe_reserve_photo(a,p) is distinct from '{"status":"reserved"}'::jsonb then raise exception 'Reservation replay failed';end if;
  insert into storage.objects values('customer-wardrobe-private',p);
  begin insert into storage.objects values('customer-wardrobe-private',b::text||'/00000000-0000-4000-8000-000000000004.png');
  raise exception 'Cross-owner upload';exception when insufficient_privilege then null;end;
@@ -69,6 +74,12 @@ begin
  begin perform public.customer_wardrobe_change(a,3,'set',item);raise exception 'Retired photo reattached';exception when invalid_parameter_value then null;end;
  begin perform public.customer_wardrobe_request_erasure(a,3,b::text||'/00000000-0000-4000-8000-000000000003.png');raise exception 'Cross-owner erasure accepted';exception when invalid_parameter_value then null;end;
  if not exists(select 1 from storage.objects where name=p) then raise exception 'Request directly deleted file';end if;
+ if public.customer_wardrobe_reserve_photo(a,p) is distinct from '{"status":"retired"}'::jsonb then raise exception 'Retired path reserved again';end if;
+ if private.customer_wardrobe_upload_allowed(p) then raise exception 'Retired path upload allowed';end if;
+ for affected in 1..19 loop
+  if public.customer_wardrobe_reserve_photo(a,a::text||'/00000000-0000-4000-8000-'||lpad((100+affected)::text,12,'0')||'.png') is distinct from '{"status":"reserved"}'::jsonb then raise exception 'Quota reservation failed';end if;
+ end loop;
+ if public.customer_wardrobe_reserve_photo(a,a::text||'/00000000-0000-4000-8000-000000000999.png') is distinct from '{"status":"limit"}'::jsonb then raise exception 'Quota exceeded';end if;
 end $test$;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000002","is_anonymous":true}',false);
 do $$ begin
@@ -81,4 +92,4 @@ do $$ begin
 end $$;
 delete from auth.users where id='00000000-0000-4000-8000-000000000001';
 do $$ begin if exists(select 1 from private.customer_wardrobe_state where user_id='00000000-0000-4000-8000-000000000001') then raise exception 'Metadata cascade failed';end if;end $$;
-\echo 'PASS phase4 wardrobe isolated policy boundary, metadata CAS, photo references and storefront compatibility'
+\echo 'PASS phase4 wardrobe isolated policy boundary, metadata CAS, reservations, quota and storefront compatibility'
