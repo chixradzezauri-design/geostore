@@ -1,6 +1,8 @@
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
 import { WISHLIST_SYNC_ENABLED } from './utils/wishlistSyncReview.js';
+import { CART_SYNC_ENABLED, validateCartReviewStock } from './utils/cartSyncReview.js';
+const CartSyncPanel = React.lazy(()=>import('./components/CartSyncPanel.jsx'));
 import { projectWishlistIds } from './utils/wishlistSyncContract.js';
 const WishlistSyncPanel = React.lazy(()=>import('./components/WishlistSyncPanel.jsx'));
 import {getInstallPlatform,isStandaloneApp} from './utils/pwaInstall.js';
@@ -3958,6 +3960,7 @@ export default function App() {
               {t.cart}
             </h2>
 
+            {CART_SYNC_ENABLED && !authLoading && !adminLoggedIn && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><CartSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getCart={()=>cartRef.current} validateStock={lines=>catalogueVerifiedEpoch===productsAccessEpoch.current&&validateCartReviewStock(lines,products)} lang={currentLang}/></Suspense>}
             {cart.length === 0 ? (
               <div className="gs-cart-empty flex flex-col items-center justify-center gap-3 text-center px-5 py-12 sm:py-16">
                 <span className="gs-cart-empty-icon flex items-center justify-center w-14 h-14 rounded-full border border-slate-200 bg-slate-50 text-slate-500">
