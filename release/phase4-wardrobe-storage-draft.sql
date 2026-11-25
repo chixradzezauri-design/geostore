@@ -20,13 +20,13 @@ create policy "Wardrobe private owner boundary" on storage.objects
    (select auth.uid()) is not null
    and coalesce((select auth.jwt())->>'is_anonymous','false') <> 'true'
    and split_part(name,'/',1)=(select auth.uid())::text
-   and name ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}[.](jpg|png|webp|gif)$'
+   and name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](jpg|png|webp|gif)$'
  ))
  with check (bucket_id <> 'customer-wardrobe-private' or (
    (select auth.uid()) is not null
    and coalesce((select auth.jwt())->>'is_anonymous','false') <> 'true'
    and split_part(name,'/',1)=(select auth.uid())::text
-   and name ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}[.](jpg|png|webp|gif)$'
+   and name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](jpg|png|webp|gif)$'
  ));
 create policy "Wardrobe owner download" on storage.objects
  for select to authenticated using (

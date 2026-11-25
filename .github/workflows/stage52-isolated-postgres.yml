@@ -114,6 +114,9 @@ on:
       - 'tests/sql/phase4_wishlist_sync_contract.sql'
       - 'release/phase4-cart-sync-draft.sql'
       - 'tests/sql/phase4_cart_sync_contract.sql'
+      - 'release/phase4-wardrobe-storage-draft.sql'
+      - 'release/phase4-wardrobe-items-draft.sql'
+      - 'tests/sql/phase4_wardrobe_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -209,3 +212,6 @@ jobs:
 
           createdb phase4_cart_sync
           PGDATABASE=phase4_cart_sync psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_cart_sync_contract.sql
+
+          createdb phase4_wardrobe
+          PGDATABASE=phase4_wardrobe psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_wardrobe_contract.sql
