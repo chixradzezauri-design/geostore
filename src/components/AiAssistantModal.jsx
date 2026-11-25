@@ -4,6 +4,7 @@ import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, Refresh
 
 import { supabase } from '../supabaseClient';
 import { parseOrderTrackingMessage } from '../utils/orderTrackingMessage';
+import {readCurrentWardrobe} from '../utils/wardrobeStorage.js';
 
 // 🔤 ქართული და ინგლისური სინონიმებისა და სტილისტური ტერმინების გაფართოებული ლექსიკონი
 const SYNONYMS = {
@@ -29,7 +30,8 @@ export default function AiAssistantModal({
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   addToCart,
   formatPrice,
-  currentLang = 'ka'
+  currentLang = 'ka',
+  wardrobeOwnerId = null
 }) {
   const uiText = ({
     ka: {
@@ -82,13 +84,7 @@ export default function AiAssistantModal({
   });
 
   const getInitialGreeting = () => {
-    let wardrobeCount = 0;
-    try {
-      const savedWardrobe = localStorage.getItem('geostore_digital_wardrobe');
-      if (savedWardrobe) {
-        wardrobeCount = JSON.parse(savedWardrobe).length;
-      }
-    } catch {}
+    const wardrobeCount=readCurrentWardrobe(wardrobeOwnerId).length;
 
     if (selectedProduct) {
       return {
@@ -261,11 +257,7 @@ export default function AiAssistantModal({
 
     // 2. ციფრული გარდერობი და სტილისტი
     if (query.includes('გარდერობ') || query.includes('ლუქი') || query.includes('რა მოვუხდინო') || query.includes('ჩემი ტანსაცმელ')) {
-      let userWardrobe = [];
-      try {
-        const saved = localStorage.getItem('geostore_digital_wardrobe');
-        if (saved) userWardrobe = JSON.parse(saved);
-      } catch {}
+      const userWardrobe=readCurrentWardrobe(wardrobeOwnerId);
 
       if (userWardrobe.length === 0) {
         return {

@@ -3722,9 +3722,12 @@ export default function App() {
           </Suspense>
         )}
 
-        {activeTab === 'wardrobe' && (
+        {activeTab === 'wardrobe' && authLoading && <p role="status">გარდერობი იტვირთება...</p>}
+        {activeTab === 'wardrobe' && !authLoading && (
           <Suspense fallback={null}>
             <AIDigitalWardrobe
+              key={currentUser?.id ? 'user:'+currentUser.id : 'guest'}
+              wardrobeOwnerId={currentUser?.id || null}
               products={products}
               addToCart={addToCart}
               formatPrice={formatPrice}
@@ -4897,9 +4900,11 @@ export default function App() {
         </Suspense>
       )}
 
-      {hasLoadedAiAssistant && (
+      {hasLoadedAiAssistant && !authLoading && (
         <Suspense fallback={null}>
           <AiAssistantModal
+        key={currentUser?.id ? 'user:'+currentUser.id : 'guest'}
+        wardrobeOwnerId={currentUser?.id || null}
         currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
