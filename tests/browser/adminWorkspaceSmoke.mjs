@@ -209,6 +209,14 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await demo.getByRole('button',{name:'გამოცდის დახურვა'}).click();
           await presets.locator('[data-character-undo-preset]').click();
           assert.equal(await presets.locator('[data-character-undo-preset]').count(),0);
+          await presets.locator('[data-character-complete-setup]').click();
+          await presets.locator('[data-character-undo-preset]').waitFor({state:'visible'});
+          assert.match(await studio.locator('[data-character-profiles] summary').innerText(),/12\/12/);
+          await demo.getByRole('button',{name:'გამოცდის გახსნა'}).click();
+          await demo.locator('[data-character-help="budget"]').click();
+          assert.match(await demo.locator('[role="status"]').last().innerText(),/ბიუჯეტური/);
+          await demo.getByRole('button',{name:'გამოცდის დახურვა'}).click();
+          await presets.locator('[data-character-undo-preset]').click();
           const profiles=studio.locator('[data-character-profiles]');
           await profiles.locator('summary').click();
           await profiles.getByLabel('ინდივიდუალური პერსონაჟი').selectOption('owl');

@@ -337,6 +337,7 @@ export function winterConciergePresentation(settings,{now=new Date(),index=0,lan
 }
 
 export const CONCIERGE_PRESETS=Object.freeze({
+  complete:{label:'სრული დამხმარე — 12 როლი',description:'მონაცვლეობა, ინდივიდუალური როლები, მომხმარებლის არჩევანი, აქციები და ყოველწლიური საახალწლო რეჟიმი.'},
   balanced:{label:'დაბალანსებული',description:'რჩევები, პროდუქტები და მონაცვლეობა — ყოველდღიური რეჟიმი.'},
   active:{label:'აქტიური დამხმარე',description:'უფრო ხშირი გამოჩენა, სხვადასხვა პოზიცია და ინტერაქცია.'},
   quiet:{label:'მინიმალისტური',description:'ერთი მშვიდი მისალმება, დამატებითი შეთავაზებების გარეშე.'},
@@ -348,14 +349,16 @@ export function applyConciergePreset(raw,key){
  if(!Object.hasOwn(CONCIERGE_PRESETS,key))return s;
  const common={rotation:'sequence',frequency:'repeat',repeatInterval:60,repeatLimit:4,pages:'catalogue',side:'alternate',placement:'bottom',behavior:'walk-wave',delay:2,duration:10,guideLinks:true,recommendProducts:true,recommendationMode:'featured',saleGuide:true,saleGuidePriority:'alternate',interactiveGuide:true,waveBack:true,interaction:'wave',winterCelebration:false,season:'none',effect:'sparkles'};
  const modes={
+  complete:{repeatInterval:30,repeatLimit:8,duration:12,placement:'roam',behavior:'patrol',recommendationMode:'context',helpChoices:true,winterCelebration:true,blackFridayBoost:true},
   balanced:{},
   active:{repeatInterval:30,repeatLimit:8,duration:12,placement:'roam',behavior:'patrol',recommendationMode:'variety'},
-  quiet:{rotation:'fixed',frequency:'session',pages:'home',side:'left',behavior:'bow',delay:3,duration:6,guideLinks:false,recommendProducts:false,saleGuide:false,interactiveGuide:false,waveBack:false,effect:'none'},
-  winter:{winterCelebration:true,winterStyle:'alternate',winterEffects:true,repeatInterval:45,repeatLimit:6,saleGuide:false,effect:'sparkles',recommendationMode:'variety'},
-  sale:{character:'deal',rotation:'fixed',behavior:'point',saleGuide:true,saleGuidePriority:'always',recommendProducts:false,repeatInterval:60,repeatLimit:4}
+  quiet:{helpChoices:false,rotation:'fixed',frequency:'session',pages:'home',side:'left',behavior:'bow',delay:3,duration:6,guideLinks:false,recommendProducts:false,saleGuide:false,interactiveGuide:false,waveBack:false,effect:'none'},
+  winter:{helpChoices:true,winterCelebration:true,winterStyle:'alternate',winterEffects:true,repeatInterval:45,repeatLimit:6,saleGuide:false,effect:'sparkles',recommendationMode:'variety'},
+  sale:{helpChoices:true,character:'deal',rotation:'fixed',behavior:'point',saleGuide:true,saleGuidePriority:'always',recommendProducts:false,repeatInterval:60,repeatLimit:4}
  };
  const scenarioUpdates=Object.fromEntries(Object.entries(s.scenarios).map(([k,v])=>[k,{...v,enabled:key==='quiet'?false:key==='sale'?k==='flash':true}]));
- return normalizeCharacterSettings({...s,...common,...modes[key],enabled:s.enabled,mobile:s.mobile,desktop:s.desktop,advice:{...s.advice,enabled:key!=='quiet',topic:key==='sale'?'prices':key==='winter'?'gifts':'auto'},scenarios:scenarioUpdates,appearance:{...s.appearance,prominence:key==='quiet'?'compact':'enhanced'}});
+ const next=normalizeCharacterSettings({...s,...common,...modes[key],enabled:s.enabled,mobile:s.mobile,desktop:s.desktop,advice:{...s.advice,enabled:key!=='quiet',topic:key==='sale'?'prices':key==='winter'?'gifts':'auto'},scenarios:scenarioUpdates,appearance:{...s.appearance,prominence:key==='quiet'?'compact':'enhanced'}});
+ return key==='complete'?applyRecommendedCharacterRoles(next):next;
 }
 
 // Individual profiles refine globally enabled functions; they cannot bypass the master switches.

@@ -57,10 +57,11 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     setPreview(null);setEventPreview(null);
     setSiteSettings(previous=>({...previous,characterStudio:{...normalizeCharacterSettings({...previous?.characterStudio,...patch}),greetingLibrary:previous?.characterStudio?.greetingLibrary??s.greetingLibrary}}));
   };
-  const applyPreset=()=>{
+  const applyPreset=(key=presetKey)=>{
     setPreview(null);setEventPreview(null);
     const previous=siteSettings?.characterStudio;
-    const next=applyConciergePreset(previous,presetKey);
+    const next=applyConciergePreset(previous,key);
+    setPresetKey(key);
     setPresetUndo({previous,applied:JSON.stringify(next)});
     setSiteSettings(value=>({...value,characterStudio:next}));
   };
@@ -106,11 +107,13 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div><h4>მზა მართვის რეჟიმები</h4><p>აირჩიე რეჟიმი და გამოიყენე მონახაზზე. გამოქვეყნება ცალკე მოქმედებაა.</p></div>
       <div className="gs-concierge-preset-controls">
         <label className="block text-xs text-slate-300">რეჟიმი<select aria-label="მზა რეჟიმი" className={field} value={presetKey} disabled={busy} onChange={e=>setPresetKey(e.target.value)}>{Object.entries(CONCIERGE_PRESETS).map(([key,value])=><option key={key} value={key}>{value.label}</option>)}</select></label>
-        <button type="button" data-character-apply-preset disabled={busy} onClick={applyPreset} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">რეჟიმის გამოყენება</button>
+        <button type="button" data-character-apply-preset disabled={busy} onClick={()=>applyPreset()} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">რეჟიმის გამოყენება</button>
       </div>
       <p>{CONCIERGE_PRESETS[presetKey].description}</p>
+      <div className="gs-character-complete-setup"><strong>სრული დამხმარე</strong><p>ერთი მოქმედებით გამოიყენე 12 როლი და ახალი შესაძლებლობები. არსებული ჩართული პროფილები და საკუთარი ტექსტები შენარჩუნდება.</p><button type="button" data-character-complete-setup disabled={busy} onClick={()=>applyPreset('complete')}>სრული რეჟიმის გამოყენება</button></div>
       {presetUndo&&JSON.stringify(s)===presetUndo.applied&&<div role="status" className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-200"><span>რეჟიმი გამოყენებულია მონახაზზე.</span><button type="button" data-character-undo-preset disabled={busy} onClick={undoPreset} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">გაუქმება</button></div>}
       <div className="gs-concierge-summary" aria-label="აქტიური ფუნქციები">{[['რჩევები',s.advice.enabled,()=>update({advice:{...s.advice,enabled:!s.advice.enabled}})],['პროდუქტები',s.recommendProducts,()=>update({recommendProducts:!s.recommendProducts})],['აქციები',s.saleGuide,()=>update({saleGuide:!s.saleGuide})],['ინტერაქცია',s.interactiveGuide,()=>update({interactiveGuide:!s.interactiveGuide})],['საახალწლო',s.winterCelebration,()=>update({winterCelebration:!s.winterCelebration})],['მინიშნებები',s.guideLinks,()=>update({guideLinks:!s.guideLinks})]].map(([label,on,toggle])=><button type="button" key={label} disabled={busy} data-enabled={on?'true':'false'} aria-label={label+(on?' — გამორთვა':' — ჩართვა')} onClick={toggle}>{on?'✓':'–'} {label}</button>)}</div>
+      <div className="gs-character-extra-controls"><button type="button" aria-pressed={s.helpChoices&&s.interactiveGuide} disabled={busy||!s.interactiveGuide} onClick={()=>update({helpChoices:!s.helpChoices})}>არჩევითი დახმარება: {s.helpChoices&&s.interactiveGuide?'ჩართული':'გამორთული'}</button><button type="button" aria-pressed={s.blackFridayBoost&&s.saleGuide} disabled={busy||!s.saleGuide} onClick={()=>update({blackFridayBoost:!s.blackFridayBoost})}>შავი პარასკევი: {s.blackFridayBoost&&s.saleGuide?'ჩართული':'გამორთული'}</button></div>
       <p>ფუნქციის ღილაკზე დაჭერით პირდაპირ შეცვლი მის ჩართვას.</p>
       <p>რეჟიმები არ ცვლის საიტზე ჩართვის ღილაკს, მოწყობილობების არჩევანს, შენს ტექსტებს, ფერებს ან ინდივიდუალურ კალენდარს.</p>
     </div>
