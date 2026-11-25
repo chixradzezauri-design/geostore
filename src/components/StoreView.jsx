@@ -743,7 +743,7 @@ export default function StoreView({
     categories: <>
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div id="gs-video-collections" data-visual-editor-target="categories" {...sectionGeometryProps('categories',videoElementStyle('categories'))} className="gs-editorial-collections space-y-6">
+      <div id="gs-video-collections" data-visual-editor-target="categories" {...sectionGeometryProps('categories',videoElementStyle('categories'))} className="gs-editorial-collections space-y-6" data-signature-categories={signatureHero ? "true" : undefined}>
         <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 data-visual-editor-target="categories.title" style={videoElementStyle('categories.title')} className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -751,9 +751,10 @@ export default function StoreView({
             </h3>
             <p data-visual-editor-target="categories.description" style={videoElementStyle('categories.description')} className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
           </div>
-          <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
-            {processedProducts?.length || 0} {storeText.productsOnDisplay}
-          </span>
+          <div className="gs-signature-collection-tools">
+            <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">{processedProducts?.length || 0} {storeText.productsOnDisplay}</span>
+            {signatureHero && <button type="button" className="gs-signature-all-categories" aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory} onClick={() => selectCatalogueCategory('ყველა')}>{storeText.allCategories} <ArrowUpRight aria-hidden="true" size={16}/></button>}
+          </div>
         </div>
         
         {(selectedCategory !== 'ყველა' || selectedSubCategory) && (
@@ -784,7 +785,7 @@ export default function StoreView({
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
         <div className="gs-category-grid gs-catalog-category-grid gs-editorial-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div
+          {(!signatureHero || !(mainCategories.length || categories?.length)) && <div
             data-visual-editor-target="category.card"
             style={videoElementStyle('category.card')}
             role="button"
@@ -810,7 +811,7 @@ export default function StoreView({
               <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
               <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
             </div>
-          </div>
+          </div>}
 
           {(mainCategories.length > 0 ? mainCategories : (categories || []).map(c => typeof c === 'object' ? c : { id: c, name: c })).map(cat => {
             const catName = cat.name;
@@ -855,9 +856,10 @@ export default function StoreView({
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
                   </div>
                 </div>
-                <div className="z-10">
+                <div className="z-10 gs-signature-category-copy">
                   <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
                   <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
+                  {signatureHero && <span className="gs-signature-category-arrow" aria-hidden="true"><ArrowUpRight size={17}/></span>}
                 </div>
               </CategoryControl>
             );
