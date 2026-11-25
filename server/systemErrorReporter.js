@@ -15,7 +15,11 @@ export function createServerErrorReporter({enabled=false,secret,fetchImpl=global
   }catch{return false;}finally{busy=false;}
  };
 }
+// Explicit code review and approved backend release are required before
+// environment configuration can activate reporting. The application-only
+// release never reads the monitoring credential or sends telemetry.
+export const SYSTEM_MONITOR_ROLLOUT_ENABLED=false;
 export const reportServerError=createServerErrorReporter({
- enabled:process.env.GEOSTORE_SYSTEM_MONITOR_ENABLED==='true',
- secret:process.env.GEOSTORE_MONITOR_SUPABASE_SECRET
+ enabled:SYSTEM_MONITOR_ROLLOUT_ENABLED&&process.env.GEOSTORE_SYSTEM_MONITOR_ENABLED==='true',
+ secret:SYSTEM_MONITOR_ROLLOUT_ENABLED?process.env.GEOSTORE_MONITOR_SUPABASE_SECRET:undefined
 });
