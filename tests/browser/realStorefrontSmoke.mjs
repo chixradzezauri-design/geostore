@@ -7,7 +7,7 @@ import { runAdminWorkspaceSmoke } from './adminWorkspaceSmoke.mjs';
 import {runCatalogueSeoHttpSmoke} from './catalogueSeoHttpSmoke.mjs';
 import {runPwaOfflineSmoke} from './pwaOfflineSmoke.mjs';
 import {runSignatureStorefrontSmoke} from './signatureStorefrontSmoke.mjs';
-import {runCharacterStudioSmoke} from './characterStudioSmoke.mjs';
+import {runCharacterStudioSmoke,runFlagship3DSmoke} from './characterStudioSmoke.mjs';
 
 const server = spawn(process.execPath,
   ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'],
@@ -257,6 +257,8 @@ try {
   await runAdminWorkspaceSmoke(browser, host);
   await runCharacterStudioSmoke(browser,host,[320,1440]);
   await runPwaOfflineSmoke(browser);
+  const gpuBrowser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  try{await runFlagship3DSmoke(gpuBrowser,host);}finally{await gpuBrowser.close();}
 
   // Stage 48: exercise Safari's WebKit engine with the exact same fully
   // intercepted catalogue. This is not a native iPhone Safari test.

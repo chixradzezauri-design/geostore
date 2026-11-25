@@ -45,9 +45,11 @@ export default function FlagshipFox3D({color,emotion='happy',behavior='wave',sea
   useEffect(()=>{
     const node=canvas.current;
     if(!node)return;
+    setReady(false);
     let gl,program,vert,frag,positions,indices,frame=0,stopped=false;
     const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
     const cleanup=()=>{
+      if(stopped)return;
       stopped=true;cancelAnimationFrame(frame);
       if(gl){if(positions)gl.deleteBuffer(positions);if(indices)gl.deleteBuffer(indices);if(program)gl.deleteProgram(program);if(vert)gl.deleteShader(vert);if(frag)gl.deleteShader(frag);}
     };
@@ -77,7 +79,7 @@ export default function FlagshipFox3D({color,emotion='happy',behavior='wave',sea
         gl.uniform1f(loc.tilt,tilt);gl.uniform1f(loc.gloss,gloss);gl.uniform1f(loc.fur,fur);
         gl.drawElements(gl.TRIANGLES,mesh.indices.length,gl.UNSIGNED_SHORT,0);
       };
-      let start=null,last=-Infinity;
+      let start=null,last=-Infinity,firstFrame=true;
       const render=now=>{
         if(stopped)return;
         try{
@@ -127,7 +129,7 @@ export default function FlagshipFox3D({color,emotion='happy',behavior='wave',sea
             }
             if(season==='winter')draw([0,-.02,.06],[.52,.13,.42],[.65,.05,.12],0,.1,0);
             if(gl.getError()!==gl.NO_ERROR)throw Error('draw failed');
-            if(elapsed===0)setReady(true);
+            if(firstFrame){firstFrame=false;setReady(true);}
           }
           if(!motion.matches&&elapsed<15)frame=requestAnimationFrame(render);
         }catch{fail();}

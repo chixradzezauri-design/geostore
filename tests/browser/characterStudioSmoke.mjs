@@ -5,8 +5,8 @@ const fixtureContextOptions=width=>({viewport:{width,height:850},serviceWorkers:
 async function installCharacterFixture(context,readState){
   await context.route(backend+'/**',async route=>{
     const path=new URL(route.request().url()).pathname;
-    const {enabled,activeSale}=readState();
-    const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character:'cat',behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'},product:{enabled:true,message:'Product guide fixture'},searchEmpty:{enabled:true,message:'Search helper fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
+    const {enabled,activeSale,character='cat',appearance={}}=readState();
+    const data=path==='/rest/v1/storefront_config'?[{is_published:true,published_config:{siteSettings:{characterStudio:{enabled,character,appearance,behavior:'run-wave',delay:0,duration:12,side:'right',message:'Character fixture',scenarios:{flash:{enabled:true,message:'Flash scene fixture'},cart:{enabled:true,message:'Cart scene fixture'},wishlist:{enabled:true,message:'Wishlist scene fixture'},cartAdded:{enabled:true,message:'Cart reaction fixture'},wishlistAdded:{enabled:true,message:'Wishlist reaction fixture'},product:{enabled:true,message:'Product guide fixture'},searchEmpty:{enabled:true,message:'Search helper fixture'}}}}}}]:path==='/rest/v1/products'?stage49FixtureProductRows.map(p=>activeSale?p:{...p,flash_sale_started_at:null,flash_sale_ends_at:null}):[];
     if(!['GET','HEAD','OPTIONS'].includes(route.request().method()))return route.fulfill({status:403,contentType:'application/json',body:'{}'});
     return route.fulfill({status:200,contentType:'application/json',headers:{'cache-control':'no-store'},body:JSON.stringify(data)});
   });
@@ -102,5 +102,77 @@ export async function runCharacterStudioSmoke(browser,host,widths){
     }finally{await context.close();}
     await verifyDisabledPublishedConfig(browser,host,width);
     console.log('PASS character studio public greeting at '+width+'px');
+  }
+}
+
+/** Exercise actual WebGL rendering and explicit fallback on the built storefront.
+ * Software ANGLE is intentionally allowed in this isolated CI browser only. */
+export async function runFlagship3DSmoke(browser,host){
+  for(const mode of ['webgl','unavailable','vector']){
+    const context=await browser.newContext(fixtureContextOptions(390));
+    try{
+      await installCharacterFixture(context,()=>({enabled:true,activeSale:false,character:'fox',appearance:{renderMode:mode==='vector'?'vector':'auto'}}));
+      await context.addInitScript(mode=>{
+        const original=HTMLCanvasElement.prototype.getContext;
+        window.__mascot3DProbe={requests:0,pixels:0,frames:0};
+        HTMLCanvasElement.prototype.getContext=function(type,options){
+          if(type!=='webgl')return original.call(this,type,options);
+          window.__mascot3DProbe.requests++;
+          if(mode==='unavailable')return null;
+          const gl=original.call(this,type,{...options,failIfMajorPerformanceCaveat:false});
+          if(!gl)return null;
+          const getError=gl.getError.bind(gl);
+          let sampled=false;
+          gl.getError=function(){
+            const result=getError();
+            if(!sampled&&result===gl.NO_ERROR){
+              const width=gl.drawingBufferWidth,height=gl.drawingBufferHeight;
+              const pixels=new Uint8Array(width*height*4);
+              gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+              let opaque=0;
+              for(let i=3;i<pixels.length;i+=4)if(pixels[i]>128)opaque++;
+              window.__mascot3DProbe.pixels=opaque;
+              sampled=true;
+            }
+            window.__mascot3DProbe.frames++;
+            return result;
+          };
+          return gl;
+        };
+      },mode);
+      const page=await context.newPage(),errors=[];
+      page.on('pageerror',error=>errors.push(error.message));
+      await page.goto(host,{waitUntil:'domcontentloaded'});
+      const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
+      await scene.waitFor({state:'visible',timeout:15000});
+      if(mode==='webgl'){
+        await scene.locator('[data-character-3d="ready"]').waitFor({state:'visible',timeout:10000});
+        const probe=await page.evaluate(()=>window.__mascot3DProbe);
+        assert.ok(probe.pixels>300,'Actual depth-tested model produced visible framebuffer pixels');
+        assert.equal(probe.frames,1,'Reduced-motion mode renders a single WebGL frame');
+        const canvas=scene.locator('canvas.gs-character-3d-canvas');
+        assert.ok(await canvas.evaluate(n=>n.width<=256&&n.height<=290),'Framebuffer is capped');
+        assert.equal(await canvas.evaluate(n=>getComputedStyle(n).pointerEvents),'none');
+        // Simulate GPU context loss when the browser supplies the standard extension.
+        const lost=await canvas.evaluate(n=>{
+          const gl=n.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');
+          if(!ext)return false;ext.loseContext();return true;
+        });
+        if(lost){await scene.locator('[data-character-3d="fallback"] svg[data-character-model="fox"]').waitFor({state:'visible'});}
+      }else{
+        await scene.locator('svg[data-character-model="fox"]').waitFor({state:'visible'});
+        if(mode==='unavailable'){
+          await scene.locator('[data-character-3d="fallback"]').waitFor({state:'visible'});
+          assert.ok(await page.evaluate(()=>window.__mascot3DProbe.requests)>0);
+        }else{
+          assert.equal(await scene.locator('canvas').count(),0,'Vector mode never creates a 3D canvas');
+          assert.equal(await page.evaluate(()=>window.__mascot3DProbe.requests),0);
+        }
+      }
+      await scene.locator('.gs-character-dismiss').click();
+      await scene.waitFor({state:'detached'});
+      assert.deepEqual(errors,[]);
+      console.log('PASS flagship mascot '+mode);
+    }finally{await context.close();}
   }
 }
