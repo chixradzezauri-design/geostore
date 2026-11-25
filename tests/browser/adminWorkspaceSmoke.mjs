@@ -216,6 +216,11 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await profiles.getByLabel('რჩევის მიმართულება').inputValue(),'details');
           await profiles.getByLabel('ინდივიდუალური მისალმება',{exact:true}).fill('Fixture owl profile');
           assert.match(await profiles.locator('.gs-character-preview-scene').innerText(),/Fixture owl profile/);
+          await profiles.locator('[data-character-all-roles]').click();
+          assert.match(await profiles.locator('summary').innerText(),/12\/12/);
+          assert.equal(await profiles.getByLabel('ინდივიდუალური მისალმება',{exact:true}).inputValue(),'Fixture owl profile');
+          await profiles.getByLabel('ინდივიდუალური პერსონაჟი').selectOption('deal');
+          assert.equal(await profiles.getByLabel('სასურველი განყოფილება').inputValue(),'flash');
           await profiles.locator('summary').click();
           assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
         }

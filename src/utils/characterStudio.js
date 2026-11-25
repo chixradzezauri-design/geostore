@@ -277,7 +277,7 @@ export function characterRepeatRecord(raw,revision){
   try{
     const r=typeof raw==='string'?JSON.parse(raw):raw;
     if(r?.revision===revision&&Number.isInteger(r.count)&&r.count>=0&&r.count<=8&&Number.isFinite(r.at)&&r.at>=0){
-      return {revision,count:r.count,at:r.at,lastId:pick(r.lastId,CHARACTERS.map(c=>c.id),null),muted:r.muted===true};
+      return {revision,count:r.count,at:r.at,lastId:pick(r.lastId,CHARACTERS.map(c=>c.id),null),...(Object.hasOwn(r,'lastRegularId')?{lastRegularId:pick(r.lastRegularId,CHARACTERS.filter(c=>!c.special).map(c=>c.id),null)}:{}),muted:r.muted===true};
     }
   }catch{}
   return {revision,count:0,at:0,lastId:null,muted:false};
@@ -293,9 +293,9 @@ export function nextConciergeCharacter(settings,record,date=new Date(),random=Ma
   const s=normalizeCharacterSettings(settings);
   if(s.rotation!=='sequence'&&s.rotation!=='random')return selectCharacter(s,date,random);
   const pool=CHARACTERS.filter(c=>!c.special);
-  const previous=pool.findIndex(c=>c.id===record.lastId);
+  const previous=pool.findIndex(c=>c.id===(record.lastRegularId||record.lastId));
   if(s.rotation==='sequence')return styledCharacter(pool[(previous+1)%pool.length],s);
-  const available=pool.filter(c=>c.id!==record.lastId);
+  const available=pool.filter(c=>c.id!==(record.lastRegularId||record.lastId));
   const value=random();
   const i=Number.isFinite(value)?Math.max(0,Math.min(available.length-1,Math.floor(value*available.length))):0;
   return styledCharacter(available[i],s);
@@ -380,6 +380,7 @@ export function normalizeCharacterProfiles(raw){
    behavior:pick(p.behavior,['inherit',...CHARACTER_MOTIONS],'inherit'),
    side:pick(p.side,['inherit','left','right','alternate'],'inherit'),
    placement:pick(p.placement,['inherit','bottom','middle','roam'],'inherit'),
+   target:pick(p.target,['inherit','categories','products','flash'],'inherit'),
    recommendationMode:pick(p.recommendationMode,['inherit','featured','category','variety'],'inherit'),
    tips:p.tips!==false,products:p.products!==false,sales:p.sales!==false,guides:p.guides!==false,interactions:p.interactions!==false,
    messages:Object.fromEntries(CHARACTER_GREETING_LANGS.map(lang=>[lang,typeof p.messages?.[lang]==='string'?p.messages[lang].trim().slice(0,120):'']))}]];
@@ -396,4 +397,17 @@ export function applyCharacterProfile(settings,id,lang='ka',{preserveEvent=false
   interactiveGuide:s.interactiveGuide&&p.interactions,waveBack:s.waveBack&&p.interactions};
  if(!preserveEvent){next.behavior=p.behavior==='inherit'?s.behavior:p.behavior;next.message=p.messages[locale]||s.message;}
  return next;
+}
+
+export function applyRecommendedCharacterRoles(raw){
+ const s=normalizeCharacterSettings(raw);
+ const profiles=Object.fromEntries(CHARACTERS.map(({id})=>{
+  const role=CHARACTER_PROFILE_ROLES[id],previous=s.profiles[id];
+  return [id,previous?.enabled?previous:{enabled:true,topic:role.topic,behavior:role.behavior,recommendationMode:role.recommendationMode,target:id==='deal'?'flash':id==='fox'||id==='cat'?'categories':'products',...previous,enabled:true,topic:previous?.topic&&previous.topic!=='inherit'?previous.topic:role.topic,behavior:previous?.behavior&&previous.behavior!=='inherit'?previous.behavior:role.behavior,recommendationMode:previous?.recommendationMode&&previous.recommendationMode!=='inherit'?previous.recommendationMode:role.recommendationMode,target:previous?.target&&previous.target!=='inherit'?previous.target:id==='deal'?'flash':id==='fox'||id==='cat'?'categories':'products'}];
+ }));
+ return normalizeCharacterSettings({...s,profiles});
+}
+export function chooseCharacterGuideTarget(settings,id,available,index=0){
+ const p=normalizeCharacterSettings(settings).profiles[id];
+ return p?.enabled&&p.target!=='inherit'&&available.includes(p.target)?p.target:chooseConciergeTarget(available,index);
 }

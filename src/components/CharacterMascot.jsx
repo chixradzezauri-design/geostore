@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS,applyCharacterProfile} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS,applyCharacterProfile,chooseCharacterGuideTarget} from '../utils/characterStudio.js';
 import './characterStudio.css';
 import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeInteractionDeadline} from '../utils/characterAdvice.js';
 import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY,conciergeSaleProducts,chooseConciergeSale,CONCIERGE_SALE_COPY} from '../utils/characterRecommendations.js';
@@ -258,19 +258,20 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       const catalogue=catalogueRef.current;
       const saleEligible=effective.saleGuide&&typeof catalogue.onOpenProduct==='function'&&(effective.saleGuidePriority==='always'||character.id==='deal'||(effective.saleGuidePriority==='alternate'&&repeat&&record.count%2===1));
       let sale=saleEligible?chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current}):null;
-      if(sale&&!event&&!winter){
+      if(sale&&!event&&!winter&&baseEffective.rotation!=='fixed'){
         const dealSettings=applyCharacterProfile(baseEffective,'deal',lang);
         if(dealSettings.saleGuide){character=selectCharacter({...dealSettings,rotation:'fixed',character:'deal'},now);effective=dealSettings;}
         else sale=null;
       }
       if(repeat){
-        if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id});
+        if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id,lastRegularId:CHARACTERS.find(c=>c.id===character.id)?.special?record.lastRegularId||(CHARACTERS.find(c=>c.id===record.lastId&&!c.special)?.id??null):character.id});
       }else markSeen(current.frequency,revision);
       const placement=conciergePlacement(effective,repeat?record.count:0);
-      const guideTarget=effective.guideLinks?chooseConciergeTarget(Object.keys(CHARACTER_GUIDE_TARGETS).filter(key=>visibleGuideTarget(key)),repeat?record.count:0):null;
+      const guideTarget=effective.guideLinks?chooseCharacterGuideTarget(effective,character.id,Object.keys(CHARACTER_GUIDE_TARGETS).filter(key=>visibleGuideTarget(key)),repeat?record.count:0):null;
       const recommendation=sale||(effective.recommendProducts&&typeof catalogue.onOpenProduct==='function'?chooseConciergeProduct(catalogue.products,{ready:catalogue.ready,mode:effective.recommendationMode,category:catalogue.category,index:repeat?record.count:0,excludeId:lastRecommendedId.current}):null);
       if(recommendation)lastRecommendedId.current=recommendation.id;
-      const advice=!event&&!winter&&(!repeat||record.count>0)?chooseConciergeAdvice(effective.advice,{characterId:character.id,target:guideTarget,index:record.count,lang,hasProduct:!!recommendation}):null;
+      const profileMessage=effective.profiles[character.id]?.enabled&&effective.profiles[character.id]?.messages[lang];
+      const advice=!event&&!winter&&!profileMessage&&(!repeat||record.count>0)?chooseConciergeAdvice(effective.advice,{characterId:character.id,target:guideTarget,index:record.count,lang,hasProduct:!!recommendation}):null;
       actionsRef.current=0;shownAtRef.current=now.getTime();
       setPresentation({character,settings:{...effective,...placement},guideTarget,recommendationId:recommendation?.id,sale:!!sale,advice,key:now.getTime(),actionCount:0});
       setSaleClock(now.getTime());
