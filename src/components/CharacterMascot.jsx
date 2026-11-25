@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {CHARACTERS,CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS,applyCharacterProfile,chooseCharacterGuideTarget} from '../utils/characterStudio.js';
+import {CHARACTERS,CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,winterConciergePresentation,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS,applyCharacterProfile,chooseCharacterGuideTarget,blackFridayWindow} from '../utils/characterStudio.js';
 import './characterStudio.css';
 import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL,nextConciergeAdvice,CONCIERGE_INTERACTIVE_COPY,conciergeInteractionDeadline} from '../utils/characterAdvice.js';
 import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY,conciergeSaleProducts,chooseConciergeSale,CONCIERGE_SALE_COPY,conciergeRecommendationPool} from '../utils/characterRecommendations.js';
@@ -259,11 +259,12 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       let character=repeat?nextConciergeCharacter(baseEffective,record,now):selectCharacter(baseEffective,now);
       let effective=applyCharacterProfile(baseEffective,character.id,lang,{preserveEvent:!!(event||winter)});
       const catalogue=catalogueRef.current;
-      const saleEligible=effective.saleGuide&&typeof catalogue.onOpenProduct==='function'&&(effective.saleGuidePriority==='always'||character.id==='deal'||(effective.saleGuidePriority==='alternate'&&repeat&&record.count%2===1));
+      const seasonalSale=effective.blackFridayBoost&&blackFridayWindow(now);
+      const saleEligible=effective.saleGuide&&typeof catalogue.onOpenProduct==='function'&&(seasonalSale||effective.saleGuidePriority==='always'||character.id==='deal'||(effective.saleGuidePriority==='alternate'&&repeat&&record.count%2===1));
       let sale=saleEligible?chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current,mode:effective.recommendationMode,category:catalogue.category,budget:effective.recommendationBudget}):null;
       if(sale&&!event&&!winter&&baseEffective.rotation!=='fixed'){
         const dealSettings=applyCharacterProfile(baseEffective,'deal',lang);
-        if(dealSettings.saleGuide){character=selectCharacter({...dealSettings,rotation:'fixed',character:'deal'},now);effective=dealSettings;}
+        if(dealSettings.saleGuide){const verified=chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current,mode:dealSettings.recommendationMode,category:catalogue.category,budget:dealSettings.recommendationBudget});if(verified){sale=verified;character=selectCharacter({...dealSettings,rotation:'fixed',character:'deal'},now);effective=dealSettings;}else sale=null;}
         else sale=null;
       }
       if(repeat){

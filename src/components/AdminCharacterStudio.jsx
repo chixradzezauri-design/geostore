@@ -155,7 +155,8 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     </details>
     <details className="gs-character-admin-section" data-character-winter-settings>
       <summary>საახალწლო განწყობა — Santa & Snowy</summary>
-      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterCelebration} disabled={busy} onChange={e=>update({winterCelebration:e.target.checked})}/> ყოველწლიური საახალწლო რეჟიმი (1 დეკემბერი – 14 იანვარი)</label>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterCelebration} disabled={busy} onChange={e=>update({winterCelebration:e.target.checked})}/> ყოველწლიური საახალწლო რეჟიმი</label>
+      <label className="block text-xs text-slate-300">სადღესასწაულო პერიოდი<select aria-label="სადღესასწაულო პერიოდი" className={field} value={s.winterPeriod} disabled={busy} onChange={e=>update({winterPeriod:e.target.value})}><option value="standard">1 დეკემბერი – 14 იანვარი</option><option value="extended">20 ნოემბერი – 14 იანვარი</option><option value="short">20 დეკემბერი – 7 იანვარი</option></select></label>
       <label className="block text-xs text-slate-300">საახალწლო პერსონაჟი<select aria-label="საახალწლო პერსონაჟი" className={field} value={s.winterStyle} disabled={busy} onChange={e=>update({winterStyle:e.target.value})}><option value="alternate">Santa და Snowy მონაცვლეობით</option><option value="santa">მხოლოდ Santa</option><option value="snowman">მხოლოდ Snowy</option></select></label>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.winterEffects} disabled={busy} onChange={e=>update({winterEffects:e.target.checked})}/> თოვლისა და სადღესასწაულო ნათების ეფექტები</label>
       <p className="text-xs text-slate-300">თბილისის დროით მოქმედებს. ინდივიდუალური კალენდრის ღონისძიებას უპირატესობა აქვს. ეფექტები მხოლოდ პერსონაჟთან ჩნდება და შემცირებული მოძრაობის რეჟიმში არ მუშაობს.</p>
@@ -164,6 +165,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <summary>Deal Hunter — აქციების დამხმარე</summary>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.saleGuide} disabled={busy} onChange={e=>update({saleGuide:e.target.checked})}/> მოქმედი აქციების შეთავაზება</label>
       <label className="block text-xs text-slate-300">აქციების გამოჩენა<select aria-label="აქციების გამოჩენა" className={field} value={s.saleGuidePriority} disabled={busy} onChange={e=>update({saleGuidePriority:e.target.value})}><option value="alternate">სხვა რჩევებთან მონაცვლეობით</option><option value="always">მოქმედ აქციას უპირატესობა</option><option value="deal-only">მხოლოდ Deal Hunter-ის გამოჩენისას</option></select></label>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.blackFridayBoost} disabled={busy||!s.saleGuide} onChange={e=>update({blackFridayBoost:e.target.checked})}/> შავი პარასკევი – კიბერ ორშაბათი: მოქმედ აქციებს უპირატესობა</label><p className="text-xs text-slate-300">ყოველწლიურად, თბილისის დროით. ფასდაკლებებს არ ქმნის და მხოლოდ რეალურად მოქმედ შეთავაზებებს აჩვენებს.</p>
       <p className="text-xs text-slate-300">აჩვენებს მხოლოდ გადამოწმებულ, მარაგში არსებულ მოქმედ აქციას და ფასთა ნამდვილ სხვაობას. ვადის გასვლისთანავე შეთავაზება ქრება. ვარიანტიანი პროდუქტები, რომელთა ფასებიც შეიძლება განსხვავდებოდეს, არ გამოიყენება ამ ფასის მინიშნებაში.</p>
     </details>
     <details className="gs-character-admin-section" data-character-advice-settings>
@@ -273,9 +275,11 @@ function ConciergeFunctionalDemo({settings,lang}){
   const [revision,setRevision]=useState(0);
   const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
   const reset=(value=topic)=>{setTopic(value);setNumber(0);setAdvice(null);setNotice('');setActions(0);setRevision(v=>v+1);};
-  const sale=topic==='sale',winter=topic==='winter';
-  const character=selectCharacter({...settings,rotation:'fixed',character:sale?'deal':winter?'santa':settings.character});
-  const configured=applyCharacterProfile(settings,character.id,lang);
+  const sale=topic==='sale',winter=topic==='winter'||topic==='snowman';
+  const theme=winter?CHARACTER_EVENT_THEMES[topic==='snowman'?'snowman':'santa']:sale?CHARACTER_EVENT_THEMES.blackfriday:null;
+  const themed=theme?{...settings,character:theme.character,rotation:'fixed',season:theme.season,effect:winter&&!settings.winterEffects?'none':theme.effect,behavior:theme.behavior,message:theme.lines[lang]||theme.lines.ka}:settings;
+  const character=selectCharacter({...themed,rotation:'fixed'});
+  const configured=applyCharacterProfile(themed,character.id,lang,{preserveEvent:!!theme});
   const effective={...configured,appearance:{...configured.appearance,renderMode:'vector'},behavior:configured.behavior==='still'?'wave':configured.behavior};
   const canProduct=sale?effective.saleGuide:effective.recommendProducts;
   const names=lang==='en'?['Sample wallet','Sample bag','Sample accessory']:lang==='ru'?['Пример кошелька','Пример сумки','Пример аксессуара']:['საცდელი საფულე','საცდელი ჩანთა','საცდელი აქსესუარი'];
@@ -283,10 +287,10 @@ function ConciergeFunctionalDemo({settings,lang}){
   const firstAdvice=effective.advice.enabled?chooseConciergeAdvice(effective.advice,{characterId:character.id,lang,hasProduct:!!recommendation}):null;
   const act=fn=>{if(actions>=4)return;setActions(v=>v+1);fn();};
   return <div className="gs-concierge-demo-content">
-    <label className="block text-xs text-slate-300">სატესტო სიტუაცია<select aria-label="სატესტო სიტუაცია" className={field} value={topic} onChange={e=>reset(e.target.value)}><option value="normal">ჩვეულებრივი რეკომენდაცია</option><option value="sale">მოქმედი აქციის მაგალითი</option><option value="winter">საახალწლო რჩევა</option><option value="guide">განყოფილებაზე მინიშნება</option></select></label>
+    <label className="block text-xs text-slate-300">სატესტო სიტუაცია<select aria-label="სატესტო სიტუაცია" className={field} value={topic} onChange={e=>reset(e.target.value)}><option value="normal">ჩვეულებრივი რეკომენდაცია</option><option value="sale">მოქმედი აქციის მაგალითი</option><option value="winter">Santa — საჩუქრის რჩევა</option><option value="snowman">Snowy — ზამთრის ეფექტი</option><option value="guide">განყოფილებაზე მინიშნება</option></select></label>
     <p className="text-xs text-slate-300">სატესტო მონაცემები და პირობითი ფასები. ღილაკები არ ხსნის ნამდვილ პროდუქტს და არ ცვლის საიტის მონაცემებს.</p>
     {((sale&&!settings.saleGuide)||(winter&&!settings.winterCelebration)||(topic==='guide'&&!settings.guideLinks))&&<p role="status" className="text-xs text-amber-300">ეს შესაძლებლობა მონახაზში გამორთულია — ჩართე შესაბამისი ფუნქციის ღილაკით.</p>}
-    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||firstAdvice} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(effective.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))}/></div>
+    <div className="gs-character-preview gs-concierge-demo-stage" data-device="mobile"><CharacterScene key={revision} character={character} settings={effective} lang={lang} preview interactivePreview advice={advice||(winter?null:firstAdvice)} recommendation={topic==='guide'?null:recommendation} guideTarget={settings.guideLinks?'products':null} onGuide={()=>setNotice('საცდელი მოქმედება: პროდუქტების განყოფილებაზე გადასვლა')} onRecommend={()=>setNotice('საცდელი მოქმედება: '+recommendation?.name+' — პროდუქტის გახსნა')} actionCount={actions} interactionNotice={notice} onNextTip={()=>act(()=>{setAdvice(nextConciergeAdvice(effective.advice,advice||firstAdvice,{lang,index:actions}));setNotice('');})} onNextProduct={topic==='guide'?undefined:canProduct?()=>act(()=>{setNumber(v=>(v+1)%names.length);setNotice('');}):undefined} onThanks={()=>act(()=>setNotice(copy.reply))}/></div>
     <div className="flex items-center justify-between gap-2"><span className="text-xs text-slate-300">მოქმედება: {actions}/4</span><button type="button" className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white min-h-[44px]" onClick={()=>reset()}>გამოცდის თავიდან დაწყება</button></div>
   </div>;
 }

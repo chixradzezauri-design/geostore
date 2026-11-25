@@ -161,7 +161,7 @@ export function normalizeCharacterSettings(raw){
     greetingMode:pick(s.greetingMode,['character','funny','time','library',...Object.keys(CHARACTER_GREETING_TONES)],'character'),
     greetingLibrary:normalizeGreetingLibrary(s.greetingLibrary),
     calendarEnabled:s.calendarEnabled===true,events:normalizeCharacterEvents(s.events),
-    winterCelebration:s.winterCelebration===true,winterStyle:pick(s.winterStyle,['alternate','santa','snowman'],'alternate'),winterEffects:s.winterEffects!==false,
+    winterCelebration:s.winterCelebration===true,winterStyle:pick(s.winterStyle,['alternate','santa','snowman'],'alternate'),winterEffects:s.winterEffects!==false,winterPeriod:pick(s.winterPeriod,['standard','extended','short'],'standard'),blackFridayBoost:s.blackFridayBoost===true,
     effect:pick(s.effect,['none','sparkles','hearts','confetti','snow','festive'],'none'),waveBack:s.waveBack===true,
     interaction:pick(s.interaction,CHARACTER_INTERACTIONS,'wave'),interactiveGuide:s.interactiveGuide===true,
     emotion:pick(s.emotion,['happy','wink','surprise'],'happy'),
@@ -327,7 +327,8 @@ export function winterConciergePresentation(settings,{now=new Date(),index=0,lan
  const day=characterCalendarDay(now);
  if(!s.enabled||!s.winterCelebration||event||!day)return null;
  const mmdd=day.slice(5);
- if(!(mmdd>='12-01'||mmdd<='01-14'))return null;
+ const range={standard:['12-01','01-14'],extended:['11-20','01-14'],short:['12-20','01-07']}[s.winterPeriod];
+ if(!(mmdd>=range[0]||mmdd<=range[1]))return null;
  const n=Number.isFinite(index)?Math.max(0,Math.floor(index)):0;
  const id=s.winterStyle==='alternate'?(n%2?'snowman':'santa'):s.winterStyle;
  const preset=CHARACTER_EVENT_THEMES[id];
@@ -415,4 +416,14 @@ export function applyRecommendedCharacterRoles(raw){
 export function chooseCharacterGuideTarget(settings,id,available,index=0){
  const p=normalizeCharacterSettings(settings).profiles[id];
  return p?.enabled&&p.target!=='inherit'&&available.includes(p.target)?p.target:chooseConciergeTarget(available,index);
+}
+
+// The Friday after the fourth Thursday of November through Cyber Monday, in store time.
+export function blackFridayWindow(now=new Date()){
+ const day=characterCalendarDay(now);if(!day)return false;
+ const year=Number(day.slice(0,4));if(!Number.isInteger(year))return false;
+ const first=new Date(Date.UTC(year,10,1));const fourthThursday=1+(4-first.getUTCDay()+7)%7+21;
+ const start=new Date(Date.UTC(year,10,fourthThursday+1)).toISOString().slice(0,10);
+ const end=new Date(Date.UTC(year,10,fourthThursday+4)).toISOString().slice(0,10);
+ return day>=start&&day<=end;
 }
