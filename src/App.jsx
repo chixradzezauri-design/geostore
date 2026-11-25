@@ -23,6 +23,8 @@ const AdminBackupMfaPanel = lazy(() => import('./components/AdminBackupMfaPanel.
 import {createAdminBackupMfa} from './utils/adminBackupMfa.js';
 
 import Header from './components/Header';
+import { normalizeCharacterSettings, canDisplayCharacter } from './utils/characterStudio.js';
+const CharacterMascot = lazy(() => import('./components/CharacterMascot.jsx'));
 import StorefrontFooter from './components/StorefrontFooter';
 import ProductMediaImage from './components/ProductMediaImage';
 import {loadAdminCss} from './utils/loadAdminCss.js';
@@ -346,6 +348,7 @@ const validateStorefrontSiteSettings = (rawSettings) => {
     throw new Error('საიტის პარამეტრების ფორმატი არასწორია.');
   }
   const settings = { ...DEFAULT_SITE_SETTINGS, ...rawSettings };
+  if (Object.hasOwn(rawSettings, 'characterStudio')) settings.characterStudio = normalizeCharacterSettings(rawSettings.characterStudio);
   const limits = { storeName: 60, topBarText: 160, heroTitle: 120, heroSubtitle: 240 };
   for (const [key, maxLength] of Object.entries(limits)) {
     if (typeof settings[key] !== 'string') settings[key] = String(settings[key] ?? '');
@@ -484,6 +487,14 @@ export default function App() {
 
   const t = translations[currentLang] || translations.ka;
 
+  const [publishedCharacterSettings, setPublishedCharacterSettings] = useState(null);
+  const [characterMobile, setCharacterMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setCharacterMobile(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [siteSettings, setSiteSettings] = useState(() => {
     const saved = loadSafeStorage('geostore_site_settings', DEFAULT_SITE_SETTINGS);
     const settings = {
@@ -1132,6 +1143,7 @@ export default function App() {
   }, [hasSettingsAccess, categories, bannersList, siteSettings]);
 
   useEffect(() => {
+    setPublishedCharacterSettings(null);
     // Settings-authorized staff load the private draft in the separate authenticated effect above.
     // Do not let a slower public-config request overwrite that draft after login.
     if (hasSettingsAccess) return undefined;
@@ -1146,6 +1158,7 @@ export default function App() {
         const rows = await response.json();
         const config = rows?.[0]?.is_published ? rows[0].published_config : null;
         if (!active || !config || typeof config !== 'object') return;
+        setPublishedCharacterSettings(normalizeCharacterSettings(config.siteSettings?.characterStudio));
         if (Array.isArray(config.categories)) setCategoriesList(config.categories);
         if (Array.isArray(config.banners)) setBannersList(config.banners);
         if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) setSiteSettings(config.siteSettings);
@@ -3734,6 +3747,9 @@ export default function App() {
 
   return (
     <div data-signature-commerce={activeTab !== 'admin' && siteSettings?.visualDesign?.signature2026 === true ? "true" : undefined} className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
+      {!hasSettingsAccess && activeTab === 'store' && !searchQuery && canDisplayCharacter(publishedCharacterSettings, { route: catalogueRoute?.kind, mobile: characterMobile, blocked: Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal) }) && (
+        <Suspense fallback={null}><CharacterMascot settings={publishedCharacterSettings} lang={currentLang}/></Suspense>
+      )}
       {activeTab === 'admin' && hasSettingsAccess && storefrontRemoteConflict && (
         <div role="alert" className="fixed top-2 left-2 right-2 z-[60] mx-auto max-h-[35vh] max-w-2xl overflow-y-auto rounded-xl border border-amber-400 bg-amber-950 px-3 py-2 text-xs leading-relaxed text-amber-50 shadow-xl sm:top-3 sm:left-3 sm:right-3 sm:px-4 sm:py-3 sm:text-sm" aria-live="assertive">
           <strong className="block font-bold">სხვა მოწყობილობაზე ახალი მონახაზია შენახული</strong>

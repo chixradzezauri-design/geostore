@@ -1,0 +1,28 @@
+/* Scoped styles: never change the commerce layout or global animation rules. */
+.gs-character-scene{--gs-character-enter:-110vw;position:fixed;bottom:calc(92px + env(safe-area-inset-bottom,0px));left:12px;z-index:20;display:flex;align-items:flex-end;gap:4px;max-width:min(310px,calc(100vw - 24px));pointer-events:none;color:#17233b;font:500 13px/1.45 system-ui,sans-serif;isolation:isolate}
+.gs-character-scene[data-side="right"]{--gs-character-enter:110vw;left:auto;right:12px;flex-direction:row-reverse}
+.gs-character-figure{width:100px;flex:0 0 100px;transform-origin:center bottom}
+.gs-character-art{display:block;width:100%;height:auto;overflow:visible}
+.gs-character-bubble{position:relative;background:#fffdf7;border:1px solid #e4d7bb;box-shadow:0 5px 22px #17233b26;border-radius:16px 16px 16px 4px;padding:10px 28px 10px 12px;min-width:0;overflow-wrap:anywhere;max-height:150px;overflow:auto;animation:gs-character-bubble-in .35s ease-out both}
+.gs-character-bubble strong,.gs-character-bubble span{display:block}
+.gs-character-bubble strong{font-size:11px;color:#7c4a0e;margin-bottom:3px}
+.gs-character-dismiss{pointer-events:auto;position:absolute;right:4px;top:3px;width:24px;height:24px;border:0;border-radius:8px;background:transparent;color:#17233b;font-size:21px;line-height:1;cursor:pointer}
+.gs-character-dismiss:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+.gs-character-scene[data-motion="run-wave"]{animation:gs-character-enter 1.35s cubic-bezier(.2,.75,.3,1) both}
+.gs-character-scene[data-motion="run-wave"] .gs-character-figure{animation:gs-character-run .28s ease-in-out 4}
+.gs-character-scene[data-motion="run-wave"] .gs-character-bubble{animation-delay:1.1s}
+.gs-character-scene[data-motion="slide"]{animation:gs-character-enter 1s ease-out both}
+.gs-character-scene[data-motion="jump"] .gs-character-figure{animation:gs-character-hop .55s ease-in-out 3}
+.gs-character-hand{transform-box:fill-box;transform-origin:12% 85%;animation:gs-character-wave .6s ease-in-out 4}
+.gs-character-scene[data-motion="run-wave"] .gs-character-hand{animation-delay:1.3s}
+@keyframes gs-character-enter{from{transform:translateX(var(--gs-character-enter))}to{transform:translateX(0)}}
+@keyframes gs-character-run{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
+@keyframes gs-character-hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-23px)}}
+@keyframes gs-character-wave{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(23deg)}}
+@keyframes gs-character-bubble-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.gs-character-preview{position:relative;min-height:220px;overflow:hidden;border-radius:16px;background:linear-gradient(150deg,#fdf5e5,#e9e7e2);border:1px solid #d6cdbd;display:flex;align-items:center;justify-content:center;color:#625849}
+.gs-character-preview-scene{--gs-character-enter:-100%;position:absolute;bottom:12px;max-width:calc(100% - 24px)}
+.gs-character-preview-scene[data-side="right"]{--gs-character-enter:100%}
+@media(min-width:768px){.gs-character-scene:not(.gs-character-preview-scene){bottom:24px;left:24px;max-width:350px}.gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){left:auto;right:24px}.gs-character-figure{width:116px;flex-basis:116px}}
+@media(max-width:420px){.gs-character-figure{width:76px;flex-basis:76px}.gs-character-scene{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.gs-character-scene,.gs-character-scene *{animation:none!important;transition:none!important}}
