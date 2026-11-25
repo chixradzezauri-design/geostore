@@ -6,7 +6,8 @@ import {
   Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon, MousePointer2, Plus, Trash2, Copy
 } from 'lucide-react';
 import StoreView from './StoreView';
-import Header, { SignatureMobileNav } from './Header';
+import Header from './Header';
+import { SignatureMobileNav } from './Header';
 import StorefrontFooter from './StorefrontFooter';
 import { supabase } from '../supabaseClient';
 import {
