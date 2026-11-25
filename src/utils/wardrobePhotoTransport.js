@@ -35,7 +35,7 @@ export function createWardrobePhotoTransport({enabled=false,client,getContext}={
    }catch{return {status:'invalid'};}
    if(!active(s))return {status:'inactive'};
    try{
-    const result=await client.storage.from(WARDROBE_BUCKET).upload(path,file,{contentType:mime,upsert:false});
+    const result=await client.storage.from(WARDROBE_BUCKET).upload(path,file,{contentType:mime,upsert:false,cacheControl:'0'});
     if(!active(s))return {status:'inactive'};
     if(result?.error||result?.data?.path!==path)return {status:'uncertain'};
     return {status:'uploaded',path,...s};

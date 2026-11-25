@@ -25,7 +25,7 @@ test('disabled, guest and unsafe images do not call storage',async()=>{
 test('upload is private and immutable; authenticated download returns a blob',async()=>{
  const f=fixture();
  assert.deepEqual(await f.transport.upload(photo,P),{status:'uploaded',path,ownerId:A,epoch:1});
- assert.deepEqual(f.calls[0],[path,photo,{contentType:'image/png',upsert:false}]);
+ assert.deepEqual(f.calls[0],[path,photo,{contentType:'image/png',upsert:false,cacheControl:'0'}]);
  assert.equal((await f.transport.download(path)).blob,photo);
  assert.equal((await f.transport.download(path.replace(A,B))).status,'invalid');
  assert.equal(f.calls.length,2);
