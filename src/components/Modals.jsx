@@ -6,6 +6,8 @@ import {
   Search, PackageCheck, Clock, Navigation, Map, Bell, Sparkles, Tag 
 } from 'lucide-react';
 import { normalizeTrackingLookup } from '../utils/orderSafety';
+import { filterCustomerNotifications, summarizeSupportReplies } from '../utils/customerNotificationCenter.js';
+import './customerNotificationCenter.css';
 
 export default function Modals({
   isCheckoutOpen,
@@ -38,6 +40,12 @@ export default function Modals({
   notificationsLoading = false,
   notificationsError = '',
   markAllNotificationsAsRead,
+  supportNotificationTickets = [],
+  supportNotificationsLoading = false,
+  supportNotificationsError = '',
+  supportNotificationsHasMore = false,
+  onOpenSupportNotifications,
+  onOpenOrderHistory,
   lookupOrderForTracking,
   selectedRegion,
   setSelectedRegion,
@@ -46,6 +54,17 @@ export default function Modals({
   storefrontThemeStyle = {},
   currentLang = 'ka'
 }) {
+  const [notificationFilter,setNotificationFilter]=useState('all');
+  const [notificationSearch,setNotificationSearch]=useState('');
+  useEffect(()=>{setNotificationFilter('all');setNotificationSearch('');},[currentUser?.id,isNotificationsOpen]);
+  const notificationWords=({
+    ka:{all:'ყველა',unread:'წაუკითხავი',read:'წაკითხული',search:'შეკვეთის ნომრით ძიება',empty:'შესაბამისი შეტყობინება არ მოიძებნა.',orders:'შეკვეთების ისტორია',support:'მხარდაჭერის პასუხები',open:'მიმართვების ნახვა',unknown:'მონაცემები დროებით მიუწვდომელია',partial:'ნაჩვენებია ჩატვირთული მიმართვების მონაცემები.',loading:'იტვირთება…',replies:'მიმართვა ახალი პასუხით'},
+    en:{all:'All',unread:'Unread',read:'Read',search:'Search order number',empty:'No matching notifications.',orders:'Order history',support:'Support replies',open:'View requests',unknown:'Data temporarily unavailable',partial:'Counts cover loaded requests only.',loading:'Loading…',replies:'requests with new replies'},
+    ru:{all:'Все',unread:'Непрочитанные',read:'Прочитанные',search:'Поиск номера заказа',empty:'Подходящих уведомлений нет.',orders:'История заказов',support:'Ответы поддержки',open:'Смотреть обращения',unknown:'Данные временно недоступны',partial:'Учитываются загруженные обращения.',loading:'Загрузка…',replies:'обращений с новыми ответами'}
+  })[currentLang] || {all:'ყველა',unread:'წაუკითხავი',read:'წაკითხული',search:'შეკვეთის ნომრით ძიება',empty:'შესაბამისი შეტყობინება არ მოიძებნა.',orders:'შეკვეთების ისტორია',support:'მხარდაჭერის პასუხები',open:'მიმართვების ნახვა',unknown:'მონაცემები დროებით მიუწვდომელია',partial:'ნაჩვენებია ჩატვირთული მიმართვების მონაცემები.',loading:'იტვირთება…',replies:'მიმართვა ახალი პასუხით'};
+  const visibleNotifications=filterCustomerNotifications(notifications,notificationFilter,notificationSearch);
+  const unreadCount=filterCustomerNotifications(notifications,'unread').length;
+  const supportReplyCount=summarizeSupportReplies(supportNotificationTickets);
   const termsCopy = ({
     ka: {
       title: 'წესები და პირობები',
@@ -743,32 +762,45 @@ export default function Modals({
 
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400 font-bold">{copy.totalNotifications} <b className="text-amber-400">{notifications.length}</b></span>
-              {notifications.length > 0 && (
-                <button type="button" onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
+              {unreadCount > 0 && (
+                <button type="button" disabled={notificationsLoading || !!notificationsError} onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer disabled:opacity-50">
                   {copy.markRead}
                 </button>
               )}
             </div>
 
+            <div className="gs-notification-center-controls">
+              <div className="gs-notification-center-filters" role="group" aria-label={copy.notifications}>
+                {['all','unread','read'].map(filter=><button key={filter} type="button" aria-pressed={notificationFilter===filter} onClick={()=>setNotificationFilter(filter)}>{notificationWords[filter]} ({filter==='all'?notifications.length:filter==='unread'?unreadCount:notifications.length-unreadCount})</button>)}
+              </div>
+              <input type="search" aria-label={notificationWords.search} placeholder={notificationWords.search} maxLength={100} value={notificationSearch} onChange={e=>setNotificationSearch(e.target.value)}/>
+            </div>
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
-              {notificationsLoading ? (
+              {currentUser?.id && <section className="gs-notification-support-summary" aria-label={notificationWords.support}>
+                <strong>{notificationWords.support}</strong>
+                <p role="status">{supportNotificationsError?notificationWords.unknown:supportNotificationsLoading?notificationWords.loading:supportReplyCount+' · '+notificationWords.replies}</p>
+                {supportNotificationsHasMore&&!supportNotificationsError&&<small>{notificationWords.partial}</small>}
+                <button type="button" onClick={onOpenSupportNotifications}>{notificationWords.open}</button>
+              </section>}
+              {notificationsError && notifications.length>0 && <p role="alert" className="text-xs text-amber-200">{notificationsError}</p>}
+              {notificationsLoading && notifications.length===0 ? (
                 <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
                   <Bell className="w-8 h-8 text-amber-400/50 mx-auto animate-pulse" />
                   <p className="text-slate-400 text-xs font-bold">{currentLang === 'en' ? 'Loading notifications…' : currentLang === 'ru' ? 'Загрузка уведомлений…' : 'შეტყობინებები იტვირთება…'}</p>
                 </div>
-              ) : notificationsError ? (
+              ) : notificationsError && notifications.length===0 ? (
                 <div role="alert" className="text-center py-8 px-4 bg-[#121216] rounded-3xl border border-amber-500/25 space-y-2">
                   <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
                   <p className="text-amber-200 text-xs font-bold leading-relaxed">{notificationsError}</p>
                 </div>
-              ) : notifications.length === 0 ? (
+              ) : visibleNotifications.length === 0 ? (
                 <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
                   <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
-                  <p className="text-slate-400 text-xs font-bold" >{copy.noNotifications}</p>
+                  <p className="text-slate-400 text-xs font-bold">{notifications.length===0?copy.noNotifications:notificationWords.empty}</p>
                 </div>
               ) : (
-                notifications.map(n => (
-                  <div key={n.id} className="gs-video-notification-card bg-[#121216] border border-amber-500/20 p-4 rounded-2xl space-y-1.5 shadow-inner hover:border-amber-400/50 transition">
+                visibleNotifications.map(n => (
+                  <div key={n.id} data-notification-unread={!n.read ? "true" : undefined} className="gs-video-notification-card bg-[#121216] border border-amber-500/20 p-4 rounded-2xl space-y-1.5 shadow-inner hover:border-amber-400/50 transition">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-black text-amber-300 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {getNotificationCopy(n).title}
@@ -776,6 +808,8 @@ export default function Modals({
                       <span className="text-[10px] text-slate-500">{localizedNotificationDate(n.date) || (currentLang === 'en' ? 'New' : currentLang === 'ru' ? 'Новое' : 'ახალი')}</span>
                     </div>
                     <p className="text-slate-300 text-xs leading-relaxed">{getNotificationCopy(n).message}</p>
+                    <span className="gs-notification-read-label">{n.read?notificationWords.read:notificationWords.unread}</span>
+                    {currentUser?.id && <button type="button" className="gs-notification-order-link" onClick={onOpenOrderHistory}>{notificationWords.orders}</button>}
                   </div>
                 ))
               )}

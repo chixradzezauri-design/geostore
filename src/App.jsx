@@ -811,6 +811,7 @@ export default function App() {
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const supportHistoryOpen = supportOpen || isNotificationsOpen;
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [supportSubmission, setSupportSubmission] = useState(null);
   const [orderRequestDraft, setOrderRequestDraft] = useState(null);
@@ -861,7 +862,7 @@ export default function App() {
 
   useEffect(() => {
     const historySessionId = ++supportHistorySessionRef.current;
-    if (!supportOpen || !currentUser?.id) {
+    if (!supportHistoryOpen || !currentUser?.id) {
       supportHistoryLoadMoreSessionRef.current = null;
       supportHistoryOwnerRef.current = null;
       setMySupportTickets([]);
@@ -900,7 +901,7 @@ export default function App() {
           supabaseUrl: SUPABASE_URL,
           headers: await getSupabaseHeaders({ authenticated: true })
         });
-        if (active) {
+        if (active && historySessionId === supportHistorySessionRef.current && String(activeCartOwnerRef.current.userId ?? '') === ownerId) {
           if (page === null) {
             setMySupportTickets([]);
             setMySupportTicketsCursor(null);
@@ -949,7 +950,7 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [supportOpen, currentUser?.id, currentLang]);
+  }, [supportHistoryOpen, currentUser?.id, currentLang]);
 
   useEffect(() => {
     if (!supportOpen || !supportThreadLoaded) return undefined;
@@ -4390,6 +4391,9 @@ export default function App() {
                 </p>
               </div>
 
+              <button type="button" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)} className="w-full min-h-11 rounded-xl border border-amber-500/40 bg-slate-950/60 px-3 py-2 font-bold text-amber-200 disabled:opacity-50">
+                {currentLang === 'en' ? 'Notification center' : currentLang === 'ru' ? 'Центр уведомлений' : 'შეტყობინებების ცენტრი'}{unreadNotificationsCount > 0 ? ' · '+unreadNotificationsCount : ''}
+              </button>
               <CustomerMarketingConsent key={currentUser.id+':'+currentUser.email} userId={currentUser.id} lang={currentLang} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>
               <button
                 type="button"
@@ -5142,6 +5146,12 @@ export default function App() {
         notificationsLoading={notificationsLoading}
         notificationsError={notificationsError}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
+        supportNotificationTickets={currentUser?.id && supportHistoryOwnerRef.current === String(currentUser.id) ? mySupportTickets : []}
+        supportNotificationsLoading={mySupportTicketsLoading}
+        supportNotificationsError={mySupportTicketsError}
+        supportNotificationsHasMore={mySupportTicketsHasMore}
+        onOpenSupportNotifications={()=>{setIsNotificationsOpen(false);setSupportSubmission(null);setSupportOpen(true);}}
+        onOpenOrderHistory={()=>{setIsNotificationsOpen(false);setActiveTab('profile');}}
         orders={orders}
         lookupOrderForTracking={lookupOrderForTracking}
         selectedRegion={selectedRegion}
