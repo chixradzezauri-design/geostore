@@ -246,7 +246,8 @@ export default function StorefrontVisualEditor({
   onRestoreStorefrontVersion,
   storefrontDraftBusy = false,
   onPublishStorefront,
-  storefrontPublishBusy = false
+  storefrontPublishBusy = false,
+  campaignOnly = false
 }) {
   const initialDesign = normalizeStorefrontVisualDesign(siteSettings?.visualDesign);
   const [design, setDesign] = useState(initialDesign);
@@ -268,7 +269,7 @@ export default function StorefrontVisualEditor({
   const [previewMode, setPreviewMode] = useState('desktop');
   const [controlSearch, setControlSearch] = useState('');
   const controlSearchQuery = controlSearch.trim().toLocaleLowerCase('ka-GE');
-  const isControlGroupVisible = key => !controlSearchQuery || STOREFRONT_EDITOR_GROUP_SEARCH[key].includes(controlSearchQuery);
+  const isControlGroupVisible = key => campaignOnly ? key==='campaigns' : !controlSearchQuery || STOREFRONT_EDITOR_GROUP_SEARCH[key].includes(controlSearchQuery);
   const visibleControlGroupCount = Object.keys(STOREFRONT_EDITOR_GROUP_SEARCH).filter(isControlGroupVisible).length;
   const [previewCategory, setPreviewCategory] = useState('ყველა');
   const [selectionMode, setSelectionMode] = useState(false);
@@ -962,19 +963,114 @@ export default function StorefrontVisualEditor({
     commitDesign({ ...DEFAULT_STOREFRONT_VISUAL_DESIGN, designTemplates: designRef.current.designTemplates });
   };
 
+  const campaignControls=(<details data-gs-campaign-controls="true" open={campaignOnly?true:undefined} hidden={!isControlGroupVisible('campaigns')} className="rounded-2xl border border-amber-400/30 bg-slate-900/90 p-3 sm:p-4">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><span aria-hidden="true">⚡</span> აქციის სახელი, ბანერი და დიზაინი</summary>
+            <div className="mt-3 space-y-3">
+              {campaignOnly&&<button type="button" onClick={()=>commitDesign(moveFlashSaleAfterHero(designRef.current))} className="min-h-11 w-full rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100">აქცია მთავარი ბანერის შემდეგ — ყველა მოწყობილობაზე</button>}
+              <p className="text-xs leading-5 text-slate-400">აირჩიეთ მზა სახელწოდება ან შექმენით საკუთარი. აქ იცვლება მხოლოდ სარეკლამო ტექსტი, არა პროდუქტის ფასი, ფასდაკლება ან ვადა.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {FLASH_CAMPAIGN_COPY_PRESETS.map(preset => (
+                  <button key={preset.id} type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,preset.id))} className="min-h-11 rounded-xl border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-left text-xs font-semibold text-amber-100 hover:bg-amber-400/15">{preset.label}</button>
+                ))}
+              </div>
+              {[
+                ['flashSaleTitle','აქციის სახელი',60,'მაგ. შავი პარასკევი'],
+                ['flashSaleBadge','მცირე წარწერა',60,'მაგ. BLACK FRIDAY'],
+                ['flashSaleSubtitle','აქციის აღწერა',120,'მოკლე აღწერა']
+              ].map(([key,label,maxLength,placeholder])=>(
+                <label key={key} className="block space-y-1 text-xs font-semibold text-slate-300">{label}
+                  <input value={design.copy[key]} maxLength={maxLength} placeholder={placeholder} onChange={event=>updateGroup('copy',key,event.target.value)} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                  <span className="block text-right text-[10px] font-normal text-slate-400">{design.copy[key].length}/{maxLength}</span>
+                </label>
+              ))}
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">აქციის ვიზუალური თემა</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {FLASH_CAMPAIGN_THEMES.map(theme=>(
+                    <button key={theme.id} type="button" aria-pressed={(design.flashCampaignTheme || 'inherit')===theme.id} onClick={()=>commitDesign({...designRef.current,flashCampaignTheme:theme.id})}
+                      className="flex min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 aria-pressed:ring-2 aria-pressed:ring-amber-300"
+                      style={{backgroundColor:theme.background,color:theme.ink,borderColor:theme.accent}}>
+                      <span aria-hidden="true" className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:theme.accent}}/>{theme.label}
+                      {(design.flashCampaignTheme || 'inherit')===theme.id && <span className="ml-auto" aria-hidden="true">✓</span>}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-slate-400">თემა არ ცვლის ფასებს, ვადებს, სათაურსა და ინდივიდუალურად დაყენებულ ფერებს. მოქმედებს ყველა მოწყობილობაზე გამოქვეყნების შემდეგ.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">სარეკლამო ბანერი და განლაგება</h4>
+                <label className="block space-y-1 text-xs font-semibold text-slate-300">აქციის ფოტოს HTTPS ბმული
+                  <input key={design.flashCampaignBanner || 'empty-banner'} disabled={heroImagePending} type="url" maxLength={2048} defaultValue={design.flashCampaignBanner?.startsWith('https:')?design.flashCampaignBanner:''} placeholder="https://…" onBlur={event=>{
+                    const raw=event.currentTarget.value.trim();
+                    const value=normalizeFlashCampaignBanner(raw);
+                    if(raw && !value){setSaveMessage('ფოტოსთვის გამოიყენეთ უსაფრთხო HTTPS ბმული.');event.currentTarget.value=designRef.current.flashCampaignBanner || '';return;}
+                    if(value&&value!==(designRef.current.flashCampaignBanner || ''))commitDesign({...designRef.current,flashCampaignBanner:value});
+                  }} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                </label>
+                <button type="button" disabled={heroImagePending||!design.flashCampaignBanner} onClick={()=>commitDesign({...designRef.current,flashCampaignBanner:''})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-200 disabled:opacity-40">ბანერის მოცილება</button>
+                <label className="mt-2 block text-xs font-semibold text-slate-300">ფოტოს ატვირთვა (JPG, PNG, WEBP · მაქს. 1 MB)
+                  <input type="file" accept="image/jpeg,image/png,image/webp" disabled={heroImagePending||storefrontDraftBusy||storefrontPublishBusy||versionRestoreBusy} onChange={handleFlashBannerFileChange} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-300"/>
+                </label>
+                {design.flashCampaignBanner&&<img key={design.flashCampaignBanner} src={design.flashCampaignBanner} alt="აქციის ბანერის წინასწარი ნახვა" referrerPolicy="no-referrer" className="mt-2 max-h-28 w-full rounded-lg object-contain" onError={event=>{event.currentTarget.hidden=true;}}/>}
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[['desktopHeight','კომპიუტერის სიმაღლე',80,360],['tabletHeight','ტაბლეტის სიმაღლე',80,360],['mobileHeight','მობილურის სიმაღლე',80,360],['positionX','ჰორიზონტალური პოზიცია (%)',0,100],['positionY','ვერტიკალური პოზიცია (%)',0,100],['radius','კუთხეების მომრგვალება',0,32]].map(([key,label,min,max])=><label key={key} className="min-w-0 text-xs text-slate-300">{label}
+                    <input type="number" min={min} max={max} step="1" value={design.flashBannerAppearance?.[key]??''} placeholder="ავტომატური" onChange={event=>{const next={...designRef.current.flashBannerAppearance};if(event.target.value==='')delete next[key];else next[key]=Number(event.target.value);commitDesign({...designRef.current,flashBannerAppearance:next});}} className="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-white"/>
+                  </label>)}
+                  {[['fit','ფოტოს მორგება',[['cover','შევსება'],['contain','სრულად ჩვენება']]],['placement','ბანერის ადგილი',[['above','სათაურის ზემოთ'],['below','სათაურის ქვემოთ']]]].map(([key,label,options])=><label key={key} className="text-xs text-slate-300">{label}<select value={design.flashBannerAppearance?.[key]??''} onChange={event=>commitDesign({...designRef.current,flashBannerAppearance:{...designRef.current.flashBannerAppearance,[key]:event.target.value}})} className="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-white"><option value="">ნაგულისხმევი</option>{options.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>)}
+                </div>
+                <button type="button" onClick={()=>commitDesign({...designRef.current,flashBannerAppearance:{}})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-300">ბანერის ზომების აღდგენა</button>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {[['inherit','არსებული'],['grid','ბარათები'],['compact','კომპაქტური']].map(([id,label])=><button key={id} type="button" aria-pressed={(design.flashCampaignLayout || 'inherit')===id} onClick={()=>commitDesign({...designRef.current,flashCampaignLayout:id})} className="min-h-11 rounded-lg border border-slate-600 px-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400">ბანერი მხოლოდ აქტიური აქციის დროს გამოჩნდება. განლაგება პროდუქტებს არ ცვლის.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">უკუთვლის დიზაინი</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {FLASH_TIMER_STYLES.map(option=><button key={option.id} type="button" aria-pressed={(design.flashTimerStyle||'inherit')===option.id} onClick={()=>commitDesign({...designRef.current,flashTimerStyle:option.id})} className="min-w-0 min-h-16 rounded-xl border border-slate-600 px-2 py-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">
+                    <span aria-hidden="true" className={'block mb-1 font-bold tabular-nums '+(option.id==='digital'?'font-mono tracking-widest':option.id==='pills'?'rounded-full bg-slate-700 px-1':option.id==='outline'?'border border-slate-500 rounded px-1':'')}>{option.sample}</span>
+                    <span>{option.label}</span>
+                  </button>)}
+                </div>
+                <label className="mt-2 flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-300"><input type="checkbox" checked={design.flashTimerMotion==='reveal'} onChange={event=>commitDesign({...designRef.current,flashTimerMotion:event.target.checked?'reveal':'none'})}/> მსუბუქი გამოჩენის ანიმაცია</label>
+                <p className="text-[11px] leading-5 text-slate-400">ანიმაცია მხოლოდ გამოჩენისას სრულდება; მოძრაობის შემცირების სისტემურ პარამეტრს პატივს სცემს. ვადა და უკუთვლის გამოთვლა უცვლელია.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">პროდუქტის პრემიუმ დიზაინი</h4>
+                {FLASH_PRODUCT_APPEARANCE.map(group=><fieldset key={group.key} className="mb-3 min-w-0 space-y-2">
+                  <legend className="mb-1 text-xs font-semibold text-slate-300">{group.label}</legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    {group.options.map(([id,label])=><button key={id} type="button" aria-pressed={(design[group.key]||'inherit')===id} onClick={()=>commitDesign({...designRef.current,[group.key]:id})} className="min-h-11 min-w-0 rounded-lg border border-slate-600 px-2 py-2 text-xs text-slate-200 break-words aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
+                  </div>
+                </fieldset>)}
+                <p className="text-[11px] leading-5 text-slate-400">სამივე ელემენტის სტილი დამოუკიდებელია. ინდივიდუალურად დაყენებული ფერები და ზომები უპირატესია. ფასები, მარაგი და კალათის მოქმედებები უცვლელია.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">აქციის ელემენტების დეტალური გაფორმება</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {['flashSale','flashSale.title','flashSale.badge','flashSale.description','flashSale.card','flashSale.image','flashSale.timer','flashSale.discount','flashSale.button'].map(id=>(
+                    <button key={id} type="button" aria-pressed={selectedElement?.id===id} onClick={()=>selectElementFromTree(id)} className="min-h-11 rounded-lg border border-slate-600 px-3 py-2 text-left text-xs font-semibold text-slate-200 aria-pressed:border-emerald-300 aria-pressed:text-emerald-200">{VISUAL_EDITOR_TARGETS[id].label}</button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-slate-400">აირჩიეთ ელემენტი და გამოიყენეთ პირდაპირი რედაქტორის ფერები, ზომები და მოწყობილობის რეჟიმები. პროდუქტის მონაცემები და ფასდაკლების გამოთვლა უცვლელია.</p>
+              </div>
+              <button type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,'reset'))} className="min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300">ნაგულისხმევი ტექსტების აღდგენა</button>
+              <p className="text-[11px] leading-5 text-slate-400">ტექსტები საერთო ვიზუალურ მონახაზში ინახება. გამოქვეყნების შემდეგ ყველა მოწყობილობაზე გამოჩნდება, როცა აქტიური აქცია არსებობს.</p>
+            </div>
+          </details>);
   return (
-    <section className="gs-storefront-visual-editor space-y-5" aria-labelledby="gs-visual-editor-title">
+    <section data-gs-flash-editor={campaignOnly?'true':undefined} className="gs-storefront-visual-editor space-y-5" aria-labelledby="gs-visual-editor-title">
       <header className="rounded-2xl border border-emerald-400/25 bg-slate-900/80 p-4 sm:p-5">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-300">GEOSTORE / VISUAL STUDIO</p>
-            <h2 id="gs-visual-editor-title" className="mt-1 text-xl font-black text-white">მთავარი გვერდის ვიზუალური რედაქტორი</h2>
+            <h2 id="gs-visual-editor-title" className="mt-1 text-xl font-black text-white">{campaignOnly?'აქციის ვიზუალური რედაქტორი':'მთავარი გვერდის ვიზუალური რედაქტორი'}</h2>
             <p className="mt-1 text-xs leading-5 text-slate-400">ცვლილებები ჯერ მხოლოდ მონახაზში ინახება. გამოქვეყნება ცალკე მოქმედებაა.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={undo} disabled={historyIndex <= 0} className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 disabled:opacity-35"><RotateCcw className="mr-1 inline h-3.5 w-3.5" /> გაუქმება</button>
             <button type="button" onClick={redo} disabled={historyIndex >= history.length - 1} className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 disabled:opacity-35"><RotateCw className="mr-1 inline h-3.5 w-3.5" /> გამეორება</button>
-            <button type="button" onClick={resetDesign} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">ვიზუალური Reset</button>
+            {!campaignOnly&&<button type="button" onClick={resetDesign} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">ვიზუალური Reset</button>}
           </div>
         </div>
         {heroImagePending && <p role="status" className="mt-2 text-xs text-amber-200">ფოტო იტვირთება — შენახვა დროებით შეჩერებულია.</p>}
@@ -987,7 +1083,7 @@ export default function StorefrontVisualEditor({
         <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
       </div>
 
-      <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" aria-label="გამოქვეყნებული ვერსიების ისტორია">
+      <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" hidden={campaignOnly} aria-label="გამოქვეყნებული ვერსიების ისტორია">
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-black text-white">გამოქვეყნებული ვერსიების ისტორია</h3>
@@ -1045,9 +1141,10 @@ export default function StorefrontVisualEditor({
       </details>
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
-        <aside className="gs-visual-editor-controls order-2 min-w-0 space-y-4 2xl:order-1">
-          {isOwner && <StorefrontDesignTemplates design={design} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy || versionRestoreBusy} onChange={commitDesign}/>}
-          <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
+        <aside className={`gs-visual-editor-controls min-w-0 space-y-4 2xl:order-1 ${campaignOnly?"order-1":"order-2"}`}>
+          {campaignOnly&&campaignControls}
+          {!campaignOnly&&isOwner && <StorefrontDesignTemplates design={design} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy || versionRestoreBusy} onChange={commitDesign}/>}
+          <div hidden={campaignOnly} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3">
             <label htmlFor="gs-visual-editor-control-search" className="block text-xs font-bold text-slate-200">პარამეტრების ჯგუფების ძებნა</label>
             <input id="gs-visual-editor-control-search" type="search" value={controlSearch} onChange={event => setControlSearch(event.target.value)} placeholder="მაგალითად: ფერები, ტექსტი, ფოტო…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-base text-white placeholder:text-slate-500" />
             <div className="mt-2 flex flex-wrap justify-between items-center gap-2"><p role="status" aria-live="polite" className="text-[11px] text-slate-400">{visibleControlGroupCount} / 7 ჯგუფი · გასაშლელად შეეხეთ სათაურს</p>{controlSearch && <button type="button" onClick={() => setControlSearch('')} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200">გასუფთავება</button>}</div>
@@ -1063,7 +1160,7 @@ export default function StorefrontVisualEditor({
                 {selectionMode ? 'არჩევა ჩართულია' : 'არჩევის ჩართვა'}
               </button>
             </div>
-            <details className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
+            <details hidden={campaignOnly} className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-bold text-slate-200">
                 <span>კომპონენტების იერარქია</span>
                 <span className="text-[10px] font-semibold text-slate-500">{Object.keys(VISUAL_EDITOR_TARGETS).length} ელემენტი</span>
@@ -1255,100 +1352,7 @@ export default function StorefrontVisualEditor({
             </div>
           </details>
 
-          <details data-gs-campaign-controls="true" hidden={!isControlGroupVisible('campaigns')} className="rounded-2xl border border-amber-400/30 bg-slate-900/90 p-3 sm:p-4">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><span aria-hidden="true">⚡</span> აქციების სახელები და ტექსტები</summary>
-            <div className="mt-3 space-y-3">
-              <p className="text-xs leading-5 text-slate-400">აირჩიეთ მზა სახელწოდება ან შექმენით საკუთარი. აქ იცვლება მხოლოდ სარეკლამო ტექსტი, არა პროდუქტის ფასი, ფასდაკლება ან ვადა.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {FLASH_CAMPAIGN_COPY_PRESETS.map(preset => (
-                  <button key={preset.id} type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,preset.id))} className="min-h-11 rounded-xl border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-left text-xs font-semibold text-amber-100 hover:bg-amber-400/15">{preset.label}</button>
-                ))}
-              </div>
-              {[
-                ['flashSaleTitle','აქციის სახელი',60,'მაგ. შავი პარასკევი'],
-                ['flashSaleBadge','მცირე წარწერა',60,'მაგ. BLACK FRIDAY'],
-                ['flashSaleSubtitle','აქციის აღწერა',120,'მოკლე აღწერა']
-              ].map(([key,label,maxLength,placeholder])=>(
-                <label key={key} className="block space-y-1 text-xs font-semibold text-slate-300">{label}
-                  <input value={design.copy[key]} maxLength={maxLength} placeholder={placeholder} onChange={event=>updateGroup('copy',key,event.target.value)} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
-                  <span className="block text-right text-[10px] font-normal text-slate-400">{design.copy[key].length}/{maxLength}</span>
-                </label>
-              ))}
-              <div className="border-t border-slate-700 pt-3">
-                <h4 className="mb-2 text-xs font-bold text-white">აქციის ვიზუალური თემა</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {FLASH_CAMPAIGN_THEMES.map(theme=>(
-                    <button key={theme.id} type="button" aria-pressed={(design.flashCampaignTheme || 'inherit')===theme.id} onClick={()=>commitDesign({...designRef.current,flashCampaignTheme:theme.id})}
-                      className="flex min-h-12 min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 aria-pressed:ring-2 aria-pressed:ring-amber-300"
-                      style={{backgroundColor:theme.background,color:theme.ink,borderColor:theme.accent}}>
-                      <span aria-hidden="true" className="h-4 w-4 shrink-0 rounded-full" style={{backgroundColor:theme.accent}}/>{theme.label}
-                      {(design.flashCampaignTheme || 'inherit')===theme.id && <span className="ml-auto" aria-hidden="true">✓</span>}
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-2 text-[11px] leading-5 text-slate-400">თემა არ ცვლის ფასებს, ვადებს, სათაურსა და ინდივიდუალურად დაყენებულ ფერებს. მოქმედებს ყველა მოწყობილობაზე გამოქვეყნების შემდეგ.</p>
-              </div>
-              <div className="border-t border-slate-700 pt-3">
-                <h4 className="mb-2 text-xs font-bold text-white">სარეკლამო ბანერი და განლაგება</h4>
-                <label className="block space-y-1 text-xs font-semibold text-slate-300">აქციის ფოტოს HTTPS ბმული
-                  <input key={design.flashCampaignBanner || 'empty-banner'} disabled={heroImagePending} type="url" maxLength={2048} defaultValue={design.flashCampaignBanner?.startsWith('https:')?design.flashCampaignBanner:''} placeholder="https://…" onBlur={event=>{
-                    const raw=event.currentTarget.value.trim();
-                    const value=normalizeFlashCampaignBanner(raw);
-                    if(raw && !value){setSaveMessage('ფოტოსთვის გამოიყენეთ უსაფრთხო HTTPS ბმული.');event.currentTarget.value=designRef.current.flashCampaignBanner || '';return;}
-                    if(value&&value!==(designRef.current.flashCampaignBanner || ''))commitDesign({...designRef.current,flashCampaignBanner:value});
-                  }} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
-                </label>
-                <button type="button" disabled={heroImagePending||!design.flashCampaignBanner} onClick={()=>commitDesign({...designRef.current,flashCampaignBanner:''})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-200 disabled:opacity-40">ბანერის მოცილება</button>
-                <label className="mt-2 block text-xs font-semibold text-slate-300">ფოტოს ატვირთვა (JPG, PNG, WEBP · მაქს. 1 MB)
-                  <input type="file" accept="image/jpeg,image/png,image/webp" disabled={heroImagePending||storefrontDraftBusy||storefrontPublishBusy||versionRestoreBusy} onChange={handleFlashBannerFileChange} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 p-2 text-xs text-slate-300"/>
-                </label>
-                {design.flashCampaignBanner&&<img key={design.flashCampaignBanner} src={design.flashCampaignBanner} alt="აქციის ბანერის წინასწარი ნახვა" referrerPolicy="no-referrer" className="mt-2 max-h-28 w-full rounded-lg object-contain" onError={event=>{event.currentTarget.hidden=true;}}/>}
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {[['desktopHeight','კომპიუტერის სიმაღლე',80,360],['tabletHeight','ტაბლეტის სიმაღლე',80,360],['mobileHeight','მობილურის სიმაღლე',80,360],['positionX','ჰორიზონტალური პოზიცია (%)',0,100],['positionY','ვერტიკალური პოზიცია (%)',0,100],['radius','კუთხეების მომრგვალება',0,32]].map(([key,label,min,max])=><label key={key} className="min-w-0 text-xs text-slate-300">{label}
-                    <input type="number" min={min} max={max} step="1" value={design.flashBannerAppearance?.[key]??''} placeholder="ავტომატური" onChange={event=>{const next={...designRef.current.flashBannerAppearance};if(event.target.value==='')delete next[key];else next[key]=Number(event.target.value);commitDesign({...designRef.current,flashBannerAppearance:next});}} className="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-white"/>
-                  </label>)}
-                  {[['fit','ფოტოს მორგება',[['cover','შევსება'],['contain','სრულად ჩვენება']]],['placement','ბანერის ადგილი',[['above','სათაურის ზემოთ'],['below','სათაურის ქვემოთ']]]].map(([key,label,options])=><label key={key} className="text-xs text-slate-300">{label}<select value={design.flashBannerAppearance?.[key]??''} onChange={event=>commitDesign({...designRef.current,flashBannerAppearance:{...designRef.current.flashBannerAppearance,[key]:event.target.value}})} className="mt-1 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 text-white"><option value="">ნაგულისხმევი</option>{options.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>)}
-                </div>
-                <button type="button" onClick={()=>commitDesign({...designRef.current,flashBannerAppearance:{}})} className="mt-2 min-h-11 rounded-lg border border-slate-600 px-3 text-xs text-slate-300">ბანერის ზომების აღდგენა</button>
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {[['inherit','არსებული'],['grid','ბარათები'],['compact','კომპაქტური']].map(([id,label])=><button key={id} type="button" aria-pressed={(design.flashCampaignLayout || 'inherit')===id} onClick={()=>commitDesign({...designRef.current,flashCampaignLayout:id})} className="min-h-11 rounded-lg border border-slate-600 px-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
-                </div>
-                <p className="mt-2 text-[11px] text-slate-400">ბანერი მხოლოდ აქტიური აქციის დროს გამოჩნდება. განლაგება პროდუქტებს არ ცვლის.</p>
-              </div>
-              <div className="border-t border-slate-700 pt-3">
-                <h4 className="mb-2 text-xs font-bold text-white">უკუთვლის დიზაინი</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {FLASH_TIMER_STYLES.map(option=><button key={option.id} type="button" aria-pressed={(design.flashTimerStyle||'inherit')===option.id} onClick={()=>commitDesign({...designRef.current,flashTimerStyle:option.id})} className="min-w-0 min-h-16 rounded-xl border border-slate-600 px-2 py-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">
-                    <span aria-hidden="true" className={'block mb-1 font-bold tabular-nums '+(option.id==='digital'?'font-mono tracking-widest':option.id==='pills'?'rounded-full bg-slate-700 px-1':option.id==='outline'?'border border-slate-500 rounded px-1':'')}>{option.sample}</span>
-                    <span>{option.label}</span>
-                  </button>)}
-                </div>
-                <label className="mt-2 flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-300"><input type="checkbox" checked={design.flashTimerMotion==='reveal'} onChange={event=>commitDesign({...designRef.current,flashTimerMotion:event.target.checked?'reveal':'none'})}/> მსუბუქი გამოჩენის ანიმაცია</label>
-                <p className="text-[11px] leading-5 text-slate-400">ანიმაცია მხოლოდ გამოჩენისას სრულდება; მოძრაობის შემცირების სისტემურ პარამეტრს პატივს სცემს. ვადა და უკუთვლის გამოთვლა უცვლელია.</p>
-              </div>
-              <div className="border-t border-slate-700 pt-3">
-                <h4 className="mb-2 text-xs font-bold text-white">პროდუქტის პრემიუმ დიზაინი</h4>
-                {FLASH_PRODUCT_APPEARANCE.map(group=><fieldset key={group.key} className="mb-3 min-w-0 space-y-2">
-                  <legend className="mb-1 text-xs font-semibold text-slate-300">{group.label}</legend>
-                  <div className="grid grid-cols-2 gap-2">
-                    {group.options.map(([id,label])=><button key={id} type="button" aria-pressed={(design[group.key]||'inherit')===id} onClick={()=>commitDesign({...designRef.current,[group.key]:id})} className="min-h-11 min-w-0 rounded-lg border border-slate-600 px-2 py-2 text-xs text-slate-200 break-words aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
-                  </div>
-                </fieldset>)}
-                <p className="text-[11px] leading-5 text-slate-400">სამივე ელემენტის სტილი დამოუკიდებელია. ინდივიდუალურად დაყენებული ფერები და ზომები უპირატესია. ფასები, მარაგი და კალათის მოქმედებები უცვლელია.</p>
-              </div>
-              <div className="border-t border-slate-700 pt-3">
-                <h4 className="mb-2 text-xs font-bold text-white">აქციის ელემენტების დეტალური გაფორმება</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {['flashSale','flashSale.title','flashSale.badge','flashSale.description','flashSale.card','flashSale.image','flashSale.timer','flashSale.discount','flashSale.button'].map(id=>(
-                    <button key={id} type="button" aria-pressed={selectedElement?.id===id} onClick={()=>selectElementFromTree(id)} className="min-h-11 rounded-lg border border-slate-600 px-3 py-2 text-left text-xs font-semibold text-slate-200 aria-pressed:border-emerald-300 aria-pressed:text-emerald-200">{VISUAL_EDITOR_TARGETS[id].label}</button>
-                  ))}
-                </div>
-                <p className="mt-2 text-[11px] leading-5 text-slate-400">აირჩიეთ ელემენტი და გამოიყენეთ პირდაპირი რედაქტორის ფერები, ზომები და მოწყობილობის რეჟიმები. პროდუქტის მონაცემები და ფასდაკლების გამოთვლა უცვლელია.</p>
-              </div>
-              <button type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,'reset'))} className="min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300">ნაგულისხმევი ტექსტების აღდგენა</button>
-              <p className="text-[11px] leading-5 text-slate-400">ტექსტები საერთო ვიზუალურ მონახაზში ინახება. გამოქვეყნების შემდეგ ყველა მოწყობილობაზე გამოჩნდება, როცა აქტიური აქცია არსებობს.</p>
-            </div>
-          </details>
+          {!campaignOnly&&campaignControls}
 
           <details hidden={!isControlGroupVisible('theme')} className="rounded-2xl border border-slate-700 bg-slate-900/90 p-3 sm:p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Palette className="h-4 w-4 text-emerald-300" /> ფერები და თემები</summary>
@@ -1514,14 +1518,14 @@ export default function StorefrontVisualEditor({
           </div>
         </aside>
 
-        <div className="gs-visual-editor-preview-column order-1 min-w-0 2xl:order-2">
+        <div className={`gs-visual-editor-preview-column min-w-0 2xl:order-2 ${campaignOnly?"order-2":"order-1"}`}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-black text-white">ცოცხალი Preview</h3>
               <p className="text-[10px] text-slate-400">{selectionMode ? 'დააჭირეთ ელემენტს სტილის შესაცვლელად. პროდუქტის დეტალები გახსენით არჩევის რეჟიმის გამორთვით, შემდეგ ჩართეთ რეჟიმი და მონიშნეთ დეტალური ფანჯრის ელემენტები.' : 'სექციები და პროდუქტები შეგიძლიათ გადაადგილოთ გადათრევით. პროდუქტის დეტალების გასახსნელად დააჭირეთ პროდუქტს; კალათა და შეკვეთა Preview-ში გამორთულია.'}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {previewMode !== 'desktop' && <button type="button" onClick={clearViewportOverrides} disabled={!hasViewportOverrides} className="rounded-lg border border-amber-300/40 px-2.5 py-2 text-[10px] font-bold text-amber-100 disabled:opacity-40">ამ მოწყობილობის პარამეტრების გასუფთავება</button>}
+              {!campaignOnly&&previewMode !== 'desktop' && <button type="button" onClick={clearViewportOverrides} disabled={!hasViewportOverrides} className="rounded-lg border border-amber-300/40 px-2.5 py-2 text-[10px] font-bold text-amber-100 disabled:opacity-40">ამ მოწყობილობის პარამეტრების გასუფთავება</button>}
               <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
               <button type="button" onClick={() => setPreviewMode('tablet')} aria-pressed={previewMode === 'tablet'} className={previewMode === 'tablet' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Tablet</button>
@@ -1610,7 +1614,7 @@ export default function StorefrontVisualEditor({
             }
           `}</style>
           <div onClickCapture={handlePreviewSelect} onKeyDownCapture={handlePreviewKeyDown} tabIndex={selectionMode ? 0 : undefined} aria-label={selectionMode ? 'საიტის Preview — ელემენტის არჩევა; გამოსასვლელად Escape' : undefined} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : previewMode === 'tablet' ? '820px' : '100%' }}>
-            <Header
+            {!campaignOnly&&<Header
               visualEditorViewport={previewMode}
               siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
               visualDesign={previewDesign}
@@ -1638,14 +1642,16 @@ export default function StorefrontVisualEditor({
               handleInstallClick={NOOP}
               currentLang="ka"
               setCurrLang={NOOP}
-            />
+            />}
             <div className="gs-visual-preview-content">
+              {campaignOnly&&<p className="bg-slate-100 p-3 text-xs text-slate-700">წინასწარი ნახვა აჩვენებს რეალურ აქტიურ აქციას. თუ აქცია არ არის აქტიური, პროდუქტის ბარათები არ გამოჩნდება.</p>}
               <StoreView
+                campaignPreviewOnly={campaignOnly}
                 onOpenTracker={NOOP}
                 onOpenTerms={NOOP}
                 onOpenPrivacy={NOOP}
                 onOpenSupport={NOOP}
-                onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
+                onProductOrderChange={campaignOnly?undefined:productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
                 siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
                 visualEditorViewport={previewMode}
@@ -1662,7 +1668,7 @@ export default function StorefrontVisualEditor({
                 formatPrice={formatPrice || (value => String(Number(value || 0).toLocaleString('ka-GE')) + ' ₾')}
               />
             </div>
-            <StorefrontFooter
+            {!campaignOnly&&<StorefrontFooter
               visualEditorViewport={previewMode}
               onOpenSupport={NOOP}
               siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
@@ -1672,8 +1678,8 @@ export default function StorefrontVisualEditor({
               setIsTermsOpen={NOOP}
               setIsWarrantyOpen={NOOP}
               currentLang="ka"
-            />
-            {previewDesign.signature2026 === true && previewMode === "mobile" && <SignatureMobileNav currentLang="ka" onHome={() => setPreviewCategory("ყველა")} onCategories={NOOP} onWishlist={NOOP} onProfile={NOOP}/>}
+            />}
+            {!campaignOnly&&previewDesign.signature2026 === true && previewMode === "mobile" && <SignatureMobileNav currentLang="ka" onHome={() => setPreviewCategory("ყველა")} onCategories={NOOP} onWishlist={NOOP} onProfile={NOOP}/>}
           </div>
         </div>
       </div>
