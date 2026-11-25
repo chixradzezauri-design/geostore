@@ -114,3 +114,24 @@
 .gs-character-scene .gs-character-effects{contain:layout style}
 .gs-character-scene .gs-character-bubble{overscroll-behavior:contain}
 .gs-character-admin input:focus-visible,.gs-character-admin select:focus-visible,.gs-character-admin textarea:focus-visible{outline:2px solid #34d399;outline-offset:2px}
+
+/* Reserve a lane for the existing AI/support dock instead of increasing mascot z-index.
+   Desktop dock is 218px wide, with an edge inset; narrow viewports use vertical clearance. */
+@media(min-width:768px){
+  .gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){
+    right:calc(258px + env(safe-area-inset-right,0px));
+    max-width:min(350px,calc(100vw - 282px - env(safe-area-inset-right,0px)));
+  }
+}
+@media(max-width:767px){
+  .gs-character-scene:not(.gs-character-preview-scene){
+    bottom:calc(180px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){
+    bottom:calc(92px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+  }
+}
+@media(max-width:767px) and (max-height:480px){
+  .gs-character-scene:not(.gs-character-preview-scene){bottom:calc(170px + env(safe-area-inset-bottom,0px));}
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){bottom:calc(74px + env(safe-area-inset-bottom,0px));}
+}

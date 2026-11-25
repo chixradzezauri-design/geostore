@@ -26,7 +26,13 @@ export async function runCharacterStudioSmoke(browser,host,widths){
       const box=await mascot.boundingBox();
       assert.ok(box.x>=0&&box.x+box.width<=width+1,'Mascot must fit viewport');
       assert.equal(await mascot.evaluate(n=>getComputedStyle(n).pointerEvents),'none');
-      await mascot.locator('button').click();
+      const dismiss=mascot.locator('.gs-character-dismiss');
+      assert.equal(await dismiss.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Mascot dismiss must not be obstructed by the assistance dock');
+      const dockButtons=page.locator('.gs-floating-support .gs-floating-action, .gs-floating-ai .gs-floating-action');
+      for(const button of await dockButtons.all()){
+        if(await button.isVisible())assert.equal(await button.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Assistance buttons remain clickable with mascot visible');
+      }
+      await dismiss.click({timeout:8000});
       await mascot.waitFor({state:'detached'});
       await page.reload({waitUntil:'domcontentloaded'});
       await page.locator('.geostore-storefront').waitFor({state:'visible'});
