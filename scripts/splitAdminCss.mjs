@@ -2,10 +2,22 @@ import postcss from 'postcss';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
+import {gzipSync} from 'node:zlib';
 import {pathToFileURL} from 'node:url';
 // Versioned markers participate in the original Vite content hash. Bump both
 // whenever the partition algorithm changes to avoid immutable-cache collisions.
-const start='.gs-build-admin-css-start-v2',end='.gs-build-admin-css-end-v2';
+const start='.gs-build-admin-css-start-v3',end='.gs-build-admin-css-end-v3';
+// These seven legacy selectors were inspected in adminDashboard.css and
+// their classes in AdminDashboardPro.jsx. Never allow arbitrary admin-* prefixes.
+const auditedCommandSelectors=new Set([
+ '.admin-command-center','.admin-command-hero','.admin-command-kpi',
+ '.admin-command-kpi:focus-visible','.admin-command-panel button:focus-visible',
+ '.admin-command-panel','.admin-command-panel button'
+]);
+function isAdminSelector(selector){
+ const s=selector.trim();
+ return /^\.admin-dashboard-pro\.admin-dashboard-shell(?=$|[\s.#:[>+~])/.test(s)||auditedCommandSelectors.has(s);
+}
 export function splitCompiledCss(css){
  const root=postcss.parse(css),nodes=root.nodes;
  const markers=selector=>nodes.map((node,index)=>node.type==='rule'&&node.selector===selector?index:-1).filter(i=>i!==-1);
@@ -18,7 +30,7 @@ export function splitCompiledCss(css){
  const guard=node=>{
   if(node.type==='comment')return;
   if(node.type==='atrule'&&['media','supports','container'].includes(node.name)&&node.nodes){node.nodes.forEach(guard);return;}
-  if(node.type==='rule'&&postcss.list.comma(node.selector).every(s=>/^\.admin-dashboard-pro\.admin-dashboard-shell(?=$|[\s.#:[>+~])/.test(s.trim()))&&node.nodes.every(n=>n.type==='decl'))return;
+  if(node.type==='rule'&&postcss.list.comma(node.selector).every(isAdminSelector)&&node.nodes.every(n=>n.type==='decl'))return;
   throw Error('Non-admin or unsupported CSS in deferred partition: '+String(node.selector||node.name||node.type).slice(0,120));
  };
  admin.forEach(guard);
@@ -37,7 +49,8 @@ export function splitBuild(root='dist'){
  // sees it already present instead of requesting the former full bundle.
  // The versioned markers ensure the input hash differs from unsplit builds.
  if(!/^index-[A-Za-z0-9_-]+\.css$/.test(original))throw Error('Unexpected initial stylesheet name');
- const parts=splitCompiledCss(readFileSync(join(assetDir,original),'utf8'));
+ const originalCss=readFileSync(join(assetDir,original),'utf8');
+ const parts=splitCompiledCss(originalCss);
  const asset=(prefix,content)=>{
   const name=prefix+'-'+createHash('sha256').update(content).digest('hex').slice(0,20)+'.css';
   return {name,content};
@@ -47,6 +60,12 @@ export function splitBuild(root='dist'){
  html=html.replace(match[0],()=>match[0]+'\n    <meta name="gs-admin-css-slot" content="/assets/'+admin.name+'">\n    '+tag(after.name));
  for(const file of [before,admin,after])writeFileSync(join(assetDir,file.name),file.content);
  writeFileSync(htmlPath,html);
- console.log('ADMIN CSS DEFERRED '+JSON.stringify({bytes:Buffer.byteLength(parts.admin),initialParts:[before.name,after.name],admin:admin.name}));
+ const size=content=>({bytes:Buffer.byteLength(content),gzipBytes:gzipSync(content).length});
+ const originalSize=size(originalCss),beforeSize=size(parts.before),afterSize=size(parts.after);
+ console.log('ADMIN CSS DEFERRED '+JSON.stringify({
+  original:originalSize,
+  initial:{bytes:beforeSize.bytes+afterSize.bytes,gzipBytes:beforeSize.gzipBytes+afterSize.gzipBytes},
+  deferred:size(parts.admin),initialParts:[before.name,after.name],admin:admin.name
+ }));
 }
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url)splitBuild();

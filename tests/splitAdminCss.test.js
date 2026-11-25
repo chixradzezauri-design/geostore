@@ -4,7 +4,7 @@ import {splitCompiledCss,splitBuild} from '../scripts/splitAdminCss.mjs';
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,readdirSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-const start='.gs-build-admin-css-start-v2{--gs-build-admin-css-slot:start-v2}',end='.gs-build-admin-css-end-v2{--gs-build-admin-css-slot:end-v2}';
+const start='.gs-build-admin-css-start-v3{--gs-build-admin-css-slot:start-v3}',end='.gs-build-admin-css-end-v3{--gs-build-admin-css-slot:end-v3}';
 test('split leaves each rule in its original order',()=>{
  const a='.shop{color:red}',b='.admin-dashboard-pro.admin-dashboard-shell button{color:blue}',c='.admin-dashboard-pro.admin-dashboard-shell button{color:green}';
  const parts=splitCompiledCss(a+start+b+end+c);
@@ -51,5 +51,20 @@ test('preserves Vite preload dependency path and cascade slots without modifying
 test('rejects a deceptively similar root and mixed selector after nested commas',()=>{
  for(const rule of ['.admin-dashboard-pro.admin-dashboard-shell-other{color:red}', '.admin-dashboard-pro.admin-dashboard-shell :is(button,input),.shop{color:red}']){
   assert.throws(()=>splitCompiledCss('.x{color:red}'+start+rule+end+'.y{color:red}'),/Non-admin/);
+ }
+});
+
+test('actual four admin source files satisfy the exact selector safety contract',()=>{
+ const sources=['adminDashboard.css','adminDashboardSections.css','adminDashboardModals.css','adminDashboardPolish.css'].map(file=>readFileSync(new URL('../src/'+file,import.meta.url),'utf8'));
+ const admin=sources.join('\n');
+ const result=splitCompiledCss('.shop{color:red}'+start+admin+end+'.shop{color:blue}');
+ assert.ok(result.admin.includes('.admin-command-center'));
+ assert.ok(result.admin.includes('.admin-dashboard-pro.admin-dashboard-shell'));
+});
+test('only audited command center selectors are accepted outside the admin root',()=>{
+ const approved='.admin-command-center{display:grid}.admin-command-kpi:focus-visible,.admin-command-panel button:focus-visible{outline:2px solid}';
+ assert.equal(splitCompiledCss('.shop{color:red}'+start+approved+end+'.shop{color:blue}').admin,approved);
+ for(const selector of ['.admin-command-center-other','.admin-command-center + .shop','.admin-command-kpi,.shop','.admin-unknown']){
+  assert.throws(()=>splitCompiledCss('.x{color:red}'+start+selector+'{color:red}'+end+'.y{color:red}'),/Non-admin/);
  }
 });
