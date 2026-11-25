@@ -133,6 +133,8 @@ on:
       - 'tests/sql/phase4_admin_mfa_eligibility_contract.sql'
       - 'release/phase4-system-error-history-draft.sql'
       - 'tests/sql/phase4_system_error_history_contract.sql'
+      - 'release/phase4-system-error-budget-draft.sql'
+      - 'tests/sql/phase4_system_error_budget_contract.sql'
       - '.github/workflows/stage52-isolated-postgres.yml'
   workflow_dispatch:
 
@@ -244,3 +246,5 @@ jobs:
           PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_admin_mfa_eligibility_contract.sql
 
           PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_system_error_history_contract.sql
+
+          PGDATABASE=phase4_admin_mfa psql -v ON_ERROR_STOP=1 -f tests/sql/phase4_system_error_budget_contract.sql
