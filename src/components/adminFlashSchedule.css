@@ -27,3 +27,5 @@
 .gs-admin-flash-history-filters :is(input,select):focus-visible{outline:2px solid #34d399;outline-offset:2px}
 @media(max-width:640px){.gs-admin-flash-history-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:380px){.gs-admin-flash-history-filters{grid-template-columns:1fr}}
+
+.gs-admin-flash-edit{display:grid;gap:10px;padding:12px;border:1px solid #64748b88;border-radius:12px;min-width:0}.gs-admin-flash-edit h5{font-size:14px;font-weight:750;margin:0}.gs-admin-flash-edit-actions{display:flex;flex-wrap:wrap;gap:6px;min-width:0}.gs-admin-flash-edit-actions button{font-size:11px;padding:6px 9px}

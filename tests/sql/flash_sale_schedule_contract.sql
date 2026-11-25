@@ -104,3 +104,22 @@ DO $$ BEGIN
  IF EXISTS(SELECT 1 FROM private.flash_sale_schedule WHERE category='schedule-bags' AND (status<>'started' OR updated_count<>1)) THEN RAISE EXCEPTION 'outcome incorrect'; END IF;
  IF private.run_due_flash_sale_schedule()<>0 THEN RAISE EXCEPTION 'duplicate activation'; END IF;
 END $$;
+
+-- Editing never changes product prices or expands scope; stale edits fail.
+INSERT INTO public.products(id,category,price_gel,variants) VALUES('edit-a','edit-category',100,'[]');
+SET ROLE authenticated;
+DO $$ DECLARE r jsonb; v_id uuid; BEGIN
+ r:=public.admin_schedule_selected_flash_sale('edit-category',20,1,now()+interval '2 hours',ARRAY['edit-a']);
+ v_id:=(r->>'id')::uuid;
+ r:=public.admin_edit_flash_sale_schedule(v_id,0,30,3,now()+interval '5 hours');
+ IF r->>'revision'<>'1' OR r->>'discount_percent'<>'30.00' OR r->'product_ids'<>'["edit-a"]'::jsonb THEN RAISE EXCEPTION 'edit scope wrong'; END IF;
+ BEGIN PERFORM public.admin_edit_flash_sale_schedule(v_id,0,10,1,now()+interval '6 hours'); RAISE EXCEPTION 'stale edit accepted'; EXCEPTION WHEN serialization_failure THEN NULL; END;
+ PERFORM public.admin_schedule_selected_flash_sale('edit-category',10,1,now()+interval '10 hours',ARRAY['edit-a']);
+ BEGIN PERFORM public.admin_edit_flash_sale_schedule(v_id,1,20,1,now()+interval '10 hours'); RAISE EXCEPTION 'overlap edit accepted'; EXCEPTION WHEN unique_violation THEN NULL; END;
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(public.admin_list_flash_sale_schedule()) x WHERE x->>'id'=v_id::text AND x->>'revision'='1') THEN RAISE EXCEPTION 'edit rollback wrong'; END IF;
+END $$;
+RESET ROLE;
+DO $$ BEGIN
+ IF (SELECT price_gel FROM public.products WHERE id='edit-a')<>100 THEN RAISE EXCEPTION 'edit changed price'; END IF;
+ IF has_function_privilege('anon','public.admin_edit_flash_sale_schedule(uuid,integer,numeric,integer,timestamptz)','EXECUTE') THEN RAISE EXCEPTION 'anon edit allowed'; END IF;
+END $$;

@@ -18,7 +18,7 @@ export function validateFlashScheduleRows(data){
    !['pending','started','cancelled','skipped'].includes(row.status)||!Number.isFinite(Date.parse(row.starts_at))||
    !(Date.parse(row.ends_at)>Date.parse(row.starts_at))||!Number.isFinite(Number(row.discount_percent))||
    !(Number(row.discount_percent)>0&&Number(row.discount_percent)<100)||
-   !Number.isInteger(row.updated_count)||row.updated_count<0||
+   !Number.isInteger(row.updated_count)||row.updated_count<0||(row.revision!=null&&(!Number.isInteger(row.revision)||row.revision<0))||
    (row.product_ids!=null&&(!validSelection(row.product_ids)||row.updated_count>row.product_ids.length)))throw Error('აქციის ჩანაწერი არასწორია.');
   ids.add(row.id);
  }
@@ -48,4 +48,19 @@ export function filterFlashSchedule(rows,filter='all',query='',now=Date.now()){
   const status=row.status==='started'?(Date.parse(row.ends_at)<=now?'ended':'active'):row.status;
   return (filter==='all'||filter===status)&&(needle===''||row.category.toLocaleLowerCase('ka-GE').includes(needle));
  });
+}
+
+export function makeFlashScheduleDraft(row,mode,now=Date.now()){
+ if(!row||!['edit','copy'].includes(mode)|| (mode==='edit'&&(row.status!=='pending'||Date.parse(row.starts_at)<=now||!Number.isInteger(row.revision))))return null;
+ const duration=(Date.parse(row.ends_at)-Date.parse(row.starts_at))/3600000;
+ if(![1,3,6,12,24,48].includes(duration))return null;
+ return {mode,id:row.id,revision:row.revision,form:{category:row.category,discountPercent:String(row.discount_percent),durationHours:String(duration),selectedIds:row.product_ids?[...row.product_ids]:null},plannedStart:mode==='edit'?new Date(Date.parse(row.starts_at)+4*3600000).toISOString().slice(0,16):''};
+}
+export function buildFlashScheduleDraftRequest(draft,now,products){
+ if(!draft)return null;
+ const payload=buildFlashScheduleRequest(draft.form,draft.plannedStart,now,products);
+ if(!payload)return null;
+ if(draft.mode==='copy')return {rpc:payload.p_product_ids?'admin_schedule_selected_flash_sale':'admin_schedule_flash_sale',payload};
+ if(draft.mode!=='edit'||!draft.id||!Number.isInteger(draft.revision)||draft.revision<0)return null;
+ return {rpc:'admin_edit_flash_sale_schedule',payload:{p_id:draft.id,p_revision:draft.revision,p_discount_percent:payload.p_discount_percent,p_duration_hours:payload.p_duration_hours,p_starts_at:payload.p_starts_at}};
 }

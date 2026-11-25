@@ -38,3 +38,16 @@ test('selected schedules require eligible explicit IDs and preserve category pay
  for(const ids of [[],['a','a'],['b'],['c'],['missing']])assert.equal(buildFlashScheduleRequest({...form,selectedIds:ids},time,now,products),null);
  assert.equal('p_product_ids' in buildFlashScheduleRequest(form,time,now,products),false);
 });
+
+test('edit and copy drafts preserve scope; copy always requires a new explicit date',async()=>{
+ const {makeFlashScheduleDraft,buildFlashScheduleDraftRequest}=await import('../src/utils/adminFlashSchedule.js');
+ const row={id:'x',revision:2,status:'pending',category:'bags',discount_percent:20,starts_at:'2026-11-25T13:00Z',ends_at:'2026-11-25T16:00Z',product_ids:['a']};
+ const products=[{id:'a',category:'bags',priceGEL:100}];
+ const edit=makeFlashScheduleDraft(row,'edit',now);
+ assert.deepEqual(buildFlashScheduleDraftRequest(edit,now,products),{rpc:'admin_edit_flash_sale_schedule',payload:{p_id:'x',p_revision:2,p_discount_percent:20,p_duration_hours:3,p_starts_at:'2026-11-25T13:00:00.000Z'}});
+ assert.equal(makeFlashScheduleDraft({...row,status:'started'},'edit',now),null);
+ const copy=makeFlashScheduleDraft(row,'copy',now);
+ assert.equal(copy.plannedStart,'');
+ assert.equal(buildFlashScheduleDraftRequest(copy,now,products),null);
+ assert.deepEqual(buildFlashScheduleDraftRequest({...copy,plannedStart:'2026-11-26T17:00'},now,products).payload.p_product_ids,['a']);
+});
