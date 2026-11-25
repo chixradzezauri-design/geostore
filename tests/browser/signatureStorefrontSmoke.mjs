@@ -125,6 +125,15 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await page.locator('.gs-product-dialog').waitFor({state:'detached'});
    await page.locator('.gs-signature-actions button').last().click();
    await page.locator('.gs-cart-item').filter({hasText:'Stage46 Everyday Wallet'}).waitFor({state:'visible'});
+   const cartItem=page.locator('.gs-cart-item').filter({hasText:'Stage46 Everyday Wallet'});
+   assert.ok(await cartItem.evaluate(el=>{
+     const outer=el.getBoundingClientRect();
+     return [...el.querySelectorAll('.gs-cart-quantity-controls button,.gs-cart-remove')].every(button=>{
+       const r=button.getBoundingClientRect();
+       return r.width>=43 && r.height>=43 && r.left>=outer.left-1 && r.right<=outer.right+1;
+     });
+   }),'Cart action targets remain contained at '+width);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Cart does not overflow at '+width);
    assert.deepEqual(writes,[],'No live or attempted write in isolated guest scenario');
    assert.deepEqual(errors,[],'No browser exceptions in active Signature layout');
    console.log('PASS active Signature storefront '+width+'px');

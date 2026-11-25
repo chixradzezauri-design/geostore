@@ -1540,3 +1540,78 @@
 .gs-visual-preview-frame--mobile.geostore-fashion-store .gs-site-header:where(.gs-signature-header) .gs-main-menu {
   left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important;
 }
+
+
+/* Signature video follow-up 08 — compact account, wishlist and cart surfaces.
+   Layout only; authenticated data, synchronization and purchasing remain unchanged. */
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-page,.gs-wishlist-page,.gs-profile-page) {
+  min-inline-size: 0;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-title,.gs-wishlist-title) {
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-title,.gs-wishlist-title) > svg {
+  color: var(--gs-accent-dark,#302720) !important;
+  flex-shrink: 0;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-empty {
+  padding: clamp(24px,5vw,48px) 16px !important;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-item-media {
+  max-width: 100%;
+  aspect-ratio: 1;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-layout .gs-cart-item .gs-cart-quantity-controls button {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  flex: 0 0 44px;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-totals > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-totals > div > :last-child {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-card--actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-main {
+  width: 100%;
+  min-width: 0;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-image { flex-shrink: 0; }
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 44px !important;
+  align-items: stretch;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions .gs-wishlist-add {
+  min-width: 0;
+  padding-inline: 8px !important;
+  overflow-wrap: break-word;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-wishlist-actions .gs-wishlist-remove { padding-inline: 0 !important; }
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-identity > div {
+  box-sizing: border-box;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-order-summary {
+  align-items: center;
+  gap: 8px;
+}
+.geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-security :is(button,a):focus-visible {
+  outline: 2px solid var(--gs-accent-dark,#302720);
+  outline-offset: 2px;
+}
+@media (max-width:640px) {
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) :is(.gs-cart-page,.gs-wishlist-page,.gs-profile-page) > * + * { margin-top: 14px !important; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-item-media { width: 100% !important; height: auto !important; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-cart-summary { min-width: 0; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-video-profile-identity { grid-template-columns: minmax(0,1fr) !important; }
+  .geostore-shell.geostore-fashion-store:where([data-signature-commerce="true"]) .gs-profile-card > .gs-video-profile-identity > div { min-height: 0 !important; padding: 10px 12px !important; }
+}
