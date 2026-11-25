@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { EMPTY_ADMIN_ACCESS, hasAdminPermission, hasAnyAdminAccess } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
+import { optimizeProductImage, readImageDataUrl } from '../utils/optimizeProductImage.js';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
 import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
@@ -1907,6 +1908,10 @@ export default function AdminDashboardPro({
   const [stockDrafts, setStockDrafts] = useState({});
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [productImagesBusy,setProductImagesBusy]=useState(false);
+  const productImageBatchRef=useRef(null);
+  const invalidateProductImageBatch=()=>{productImageBatchRef.current=null;setProductImagesBusy(false);};
+  useEffect(()=>()=>{productImageBatchRef.current=null;},[]);
   const [productVariants, setProductVariants] = useState([]);
   const [initialCustomVariantStock, setInitialCustomVariantStock] = useState([]);
   const [sizeColorStock, setSizeColorStock] = useState(() => buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
@@ -3239,6 +3244,8 @@ export default function AdminDashboardPro({
     try {
       await validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES);
       if (!isCurrent()) return;
+      const optimized=await optimizeProductImage(file);
+      if (!isCurrent()) return;
       const reader = new FileReader();
       reader.onload = () => {
         if (!isCurrent()) return;
@@ -3257,7 +3264,7 @@ export default function AdminDashboardPro({
         alert('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
         input.value = '';
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(optimized);
     } catch (error) {
       if (!isCurrent()) return;
       alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
@@ -3507,7 +3514,7 @@ export default function AdminDashboardPro({
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
-    if (files.length === 0) return;
+    if (files.length === 0 || productImageBatchRef.current) return;
 
     const currentCount = (selectedImages || []).length;
     if (currentCount + files.length > MAX_PRODUCT_GALLERY_IMAGES) {
@@ -3515,22 +3522,32 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const batch={};
+    productImageBatchRef.current=batch;
+    setProductImagesBusy(true);
+    const isCurrent=()=>productImageBatchRef.current===batch;
     try {
       await Promise.all(files.map(file => validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES)));
-      const promises = files.map(file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('ფოტოს წაკითხვა ვერ მოხერხდა.'));
-        reader.readAsDataURL(file);
-      }));
-      const base64Images = await Promise.all(promises);
-      setSelectedImages(prev => [...(prev || []), ...base64Images]);
+      const base64Images=[];
+      for(const file of files){
+        if(!isCurrent())return;
+        const optimized=await optimizeProductImage(file);
+        if(!isCurrent())return;
+        const result=await readImageDataUrl(optimized);
+        if(!isCurrent())return;
+        if(!isValidImageDataUrl(result,MAX_PRODUCT_IMAGE_BYTES))throw Error('ფოტოს შიგთავსის შემოწმება ვერ მოხერხდა.');
+        base64Images.push(result);
+      }
+      if(isCurrent())setSelectedImages(prev => [...(prev || []), ...base64Images].slice(0,MAX_PRODUCT_GALLERY_IMAGES));
     } catch (error) {
-      alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.');
+      if(isCurrent())alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.');
+    }finally{
+      if(isCurrent()){productImageBatchRef.current=null;setProductImagesBusy(false);}
     }
   };
 
   const handleEditProduct = (p) => {
+    invalidateProductImageBatch();
     const savedSizes = Array.isArray(p.availableSizes)
       ? p.availableSizes
       : Array.isArray(p.available_sizes) ? p.available_sizes : [];
@@ -3572,6 +3589,7 @@ export default function AdminDashboardPro({
   };
 
   const resetProductEditor = () => {
+    invalidateProductImageBatch();
     setEditingProductId(null);
     setProductForm(productFormInitial);
     setProductOptionDrafts({
@@ -3587,6 +3605,7 @@ export default function AdminDashboardPro({
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
+    if(productImageBatchRef.current)return alert('დაელოდეთ ფოტოების დამუშავების დასრულებას.');
     const productName = String(productForm.name || '').trim();
     if (!productName || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
     if (productName.length > 160) return alert('პროდუქტის სახელი მაქსიმუმ 160 სიმბოლოს უნდა შეიცავდეს.');
@@ -7092,9 +7111,10 @@ export default function AdminDashboardPro({
                   <label htmlFor="admin-workspace-product-gallery" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
-                  <input id="admin-workspace-product-gallery" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
+                  <input id="admin-workspace-product-gallery" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" disabled={productImagesBusy} onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
                   
                   <p className="admin-workspace-gallery-help text-slate-400 text-xs">{selectedImages.length} / {MAX_PRODUCT_GALLERY_IMAGES} ფოტო · თითოეული მაქსიმუმ 5 MB. პირველი ფოტო მთავარია.</p>
+                  {productImagesBusy&&<p role="status" aria-live="polite" className="text-xs text-slate-300">ფოტოები მუშავდება…</p>}
                   {selectedImages.length > 0 && (
                     <div className="admin-workspace-gallery-grid">
                       {selectedImages.map((img, idx) => (
@@ -7110,7 +7130,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 {editingProductId && <button type="button" onClick={resetProductEditor} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold p-3 rounded-2xl">რედაქტირების გაუქმება</button>}
-                <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
+                <button type="submit" disabled={productImagesBusy} className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
                   {editingProductId ? 'ცვლილებების შენახვა' : 'პროდუქტის შენახვა'}
                 </button>
               </form>

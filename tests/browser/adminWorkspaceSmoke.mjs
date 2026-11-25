@@ -116,6 +116,35 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         }
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
+        if(tab==='products'){
+          const gallery=shell.locator('#admin-workspace-product-gallery');
+          // Deterministic large JPEG, locally generated; no actual Storage writes.
+          const bytes=await page.evaluate(async()=>{
+            const canvas=document.createElement('canvas');canvas.width=2400;canvas.height=1600;
+            const ctx=canvas.getContext('2d'),data=ctx.createImageData(canvas.width,canvas.height);
+            let state=123456;
+            for(let i=0;i<data.data.length;i+=4){
+              state=(Math.imul(state,1664525)+1013904223)>>>0;
+              const v=(state>>>24)&255;
+              data.data[i]=v;data.data[i+1]=v;data.data[i+2]=v;data.data[i+3]=255;
+            }
+            ctx.putImageData(data,0,0);
+            const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.92));
+            return Array.from(new Uint8Array(await blob.arrayBuffer()));
+          });
+          assert.ok(bytes.length>128*1024&&bytes.length<=5*1024*1024);
+          await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:Buffer.from(bytes)});
+          const thumbnail=shell.locator('.admin-product-gallery-thumbnail img').first();
+          await thumbnail.waitFor({state:'visible',timeout:20000});
+          assert.match(await thumbnail.getAttribute('src'),/^data:image\/webp;base64,/);
+          await page.waitForFunction(()=>document.querySelector('.admin-product-gallery-thumbnail img')?.naturalWidth===2048);
+          await shell.getByRole('button',{name:'ფოტო 1 — წაშლა',exact:true}).click();
+          const gif=Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7','base64');
+          await gallery.setInputFiles({name:'fixture.gif',mimeType:'image/gif',buffer:gif});
+          await thumbnail.waitFor({state:'visible'});
+          assert.equal(await thumbnail.getAttribute('src'),'data:image/gif;base64,'+gif.toString('base64'));
+          await shell.getByRole('button',{name:'ფოტო 1 — წაშლა',exact:true}).click();
+        }
         if (tab === 'settings') {
           const fee = page.locator('#admin-workspace-delivery-tbilisi');
           const before = await fee.inputValue();
