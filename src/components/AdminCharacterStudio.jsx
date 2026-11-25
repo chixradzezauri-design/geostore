@@ -98,6 +98,12 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-100"><label><input type="checkbox" checked={s.mobile} disabled={busy} onChange={e=>update({mobile:e.target.checked})}/> ტელეფონი</label><label><input type="checkbox" checked={s.desktop} disabled={busy} onChange={e=>update({desktop:e.target.checked})}/> კომპიუტერი</label></div>
       </div>
     </details>
+    <details className="gs-character-admin-section" data-character-sale-settings>
+      <summary>Deal Hunter — აქციების დამხმარე</summary>
+      <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.saleGuide} disabled={busy} onChange={e=>update({saleGuide:e.target.checked})}/> მოქმედი აქციების შეთავაზება</label>
+      <label className="block text-xs text-slate-300">აქციების გამოჩენა<select aria-label="აქციების გამოჩენა" className={field} value={s.saleGuidePriority} disabled={busy} onChange={e=>update({saleGuidePriority:e.target.value})}><option value="alternate">სხვა რჩევებთან მონაცვლეობით</option><option value="always">მოქმედ აქციას უპირატესობა</option><option value="deal-only">მხოლოდ Deal Hunter-ის გამოჩენისას</option></select></label>
+      <p className="text-xs text-slate-300">აჩვენებს მხოლოდ გადამოწმებულ, მარაგში არსებულ მოქმედ აქციას და ფასთა ნამდვილ სხვაობას. ვადის გასვლისთანავე შეთავაზება ქრება. ვარიანტიანი პროდუქტები, რომელთა ფასებიც შეიძლება განსხვავდებოდეს, არ გამოიყენება ამ ფასის მინიშნებაში.</p>
+    </details>
     <details className="gs-character-admin-section" data-character-advice-settings>
       <summary>რჩევები და საჩუქრების იდეები</summary>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.advice.enabled} disabled={busy} onChange={e=>update({advice:{...s.advice,enabled:e.target.checked}})}/> რჩევების ჩართვა</label>

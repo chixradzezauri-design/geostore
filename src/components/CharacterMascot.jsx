@@ -2,7 +2,7 @@ import React,{useEffect,useRef,useState} from 'react';
 import {CHARACTER_SESSION_KEY,characterMessage,normalizeCharacterSettings,selectCharacter,resolveCharacterSeason,characterAppearanceStyle,styledCharacter,characterInteractionCopy,activeCharacterEvent,applyCharacterEvent,characterSettingsRevision,characterRevisionSeen,CHARACTER_REPEAT_KEY,characterRepeatRecord,characterRepeatDelay,nextConciergeCharacter,conciergePlacement,chooseConciergeTarget,CHARACTER_GUIDE_TARGETS} from '../utils/characterStudio.js';
 import './characterStudio.css';
 import {chooseConciergeAdvice,CONCIERGE_ADVICE_LABEL} from '../utils/characterAdvice.js';
-import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY} from '../utils/characterRecommendations.js';
+import {conciergeProducts,chooseConciergeProduct,CONCIERGE_PRODUCT_COPY,conciergeSaleProducts,chooseConciergeSale,CONCIERGE_SALE_COPY} from '../utils/characterRecommendations.js';
 import {MASCOT_3D_IDS} from '../utils/mascot3DModels.js';
 const FlagshipFox3D=React.lazy(()=>import('./FlagshipFox3D.jsx'));
 class Mascot3DBoundary extends React.Component{
@@ -138,6 +138,8 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
   const target=Object.hasOwn(CHARACTER_GUIDE_TARGETS,guideTarget)?CHARACTER_GUIDE_TARGETS[guideTarget]:null;
   const location=conciergePlacement(settings,0);
   const productCopy=CONCIERGE_PRODUCT_COPY[lang]||CONCIERGE_PRODUCT_COPY.ka;
+  const saleCopy=CONCIERGE_SALE_COPY[lang]||CONCIERGE_SALE_COPY.ka;
+  const money=value=>new Intl.NumberFormat(lang==='ka'?'ka-GE':lang==='ru'?'ru-RU':'en-US',{maximumFractionDigits:2}).format(value)+' ₾';
   const interactive=settings.waveBack&&settings.behavior!=='still';
   const artCharacter=styledCharacter(character,settings);
   const artEmotion=waved?'happy':settings.emotion;
@@ -148,7 +150,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,onClo
     <div className="gs-character-bubble">
       <strong>{character.name}</strong>{!waved&&advice&&<small className="gs-character-advice-label">{CONCIERGE_ADVICE_LABEL[lang]||CONCIERGE_ADVICE_LABEL.ka}</small>}<span aria-live={interactive?'polite':undefined} data-character-advice={waved?undefined:advice?.topic}>{waved?wave.reply:advice?.text||characterMessage(settings,character,lang,variant,greetingDate)}</span>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>setWaved(true)}>{wave.button} {wave.emoji}</button>}
-      {!preview&&recommendation&&onRecommend&&<div className="gs-character-recommendation"><span>{productCopy.intro}</span><strong>{recommendation.name}</strong><button type="button" className="gs-character-guide-action" data-character-product={recommendation.id} onClick={onRecommend}>{productCopy.action} <span aria-hidden="true">↗</span></button></div>}
+      {!preview&&recommendation&&onRecommend&&<div className="gs-character-recommendation" data-character-sale={recommendation.sale?'true':undefined}><span>{recommendation.sale?saleCopy.intro:productCopy.intro}</span><strong>{recommendation.name}</strong>{recommendation.sale&&<div className="gs-character-sale-prices"><b>{money(recommendation.price)}</b><del>{money(recommendation.oldPrice)}</del><small>{saleCopy.saving}: {money(recommendation.savings)}</small></div>}<button type="button" className="gs-character-guide-action" data-character-product={recommendation.id} onClick={onRecommend}>{recommendation.sale?saleCopy.action:productCopy.action} <span aria-hidden="true">↗</span></button></div>}
       {!preview&&!recommendation&&target&&onGuide&&<button type="button" className="gs-character-guide-action" data-character-guide={guideTarget} onClick={onGuide}><span aria-hidden="true">↗</span>{target.copy[lang]||target.copy.ka}</button>}
       {!preview&&onMute&&<button type="button" className="gs-character-mute" onClick={onMute}>{lang==='en'?'Hide for this visit':lang==='ru'?'Скрыть на этот визит':'ამ ვიზიტზე დამალვა'}</button>}
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
@@ -173,6 +175,7 @@ export function CharacterReaction({scenario,lang='ka'}){
 export default function CharacterMascot({settings,lang,forceReplay=null,products=[],catalogueReady=false,category='',onOpenProduct}){
   const s=normalizeCharacterSettings(settings);
   const [presentation,setPresentation]=useState(null);
+  const [saleClock,setSaleClock]=useState(()=>Date.now());
   const dismissRef=useRef(null);
   const catalogueRef=useRef(null);
   catalogueRef.current={products,ready:catalogueReady,category,onOpenProduct};
@@ -216,17 +219,21 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
       const now=new Date();
       const event=activeCharacterEvent(current,now);
       const effective=applyCharacterEvent(current,event,lang);
-      const character=repeat?nextConciergeCharacter(effective,record,now):selectCharacter(effective,now);
+      let character=repeat?nextConciergeCharacter(effective,record,now):selectCharacter(effective,now);
+      const catalogue=catalogueRef.current;
+      const saleEligible=effective.saleGuide&&typeof catalogue.onOpenProduct==='function'&&(effective.saleGuidePriority==='always'||character.id==='deal'||(effective.saleGuidePriority==='alternate'&&repeat&&record.count%2===1));
+      const sale=saleEligible?chooseConciergeSale(catalogue.products,{ready:catalogue.ready,now:now.getTime(),index:record.count,excludeId:lastRecommendedId.current}):null;
+      if(sale&&!event)character=selectCharacter({...effective,rotation:'fixed',character:'deal'},now);
       if(repeat){
         if(!wasForced||(!record.muted&&record.count<current.repeatLimit))saveRepeat({...record,count:Math.min(8,record.count+1),at:now.getTime(),lastId:character.id});
       }else markSeen(current.frequency,revision);
       const placement=conciergePlacement(effective,repeat?record.count:0);
       const guideTarget=effective.guideLinks?chooseConciergeTarget(Object.keys(CHARACTER_GUIDE_TARGETS).filter(key=>visibleGuideTarget(key)),repeat?record.count:0):null;
-      const catalogue=catalogueRef.current;
-      const recommendation=effective.recommendProducts&&typeof catalogue.onOpenProduct==='function'?chooseConciergeProduct(catalogue.products,{ready:catalogue.ready,mode:effective.recommendationMode,category:catalogue.category,index:repeat?record.count:0,excludeId:lastRecommendedId.current}):null;
+      const recommendation=sale||(effective.recommendProducts&&typeof catalogue.onOpenProduct==='function'?chooseConciergeProduct(catalogue.products,{ready:catalogue.ready,mode:effective.recommendationMode,category:catalogue.category,index:repeat?record.count:0,excludeId:lastRecommendedId.current}):null);
       if(recommendation)lastRecommendedId.current=recommendation.id;
       const advice=!event&&(!repeat||record.count>0)?chooseConciergeAdvice(effective.advice,{characterId:character.id,target:guideTarget,index:record.count,lang,hasProduct:!!recommendation}):null;
-      setPresentation({character,settings:{...effective,...placement},guideTarget,recommendationId:recommendation?.id,advice,key:now.getTime()});
+      setPresentation({character,settings:{...effective,...placement},guideTarget,recommendationId:recommendation?.id,sale:!!sale,advice,key:now.getTime()});
+      setSaleClock(now.getTime());
       closeTimer=setTimeout(()=>close(false),current.duration*1000);
     }
     schedule();
@@ -234,6 +241,11 @@ export default function CharacterMascot({settings,lang,forceReplay=null,products
     document.addEventListener('visibilitychange',visibility);
     return()=>{disposed=true;clear();dismissRef.current=null;document.removeEventListener('visibilitychange',visibility);};
   },[settingsKey,lang,forceReplay]);
-  const recommendation=presentation?.recommendationId?conciergeProducts(products,catalogueReady).find(p=>p.id===presentation.recommendationId)||null:null;
-  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} advice={presentation.advice} recommendation={recommendation} onRecommend={()=>{const current=catalogueRef.current;const product=conciergeProducts(current.products,current.ready).find(p=>p.id===presentation.recommendationId);if(product&&current.onOpenProduct?.(product.path))dismissRef.current?.(false);}} guideTarget={presentation.guideTarget} onGuide={()=>{if(guideToSection(presentation.guideTarget))dismissRef.current?.(false);}} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
+  const recommendation=presentation?.recommendationId?(presentation.sale?conciergeSaleProducts(products,catalogueReady,saleClock):conciergeProducts(products,catalogueReady)).find(p=>p.id===presentation.recommendationId)||null:null;
+  useEffect(()=>{
+    if(!recommendation?.sale)return;
+    const timer=setTimeout(()=>setSaleClock(Date.now()),Math.max(0,recommendation.endsAt-Date.now()+1));
+    return()=>clearTimeout(timer);
+  },[recommendation?.sale,recommendation?.endsAt]);
+  return presentation?<CharacterScene key={presentation.key} character={presentation.character} settings={presentation.settings} lang={lang} advice={presentation.advice} recommendation={recommendation} onRecommend={()=>{const current=catalogueRef.current;const product=(presentation.sale?conciergeSaleProducts(current.products,current.ready,Date.now()):conciergeProducts(current.products,current.ready)).find(p=>p.id===presentation.recommendationId);if(product&&current.onOpenProduct?.(product.path))dismissRef.current?.(false);}} guideTarget={presentation.guideTarget} onGuide={()=>{if(guideToSection(presentation.guideTarget))dismissRef.current?.(false);}} onClose={()=>dismissRef.current?.(false)} onMute={s.frequency==='repeat'?()=>dismissRef.current?.(true):undefined}/>:null;
 }
