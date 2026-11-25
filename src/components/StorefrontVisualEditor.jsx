@@ -1,4 +1,5 @@
 import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
+import { FLASH_CAMPAIGN_COPY_PRESETS, applyFlashCampaignCopyPreset } from '../utils/flashCampaignCopy.js';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -219,6 +220,7 @@ const formatSnapshotDiffValue = value => {
 const STOREFRONT_EDITOR_GROUP_SEARCH = Object.freeze({
   headings: 'ტექსტები სათაურები მაღაზიის სახელი მთავარი ზედა hero content text',
   labels: 'სექციების წარწერები ღილაკები flash sale კატეგორიები labels buttons',
+  campaigns: 'აქციები აქციის სახელი შავი პარასკევი საახალწლო სეზონური ფასდაკლება flash sale campaign black friday',
   theme: 'ფერები თემები დიზაინი ფონი აქცენტი color palette theme',
   layout: 'განლაგება ზომები დაშორება შრიფტი typography layout spacing',
   image: 'მთავარი ფოტო სურათი ატვირთვა image hero upload',
@@ -1219,6 +1221,30 @@ export default function StorefrontVisualEditor({
                   <input value={design.copy[key]} maxLength={maxLength} onChange={event => updateGroup('copy', key, event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white" />
                 </label>
               ))}
+            </div>
+          </details>
+
+          <details data-gs-campaign-controls="true" hidden={!isControlGroupVisible('campaigns')} className="rounded-2xl border border-amber-400/30 bg-slate-900/90 p-3 sm:p-4">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><span aria-hidden="true">⚡</span> აქციების სახელები და ტექსტები</summary>
+            <div className="mt-3 space-y-3">
+              <p className="text-xs leading-5 text-slate-400">აირჩიეთ მზა სახელწოდება ან შექმენით საკუთარი. აქ იცვლება მხოლოდ სარეკლამო ტექსტი, არა პროდუქტის ფასი, ფასდაკლება ან ვადა.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {FLASH_CAMPAIGN_COPY_PRESETS.map(preset => (
+                  <button key={preset.id} type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,preset.id))} className="min-h-11 rounded-xl border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-left text-xs font-semibold text-amber-100 hover:bg-amber-400/15">{preset.label}</button>
+                ))}
+              </div>
+              {[
+                ['flashSaleTitle','აქციის სახელი',60,'მაგ. შავი პარასკევი'],
+                ['flashSaleBadge','მცირე წარწერა',60,'მაგ. BLACK FRIDAY'],
+                ['flashSaleSubtitle','აქციის აღწერა',120,'მოკლე აღწერა']
+              ].map(([key,label,maxLength,placeholder])=>(
+                <label key={key} className="block space-y-1 text-xs font-semibold text-slate-300">{label}
+                  <input value={design.copy[key]} maxLength={maxLength} placeholder={placeholder} onChange={event=>updateGroup('copy',key,event.target.value)} className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                  <span className="block text-right text-[10px] font-normal text-slate-400">{design.copy[key].length}/{maxLength}</span>
+                </label>
+              ))}
+              <button type="button" onClick={()=>commitDesign(applyFlashCampaignCopyPreset(designRef.current,'reset'))} className="min-h-11 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300">ნაგულისხმევი ტექსტების აღდგენა</button>
+              <p className="text-[11px] leading-5 text-slate-400">ტექსტები საერთო ვიზუალურ მონახაზში ინახება. გამოქვეყნების შემდეგ ყველა მოწყობილობაზე გამოჩნდება, როცა აქტიური აქცია არსებობს.</p>
             </div>
           </details>
 
