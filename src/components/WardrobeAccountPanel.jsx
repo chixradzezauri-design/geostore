@@ -14,11 +14,11 @@ export default function WardrobeAccountPanel({client,getScope,ownerId,lang='ka'}
  const [snapshot,setSnapshot]=useState(null),[status,setStatus]=useState(null),[busy,setBusy]=useState(false),[photo,setPhoto]=useState(null);
  const [writing,setWriting]=useState(false),[confirm,setConfirm]=useState(null),[removed,setRemoved]=useState(null);
  const del={ka:['ნივთის წაშლა','ანგარიშიდან წაშლის დადასტურება','გაუქმება','ნივთი წაიშალა. ფოტოს ფიზიკური წაშლა მოლოდინშია.','ნივთი წაიშალა.'],en:['Remove item','Confirm removal from account','Cancel','Item removed. Physical photo deletion is pending.','Item removed.'],ru:['Удалить вещь','Подтвердить удаление из аккаунта','Отмена','Вещь удалена. Физическое удаление фото ожидается.','Вещь удалена.']}[lang]||['ნივთის წაშლა','დადასტურება','გაუქმება','ფოტოს წაშლა მოლოდინშია.','ნივთი წაიშალა.'];
- const generation=useRef(0),urlRef=useRef(null),known=useRef(null),lock=useRef(false),current=useRef(getScope);
+ const mounted=useRef(false),generation=useRef(0),urlRef=useRef(null),known=useRef(null),lock=useRef(false),current=useRef(getScope);
  current.current=getScope;
  const clearPhoto=()=>{if(urlRef.current){URL.revokeObjectURL(urlRef.current);urlRef.current=null;}setPhoto(null);};
- useLayoutEffect(()=>()=>{generation.current++;if(urlRef.current)URL.revokeObjectURL(urlRef.current);urlRef.current=null;known.current=null;},[ownerId]);
- const scope=()=>{const s=current.current();return {...s,authLoading:s.authLoading||s.ownerId!==ownerId};};
+ useLayoutEffect(()=>{mounted.current=true;return ()=>{mounted.current=false;generation.current++;if(urlRef.current)URL.revokeObjectURL(urlRef.current);urlRef.current=null;known.current=null;};},[ownerId]);
+ const scope=()=>{const s=current.current();return {...s,authLoading:!mounted.current||s.authLoading||s.ownerId!==ownerId};};
  async function run(path=null){
   if(lock.current||writing)return;lock.current=true;
   const g=++generation.current,start=scope();setBusy(true);setStatus(null);clearPhoto();
@@ -57,7 +57,7 @@ export default function WardrobeAccountPanel({client,getScope,ownerId,lang='ka'}
  }
  // The parent unmounts the wardrobe while auth resolves. Also hide any
  // rendered private data if the parent scope is temporarily invalid.
- if(scope().authLoading)return null;
+ if(current.current().authLoading||current.current().ownerId!==ownerId)return null;
  return <section className="rounded-xl border border-stone-200 bg-white p-4 text-stone-900 space-y-3">
  <h3 className="text-sm font-semibold">{t[0]}</h3><p className="text-xs leading-5">{t[5]}</p>
  <button type="button" disabled={busy||writing} onClick={()=>run()} className="rounded-lg border px-3 py-2 text-xs">{t[1]}</button>

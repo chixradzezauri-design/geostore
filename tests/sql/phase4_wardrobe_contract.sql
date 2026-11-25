@@ -164,3 +164,21 @@ end $test$;
 reset role;
 do $$ begin if has_function_privilege('anon','public.customer_wardrobe_recovery_status(uuid,text)','EXECUTE') then raise exception 'anonymous recovery';end if;end $$;
 \echo 'PASS phase4 wardrobe recovery status and quota boundary'
+
+-- A real uploaded but unattached reservation can retire at unchanged item revision.
+set role authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000002","is_anonymous":false}',false);
+do $test$
+declare b uuid:='00000000-0000-4000-8000-000000000002'; p text:=b::text||'/00000000-0000-4000-8000-000000000099.jpg';r jsonb;
+begin
+ if public.customer_wardrobe_reserve_photo(b,p)->>'status' is distinct from 'reserved' then raise exception 'Orphan reservation';end if;
+ insert into storage.objects values('customer-wardrobe-private',p);
+ r:=public.customer_wardrobe_request_erasure(b,5,p);
+ if r is distinct from '{"status":"pending","revision":6}'::jsonb then raise exception 'Orphan retirement';end if;
+ r:=public.customer_wardrobe_recovery_status(b,p);
+ if r->>'photoState' is distinct from 'pending' or (r->>'reserved')::int<>1 then raise exception 'Premature quota release';end if;
+ if private.customer_wardrobe_upload_allowed(p) then raise exception 'Retired orphan can upload';end if;
+ if not exists(select 1 from storage.objects where name=p) then raise exception 'Direct deletion';end if;
+end $test$;
+reset role;
+\echo 'PASS phase4 orphan retirement without premature quota release'

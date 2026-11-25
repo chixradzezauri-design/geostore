@@ -9,15 +9,18 @@ export function parseWardrobePending(raw,ownerId){
 }
 export function classifyWardrobeRecovery(marker,snapshot,photoState){
  if(!marker)return 'none';
- if(snapshot.revision<=marker.baseRevision)return 'review';
+ if(snapshot.revision<marker.baseRevision)return 'review';
  const item=snapshot.items.find(i=>i.id===marker.itemId);
  const referenced=marker.photoPath!==null&&snapshot.items.some(i=>i.photoPath===marker.photoPath);
+ // A successful upload may precede the metadata write, leaving revision unchanged.
+ if(marker.action==='add'&&!item&&!referenced&&marker.photoPath!==null&&photoState==='present')return 'orphan';
+ if(snapshot.revision<=marker.baseRevision)return 'review';
+ if(marker.action==='add'&&!item&&!referenced&&marker.photoPath!==null&&['pending','erased'].includes(photoState))return 'retired';
  if(marker.action==='add'&&item&&item.photoPath===marker.photoPath&&(marker.photoPath===null||photoState==='present'))return 'observed';
  if(marker.action==='remove'&&!item&&(marker.photoPath===null||(referenced&&photoState==='present')||(!referenced&&['pending','erased'].includes(photoState))))return 'observed';
- if(marker.action==='add'&&!item&&!referenced&&photoState==='present')return 'orphan';
  return 'review';
 }
-export async function reviewWardrobePending({enabled=false,client,getScope,storage,locks,confirm=null}={}){
+export async function reviewWardrobePending({enabled=false,client,getScope,storage,locks,confirm=null,retire=null}={}){
  if(enabled!==true)return {status:'disabled'};
  const start=getScope();if(start?.authLoading!==false||typeof start.ownerId!=='string'||!uuid.test(start.ownerId)||!Number.isSafeInteger(start.epoch)||start.epoch<0)return {status:'inactive'};
  if(!storage||!locks?.request)return {status:'unsupported'};
@@ -36,8 +39,17 @@ export async function reviewWardrobePending({enabled=false,client,getScope,stora
   const snapshot=validateWardrobeAccountSnapshot(start.ownerId,d.snapshot);
   const outcome=classifyWardrobeRecovery(marker,snapshot,d.photoState);
   const proof={raw,revision:snapshot.revision,outcome,photoState:d.photoState};
+  if(retire){
+   // Explicitly abandon only the exact unreferenced uploaded path reviewed by the user.
+   if(confirm||JSON.stringify(retire)!==JSON.stringify(proof)||outcome!=='orphan'||storage.getItem(key)!==raw||snapshot.revision===Number.MAX_SAFE_INTEGER)return {status:'review',snapshot};
+   const retired=await client.rpc('customer_wardrobe_request_erasure',{p_expected_owner:start.ownerId,p_expected_revision:snapshot.revision,p_path:marker.photoPath});
+   if(!active())return {status:'inactive'};
+   if(retired.error||retired.data?.status!=='pending'||retired.data.revision!==snapshot.revision+1)return {status:'uncertain'};
+   // Do not clear the marker or claim physical deletion. Re-observe the tombstone.
+   return {status:'retirement-requested'};
+  }
   if(confirm){
-   if(JSON.stringify(confirm)!==JSON.stringify(proof)||outcome!=='observed'||storage.getItem(key)!==raw)return {status:'review',snapshot};
+   if(JSON.stringify(confirm)!==JSON.stringify(proof)||!['observed','retired'].includes(outcome)||storage.getItem(key)!==raw)return {status:'review',snapshot};
    storage.removeItem(key);return {status:'cleared',snapshot,reserved:d.reserved,pending:d.pending};
   }
   return {status:'ready',snapshot,reserved:d.reserved,pending:d.pending,outcome,photoState:d.photoState,proof};
