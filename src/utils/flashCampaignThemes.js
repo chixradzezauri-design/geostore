@@ -19,3 +19,16 @@ export function normalizeFlashCampaignBanner(value) {
   if (typeof value !== 'string' || value.length > 2048) return '';
   try { const url = new URL(value.trim()); return url.protocol === 'https:' && !url.username && !url.password ? url.href : ''; } catch { return ''; }
 }
+
+export const FLASH_TIMER_STYLES=Object.freeze([
+ {id:'inherit',label:'არსებული',sample:'08 : 42 : 19'},
+ {id:'outline',label:'თხელი ჩარჩო',sample:'08 : 42 : 19'},
+ {id:'pills',label:'მომრგვალებული',sample:'08 : 42 : 19'},
+ {id:'digital',label:'ციფრული',sample:'08 : 42 : 19'}
+].map(Object.freeze));
+export function normalizeFlashTimerStyle(value){
+ return FLASH_TIMER_STYLES.some(style=>style.id===value)?value:'inherit';
+}
+export function normalizeFlashTimerMotion(value){
+ return value==='reveal'?'reveal':'none';
+}

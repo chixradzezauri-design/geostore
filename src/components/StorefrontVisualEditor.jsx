@@ -1,4 +1,4 @@
-import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner } from '../utils/flashCampaignThemes.js';
+import { FLASH_CAMPAIGN_THEMES, normalizeFlashCampaignBanner, FLASH_TIMER_STYLES } from '../utils/flashCampaignThemes.js';
 import StorefrontSectionGeometry from './StorefrontSectionGeometry.jsx';
 import { FLASH_CAMPAIGN_COPY_PRESETS, applyFlashCampaignCopyPreset } from '../utils/flashCampaignCopy.js';
 import StorefrontDesignTemplates from './StorefrontDesignTemplates.jsx';
@@ -1278,6 +1278,17 @@ export default function StorefrontVisualEditor({
                   {[['inherit','არსებული'],['grid','ბარათები'],['compact','კომპაქტური']].map(([id,label])=><button key={id} type="button" aria-pressed={(design.flashCampaignLayout || 'inherit')===id} onClick={()=>commitDesign({...designRef.current,flashCampaignLayout:id})} className="min-h-11 rounded-lg border border-slate-600 px-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">{label}</button>)}
                 </div>
                 <p className="mt-2 text-[11px] text-slate-400">ბანერი მხოლოდ აქტიური აქციის დროს გამოჩნდება. განლაგება პროდუქტებს არ ცვლის.</p>
+              </div>
+              <div className="border-t border-slate-700 pt-3">
+                <h4 className="mb-2 text-xs font-bold text-white">უკუთვლის დიზაინი</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {FLASH_TIMER_STYLES.map(option=><button key={option.id} type="button" aria-pressed={(design.flashTimerStyle||'inherit')===option.id} onClick={()=>commitDesign({...designRef.current,flashTimerStyle:option.id})} className="min-w-0 min-h-16 rounded-xl border border-slate-600 px-2 py-2 text-xs text-slate-200 aria-pressed:border-amber-300 aria-pressed:text-amber-200">
+                    <span aria-hidden="true" className={'block mb-1 font-bold tabular-nums '+(option.id==='digital'?'font-mono tracking-widest':option.id==='pills'?'rounded-full bg-slate-700 px-1':option.id==='outline'?'border border-slate-500 rounded px-1':'')}>{option.sample}</span>
+                    <span>{option.label}</span>
+                  </button>)}
+                </div>
+                <label className="mt-2 flex min-h-11 items-center gap-2 text-xs font-semibold text-slate-300"><input type="checkbox" checked={design.flashTimerMotion==='reveal'} onChange={event=>commitDesign({...designRef.current,flashTimerMotion:event.target.checked?'reveal':'none'})}/> მსუბუქი გამოჩენის ანიმაცია</label>
+                <p className="text-[11px] leading-5 text-slate-400">ანიმაცია მხოლოდ გამოჩენისას სრულდება; მოძრაობის შემცირების სისტემურ პარამეტრს პატივს სცემს. ვადა და უკუთვლის გამოთვლა უცვლელია.</p>
               </div>
               <div className="border-t border-slate-700 pt-3">
                 <h4 className="mb-2 text-xs font-bold text-white">აქციის ელემენტების დეტალური გაფორმება</h4>

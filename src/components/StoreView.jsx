@@ -1,6 +1,6 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner } from '../utils/flashCampaignThemes.js';
+import { normalizeFlashCampaignTheme, normalizeFlashCampaignLayout, normalizeFlashCampaignBanner, normalizeFlashTimerStyle, normalizeFlashTimerMotion } from '../utils/flashCampaignThemes.js';
 import { getSignatureCampaignSlides, signatureSlideIndex } from '../utils/signatureHero.js';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
@@ -707,7 +707,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" role="timer" aria-live="off" aria-label={`დარჩენილია ${timeLeft.hours} საათი ${timeLeft.minutes} წუთი ${timeLeft.seconds} წამი`}>
+            <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" data-flash-timer-style={normalizeFlashTimerStyle(siteSettings?.visualDesign?.flashTimerStyle)} data-flash-timer-motion={normalizeFlashTimerMotion(siteSettings?.visualDesign?.flashTimerMotion)} role="timer" aria-live="off" aria-label={`დარჩენილია ${timeLeft.hours} საათი ${timeLeft.minutes} წუთი ${timeLeft.seconds} წამი`}>
               <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.hours}</span>
