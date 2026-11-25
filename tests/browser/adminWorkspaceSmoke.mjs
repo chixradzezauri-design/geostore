@@ -133,12 +133,48 @@ export async function runAdminWorkspaceSmoke(browser, host) {
             return Array.from(new Uint8Array(await blob.arrayBuffer()));
           });
           assert.ok(bytes.length>128*1024&&bytes.length<=5*1024*1024);
-          await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:Buffer.from(bytes)});
+          // Chromium canvas JPEGs may contain an ICC APP2 segment. The production
+          // optimizer deliberately preserves those. Strip APP2 only from this
+          // synthetic sRGB fixture, never from a user's uploaded image.
+          const original=Buffer.from(bytes);
+          assert.equal(original.readUInt16BE(0),0xffd8);
+          const parts=[original.subarray(0,2)];
+          let offset=2, app2Count=0, scanFound=false;
+          while(offset<original.length){
+            const start=offset;
+            assert.equal(original[offset++],0xff);
+            while(original[offset]===0xff)offset++;
+            const marker=original[offset++];
+            if(marker===0xda){parts.push(original.subarray(start));scanFound=true;break;}
+            assert.ok(marker!==0xd9&&offset+2<=original.length);
+            const length=original.readUInt16BE(offset);
+            assert.ok(length>=2&&offset+length<=original.length);
+            offset+=length;
+            if(marker===0xe2)app2Count++;
+            else parts.push(original.subarray(start,offset));
+          }
+          assert.ok(scanFound,'Synthetic JPEG contains a scan');
+          const eligible=Buffer.concat(parts);
+          assert.ok(eligible.length>128*1024&&eligible.length<=5*1024*1024);
           const thumbnail=shell.locator('.admin-product-gallery-thumbnail img').first();
+          const remove=()=>shell.getByRole('button',{name:'ფოტო 1 — წაშლა',exact:true}).click();
+          if(app2Count){
+            await gallery.setInputFiles({name:'profiled.jpg',mimeType:'image/jpeg',buffer:original});
+            await thumbnail.waitFor({state:'visible',timeout:20000});
+            const preserved=await thumbnail.getAttribute('src');
+            assert.ok(preserved==='data:image/jpeg;base64,'+original.toString('base64'),'ICC JPEG must be retained byte for byte');
+            await remove();
+            await thumbnail.waitFor({state:'detached'});
+          }
+          await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:eligible});
           await thumbnail.waitFor({state:'visible',timeout:20000});
-          assert.match(await thumbnail.getAttribute('src'),/^data:image\/webp;base64,/);
-          await page.waitForFunction(()=>document.querySelector('.admin-product-gallery-thumbnail img')?.naturalWidth===2048);
-          await shell.getByRole('button',{name:'ფოტო 1 — წაშლა',exact:true}).click();
+          const optimized=await thumbnail.getAttribute('src');
+          assert.ok(optimized?.startsWith('data:image/webp;base64,'),'Eligible JPEG must convert to WebP');
+          const encoded=Buffer.from(optimized.split(',')[1],'base64');
+          assert.ok(encoded.length<=eligible.length*0.85,'WebP must save at least 15%');
+          await page.waitForFunction(()=>{const img=document.querySelector('.admin-product-gallery-thumbnail img');return img?.naturalWidth===2048&&img?.naturalHeight===1365;});
+          await remove();
+          await thumbnail.waitFor({state:'detached'});
           const gif=Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7','base64');
           await gallery.setInputFiles({name:'fixture.gif',mimeType:'image/gif',buffer:gif});
           await thumbnail.waitFor({state:'visible'});
