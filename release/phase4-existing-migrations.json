@@ -1,0 +1,497 @@
+{
+  "baseline": "0816293d70be26e215235d231f49468338e2b36f",
+  "files": [
+    {
+      "name": "20261102180130_order_stock_automation.sql",
+      "gitBlob": "863adb1fb45ffdaf69541d94a75eceaccdb17e02"
+    },
+    {
+      "name": "20261103044438_add_idempotent_checkout_replay.sql",
+      "gitBlob": "5910b20b89b983edc652d27f6a87cd409dd7b7cb"
+    },
+    {
+      "name": "20261103044704_validate_checkout_idempotency_payload.sql",
+      "gitBlob": "b02680b25339b79d7b2ca9bee1ff6e823ee8b092"
+    },
+    {
+      "name": "20261103044919_minimize_checkout_idempotency_snapshot.sql",
+      "gitBlob": "b25c00daf6e2bb5cbde1fcc8a45fe71e920286fe"
+    },
+    {
+      "name": "20261103120657_geostore_order_security_hardening.sql",
+      "gitBlob": "ccaee1d5cf043df9022e6a1abca71a8ddc338819"
+    },
+    {
+      "name": "20261103120854_optimize_admin_product_insert_policy.sql",
+      "gitBlob": "8a5cc74b6bc002454f82f5bc4e3ad8c0e2ea43de"
+    },
+    {
+      "name": "20261103121325_persist_admin_coupons_and_delivery_fees.sql",
+      "gitBlob": "26dcea6a239d561086865ac7a41eaf829f6fd8c8"
+    },
+    {
+      "name": "20261103121548_remove_duplicate_coupon_delivery_select_policies.sql",
+      "gitBlob": "79dbcca05ef98d6b90cd181ee0c0572c3a5c100d"
+    },
+    {
+      "name": "20261103122121_prevent_stock_restore_after_dispatch.sql",
+      "gitBlob": "d848151012cd4c8e2b5c8ae4baa3511aa28c8688"
+    },
+    {
+      "name": "20261103122611_lock_down_rpc_search_paths.sql",
+      "gitBlob": "ef7758adc46e85e361cffdb8eea2e231d2e4f33b"
+    },
+    {
+      "name": "20261103151704_use_amr_for_admin_order_reactivation.sql",
+      "gitBlob": "efe983cdae7e32ac82d54a036c3f10c3364df030"
+    },
+    {
+      "name": "20261103155226_track_order_status_change_time.sql",
+      "gitBlob": "2a7da069b6c31d0bb97d8847e010cac2653cbe99"
+    },
+    {
+      "name": "20261103160155_restrict_product_cost_to_primary_admin.sql",
+      "gitBlob": "f68f9d34164c8bfd0d0a3c3587fa8e075735de7e"
+    },
+    {
+      "name": "20261103162615_secure_admin_product_crud.sql",
+      "gitBlob": "7669393d2d0fdd659d70f8bb9b713585091898d4"
+    },
+    {
+      "name": "20261103164324_admin_product_auth_uid.sql",
+      "gitBlob": "cf46057a50b53197b6a518690efcd63dcc888848"
+    },
+    {
+      "name": "20261103164717_admin_authorization_use_auth_uid.sql",
+      "gitBlob": "d2c750ccefc10d5c2263b1627a1e3897298ab843"
+    },
+    {
+      "name": "20261103194444_secure_admin_save_order_note.sql",
+      "gitBlob": "193707611c4056c3d5e946af838f6f61e1599c51"
+    },
+    {
+      "name": "20261103213006_harden_admin_rpcs_and_minimize_order_tracking_data.sql",
+      "gitBlob": "3799df0caeb06200769ce07761b96af0190269c4"
+    },
+    {
+      "name": "20261106085242_minimize_public_order_tracking_payload.sql",
+      "gitBlob": "9f57a6248cca91bf8bc67a71c26b55704ad9b9d3"
+    },
+    {
+      "name": "20261106085349_persist_admin_flash_sale_updates.sql",
+      "gitBlob": "c9cc354c99084aac3b51933aa39d606d9e05e614"
+    },
+    {
+      "name": "20261106085602_restrict_customer_order_reads_to_admin.sql",
+      "gitBlob": "9328cfe2cb8065a8fd6339a141a49e2b1385df0e"
+    },
+    {
+      "name": "20261106085622_revoke_anon_direct_order_reads.sql",
+      "gitBlob": "5dd453fdfd3c1e1e00ac5b15bca4c72640dcdb3a"
+    },
+    {
+      "name": "20261106090007_optimize_storefront_rls_auth_initplans.sql",
+      "gitBlob": "bf1f8222073b777acf217c0ef84944f87cf3d1c2"
+    },
+    {
+      "name": "20261106103315_align_product_admin_authorization_with_auth_uid.sql",
+      "gitBlob": "e9f5a79766692d19347b2c5e2fbf6dee62029884"
+    },
+    {
+      "name": "20261106103320_harden_public_support_submission_permissions.sql",
+      "gitBlob": "91ed8ed4342a0548d74acb9d77dad94087e1360d"
+    },
+    {
+      "name": "20261106103325_preserve_order_item_variants.sql",
+      "gitBlob": "ae536311f85e453286ad57021e9376f5a02d5401"
+    },
+    {
+      "name": "20261106110051_fix_flash_sale_stale_original_price.sql",
+      "gitBlob": "2d75b5d4353685d8d7e9aefd99f6ca776245eba9"
+    },
+    {
+      "name": "20261106120000_validate_order_item_variants.sql",
+      "gitBlob": "b9543494b3a6380ae58b9b1ea6a76fdbe20b57aa"
+    },
+    {
+      "name": "20261106210000_validate_checkout_input_on_order_insert.sql",
+      "gitBlob": "73f9e57bf4118781215da2973d394e26abf9ce77"
+    },
+    {
+      "name": "20261106220000_harden_support_ticket_public_insert.sql",
+      "gitBlob": "e0d5e46b0305d2d593facf5a6a51a52f0cdf22d3"
+    },
+    {
+      "name": "20261107001000_add_product_data_integrity_constraints.sql",
+      "gitBlob": "08afd160d533565dc63b52384ab7bdd1a5c3b110"
+    },
+    {
+      "name": "20261107002000_harden_flash_sale_rounding.sql",
+      "gitBlob": "74d21151e778b631b72d15d489ebbb0eeb864d00"
+    },
+    {
+      "name": "20261107020000_add_order_status_notifications.sql",
+      "gitBlob": "13615e65db69d336ebe67720966b6b2ec1fc3f30"
+    },
+    {
+      "name": "20261107083528_atomic_storefront_publish_and_append_only_versions.sql",
+      "gitBlob": "a993e94b2675dd5dde5f767615e89d88a39c5aec"
+    },
+    {
+      "name": "20261107083600_validate_storefront_publish_snapshot_shape.sql",
+      "gitBlob": "f6d8629828cf539d2a7a07625a8dd91ed9724a9d"
+    },
+    {
+      "name": "20261107084940_harden_order_status_stock_transitions.sql",
+      "gitBlob": "db6f7f0741684836c7914a093dcc18d68ecb389e"
+    },
+    {
+      "name": "20261107085444_secure_support_intake_and_persist_admin_activity.sql",
+      "gitBlob": "66934ee76dbd1471c02957dbb61b1b7fdf44b287"
+    },
+    {
+      "name": "20261107085535_return_http_429_for_support_rate_limits.sql",
+      "gitBlob": "6437f644faef497bf2a9db36746265b41c279cc4"
+    },
+    {
+      "name": "20261107093727_admin_product_create_no_upsert.sql",
+      "gitBlob": "ee1575a1e2420327800d5198c39cb848e2b5808c"
+    },
+    {
+      "name": "20261107094312_rate_limit_public_order_tracking.sql",
+      "gitBlob": "5f3622035f4beada2b8a8859c076ebd60b53b23f"
+    },
+    {
+      "name": "20261107094358_bound_public_guest_checkout_input.sql",
+      "gitBlob": "a274a8d1f87453b3c25d6034344139062f2a7e69"
+    },
+    {
+      "name": "20261107100015_secure_authenticated_order_history.sql",
+      "gitBlob": "76345e6be794bde63f140ab5542bfcb7533f2cf0"
+    },
+    {
+      "name": "20261107110746_enforce_nonnegative_product_stock.sql",
+      "gitBlob": "329f23862210f3ffb1909b038130ec52efaa2333"
+    },
+    {
+      "name": "20261107115218_persist_checkout_addons_server_pricing.sql",
+      "gitBlob": "f7ed53b2e90c16c4de7be8d0b45c3a1da655e603"
+    },
+    {
+      "name": "20261107130302_add_order_status_notifications.sql",
+      "gitBlob": "76002b509fc8aedbe8be7d83cab8fb00db053886"
+    },
+    {
+      "name": "20261107130319_harden_order_notification_rpc_wrappers.sql",
+      "gitBlob": "21c7269b568a710ffe0696d94c7315de7fffb96a"
+    },
+    {
+      "name": "20261107130422_restrict_support_ticket_insert_columns.sql",
+      "gitBlob": "6d7106b4134098bf927d7de941e7c93ef0fbf6dc"
+    },
+    {
+      "name": "20261107130453_harden_flash_sale_rounding.sql",
+      "gitBlob": "352528cae487c5065e0e169daaa3cabbd3c9286d"
+    },
+    {
+      "name": "20261107130536_add_product_data_integrity_constraints.sql",
+      "gitBlob": "98f83c45d6d9e05fa7aea3750c2b804c1e43e9b6"
+    },
+    {
+      "name": "20261107130549_validate_product_data_integrity_constraints.sql",
+      "gitBlob": "f39fa49ae0679ff68d0a36051ff89ae43036cdb7"
+    },
+    {
+      "name": "20261107150014_require_valid_guest_checkout_email.sql",
+      "gitBlob": "695fb0b6d8a22396d2e1ef5ab2961dc014bf18f9"
+    },
+    {
+      "name": "20261107153000_enable_rls_order_tracking_rate_limits.sql",
+      "gitBlob": "87c0d5a2b3316eebd6615de9422f5f19e4878c63"
+    },
+    {
+      "name": "20261107160152_minimize_customer_order_history_payload.sql",
+      "gitBlob": "a0e0fccfd72bef658c094a7f41472e6648244c14"
+    },
+    {
+      "name": "20261107170000_integrate_custom_product_variants.sql",
+      "gitBlob": "dbb7a7dee5a06f58c724b5dc6e83730212918627"
+    },
+    {
+      "name": "20261107172000_stabilize_admin_product_order.sql",
+      "gitBlob": "c160a95f91e9c95c69437e4c7597dfd5aa980bae"
+    },
+    {
+      "name": "20261107181500_skip_custom_variant_products_in_flash_sales.sql",
+      "gitBlob": "50007298301b57e11f0f93228ac86e8a1965bd97"
+    },
+    {
+      "name": "20261108215548_bind_order_ownership_to_auth_user_uuid.sql",
+      "gitBlob": "a6ca1f9433dfd86acdd63df9fa5838d24bba2ade"
+    },
+    {
+      "name": "20261108225558_size_color_inventory_stock.sql",
+      "gitBlob": "41509c4abdc9eaacd4f001f37b5f04e830bda91c"
+    },
+    {
+      "name": "20261108231918_order_item_image_snapshot.sql",
+      "gitBlob": "449511bb6a984ae81736301527276163d02b7fd2"
+    },
+    {
+      "name": "20261109092744_set_created_at_for_new_products.sql",
+      "gitBlob": "d0eed6f323dc45e0a9b945693d2e2f1d5732685f"
+    },
+    {
+      "name": "20261109102126_support_ticket_threading_and_secure_access.sql",
+      "gitBlob": "60ed3ca87c745ade19c2fcefce5d54e55efa80c3"
+    },
+    {
+      "name": "20261109102221_fix_support_ticket_message_lookup.sql",
+      "gitBlob": "340ea89a51c13e532ac414fc0efe87796788556e"
+    },
+    {
+      "name": "20261109102338_harden_support_ticket_rpc_wrappers.sql",
+      "gitBlob": "b31f16f69ff59fca523379906377ed53823bbfb8"
+    },
+    {
+      "name": "20261109151649_restrict_public_product_purchase_cost.sql",
+      "gitBlob": "446b6be17bec97ea5fd4699860a010bac4cfac03"
+    },
+    {
+      "name": "20261109151806_restrict_public_storefront_config_to_published_fields.sql",
+      "gitBlob": "e0b190c54d1fb2c072aadd140aa6b5be33737db7"
+    },
+    {
+      "name": "20261109151847_move_variant_stock_security_definer_to_private.sql",
+      "gitBlob": "a3ca8471579201853e113f951bb8f2830ee80c61"
+    },
+    {
+      "name": "20261109152039_sanitize_customer_order_history_item_fields.sql",
+      "gitBlob": "543d201f9197f814f7ed7b3b0b23ebee576e6e2c"
+    },
+    {
+      "name": "20261109152543_restrict_authenticated_product_cost_select.sql",
+      "gitBlob": "a0c320a7dbed522a0614650d2b5708a31609cc6e"
+    },
+    {
+      "name": "20261109154122_preserve_customer_order_owner.sql",
+      "gitBlob": "ad6253a12e10e7b28b28fcf160438e524b67c852"
+    },
+    {
+      "name": "20261109160629_allow_partial_size_color_stock_updates.sql",
+      "gitBlob": "0a65b8b457e8fabc87c8f9ff9400752292d54cb5"
+    },
+    {
+      "name": "20261109203329_admin_manage_custom_variant_stock.sql",
+      "gitBlob": "41e10118d92ac91883e0661e51a3a102828d07c7"
+    },
+    {
+      "name": "20261109211019_enable_customer_order_notification_realtime.sql",
+      "gitBlob": "cd9194813cf434670b8e9330ee8d96bb5f054c93"
+    },
+    {
+      "name": "20261109211210_enable_admin_legacy_message_realtime.sql",
+      "gitBlob": "bbb982a296f7df4a0c1eab339c331ba306b8dd1d"
+    },
+    {
+      "name": "20261109212150_prevent_deleting_products_used_in_orders.sql",
+      "gitBlob": "d1da56a64917f15d011bb154ec2fda2fce5d0227"
+    },
+    {
+      "name": "20261110043433_admin_atomic_variant_stock_batches.sql",
+      "gitBlob": "991874a853c497ad13536790876d1e0b5946fadc"
+    },
+    {
+      "name": "20261110050000_enable_support_ticket_status_realtime.sql",
+      "gitBlob": "e855e7fc472cbaa4839f501872bae52b13285b82"
+    },
+    {
+      "name": "20261110054145_add_idempotent_support_ticket_replies.sql",
+      "gitBlob": "c0d628e6b8f68f72156585df54544607fafc5726"
+    },
+    {
+      "name": "20261110054535_add_idempotent_support_ticket_creation.sql",
+      "gitBlob": "a9ec2948bce2b8a18b860db0095c06a112bca9d5"
+    },
+    {
+      "name": "20261112133000_guard_legacy_order_product_references.sql",
+      "gitBlob": "d81f2240efd8d83655faa96e7aa43de91e4aa518"
+    },
+    {
+      "name": "20261116071600_harden_support_ticket_authorization_and_admin_reply_status.sql",
+      "gitBlob": "6865db4d07c2b5a501edb2eb3a1c1f2de95e40ed"
+    },
+    {
+      "name": "20261116120907_support_ticket_read_receipts.sql",
+      "gitBlob": "4cb33f7d9a2b3486ae1fae4706c1364ee2cb80fc"
+    },
+    {
+      "name": "20261116120914_add_owner_checked_support_ticket_status.sql",
+      "gitBlob": "51bcbd362f484f249f820fd3c536fae5129fefe9"
+    },
+    {
+      "name": "20261116121216_customer_support_ticket_history.sql",
+      "gitBlob": "d91d988338c015db9416e3c117a378895e4a2521"
+    },
+    {
+      "name": "20261116121952_restrict_direct_product_deletes_to_guarded_rpc.sql",
+      "gitBlob": "6480bf0755fddeb8953e3be709606cc5e7a8efa1"
+    },
+    {
+      "name": "20261116124315_revoke_authenticated_product_purchase_cost_select.sql",
+      "gitBlob": "fd00694f268c51d9c83dd5466690a9bf81347a17"
+    },
+    {
+      "name": "20261116124349_restore_authenticated_product_column_allowlist.sql",
+      "gitBlob": "32275a3a7222c866e2ab22c55042a5e90e1162a5"
+    },
+    {
+      "name": "20261116124647_protect_support_tickets_from_direct_deletion.sql",
+      "gitBlob": "4777b2b9d923a2ca587ea9079c820883408fe930"
+    },
+    {
+      "name": "20261116132211_persist_flash_sale_expiry_and_auto_restore.sql",
+      "gitBlob": "ecb110cbc73b7d362a40cb55e979e98d026f0044"
+    },
+    {
+      "name": "20261116132313_align_legacy_flash_sale_rpc.sql",
+      "gitBlob": "a48924c7fa90576c3208d8df02af2cbbbcb1677c"
+    },
+    {
+      "name": "20261116132703_persistent_flash_sale_campaigns.sql",
+      "gitBlob": "ed814322c8f5c45d1039c58e0e36a6685318138a"
+    },
+    {
+      "name": "20261116133134_flash_sale_expiry_compatibility.sql",
+      "gitBlob": "e3217ab14bdf418053d1c5deee972f84c317d559"
+    },
+    {
+      "name": "20261116135251_restore_single_flash_sale_expiry_job.sql",
+      "gitBlob": "5be722fec49e6328ef73e02fca789fe5ba61d380"
+    },
+    {
+      "name": "20261117084403_private_inventory_movement_ledger_stage92.sql",
+      "gitBlob": "6dcbbf78cf1785ef6735c73d4a6440d1d34392af"
+    },
+    {
+      "name": "20261117084443_customer_support_ticket_history_pagination.sql",
+      "gitBlob": "28b85cf8ce23d694bcc47eaa45e35f75ec033e4e"
+    },
+    {
+      "name": "20261117084528_inventory_replenishment_settings.sql",
+      "gitBlob": "ca192e9bf4394cd1cacc068dbbfe67416aa06fb1"
+    },
+    {
+      "name": "20261117231455_admin_staff_auth_foundation.sql",
+      "gitBlob": "bdf598d51ec28a500b0087ec70ce9873fb0e924c"
+    },
+    {
+      "name": "20261117231459_staff_orders_permission.sql",
+      "gitBlob": "53b9d0e5a8b69442b246c5988fde28618083239c"
+    },
+    {
+      "name": "20261117231504_reopen_completed_orders.sql",
+      "gitBlob": "acd1dc0c155f0af3e7ae9b1931232541c4578e35"
+    },
+    {
+      "name": "20261117231508_staff_products_permission.sql",
+      "gitBlob": "0e8c67aacd85e17d78b8b57225b5612e7c924500"
+    },
+    {
+      "name": "20261117231531_staff_expenses_permission.sql",
+      "gitBlob": "81634064a2ed20533156dd65fb01e16702bc089f"
+    },
+    {
+      "name": "20261117231534_staff_crm_support_permissions.sql",
+      "gitBlob": "7084db8b959f6f3d02eb6a8c0c599e137bfc2548"
+    },
+    {
+      "name": "20261117231538_staff_settings_permission.sql",
+      "gitBlob": "711b449cc1ccd6a614d4caac789d88b330eca921"
+    },
+    {
+      "name": "20261117231542_staff_analytics_summary.sql",
+      "gitBlob": "bce56e3f68a202dd4e86b292c6a53b7f139345f1"
+    },
+    {
+      "name": "20261117231546_stable_checkout_idempotency_ordering.sql",
+      "gitBlob": "a20a559f7e44e1bbeb5fb917cf4ddbcaf95efdfa"
+    },
+    {
+      "name": "20261117231549_admin_staff_pending_invites.sql",
+      "gitBlob": "41c9189be4a1503c1061a440d9eb278932cd7aba"
+    },
+    {
+      "name": "20261118180000_move_all_support_ticket_history_rpcs_to_private.sql",
+      "gitBlob": "ce772dcafb92b499dafe8fa6b0eee4aad6174336"
+    },
+    {
+      "name": "20261119071952_admin_rpc_invoker_wrappers.sql",
+      "gitBlob": "19d21ceb551868bb026521823d01bef5ff18fc4a"
+    },
+    {
+      "name": "20261119071959_add_secure_admin_customer_crm.sql",
+      "gitBlob": "cba5d971a537882b206c494764fa3e231b601459"
+    },
+    {
+      "name": "20261119090000_revoke_anon_completed_order_reactivation.sql",
+      "gitBlob": "a700f0b679f3a62ecdba52f484d7da14a12955cb"
+    },
+    {
+      "name": "20261119094446_revoke_anon_completed_order_reactivation.sql",
+      "gitBlob": "f43035cba58a7b76ed0cac03a2e0f9e0c482b308"
+    },
+    {
+      "name": "20261119110000_add_storefront_hero_storage_scope.sql",
+      "gitBlob": "9895cf06576a404817311c5d680782ef79f55d83"
+    },
+    {
+      "name": "20261119140327_admin_panel_visual_settings_owner_policy.sql",
+      "gitBlob": "79bba901619648e7e6b8656ebc275fcbd0bb28ea"
+    },
+    {
+      "name": "20261119150000_admin_panel_visual_design_sync.sql",
+      "gitBlob": "a8fc812fe8f06f73eb467868d2ff2f5bf77c8d20"
+    },
+    {
+      "name": "20261119152000_admin_panel_visual_design_concurrency.sql",
+      "gitBlob": "2f49ff3c04b8405552c7cdb47559a4d970078bf9"
+    },
+    {
+      "name": "20261119181855_storefront_draft_concurrency.sql",
+      "gitBlob": "1033bd19e682320153854532606a28e67331344b"
+    },
+    {
+      "name": "20261119181911_restore_storefront_version_to_draft.sql",
+      "gitBlob": "5751a86ce931eb731b8466efdf078fc206ef1332"
+    },
+    {
+      "name": "20261119181955_legacy_storefront_draft_save_compat.sql",
+      "gitBlob": "7436658df49c0c519eb59c73ad79e3db60533d5c"
+    },
+    {
+      "name": "20261120122908_replenishment_optimistic_concurrency.sql",
+      "gitBlob": "276199f8f34d174a1fdbdf08289f4f11df0247b6"
+    },
+    {
+      "name": "20261120124250_storefront_publish_concurrency_safe_compat.sql",
+      "gitBlob": "7ea468f0d7490dafa907b2add4997673f2d30d2b"
+    },
+    {
+      "name": "20261121170000_strip_private_costs_from_checkout_rpc.sql",
+      "gitBlob": "cfd671d05e3c66fd1f350db8b21a6d5662a91e9a"
+    },
+    {
+      "name": "20261121190000_redact_alternate_costs_from_order_history.sql",
+      "gitBlob": "1c7166ba6e3cb77b6450e1b332c11014084f5d3f"
+    },
+    {
+      "name": "20261121210000_scope_admin_order_ledger_permissions.sql",
+      "gitBlob": "539f391801349958d8a31989b27bc355fd57ce89"
+    },
+    {
+      "name": "20261121213000_revoke_legacy_order_snapshot_reads.sql",
+      "gitBlob": "6af4de166536f5e1c06b347603ea58fdd0b56543"
+    }
+  ]
+}
