@@ -496,7 +496,7 @@ function StaffAnalyticsSummary() {
               <div className="mt-3 space-y-2">
                 {(summary.top_products || []).map((product) => (
                   <div key={product.product_id} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <span className="min-w-0 truncate text-slate-300">{product.product_name}</span>
+                    <span className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-slate-300">{product.product_name}</span>
                     <span className="shrink-0 text-right text-white">{count(product.units)} ც. · {money(product.revenue)}</span>
                   </div>
                 ))}
@@ -6160,10 +6160,10 @@ export default function AdminDashboardPro({
                         const zeroCount = group.positions.filter(position => position._stockValue === 0).length;
                         return (
                           <details key={group.key} className="group rounded-xl border border-slate-800 bg-slate-950/50">
-                            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-2 px-3 py-2.5">
+                            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex flex-col items-stretch gap-2 px-3 py-2.5 sm:flex-row sm:items-center">
                               <div className="min-w-0 flex-1">
-                                <b className="block truncate text-xs text-slate-100">{group.name}</b>
-                                <span className="block truncate text-[10px] text-slate-500">{group.sku} · {group.positions.length} ვარიანტი</span>
+                                <b className="block whitespace-normal [overflow-wrap:anywhere] text-xs text-slate-100">{group.name}</b>
+                                <span className="block whitespace-normal [overflow-wrap:anywhere] text-[10px] text-slate-500">{group.sku} · {group.positions.length} ვარიანტი</span>
                               </div>
                               <div className="flex shrink-0 items-center gap-1.5">
                                 {zeroCount > 0 && <span className="rounded-full bg-rose-500/10 px-2 py-1 text-[9px] font-bold text-rose-300">{zeroCount} ნული</span>}
@@ -6174,7 +6174,7 @@ export default function AdminDashboardPro({
                             <div className="border-t border-slate-800 px-3 py-2 space-y-1.5">
                               {group.positions.map(position => (
                                 <div key={position._inventoryKey} className="flex items-center justify-between gap-3 text-[11px]">
-                                  <span className="min-w-0 truncate text-slate-400">{position.variantName || 'საერთო მარაგი'}</span>
+                                  <span className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-slate-400">{position.variantName || 'საერთო მარაგი'}</span>
                                   <span className={position._stockValue === 0 ? 'shrink-0 font-bold text-rose-300' : 'shrink-0 font-bold text-amber-300'}>
                                     {position._stockValue === 0 ? 'ნულოვანი მარაგი' : `${position._stockValue} ცალი`}
                                   </span>
@@ -6197,7 +6197,7 @@ export default function AdminDashboardPro({
                 </div>
                 {!ordersVerifiedForReports ? <p className="text-amber-200 text-xs py-4">შეკვეთების სრული ისტორია ჯერ არ არის დადასტურებული.</p> : financialOverview.bestSellingProducts.length === 0 ? <p className="text-slate-500 text-xs py-4">გაყიდვები ჯერ არ არის.</p> : financialOverview.bestSellingProducts.map((item, index) => (
                   <div key={item.key} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <div className="min-w-0"><b className="text-white block truncate">{index + 1}. {item.name}</b><span className="text-slate-500">{item.vendor} · {item.revenue.toFixed(2)} ₾</span></div>
+                    <div className="min-w-0"><b className="text-white block whitespace-normal [overflow-wrap:anywhere]">{index + 1}. {item.name}</b><span className="text-slate-500">{item.vendor} · {item.revenue.toFixed(2)} ₾</span></div>
                     <b className="text-indigo-300 whitespace-nowrap">{item.quantity} ც.</b>
                   </div>
                 ))}
