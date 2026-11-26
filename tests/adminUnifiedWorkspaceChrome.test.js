@@ -105,3 +105,13 @@ test('Atelier correspondence preserves message delivery limitations and existing
  for(const token of ['handleUpdateTicketStatus(t.id','handleSendTicketReply(t.id)','fetchSupportTicketThread(t.id)','fetchLegacyMessages','handleSendBroadcast','მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.'])assert.ok(app.includes(token),token);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('communication regions stay bounded'));
 });
+
+
+test('Atelier promotions retain draft and pricing contracts while bounding promotion controls',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const stage=css.split('/* Atelier promotions:')[1].split('/* Stage 13')[0];
+ for(const token of ['grid-template-columns: 76px minmax(0,1fr)','min-height: 44px','admin-unified-flash-price-pair','object-fit: contain','button:disabled'])assert.ok(stage.includes(token),token);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const token of ['handleApplyFlashSale','selectedFlashRows','handleCreateCoupon','handleDeleteCoupon(c.id)','handleAddBanner','handleDeleteBanner(b.id)','moveBanner(b.id, -1)','onPublishStorefront','flashSalePlannedStart'])assert.ok(app.includes(token),token);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('promotion controls stay within their regions'));
+});

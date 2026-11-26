@@ -197,6 +197,24 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (['discounts','coupons','banners','users'].includes(tab)) {
+              const promoIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='discounts'?'.admin-discounts-panel':module==='coupons'?'.admin-coupons-panel':module==='banners'?'.admin-banners':'.admin-marketing-segments');
+                if(!scope)return module==='users'?[]:['promotion module missing'];
+                const issues=[];
+                const groups=scope.querySelectorAll(module==='discounts'?'.admin-flash-sale-fields,.admin-unified-flash-price-row':module==='coupons'?'.admin-coupon-form,.admin-coupon-card':module==='banners'?'.admin-banner-fields,.admin-unified-banner-actions,.admin-banner-card > div:first-child':'[data-admin-segment-card]');
+                for(const group of groups){
+                  const outer=group.getBoundingClientRect();
+                  if(!outer.height)continue;
+                  for(const el of group.querySelectorAll('input,select,button,:scope > div,:scope > p,:scope > label,:scope > [data-admin-pro-banner-image]')){
+                    const rect=el.getBoundingClientRect();
+                    if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('promotion element outside group');
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(promoIssues,[],engine+' '+targetWidth+'px: promotion controls stay within their regions');
+            }
             if (['support','messages','broadcasts'].includes(tab)) {
               const communicationIssues=await shell.evaluate((root,module)=>{
                 const scope=root.querySelector(module==='broadcasts'?'.admin-broadcasts-panel':'.admin-support-panel');

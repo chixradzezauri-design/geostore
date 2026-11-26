@@ -1298,7 +1298,39 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banners,.admin-coupons-panel) > div { background-image: none !important; box-shadow: none !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-eyebrow { color: var(--av-muted) !important; font-size: 12px !important; font-weight: 600; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-heading { color: var(--av-text) !important; font-size: 15px !important; font-weight: 700; line-height: 1.5; }
+/* Atelier promotions: separate editable pricing, review and draft actions. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-flash-sale-fields { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-form {
+  background: var(--av-surface); border: 1px solid var(--av-border);
+  border-inline-start: 3px solid var(--av-accent);
+  border-radius: var(--admin-vd-cardRadius-active,12px); padding: 12px;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields > div {
+  display: grid; align-content: end; gap: 6px; min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields label {line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields :is(input,select),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-flash-window] input {
+  box-sizing: border-box; width: 100%; min-inline-size: 0;
+  max-inline-size: 100%; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-flash-window] > div:has(input) {min-inline-size: 0;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-row > label {
+  display: flex; align-items: center; min-inline-size: 0;
+  overflow-wrap: anywhere; min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-row > label > input {flex-shrink: 0;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-pair > span {
+  min-inline-size: 0; line-height: 1.5; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-pair strong {font-variant-numeric: tabular-nums;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel :is(.admin-flash-sale-submit,.gs-admin-flash-schedule-create):disabled {opacity: .55 !important; cursor: not-allowed;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-edit-actions > button {min-height: 44px !important; white-space: normal;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-edit-actions > button:disabled {opacity: .55 !important; cursor: not-allowed;}
+@container (max-width: 250px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-pair {grid-template-columns: minmax(0,1fr);}
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-time { display: grid; gap: 5px; padding: 8px; border: 1px solid var(--av-border); border-radius: 8px; background: var(--av-surface); color: var(--av-text) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-time > span { color: var(--av-muted); font-size: 12px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule {
@@ -1336,6 +1368,32 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-note { padding: 10px; border: 1px solid var(--av-border); background: var(--av-inset); border-radius: 8px; line-height: 1.6; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-form, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-list { grid-template-columns: minmax(0,1fr) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions { display: grid !important; grid-template-columns: 44px 44px minmax(0,1fr) 44px; gap: 6px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-card > div:first-child {
+  display: grid !important; grid-template-columns: 76px minmax(0,1fr);
+  align-items: center; gap: 10px !important; min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners [data-admin-pro-banner-image] {
+  width: 76px !important; height: 56px !important; object-fit: contain !important;
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  border-radius: 8px !important; box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-card > div:first-child > div {min-inline-size: 0; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-card h4 {font-size: 14px !important; line-height: 1.5;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-unified-banner-actions > button:disabled {opacity: .55 !important; cursor: not-allowed;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-unified-banner-actions > button:not(:disabled):hover {border-color: var(--av-accent) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-form > div:last-child > button {min-height: 44px !important; white-space: normal;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-form > label > input,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-form > label > input,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-fields input {
+  box-sizing: border-box; min-inline-size: 0; max-inline-size: 100%; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-form > button:disabled,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card > button:disabled {opacity: .55 !important; cursor: not-allowed;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card > div > p {line-height: 1.6; overflow-wrap: anywhere; font-variant-numeric: tabular-nums;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card {border-inline-start: 3px solid var(--av-accent) !important;}
+@container (max-width: 300px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-unified-banner-actions {grid-template-columns: repeat(2,minmax(0,1fr)) !important;}
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions > button, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card > button { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card {
   display: grid !important;
@@ -1635,9 +1693,20 @@
   -webkit-text-fill-color: currentColor !important;
   overflow-wrap: anywhere;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] {
+  display: grid; grid-template-rows: auto auto 1fr; gap: 6px;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p {
-  word-break: normal !important;
-  overflow-wrap: anywhere;
+  min-inline-size: 0; word-break: normal !important;
+  overflow-wrap: anywhere; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p:nth-child(2) {
+  font-variant-numeric: tabular-nums; font-size: 20px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments .admin-marketing-campaigns :is(input:not([type="checkbox"],[type="radio"]),textarea,select) {
+  box-sizing: border-box; min-inline-size: 0; max-inline-size: 100%;
+  min-height: 44px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p.text-emerald-300 {
   color: var(--av-text) !important;

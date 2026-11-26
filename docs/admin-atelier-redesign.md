@@ -37,3 +37,6 @@ Give permission selectors dedicated native-checkbox and caption tracks with a fu
 
 ## Stage 9 — support, correspondence and test notifications
 Reorganize ticket metadata, status controls, conversation bubbles and reply composer; improve legacy message headers and local-only notification preview and delivery warning. Add containment assertions across device widths. Existing ticket transitions, reply submission, history loading and local-only broadcast behavior remain unchanged. No real messages sent or data modified. Populated thread and legacy message QA and exact-HEAD browser checks remain required.
+
+## Stage 10 — marketing, flash promotions, coupons and banners
+Separate editable flash pricing, time window, price comparison and draft actions, while retaining risk indicators and the storefront preview boundary. Improve banner image/identity tracks, coupon amounts and marketing segment cards. Add responsive containment assertions for all promotion modules. Existing discount limits, price restoration, schedule, coupon validation, publication, consent and sending gates remain untouched. Exact-HEAD CI and populated campaign/banner/coupon state QA are outstanding. No production changes or prices modified.
