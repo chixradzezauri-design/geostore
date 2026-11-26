@@ -6995,7 +6995,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'products' || adminContentTab === 'products') && (
           <div className="admin-products-panel space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-unified-product-editor bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <div className="min-w-0"><h3 className="font-black text-white text-base flex items-center gap-2.5">
                   <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება'}
@@ -7008,7 +7008,12 @@ export default function AdminDashboardPro({
                 </button>
               </div>
 
-              <form id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
+              <nav className="admin-unified-product-jumps" aria-label="პროდუქტის მართვის სწრაფი გადასვლები">
+                {[['geostore-product-form', 'ძირითადი ინფორმაცია'], ['admin-unified-product-description', 'აღწერა'], ['admin-unified-product-variants', 'ვარიანტები'], ['admin-unified-product-gallery', 'ფოტოები'], ['admin-pro-catalogue-title', 'კატალოგი']].map(([target, label]) => (
+                  <button key={target} type="button" onClick={() => { const section = document.getElementById(target); section?.scrollIntoView({block: 'start', behavior: 'auto'}); section?.focus({preventScroll: true}); }}>{label}</button>
+                ))}
+              </nav>
+              <form tabIndex={-1} id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
                 <h4 className="admin-pro-product-section-title">ძირითადი ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
@@ -7049,7 +7054,7 @@ export default function AdminDashboardPro({
                   </div>
                 </div>
 
-                <section className="admin-workspace-product-content space-y-3" aria-labelledby="admin-workspace-product-content-title">
+                <section id="admin-unified-product-description" tabIndex={-1} className="admin-workspace-product-content space-y-3" aria-labelledby="admin-workspace-product-content-title">
                   <h4 id="admin-workspace-product-content-title" className="font-bold text-white text-sm">აღწერა და დამატებითი ინფორმაცია</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label className="admin-workspace-product-field">ძველი ფასი (₾)
@@ -7186,7 +7191,7 @@ export default function AdminDashboardPro({
                   </div>
                 )}
 
-                <div className="admin-product-variants-editor bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                <div id="admin-unified-product-variants" tabIndex={-1} className="admin-product-variants-editor bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ინდივიდუალური ვარიანტები</h4>
                   <p className="text-slate-400 text-xs leading-relaxed">თითოეულ ვარიანტს აქვს საკუთარი ფასი და მარაგი. შეკვეთისას ორივე სერვერზე მოწმდება.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
@@ -7207,7 +7212,7 @@ export default function AdminDashboardPro({
                   ))}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
                 </div>
 
-                <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
+                <div id="admin-unified-product-gallery" tabIndex={-1} className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
                   <label htmlFor="admin-workspace-product-gallery" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
@@ -7239,13 +7244,13 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <div>
-                  <h3 id="admin-pro-catalogue-title" className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
+                  <h3 tabIndex={-1} id="admin-pro-catalogue-title" className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
                   <p className="mt-1 text-[10px] text-slate-400">
                     გამოქვეყნებული: {(products || []).filter(product => (product.isPublished ?? product.is_published) !== false).length}
                     {' · '}დამალული: {(products || []).filter(product => (product.isPublished ?? product.is_published) === false).length}
                   </p>
                 </div>
-                <div className="admin-product-list-filters flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <div aria-label="კატალოგის ფილტრები" role="group" className="admin-product-list-filters flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <select
                     aria-label="პროდუქტის კატეგორიის ფილტრი"
                     value={productCategoryFilter}
@@ -7286,16 +7291,16 @@ export default function AdminDashboardPro({
                       {p.image ? <AdminThumbnail data-admin-pro-product-image="true" src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div data-admin-pro-product-image="true" className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
-                        <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
+                        <div className="admin-unified-product-meta"><span>{p.category}</span><span>SKU: {p.sku || '—'}</span></div>
                         <span data-admin-pro-publication={(p.isPublished ?? p.is_published) === false ? "hidden" : "published"} className={`inline-flex mt-1 rounded-full px-2 py-1 text-[10px] font-bold ${(p.isPublished ?? p.is_published) === false ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
                           {(p.isPublished ?? p.is_published) === false ? 'დამალულია მაღაზიაში' : 'გამოქვეყნებულია'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="admin-product-controls flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+                    <div aria-label={`პროდუქტის მართვა: ${p.name}`} role="group" className="admin-product-controls flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-400 text-[11px]">თვითღირებულება</span>
+                        <span className="admin-unified-product-field-label text-slate-400 text-[11px]">თვითღირებულება (₾)</span>
                         <input 
                           type="number"
                           min="0"
@@ -7324,7 +7329,7 @@ export default function AdminDashboardPro({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-400 text-[11px]">ფასი:</span>
+                        <span className="admin-unified-product-field-label text-slate-400 text-[11px]">ფასი (₾)</span>
                         <input 
                           type="number"
                           min="0"
@@ -7353,7 +7358,7 @@ export default function AdminDashboardPro({
                       </div>
 
                       <div className="flex items-center gap-2 bg-slate-900/70 border border-emerald-500/20 rounded-2xl px-2.5 py-1.5">
-                        <span className="text-slate-300 text-[11px] font-bold">მარაგი:</span>
+                        <span className="admin-unified-product-field-label text-slate-300 text-[11px] font-bold">მარაგი (ც.)</span>
                         <input
                           type="number"
                           min="0"
