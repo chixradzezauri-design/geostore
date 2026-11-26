@@ -24,8 +24,11 @@ const modules = {
   staff: '.admin-staff', logs: '.admin-audit-logs-panel', settings: '.admin-settings-panel'
 };
 
-export async function runAdminWorkspaceSmoke(browser, host) {
-  for (const width of [390, 1440]) {
+export const ADMIN_AUDIT_WIDTHS = Object.freeze([320, 360, 390, 430, 768, 1024, 1440]);
+export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 1440], auditWidths = ADMIN_AUDIT_WIDTHS, layoutOnly = false } = {}) {
+  const engine = browser.browserType().name();
+  const layoutFailures = [];
+  for (const width of widths) {
     const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const errors = [];
     const writes = [];
@@ -100,6 +103,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       assert.equal(moduleRequests.size,0,'Dedicated admin modules must not load on the initial command center');
       const picker = page.locator('#geostore-admin-mobile-section');
       const visualBaseline=[];
+      const matrix=[];
       assert.equal(await shell.locator('.admin-pro-brand h3').textContent(),'GEOSTORE Admin PRO');
       for (const [tab, selector] of Object.entries(modules)) {
         // Desktop and phone use the real exposed navigation controls.
@@ -123,6 +127,26 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
+        // Reuse the same intercepted session, no extra deploy or login per width.
+        // Resize before mutating any local fixture UI and restore the entry width.
+        if (width === widths[0]) {
+          for (const targetWidth of auditWidths) {
+            await page.setViewportSize({ width: targetWidth, height: 850 });
+            await page.waitForFunction(expected => window.innerWidth === expected, targetWidth);
+            await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+            const sample = await collectAdminVisualBaseline(shell, tab);
+            const selected = await picker.inputValue();
+            const moduleVisible = await shell.locator(selector).first().isVisible();
+            const activeCount = await activeNav.count();
+            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
+            if (sample.documentOverflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1) {
+              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,selected,moduleVisible,activeCount});
+            }
+          }
+          await page.setViewportSize({ width, height: 850 });
+          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        }
+        if (layoutOnly) continue;
         if(tab==='analytics'){
           assert.equal(await shell.locator('[data-admin-pro-finance-kpi]').count(),8,'All eight financial KPI cards retained');
           assert.ok(await shell.locator('[data-admin-pro-finance-state]').isVisible());
@@ -487,10 +511,16 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       }
       assert.equal(visualBaseline.length,Object.keys(modules).length,'Every permitted module has a visual baseline');
       assert.equal(new Set(visualBaseline.map(row=>row.module)).size,Object.keys(modules).length);
-      console.log('ADMIN_VISUAL_BASELINE '+JSON.stringify({engine:browser.browserType().name(),width,modules:visualBaseline}));
+      console.log('ADMIN_VISUAL_BASELINE '+JSON.stringify({engine,width,modules:visualBaseline}));
+      if (width === widths[0]) {
+        assert.equal(matrix.length, Object.keys(modules).length * auditWidths.length,'All modules measured at all requested widths');
+        assert.equal(new Set(matrix.map(row=>row.module+':'+row.width)).size,matrix.length,'No duplicate device/module measurements');
+        console.log('ADMIN_DEVICE_MATRIX '+JSON.stringify({engine,widths:auditWidths,measurements:matrix,failures:layoutFailures}));
+      }
       assert.deepEqual(writes, [], 'Opening and filtering modules must not mutate live or fixture data');
       assert.deepEqual(errors, [], 'No uncaught owner workspace errors');
       console.log('PASS intercepted owner workspace: ' + width + 'px, ' + Object.keys(modules).length + ' actual modules, no writes');
     } finally { await context.close(); }
   }
+  assert.deepEqual(layoutFailures, [], engine + ': device matrix has page overflow or navigation regressions');
 }

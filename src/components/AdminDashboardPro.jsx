@@ -5766,7 +5766,7 @@ export default function AdminDashboardPro({
             )}
 
             {inventoryMovementLoading && inventoryMovementRows.length === 0 ? (
-              <AdminSectionLoading label="მარაგის ისტორია იტვირთება…"/>
+              <div role="status" className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400" data-admin-pro-feedback="loading"><span aria-hidden="true" className="admin-pro-loading-indicator" />მარაგის ისტორია იტვირთება…</div>
             ) : inventoryMovementRows.length === 0 && !inventoryMovementError ? (
               <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center">
                 <Layers className="mx-auto h-8 w-8 text-emerald-400" />

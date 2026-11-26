@@ -279,6 +279,7 @@ try {
   await runStage46ProductPurchaseScenarios(browser, host, [390]);
   await runSignatureStorefrontSmoke(browser,host,[390]);
   await runCharacterStudioSmoke(browser,host,[390]);
+  await runAdminWorkspaceSmoke(browser,host,{widths:[390],layoutOnly:true});
   console.log('PASS Stage48 WebKit phone-sized checkout flow at 390px (mock data, no live orders)');
 } finally {
   if (browser) await browser.close();
