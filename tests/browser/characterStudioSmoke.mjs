@@ -218,6 +218,16 @@ export async function runConciergeV3Smoke(browser,host){
     const compactBox=await scene.locator('.gs-character-bubble').boundingBox();
     assert.ok(compactBox.height<=127,'Compact assistant has a bounded height');
     assert.equal(await scene.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).animationName),'none');
+    for(const [width,height] of [[320,850],[360,850],[390,850],[430,850],[768,850],[1024,850],[1440,850],[640,360]]){
+      await page.setViewportSize({width,height});
+      const box=await scene.boundingBox();
+      const bubble=await scene.locator('.gs-character-bubble').boundingBox();
+      assert.ok(box.x>=-1&&box.y>=-1&&box.x+box.width<=width+1&&box.y+box.height<=height+1,'Compact concierge stays in viewport '+width+'x'+height);
+      assert.ok(bubble.height<=127,'Compact text stays bounded '+width+'x'+height);
+      const dismiss=scene.locator('.gs-character-dismiss');
+      assert.equal(await dismiss.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Dismiss remains reachable '+width+'x'+height);
+    }
+    await page.setViewportSize({width:390,height:850});
     await toggle.click();
     assert.equal(await toggle.getAttribute('aria-expanded'),'true');
     await product.waitFor({state:'visible',timeout:15000});

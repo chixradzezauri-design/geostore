@@ -262,3 +262,82 @@
 .gs-character-scene:not(.gs-character-preview-scene) .gs-character-action-spark{animation:none;opacity:0}
 @media(pointer:coarse){.gs-character-scene .gs-character-details-toggle{min-height:44px}}
 @media(max-width:420px){.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="compact"] .gs-character-bubble{max-width:min(178px,calc(100vw - 112px));font-size:min(12px,var(--gs-mascot-font,13px))}}
+
+/* Premium phase 2: bound the public footprint, while preserving the saved size,
+   side and lift settings within safe viewport limits. Editor previews stay intact. */
+.gs-character-scene:not(.gs-character-preview-scene){
+  --gs-premium-edge: max(10px,env(safe-area-inset-left,0px));
+  --gs-premium-bottom:calc(180px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+  --gs-premium-room:calc(100vh - var(--gs-premium-bottom) - 16px);
+  --gs-premium-figure:min(var(--gs-mascot-mobile,76px),clamp(56px,20vw,88px));
+  bottom:var(--gs-premium-bottom);left:var(--gs-premium-edge);
+  gap:6px;max-width:min(284px,calc(100vw - 2 * var(--gs-premium-edge)));align-items:flex-end;
+}
+.gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){
+  --gs-premium-edge:max(10px,env(safe-area-inset-right,0px));
+  left:auto;right:var(--gs-premium-edge);
+}
+.geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){
+  --gs-premium-bottom:calc(92px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+  bottom:var(--gs-premium-bottom);
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{
+  width:var(--gs-premium-figure);flex:0 0 var(--gs-premium-figure);min-width:0;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-bubble{
+  display:flex;flex-direction:column;align-items:stretch;
+  width:min(208px,100%);min-width:0;overflow:hidden;
+  padding:9px 10px 8px;max-height:min(126px,32vh,var(--gs-premium-room));
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-name-row{
+  flex:0 0 auto;padding-inline-end:29px;min-height:24px;align-content:center;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-name-row>strong{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-message{
+  flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;pointer-events:auto;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-details-toggle{flex:0 0 auto}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-details{
+  min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;pointer-events:auto;
+}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-bubble{
+  max-height:min(280px,44vh,var(--gs-premium-room));
+}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-message{max-height:4.4em;flex-shrink:0}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-dismiss{top:3px;inset-inline-end:3px;right:3px;width:28px;height:28px}
+@media(min-width:768px){
+  .gs-character-scene:not(.gs-character-preview-scene){
+    --gs-premium-edge:max(24px,env(safe-area-inset-left,0px));
+    --gs-premium-bottom:calc(24px + var(--gs-mascot-lift,0px) + env(safe-area-inset-bottom,0px));
+    --gs-premium-figure:min(var(--gs-mascot-desktop,116px),128px);
+    bottom:var(--gs-premium-bottom);left:var(--gs-premium-edge);max-width:350px;
+  }
+  .gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:calc(258px + env(safe-area-inset-right,0px));right:var(--gs-premium-edge);
+    max-width:min(350px,calc(100vw - var(--gs-premium-edge) - 24px));
+  }
+}
+@media(min-width:1024px) and (min-height:650px){
+  .gs-character-scene[data-placement="middle"]:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(36vh + var(--gs-mascot-lift,0px));
+    bottom:var(--gs-premium-bottom);
+  }
+  .gs-character-scene[data-placement="middle"][data-side="right"]:not(.gs-character-preview-scene){--gs-premium-edge:24px;right:var(--gs-premium-edge)}
+}
+@media(max-height:480px){
+  .gs-character-scene:not(.gs-character-preview-scene){
+    --gs-premium-figure:56px;
+    --gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px));
+    bottom:var(--gs-premium-bottom);
+    max-width:260px;
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){--gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px));bottom:var(--gs-premium-bottom)}
+  .gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-bubble{max-height:min(220px,var(--gs-premium-room))}
+  .gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-message{max-height:2.8em;flex-shrink:1}
+}
+@supports(height:100dvh){
+  .gs-character-scene:not(.gs-character-preview-scene){--gs-premium-room:calc(100dvh - var(--gs-premium-bottom) - 16px)}
+}

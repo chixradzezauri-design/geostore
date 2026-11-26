@@ -10,3 +10,11 @@ test('premium public character actions are opt-in and the text does not bounce',
  assert.ok(smoke.includes('Recommendations do not occupy catalogue space before opening'));
  assert.equal(JSON.parse(read('vercel.json')).git.deploymentEnabled['internal-character-premium-2026-11-26'],false);
 });
+
+test('premium responsive footprint preserves size variables and keeps dismissal outside the scrolling details',()=>{
+ const jsx=read('src/components/CharacterMascot.jsx'),css=read('src/components/characterStudio.css').split('/* Premium phase 2:')[1],smoke=read('tests/browser/characterStudioSmoke.mjs');
+ assert.ok(jsx.includes('className="gs-character-message"'));
+ for(const term of ['--gs-premium-room','100dvh','env(safe-area-inset-bottom,0px)','var(--gs-mascot-mobile,76px)','var(--gs-mascot-desktop,116px)','258px','max-height:480px','.gs-character-details{','overflow:auto','.gs-character-dismiss{'])assert.ok(css.includes(term),term);
+ assert.ok(smoke.includes('Compact concierge stays in viewport'));
+ assert.ok(smoke.includes('Dismiss remains reachable'));
+});
