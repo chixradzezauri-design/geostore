@@ -797,6 +797,63 @@ try {
       await page.close();
     }
   }
+  // Stage 43: use the actual StoreView direct-child div (not article).
+  // The production CSS explicitly targets div.gs-flash-sale-card, so a tag
+  // mismatch here produces false failures and misses the real cascade.
+  // Stage 43: browser-computed CSS regression using the actual StoreView
+  // section > .grid > .gs-flash-sale-card > .py-3 > .flex structure.
+  // This tests the production CSS cascade, not just source-text selectors.
+  for (const width of [320, 375, 430, 560]) {
+    for (const count of [1, 2]) {
+      const page = await browser.newPage({ viewport: { width, height: 820 } });
+      try {
+        const flashCards = Array.from({ length: count }, (_, i) =>
+          '<div class="gs-flash-sale-card group">' +
+          '<div class="gs-flash-sale-media relative">Photo</div>' +
+          '<div class="py-3 space-y-1.5"><h4>Flash Sale Product ' + i + '</h4>' +
+          '<div class="flex items-baseline gap-2"><span>123.45 ₾</span>' +
+          '<span>199.99 ₾</span></div></div>' +
+          '<button class="w-full bg-[#16161a]">კალათაში დამატება</button></div>'
+        ).join('');
+        await page.setContent('<!doctype html><html lang="ka"><head>' +
+          '<meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
+          '<section class="geostore-fashion-store"><main class="geostore-storefront">' +
+          '<div class="gs-flash-sale-section" style="width:100%;padding:0 16px;box-sizing:border-box">' +
+          '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">' +
+          flashCards + '</div></div></main></section></body></html>');
+        await page.addStyleTag({ content: css });
+        const result = await page.evaluate(() => {
+          const grid = document.querySelector('.gs-flash-sale-section > .grid');
+          const cards = [...grid.querySelectorAll(':scope > .gs-flash-sale-card')];
+          const tracks = getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean);
+          return {
+            tracks: tracks.length,
+            gridWidth: grid.getBoundingClientRect().width,
+            cardWidths: cards.map(card => card.getBoundingClientRect().width),
+            writingModes: cards.map(card => getComputedStyle(card.querySelector('.py-3')).writingMode),
+            prices: cards.map(card => card.querySelector('.py-3 > .flex').getBoundingClientRect().width),
+            buttonWidths: cards.map(card => card.querySelector('button').getBoundingClientRect().width),
+            scrollWidth: document.documentElement.scrollWidth
+          };
+        });
+        assert.equal(result.tracks, width === 560 ? 2 : 1,
+          width + 'px / ' + count + ' cards: wrong Flash Sale tracks ' + JSON.stringify(result));
+        assert.ok(result.cardWidths.every(cardWidth => cardWidth >= 220 && cardWidth <= result.gridWidth + 1),
+          width + 'px / ' + count + ' cards: collapsed Flash Sale card ' + JSON.stringify(result));
+        assert.ok(result.writingModes.every(mode => mode === 'horizontal-tb'),
+          width + 'px / ' + count + ' cards: vertical text ' + JSON.stringify(result));
+        assert.ok(result.prices.every(priceWidth => priceWidth >= 180),
+          width + 'px / ' + count + ' cards: price row collapsed ' + JSON.stringify(result));
+        assert.ok(result.buttonWidths.every(buttonWidth => buttonWidth >= 180),
+          width + 'px / ' + count + ' cards: action collapsed ' + JSON.stringify(result));
+        assert.ok(result.scrollWidth <= width + 2,
+          width + 'px / ' + count + ' cards: horizontal overflow ' + JSON.stringify(result));
+        process.stdout.write('PASS Flash Sale ' + width + 'px / ' + count + ' cards\n');
+      } finally {
+        await page.close();
+      }
+    }
+  }
 } finally {
   await browser.close();
 }
