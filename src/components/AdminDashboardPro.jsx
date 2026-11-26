@@ -8356,8 +8356,8 @@ export default function AdminDashboardPro({
         )}
 
       {isOwner && reactivationOrder && (
-        <div tabIndex="-1" className="admin-order-reactivation-overlay fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
-          <form onSubmit={handleConfirmOrderReactivation} className="admin-order-reactivation-form w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+        <div tabIndex="-1" className="admin-order-reactivation-overlay fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title" aria-describedby="admin-reactivation-explanation">
+          <form onSubmit={handleConfirmOrderReactivation} aria-busy={isReactivatingOrder} className="admin-order-reactivation-form w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
                 <KeyRound className="w-5 h-5 text-amber-300" />
@@ -8367,7 +8367,7 @@ export default function AdminDashboardPro({
                 <p className="text-slate-400 text-xs">შეკვეთა #{reactivationOrder.id}</p>
               </div>
             </div>
-            <p className="text-slate-300 text-xs leading-5">
+            <p id="admin-reactivation-explanation" className="admin-unified-dialog-explanation text-slate-300 text-xs leading-5">
               უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი.
               {isDeliveredOrderStatus(reactivationOrder.status)
                 ? ' დასრულებული შეკვეთა დაბრუნდება აქტიურ სტატუსზე; უკვე ჩამოჭრილი მარაგი უცვლელი დარჩება და მეორედ არ ჩამოიჭრება.'
@@ -8376,6 +8376,7 @@ export default function AdminDashboardPro({
             <label className="block text-xs font-bold text-slate-300" htmlFor="reactivation-password">ადმინისტრატორის პაროლი</label>
             <input
               id="reactivation-password"
+              aria-describedby={reactivationError ? "admin-reactivation-explanation admin-reactivation-error" : "admin-reactivation-explanation"}
               type="password"
               autoComplete="current-password"
               value={reactivationPassword}
@@ -8394,8 +8395,8 @@ export default function AdminDashboardPro({
               <label htmlFor="reactivation-code" className="block text-xs font-bold text-slate-300">ექვსნიშნა უსაფრთხოების კოდი</label>
               <input id="reactivation-code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={reactivationCode} disabled={isReactivatingOrder} onChange={event=>setReactivationCode(normalizeMfaCode(event.target.value))} required className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white"/>
             </div>}
-            {reactivationError && <p role="alert" className="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/30 rounded-xl p-3">{reactivationError}</p>}
-            <div className="flex justify-end gap-2">
+            {reactivationError && <p id="admin-reactivation-error" data-admin-unified-feedback="error" role="alert" className="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/30 rounded-xl p-3">{reactivationError}</p>}
+            <div className="admin-unified-dialog-actions flex justify-end gap-2">
               <button type="button" disabled={isReactivatingOrder} onClick={() => { setReactivationOrder(null); setReactivationPassword(''); setReactivationCode(''); setReactivationError(''); }} className="px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold disabled:opacity-50">გაუქმება</button>
               <button type="submit" disabled={isReactivatingOrder || !reactivationPassword || (ADMIN_MFA_ROLLOUT_ENABLED && (!reactivationFactorId || reactivationCode.length!==6 || reactivationFactorsLoading))} className="px-4 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-50">
                 {isReactivatingOrder ? 'მოწმდება...' : 'დადასტურება და გააქტიურება'}

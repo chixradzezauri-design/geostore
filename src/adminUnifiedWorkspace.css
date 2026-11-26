@@ -849,3 +849,34 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-studio-group > summary > span[aria-hidden="true"] { transition: none; }
 }
+
+/* Stage 14 — operational forms, dialogs and feedback; retain all confirmation guards. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-order-detail-overlay,.admin-order-reactivation-overlay) { background: rgba(24,34,48,.72) !important; backdrop-filter: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-order-detail-modal,.admin-order-reactivation-form) {
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  background: var(--admin-vd-modalBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-modalBorder-active,var(--av-border)) !important;
+  box-shadow: 0 12px 36px rgba(15,23,42,.18) !important;
+  min-width: 0; box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header { gap: 10px !important; align-items: flex-start !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > div { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > button { min-width: 44px !important; min-height: 44px !important; flex-shrink: 0; background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-order-detail-modal,.admin-order-reactivation-form) :is(h3,h4,label) { color: var(--admin-vd-modalText-active,var(--av-text)) !important; line-height: 1.5; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-explanation { padding: 12px; border: 1px solid var(--av-border); border-radius: 8px; background: var(--av-inset); color: var(--av-text) !important; line-height: 1.65; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-reactivation-form :is(input,select) { min-width: 0; max-width: 100%; min-height: 44px; box-sizing: border-box; background: var(--admin-vd-inputBackground-active,var(--av-surface)) !important; color: var(--admin-vd-inputText-active,var(--av-text)) !important; border-color: var(--admin-vd-inputBorder-active,var(--av-border)) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-actions { flex-wrap: wrap; gap: 8px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-actions > button { flex: 1 1 140px; min-height: 44px !important; white-space: normal; line-height: 1.5; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-actions > button[type="button"] { color: var(--av-text) !important; background: var(--av-inset) !important; border: 1px solid var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-actions > button[type="submit"] { color: var(--admin-vd-primaryButtonText-active,#fff) !important; background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-order-detail-modal,.admin-order-reactivation-form) :is(input,select,button):focus-visible { outline: 2px solid var(--av-focus,var(--av-accent)); outline-offset: 2px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-feedback="error"] { background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-create-form,.admin-product-form,.admin-category-form,.admin-coupon-form,.admin-banner-form,.admin-expense-form,.admin-flash-sale-form,.admin-global-settings-form) :is(input,select,textarea):disabled { cursor: not-allowed; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-create-form,.admin-product-form,.admin-category-form,.admin-coupon-form,.admin-banner-form,.admin-expense-form,.admin-flash-sale-form,.admin-global-settings-form) :is(input,select,textarea):focus-visible { outline: 2px solid var(--av-focus,var(--av-accent)); outline-offset: 2px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-create-form,.admin-product-form,.admin-category-form,.admin-coupon-form,.admin-banner-form,.admin-expense-form,.admin-flash-sale-form,.admin-global-settings-form) label { line-height: 1.5; min-width: 0; }
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-reactivation-form :is(input,select) { font-size: max(16px,var(--admin-vd-inputFontSize-active,16px)) !important; }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-actions > button { flex-basis: 100%; }
+}

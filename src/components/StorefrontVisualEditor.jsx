@@ -1078,7 +1078,7 @@ export default function StorefrontVisualEditor({
       </header>
 
       {/* Keep save/publish reachable above the long phone preview. Real handlers and server guards are shared. */}
-      <div data-admin-unified-editor-actions="mobile" className="gs-visual-editor-mobile-actions sticky top-2 z-30 grid grid-cols-2 gap-2 rounded-xl border border-emerald-400/30 bg-slate-950/95 p-2 shadow-xl backdrop-blur md:hidden" role="group" aria-label="მობილური მონახაზის მოქმედებები">
+      <div className="gs-visual-editor-mobile-actions sticky top-2 z-30 grid grid-cols-2 gap-2 rounded-xl border border-emerald-400/30 bg-slate-950/95 p-2 shadow-xl backdrop-blur md:hidden" data-admin-unified-editor-actions="mobile" role="group" aria-label="მობილური მონახაზის მოქმედებები">
         <button type="button" onClick={saveDraft} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-400 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" />{storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
         <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
       </div>
