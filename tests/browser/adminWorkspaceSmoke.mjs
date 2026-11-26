@@ -55,6 +55,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           has_more: false
         });
         if (path === '/rest/v1/rpc/admin_list_products' && method === 'POST') return respond(stage49FixtureProductRows);
+        if (path === '/rest/v1/support_tickets' && method === 'GET') return respond([{id:'42', subject:'ტესტური მოთხოვნა', message:'ტესტური შეტყობინება', status:'ღია', customer_name:'Fixture', email:'support@workspace.test'}]);
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
         if (path === '/rest/v1/rpc/get_admin_panel_visual_design_state' && method === 'POST') return respond({ design: null, updated_at: null });
         if (path === '/rest/v1/rpc/has_staff_permission' && method === 'POST') return respond(true);
@@ -179,6 +180,17 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return rect.left < bounds.left - 2 || rect.right > bounds.right + 2 || rect.height < 43.5 ? [{tag:node.tagName, className:typeof node.className==='string'?node.className.slice(0,120):'',width:Math.round(rect.width),height:Math.round(rect.height)}] : [];
               });
             });
+            if (tab === 'support' && targetWidth === 320) {
+              const ticket = shell.locator('.admin-support-ticket').first();
+              await ticket.waitFor();
+              const layout = await ticket.evaluate(node => {
+                const [open, working, resolved] = [...node.querySelectorAll('.admin-support-status-actions > button')].map(button => button.getBoundingClientRect());
+                const form = node.querySelector('.admin-support-reply-form');
+                const send = form.querySelector('button').getBoundingClientRect();
+                return open.top === working.top && resolved.top > open.top && send.height >= 44 && Math.abs(send.width - form.querySelector('textarea').getBoundingClientRect().width) <= 2;
+              });
+              assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
+            }
             if (tab === 'products' && targetWidth === 390) {
               const pairedControls = await shell.locator('.admin-product-controls').first().evaluate(group => {
                 const fields = group.querySelectorAll('input[type="number"]');

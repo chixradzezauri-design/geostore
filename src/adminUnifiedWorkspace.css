@@ -1064,3 +1064,31 @@
     font-size: max(16px, var(--admin-vd-inputFontSize-active,16px)) !important;
   }
 }
+
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket .admin-support-status-actions {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-controls > button {
+  min-height: 44px !important;
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-controls > button {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-reply-form > textarea {
+    min-height: 96px;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active,16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-reply-form > button {
+    width: 100% !important;
+  }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket .admin-support-status-actions {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions > button:last-child {
+    grid-column: 1 / -1;
+  }
+}
