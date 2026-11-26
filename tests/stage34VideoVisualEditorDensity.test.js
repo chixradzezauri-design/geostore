@@ -23,7 +23,11 @@ test('Stage 34: phone save/publish actions reuse the protected handlers', () => 
   assert.match(mobile, /onClick=\{saveDraft\}/);
   assert.match(mobile, /onClick=\{publish\}/);
   assert.match(mobile, /disabled=\{heroImagePending \|\| !isOwner \|\| storefrontDraftBusy \|\| storefrontPublishBusy\}/);
-  assert.match(source, /hidden md:sticky md:bottom-2 md:z-20 md:grid/);
+  const desktop = source.match(/<div data-admin-unified-editor-actions="desktop"[\s\S]*?<\/div>/)?.[0] || '';
+  assert.match(desktop, /hidden md:sticky md:top-2 md:z-20 md:grid/);
+  assert.match(desktop, /onClick=\{saveDraft\}/);
+  assert.match(desktop, /onClick=\{publish\}/);
+  assert.match(desktop, /disabled=\{heroImagePending \|\| !isOwner \|\| storefrontDraftBusy \|\| storefrontPublishBusy\}/);
   assert.match(source, /if \(!isOwner \|\| typeof onPublishStorefront !== 'function'/);
   assert.match(source, /if \(localDesignDirtyRef\.current/);
 });

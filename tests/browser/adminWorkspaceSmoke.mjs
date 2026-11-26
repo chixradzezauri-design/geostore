@@ -146,12 +146,22 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 assert.ok(bounds.visible && bounds.fits, engine+' '+tab+' '+targetWidth+': native '+bounds.tag+' stays in its visible field');
               }
             }
+            // Stage 15: verify geometry and touch targets of the new workspace controls.
+            const newControlIssues = await shell.evaluate(root => {
+              const controls = root.querySelectorAll('[data-admin-sidebar="true"] > .admin-video-logout, #geostore-admin-mobile-section, .admin-pro-header-actions > button, .admin-unified-editor-jumps > button, .admin-unified-product-jumps > button');
+              const bounds = root.getBoundingClientRect();
+              return [...controls].flatMap(node => {
+                const rect = node.getBoundingClientRect(), style = getComputedStyle(node);
+                if (!rect.width || !rect.height || style.visibility !== 'visible' || node.closest('[hidden],[aria-hidden="true"]')) return [];
+                return rect.left < bounds.left - 2 || rect.right > bounds.right + 2 || rect.height < 43.5 ? [{tag:node.tagName, className:typeof node.className==='string'?node.className.slice(0,120):'',width:Math.round(rect.width),height:Math.round(rect.height)}] : [];
+              });
+            });
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
             matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
-            if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1) {
+            if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1 || newControlIssues.length) {
               // Diagnostic geometry only, from the isolated synthetic fixture.
               // Do not log text, input values, URLs or customer identifiers.
               const offenders = await shell.evaluate(root => {
@@ -173,7 +183,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 }
                 return result.sort((a,b)=>Math.max(b.excess,b.internal)-Math.max(a.excess,a.internal)).slice(0,16);
               });
-              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,selected,moduleVisible,activeCount,offenders});
+              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,selected,moduleVisible,activeCount,newControlIssues,offenders});
             }
           }
           await page.setViewportSize({ width, height: 850 });
@@ -355,7 +365,16 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await profiles.locator('summary').click();
           assert.match(await scenarios.locator('.gs-character-context').innerText(),/Tech Panda.*Fixture cart scene/s);
         }
-        if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
+        if(tab==='admin_visual_editor'){
+          assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
+          const editor=shell.locator('.admin-visual-editor-panel');
+          const jumps=editor.locator('.admin-unified-editor-jumps');
+          await jumps.getByRole('button',{name:'ფერები / PRO',exact:true}).click();
+          const palette=editor.locator('[data-admin-studio-group="palette"]');
+          assert.ok(await palette.evaluate(node=>node.open),'Shortcut opens existing palette without modifying a setting');
+          await palette.locator(':scope > summary').click();
+          assert.deepEqual(writes,[],'Opening editor sections never writes settings');
+        }
         if(tab==='products'){
           const productSearch=shell.getByRole('searchbox',{name:'პროდუქტის ძებნა'});
           await productSearch.fill('fixture-no-match-9d776');
