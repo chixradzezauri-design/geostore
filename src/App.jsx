@@ -1,6 +1,7 @@
 import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
 import CustomerPersonalOffers from './components/CustomerPersonalOffers.jsx';
 import CustomerPurchaseStatistics from './components/CustomerPurchaseStatistics.jsx';
+import {readLoginFields,offerBrowserPasswordSave} from './utils/customerPasswordManager.js';
 import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
 import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
@@ -2926,8 +2927,10 @@ export default function App() {
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
 
-    const email = authForm.email.trim().toLowerCase();
-    const password = authForm.password;
+    // Safari and password managers may autofill DOM fields without a React change event.
+    const loginFields = authMode === 'login' ? readLoginFields(e.currentTarget, authForm) : null;
+    const email = loginFields ? loginFields.email : authForm.email.trim().toLowerCase();
+    const password = loginFields ? loginFields.password : authForm.password;
 
     if ((authMode !== 'reset-password' && !email) || (authMode !== 'reset-request' && !password)) {
       alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
@@ -3141,6 +3144,9 @@ export default function App() {
         });
 
         showToast(currentLang === 'en' ? '🔑 Signed in successfully!' : currentLang === 'ru' ? '🔑 Вход выполнен успешно!' : '🔑 ავტორიზაცია წარმატებულია!');
+        // Only an explicitly selected, successful password login may offer native storage.
+        // Do not block authentication or write passwords to app storage.
+        if (loginFields?.offerSave) void offerBrowserPasswordSave(window,{email,password});
       }
     } catch (error) {
       console.error('Supabase authentication error:', error);

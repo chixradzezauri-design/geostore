@@ -8,6 +8,8 @@ import {
 import { normalizeTrackingLookup } from '../utils/orderSafety';
 import { filterCustomerNotifications, summarizeSupportReplies } from '../utils/customerNotificationCenter.js';
 import './customerNotificationCenter.css';
+import {supportsBrowserPasswordSave} from '../utils/customerPasswordManager.js';
+import './customerPasswordManager.css';
 
 export default function Modals({
   isCheckoutOpen,
@@ -54,6 +56,14 @@ export default function Modals({
   storefrontThemeStyle = {},
   currentLang = 'ka'
 }) {
+  const [offerPasswordSave,setOfferPasswordSave]=useState(false);
+  const [passwordHelpOpen,setPasswordHelpOpen]=useState(false);
+  useEffect(()=>{setOfferPasswordSave(false);setPasswordHelpOpen(false);},[isAuthOpen,authMode,currentUser?.id]);
+  const passwordWords=({
+    ka:{save:'პაროლის დამახსოვრება',offer:'შენახვის შეთავაზება ბრაუზერის პაროლების მენეჯერში',hint:'შესვლის შემდეგ, თუ მოწყობილობა შემოგთავაზებს, აირჩიე პაროლის შენახვა. შემდეგ ჯერზე გამოიყენე შენახული პაროლი. iPhone-ზე ეს იმართება Passwords / AutoFill პარამეტრებით. GEOSTORE პაროლს თავად არ ინახავს.'},
+    en:{save:'Remember password',offer:'Offer to save in the browser password manager',hint:'After signing in, accept the browser’s save-password prompt if offered. Next time, use autofill. On iPhone, manage this in Passwords / AutoFill settings. GEOSTORE does not store your password itself.'},
+    ru:{save:'Запомнить пароль',offer:'Предложить сохранение в менеджере паролей браузера',hint:'После входа подтвердите сохранение пароля, если браузер предложит. В следующий раз используйте автозаполнение. На iPhone настройте Passwords / AutoFill. GEOSTORE сам не хранит ваш пароль.'}
+  })[currentLang] || {save:'პაროლის დამახსოვრება',offer:'შენახვის შეთავაზება ბრაუზერში',hint:'პაროლის შენახვას და ავტომატურ შევსებას მართავს ბრაუზერი.'};
   const [notificationFilter,setNotificationFilter]=useState('all');
   const [notificationSearch,setNotificationSearch]=useState('');
   useEffect(()=>{setNotificationFilter('all');setNotificationSearch('');},[currentUser?.id,isNotificationsOpen]);
@@ -836,7 +846,7 @@ export default function Modals({
               </button>
             </div>
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
+            <form onSubmit={handleAuthSubmit} autoComplete="on" className="space-y-4 text-xs animate-in fade-in">
               {authMode === 'register' && (
                 <>
                   <div className="space-y-1">
@@ -856,14 +866,14 @@ export default function Modals({
 
               {authMode !== 'reset-password' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
-                <input id="geostore-auth-email" type="email" maxLength={254} required autoComplete="email" placeholder="name@example.com" value={authForm.email}
+                <input id="geostore-auth-email" name="username" type="email" maxLength={254} required autoComplete={authMode === 'login' ? 'username' : 'email'} autoCapitalize="none" spellCheck={false} placeholder="name@example.com" value={authForm.email}
                   onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>}
 
               {authMode !== 'reset-request' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' || authMode === 'reset-password' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" name="password" type="password" required minLength={authMode === 'register' || authMode === 'reset-password' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                 {authMode === 'register' && (
@@ -877,6 +887,11 @@ export default function Modals({
                 )}
               </div>}
 
+              {authMode === 'login' && <div className="gs-password-manager">
+                <button type="button" aria-expanded={passwordHelpOpen} aria-controls="gs-password-manager-help" onClick={()=>setPasswordHelpOpen(v=>!v)}>{passwordWords.save}</button>
+                {supportsBrowserPasswordSave(typeof window==='undefined'?null:window) && <label><input type="checkbox" name="offerPasswordSave" checked={offerPasswordSave} onChange={e=>setOfferPasswordSave(e.target.checked)}/><span>{passwordWords.offer}</span></label>}
+                {passwordHelpOpen&&<p id="gs-password-manager-help">{passwordWords.hint}</p>}
+              </div>}
               {authMode === 'reset-request' && <p className="text-[11px] text-slate-400">{copy.resetEmailHint}</p>}
               <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
                 {authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
