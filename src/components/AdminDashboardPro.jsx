@@ -7510,7 +7510,7 @@ export default function AdminDashboardPro({
               <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
             </h3>
             {visibleAdminTab==='discounts'&&isOwner&&<div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-3" data-gs-flash-workspace="true">
-              <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wide text-amber-300">FLASH STUDIO</p><h4 className="text-sm font-black text-white break-words">{siteSettings?.visualDesign?.copy?.flashSaleTitle||'ფლეშ აქციის მართვა'}</h4><p className="text-xs text-slate-300">სახელი, დიზაინი, პროდუქტები და განრიგი ერთ განყოფილებაში.</p></div>
+              <div className="min-w-0"><p className="admin-unified-promo-eyebrow text-xs">აქციების მართვა</p><h4 className="text-sm font-black text-white break-words">{siteSettings?.visualDesign?.copy?.flashSaleTitle||'ფლეშ აქციის მართვა'}</h4><p className="text-xs text-slate-300">სახელი, დიზაინი, პროდუქტები და განრიგი ერთ განყოფილებაში.</p></div>
               <div className="grid grid-cols-2 gap-2" role="group" aria-label="აქციის სამუშაო სივრცე">
                 <button type="button" aria-pressed={flashWorkspaceTab==='pricing'} onClick={()=>setFlashWorkspaceTab('pricing')} className="min-h-11 rounded-lg border border-slate-600 px-2 py-2 text-xs font-bold text-slate-200 aria-pressed:bg-emerald-400 aria-pressed:text-slate-950">ფასები და განრიგი</button>
                 <button type="button" aria-pressed={flashWorkspaceTab==='design'} onClick={()=>{setFlashDesignOpened(true);setFlashWorkspaceTab('design');}} className="min-h-11 rounded-lg border border-slate-600 px-2 py-2 text-xs font-bold text-slate-200 aria-pressed:bg-amber-300 aria-pressed:text-slate-950">სახელი და დიზაინი</button>
@@ -7540,6 +7540,7 @@ export default function AdminDashboardPro({
             </div>}
             <p className="text-xs text-slate-300">სტატისტიკა ასახავს ჩატვირთულ პროდუქტებს. მოქმედება ცვლის ფასებს სერვერზე; საბოლოო რაოდენობას სერვერი ადასტურებს.</p>
             <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
+              <h4 className="admin-unified-promo-heading">ფასდაკლების პარამეტრები</h4>
               <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label htmlFor="admin-workspace-flash-percent" className="text-slate-300 font-bold">ფასდაკლება პროცენტულად (%)</label>
@@ -7574,8 +7575,8 @@ export default function AdminDashboardPro({
                   {flashSalePlannedStart && <button type="button" onClick={()=>setFlashSalePlannedStart('')} className="min-h-11 rounded-xl border border-slate-600 px-3 text-slate-200">გასუფთავება</button>}
                 </div>
                 {flashSaleWindow ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-200">
-                  <p>დაწყება: <strong>{formatFlashSaleTime(flashSaleWindow.startsAt)}</strong></p>
-                  <p>დასრულება: <strong>{formatFlashSaleTime(flashSaleWindow.endsAt)}</strong></p>
+                  <p className="admin-unified-flash-time"><span>დაწყება</span><strong>{formatFlashSaleTime(flashSaleWindow.startsAt)}</strong></p>
+                  <p className="admin-unified-flash-time"><span>დასრულება</span><strong>{formatFlashSaleTime(flashSaleWindow.endsAt)}</strong></p>
                 </div> : <p role="alert" className="text-amber-200">აირჩიეთ მომავალი დრო.</p>}
                 <p className="text-[11px] leading-relaxed text-slate-400">თარიღის არჩევისას გამოიყენეთ ქვემოთ მოცემული დაგეგმვის ღილაკი. თარიღის გარეშე აქცია დაუყოვნებლივ დაიწყება დადასტურების შემდეგ.</p>
               </div>
@@ -7742,11 +7743,11 @@ export default function AdminDashboardPro({
               </h3>
               <form onSubmit={handleAddBanner} className="admin-banner-form space-y-4 text-xs">
                 <div className="admin-banner-fields grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <input type="text" aria-label="ბანერის სათაური" placeholder="სათაური" required maxLength={120} value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="text" aria-label="ბანერის აღწერა" placeholder="ქვესათაური / აღწერა" maxLength={240} value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <label className="admin-unified-promo-field"><span>სათაური *</span><input type="text" aria-label="ბანერის სათაური" placeholder="სათაური" required maxLength={120} value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" /></label>
+                  <label className="admin-unified-promo-field"><span>აღწერა</span><input type="text" aria-label="ბანერის აღწერა" placeholder="ქვესათაური / აღწერა" maxLength={240} value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" /></label>
                 </div>
-                <input type="text" aria-label="ბანერის ფოტოს ბმული" placeholder="ბანერის ფოტოს URL (HTTP/HTTPS)" maxLength={2048} value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <p className="text-xs text-slate-300">მაქსიმუმ 20 ბანერი. ფოტო: HTTP/HTTPS ბმული. ცვლილებები ჯერ მონახაზშია.</p>
+                <label className="admin-unified-promo-field"><span>ფოტოს ბმული</span><input type="text" aria-label="ბანერის ფოტოს ბმული" placeholder="ბანერის ფოტოს URL (HTTP/HTTPS)" maxLength={2048} value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" /></label>
+                <p className="admin-unified-promo-note text-xs text-slate-300">მაქსიმუმ 20 ბანერი. ფოტო: HTTP/HTTPS ბმული. ცვლილებები ჯერ მონახაზშია.</p>
                 <div className="flex flex-wrap gap-2">
                 {editingBannerId !== null && <button type="button" onClick={() => { setEditingBannerId(null); setBannerForm({ title: '', subtitle: '', image: '', link: '' }); }} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">გაუქმება</button>}
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{editingBannerId !== null ? "მონახაზის განახლება" : adminVisualDesign.content.bannersSubmitLabel}</button>
@@ -7767,7 +7768,7 @@ export default function AdminDashboardPro({
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="admin-unified-banner-actions flex flex-wrap gap-2" role="group" aria-label={`ბანერის მართვა: ${b.title}`}>
                       <button type="button" disabled={index === 0} aria-label={`ბანერის ზემოთ აწევა: ${b.title}`} onClick={() => moveBanner(b.id, -1)} className="admin-workspace-secondary-action rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronUp className="w-4 h-4" /></button>
                       <button type="button" disabled={index === (bannersList || []).length - 1} aria-label={`ბანერის ქვემოთ ჩამოწევა: ${b.title}`} onClick={() => moveBanner(b.id, 1)} className="admin-workspace-secondary-action rounded-xl bg-slate-800 p-2 text-slate-200"><ChevronDown className="w-4 h-4" /></button>
                       <button type="button" onClick={() => { setEditingBannerId(b.id); setBannerForm({ title: b.title || "", subtitle: b.subtitle || "", image: b.image || "", link: b.link || "" }); }} className="admin-workspace-secondary-action rounded-xl bg-slate-800 px-3 text-slate-200">რედაქტირება</button>
@@ -8023,9 +8024,9 @@ export default function AdminDashboardPro({
                 <Tag className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.couponsCreateTitle}
               </h3>
               <form onSubmit={handleCreateCoupon} className="admin-coupon-form grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
-                <input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} disabled={couponBusy} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
-                <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="0.01" max="100" step="0.01" inputMode="decimal" disabled={couponBusy} value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" max="1000000000" step="0.01" inputMode="decimal" disabled={couponBusy} value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <label className="admin-unified-promo-field"><span>კუპონის კოდი *</span><input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} disabled={couponBusy} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" /></label>
+                <label className="admin-unified-promo-field"><span>ფასდაკლება (%) *</span><input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="0.01" max="100" step="0.01" inputMode="decimal" disabled={couponBusy} value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" /></label>
+                <label className="admin-unified-promo-field"><span>მინ. შეკვეთა (₾)</span><input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" max="1000000000" step="0.01" inputMode="decimal" disabled={couponBusy} value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" /></label>
                 <button type="submit" disabled={couponBusy} aria-busy={couponBusy} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{couponBusy ? "მუშავდება…" : adminVisualDesign.content.couponsSubmitLabel}</button>
               </form>
             </div>

@@ -743,3 +743,62 @@
 @media (max-width: 359px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-actions, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Stage 12 — promotions, coupons and banners. No pricing or publication logic changes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-discounts-panel,.admin-coupons-panel,.admin-banners) { container-type: inline-size; background-image: none !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banners,.admin-coupons-panel) > div { background-image: none !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-eyebrow { color: var(--av-muted) !important; font-size: 12px !important; font-weight: 600; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-heading { color: var(--av-text) !important; font-size: 15px !important; font-weight: 700; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-flash-sale-fields { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-time { display: grid; gap: 5px; padding: 8px; border: 1px solid var(--av-border); border-radius: 8px; background: var(--av-surface); color: var(--av-text) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-time > span { color: var(--av-muted); font-size: 12px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule {
+  color: var(--av-text) !important; background: var(--av-inset) !important; border-color: var(--av-border) !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview :is(h4,legend) { color: var(--av-text) !important; font-size: 14px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview fieldset { border-color: var(--av-border) !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview [type="radio"], .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview [type="checkbox"] { accent-color: var(--av-accent); flex-shrink: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics > div, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-row {
+  background: var(--av-surface) !important; border-color: var(--av-border) !important; min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics > div > strong { color: var(--av-text) !important; font-variant-numeric: tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-row { grid-template-columns: minmax(0,1fr) !important; gap: 8px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; font-variant-numeric: tabular-nums; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > span { display: grid; gap: 3px; min-width: 0; color: var(--av-muted); font-size: 12px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair strong { color: var(--av-text) !important; font-size: 14px; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > small { grid-column: 1 / -1; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-flash-price-risk="increase"] .admin-unified-flash-price-warning { background: #fff0cc !important; color: #754300 !important; border-radius: 6px; padding: 4px 7px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview [role="alert"] { background: #fff0cc !important; color: #754300 !important; border-radius: 6px; padding: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule :is(.gs-admin-flash-schedule-summary > span,.gs-admin-flash-schedule-list > li,.gs-admin-flash-history-metrics > button,.gs-admin-flash-history-metrics > div,.gs-admin-flash-edit) {
+  background: var(--av-surface) !important; border-color: var(--av-border) !important; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics > button[aria-pressed="true"] { outline: 2px solid var(--av-accent); outline-offset: -2px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status { background: #e7edf3 !important; color: #39495a !important; border-color: transparent !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status[data-status="pending"] { background: #e4eefc !important; color: #254b8a !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status[data-status="started"] { background: #dff3eb !important; color: #14594a !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status:is([data-status="cancelled"],[data-status="skipped"]) { background: #fce5e8 !important; color: #9c2538 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-flash-sale-submit,.gs-admin-flash-schedule-create,.admin-banner-form button[type="submit"],.admin-coupon-form button[type="submit"]) {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important; color: var(--admin-vd-primaryButtonText-active,#fff) !important; box-shadow: none !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-field { display: grid; align-content: start; gap: 6px; min-width: 0; color: var(--av-text); font-size: 13px; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-field > input { width: 100% !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-promo-note { padding: 10px; border: 1px solid var(--av-border); background: var(--av-inset); border-radius: 8px; line-height: 1.6; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-form, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-list { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions { display: grid !important; grid-template-columns: 44px 44px minmax(0,1fr) 44px; gap: 6px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions > button, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card > button { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card { border-color: var(--av-border) !important; background-image: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card > div { min-width: 0; }
+@container (min-width: 480px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-flash-sale-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-form { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important; align-items: center; }
+}
+@container (min-width: 760px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-flash-sale-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-list { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-form { grid-template-columns: repeat(3,minmax(0,1fr)) auto !important; align-items: end; }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
