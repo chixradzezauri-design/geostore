@@ -99,6 +99,11 @@ export default function StoreView({
   const visualCopy = siteSettings?.visualDesign?.copy || {};
   const flashCampaignBanner = normalizeFlashCampaignBanner(siteSettings?.visualDesign?.flashCampaignBanner);
   const flashBannerAppearance = normalizeFlashBannerAppearance(siteSettings?.visualDesign?.flashBannerAppearance);
+  const flashLabels = currentLang === 'en'
+    ? { ends: 'Ends', locale: 'en-GB', remaining: 'Time remaining', hours: 'Hours', minutes: 'Minutes', seconds: 'Seconds', save: 'Save', last: n => `Only ${n} left`, soldOut: 'Sold out' }
+    : currentLang === 'ru'
+      ? { ends: 'До', locale: 'ru-RU', remaining: 'Осталось', hours: 'Часы', minutes: 'Минуты', seconds: 'Секунды', save: 'Экономия', last: n => `Осталось: ${n}`, soldOut: 'Нет в наличии' }
+      : { ends: 'დასრულდება', locale: 'ka-GE', remaining: 'დარჩენილია', hours: 'საათი', minutes: 'წუთი', seconds: 'წამი', save: 'ზოგავ', last: n => `ბოლო ${n} ცალი`, soldOut: 'ამოიწურა' };
   const flashBannerNode = flashCampaignBanner ? <img key={flashCampaignBanner} src={flashCampaignBanner} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" style={flashBannerStyle(flashBannerAppearance,visualEditorViewport||liveSectionViewport)} className="gs-flash-campaign-banner" onError={event=>{event.currentTarget.hidden=true;}} /> : null;
   const signatureHero = siteSettings?.visualDesign?.signature2026 === true;
   const serviceLabels = ({
@@ -166,7 +171,7 @@ export default function StoreView({
 
   useEffect(() => {
     setProductPage(1);
-  }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy]);
+  }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, searchQuery]);
 
   // Countdown is always derived from the server-persisted end timestamp.
   // Refreshing or reopening the storefront never starts a new sale timer.
@@ -535,7 +540,7 @@ export default function StoreView({
     const targetPage = Math.min(totalProductPages, Math.max(1, Number(nextPage) || 1));
     setProductPage(targetPage);
     if (typeof document !== 'undefined') {
-      document.getElementById('gs-catalog-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('gs-catalog-products')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     }
   };
 
@@ -600,8 +605,10 @@ export default function StoreView({
     : currentAvailableStock <= 0 ? storeText.outOfStock : '';
   const productCharacter=getCharacterScenario(publishedCharacterSettings,'product',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&!!selectedProduct&&currentAvailableStock>0&&!purchaseUnavailableReason});
   const searchEmptyCharacter=getCharacterScenario(publishedCharacterSettings,'searchEmpty',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&Boolean(String(searchQuery||'').trim())&&processedProducts.length===0});
-  const activeGalleryIndex = selectedProduct && Array.isArray(selectedProduct.gallery)
-    ? selectedProduct.gallery.indexOf(activeImage) : -1;
+  const productGallery = selectedProduct ? [...new Set([selectedProduct.image, ...(Array.isArray(selectedProduct.gallery) ? selectedProduct.gallery : [])].filter(image => typeof image === 'string' && image.trim()))] : [];
+  const activeGalleryIndex = productGallery.indexOf(activeImage || selectedProduct?.image);
+  const galleryPhotoLabel = currentLang === 'en' ? 'Photo' : currentLang === 'ru' ? 'Фото' : 'ფოტო';
+  const galleryPhotosLabel = currentLang === 'en' ? 'Photos' : currentLang === 'ru' ? 'Фотографии' : 'ფოტოები';
 
   const renderCustomSections = placement => customSections.filter(section => section.visible && (section.placement || 'after-products') === placement).map(section => {
     const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
@@ -682,7 +689,7 @@ export default function StoreView({
                 <div className="gs-signature-banner-copy relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
                   <h2 data-visual-editor-target="banner.title" style={videoElementStyle('banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
                   {banner?.subtitle && <p data-visual-editor-target="banner.description" style={videoElementStyle('banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
-                  {safeTarget && <span data-visual-editor-target="banner.button" style={videoElementStyle('banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
+                  {safeTarget && <span data-visual-editor-target="banner.button" style={videoElementStyle('banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || storeText.viewCollection} ↗</span>}
                 </div>
               </div>
             );
@@ -713,26 +720,26 @@ export default function StoreView({
                 <p data-visual-editor-target="flashSale.description" style={videoElementStyle('flashSale.description')} className="text-slate-400 text-xs">{visualCopy.flashSaleSubtitle || storeText.hurryDiscount}</p>
                 {flashSaleEndAt !== null && (
                   <p className="gs-flash-sale-deadline text-[10px] sm:text-xs text-amber-200/75 mt-1">
-                    დასრულდება: {new Date(flashSaleEndAt).toLocaleString('ka-GE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {flashLabels.ends}: {new Date(flashSaleEndAt).toLocaleString(flashLabels.locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" data-flash-timer-style={normalizeFlashTimerStyle(siteSettings?.visualDesign?.flashTimerStyle)} data-flash-timer-motion={normalizeFlashTimerMotion(siteSettings?.visualDesign?.flashTimerMotion)} role="timer" aria-live="off" aria-label={`დარჩენილია ${timeLeft.hours} საათი ${timeLeft.minutes} წუთი ${timeLeft.seconds} წამი`}>
+            <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" data-flash-timer-style={normalizeFlashTimerStyle(siteSettings?.visualDesign?.flashTimerStyle)} data-flash-timer-motion={normalizeFlashTimerMotion(siteSettings?.visualDesign?.flashTimerMotion)} role="timer" aria-live="off" aria-label={`${flashLabels.remaining}: ${timeLeft.hours} ${flashLabels.hours}, ${timeLeft.minutes} ${flashLabels.minutes}, ${timeLeft.seconds} ${flashLabels.seconds}`}>
               <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.hours}</span>
+                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{flashLabels.hours}</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
               <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.minutes}</span>
+                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{flashLabels.minutes}</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
               <div data-visual-editor-target="flashSale.timer" style={videoElementStyle('flashSale.timer')} className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.seconds}</span>
+                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{flashLabels.seconds}</span>
               </div>
             </div>
           </div>
@@ -758,16 +765,16 @@ export default function StoreView({
                     <span data-visual-editor-target="flashSale.discount" style={videoElementStyle('flashSale.discount')} className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </button>
                   <div className="gs-video-flash-copy py-3 space-y-1.5">
-                    <h4 className="font-black text-white text-xs line-clamp-1 hover:text-amber-300">{catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-flash-sale-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}</h4>
+                    <h4 className="gs-flash-sale-product-name font-black text-white text-xs hover:text-amber-300">{catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-flash-sale-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-flash-sale-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}</h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
                       {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
-                    {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
-                    {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
+                    {savedAmount > 0 && <span className="gs-flash-sale-savings">{flashLabels.save} {formatPrice(savedAmount)}</span>}
+                    {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">{flashLabels.last(availableStock)}</span>}
                   </div>
-                  <button type="button" data-visual-editor-target="flashSale.button" style={videoElementStyle('flashSale.button')} onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={getProductAvailableStock(prod) <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
-                    {storeText.addToCartShort}
+                  <button type="button" data-visual-editor-target="flashSale.button" style={videoElementStyle('flashSale.button')} onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${availableStock <= 0 ? flashLabels.soldOut : storeText.addToCartShort}: ${prod.name}`} disabled={availableStock <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                    {availableStock <= 0 ? flashLabels.soldOut : storeText.addToCartShort}
                   </button>
                 </div>
               );
@@ -818,6 +825,10 @@ export default function StoreView({
             >
               {storeText.clear} ✕
             </button>
+            <button type="button" className="gs-category-view-products" onClick={() => {
+              const target = ['gs-catalog-products','gs-video-catalog-anchor'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0);
+              target?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+            }}>{currentLang === 'en' ? 'View products' : currentLang === 'ru' ? 'Смотреть товары' : 'პროდუქტების ნახვა'} <ArrowUpRight size={16} aria-hidden="true"/></button>
           </div>
         )}
 
@@ -889,13 +900,13 @@ export default function StoreView({
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
                   <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>
-                  <div className="flex items-center gap-1 z-10">
+                  <div className="gs-category-card-counts flex items-center gap-1 z-10">
                     {subCats.length > 0 && <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700">{subCats.length} {storeText.subCount}</span>}
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
                   </div>
                 </div>
                 <div className="z-10 gs-signature-category-copy">
-                  <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
+                  <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{catName}</h4>
                   <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                   {signatureHero && <span className="gs-signature-category-arrow" aria-hidden="true"><ArrowUpRight size={17}/></span>}
                 </div>
@@ -907,7 +918,7 @@ export default function StoreView({
         {openParentCatId && mainCategories.some(cat => String(cat.id || cat.name) === String(openParentCatId) && cat.name === selectedCategory) && getSubCategories(openParentCatId).length > 0 && (
           <div id="gs-subcategory-panel" className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
+              <span className="gs-subcategory-heading text-xs text-amber-400 font-bold flex items-center gap-2">
                 <CornerDownRight className="w-4 h-4" /> {storeText.subcategories} <b className="text-white underline">{selectedCategory}</b>
               </span>
               <button type="button" onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
@@ -937,8 +948,8 @@ export default function StoreView({
                     onClick={event=>{if(SubcategoryControl==='a'){if(!shouldHandleCatalogueClick(event))return;event.preventDefault();}selectCatalogueCategory(selectedCategory,sub.name,openParentCatId);}}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
-                    <span>{sub.name}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
+                    <span className="gs-subcategory-name">{sub.name}</span>
+                    <span className={`gs-subcategory-count text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
                   </SubcategoryControl>
                 );
               })}
@@ -953,7 +964,7 @@ export default function StoreView({
 
       {/* Filters & Sorting */}
       <div id="gs-video-catalog-anchor" data-visual-editor-target="filters" {...sectionGeometryProps('filters',videoElementStyle('filters'))} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
+        <div role="group" aria-label={storeText.price} className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
           <div data-visual-editor-target="filters.priceLabel" style={videoElementStyle('filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
@@ -985,11 +996,11 @@ export default function StoreView({
             data-visual-editor-target="filters.input" style={videoElementStyle('filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button data-visual-editor-target="filters.clearButton" style={videoElementStyle('filters.clearButton')} type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
+            <button data-visual-editor-target="filters.clearButton" style={videoElementStyle('filters.clearButton')} type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }} aria-label={currentLang === 'en' ? 'Clear price range' : currentLang === 'ru' ? 'Сбросить диапазон цен' : 'ფასის დიაპაზონის გასუფთავება'} className="gs-price-filter-clear text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
           )}
         </div>
 
-        <div className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
+        <div role="group" aria-label={storeText.sort} className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
           <div data-visual-editor-target="filters.sortLabel" style={videoElementStyle('filters.sortLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
@@ -1012,6 +1023,10 @@ export default function StoreView({
             </button>
           )}
         </div>
+        <div className="gs-catalog-filter-summary">
+          <p role="status" aria-live="polite" className="gs-catalog-result-count">{processedProducts.length} {storeText.productsOnDisplay}</p>
+          {String(searchQuery || '').trim() && <button type="button" className="gs-catalog-search-chip" onClick={() => setSearchQuery?.('')} aria-label={currentLang === 'en' ? 'Clear search query' : currentLang === 'ru' ? 'Очистить запрос' : 'ძებნის ტექსტის გასუფთავება'}><span>{String(searchQuery).trim()}</span><X size={14} aria-hidden="true"/></button>}
+        </div>
       </div>
 
       {hasInvalidPriceRange && (
@@ -1032,7 +1047,8 @@ export default function StoreView({
       {/* Products Grid */}
       {processedProducts.length === 0 ? (
         <div id="gs-catalog-products" {...sectionGeometryProps('products')} className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
-          <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
+          <p className="gs-empty-products-title text-slate-400 text-sm font-bold">{hasInvalidPriceRange ? (currentLang === 'en' ? 'Check the price range' : currentLang === 'ru' ? 'Проверьте диапазон цен' : 'შეამოწმეთ ფასის დიაპაზონი') : storeText.noFilterResults}</p>
+          {!hasInvalidPriceRange && hasActiveCatalogFilters && <p className="gs-empty-products-help">{currentLang === 'en' ? 'Try another search or remove filters.' : currentLang === 'ru' ? 'Измените запрос или сбросьте фильтры.' : 'სცადეთ სხვა საძიებო სიტყვა ან გაასუფთავეთ ფილტრები.'}</p>}
           {searchEmptyCharacter&&<div className="gs-character-search-context"><React.Suspense fallback={null}><CharacterContextCard scenario={searchEmptyCharacter} lang={currentLang}/></React.Suspense></div>}
           {hasActiveCatalogFilters && (
             <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
@@ -1046,6 +1062,8 @@ export default function StoreView({
           {paginatedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
+            const catalogSoldOut = getProductAvailableStock(prod) <= 0;
+            const catalogAction = visualCopy.productButtonText || (catalogSoldOut ? storeText.viewDetails : isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd);
             const prodReviews = allReviews[prod.id] || [];
             const avgRating = prodReviews.length > 0 
               ? (prodReviews.reduce((acc, r) => acc + r.rating, 0) / prodReviews.length).toFixed(1) 
@@ -1061,7 +1079,7 @@ export default function StoreView({
                 onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(prod.id)); }}
                 onDragOver={event => { if (typeof onProductOrderChange === 'function' && sortBy === 'default') { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }}
                 onDrop={event => { event.preventDefault(); handleProductReorder(event.dataTransfer.getData('text/plain'), String(prod.id)); }}
-                className="gs-catalog-product-card group flex flex-col"
+                className="gs-catalog-product-card group flex flex-col" data-stock-state={catalogSoldOut ? "sold-out" : "available"}
               >
                 
                 <div 
@@ -1101,7 +1119,7 @@ export default function StoreView({
                     ))}
                   </div>
 
-                  <div className="gs-catalog-image-overlay absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
+                  <div aria-hidden="true" className="gs-catalog-image-overlay absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
                     <Eye className="w-4 h-4 text-amber-400" /> {storeText.viewDetails}
                   </div>
                 </div>
@@ -1109,17 +1127,18 @@ export default function StoreView({
                 <div className="gs-catalog-product-info py-3 sm:py-4 space-y-2.5">
                   <div className="gs-catalog-product-meta flex items-center justify-between">
                     <span className="gs-catalog-vendor text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
-                    <div className="gs-catalog-rating flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
-                    </div>
+                    {prodReviews.length > 0 && <div className="gs-catalog-rating flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
+                      <Star aria-hidden="true" className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
+                    </div>}
                   </div>
-                  <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                  <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug group-hover:text-amber-300 transition-colors">
                     {catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-catalog-product-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}
                   </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
+                  {catalogSoldOut && <span className="gs-catalog-stock-status">{flashLabels.soldOut}</span>}
                 </div>
 
                 <button
@@ -1127,10 +1146,10 @@ export default function StoreView({
                   data-visual-editor-target="product.button"
                   style={videoElementStyle('product.button')}
                   onClick={(event) => handleOpenProduct(prod, event.currentTarget)}
-                  aria-label={`${visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}: ${prod.name}`}
+                  aria-label={`${catalogAction}: ${prod.name}`}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {catalogAction}
                 </button>
               </article>
             );
@@ -1187,7 +1206,7 @@ export default function StoreView({
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div ref={productDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className={`gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]${purchaseUnavailableReason ? ' gs-product-dialog--purchase-unavailable' : ''}`}>
+          <div ref={productDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-product-name" className={`gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]${purchaseUnavailableReason ? ' gs-product-dialog--purchase-unavailable' : ''}`}>
             
             <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
               <span id="gs-product-dialog-title" className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -1214,28 +1233,28 @@ export default function StoreView({
                     {(activeImage || selectedProduct.image) ? <img data-visual-editor-target="product.detail.image" style={videoElementStyle('product.detail.image')} src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} loading="eager" fetchPriority={catalogueNavigation && !visualEditorViewport ? "high" : "auto"} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>
                   
-                  {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
-                    <div className="gs-product-gallery-thumbnails flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none" role="group" aria-label={`${selectedProduct.name || storeText.productDetails} — ფოტოები`}>
-                      {selectedProduct.gallery.map((img, idx) => (
-                        <button key={idx} type="button" onClick={() => setActiveImage(img)} aria-label={`${selectedProduct.name || storeText.productDetails} — ფოტო ${idx + 1}`} aria-pressed={activeImage === img} className={`gs-product-gallery-thumb w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
+                  {productGallery.length > 1 && (
+                    <div className="gs-product-gallery-thumbnails flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none" role="group" aria-label={`${selectedProduct.name || storeText.productDetails} — ${galleryPhotosLabel}`}>
+                      {productGallery.map((img, idx) => (
+                        <button key={idx} type="button" onClick={() => setActiveImage(img)} aria-label={`${selectedProduct.name || storeText.productDetails} — ${galleryPhotoLabel} ${idx + 1}`} aria-pressed={activeImage === img} className={`gs-product-gallery-thumb w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
                           <img src={img} alt={`${selectedProduct.name || storeText.productDetails} ${idx + 1}`} loading="lazy" decoding="async" draggable={false} className="w-full h-full object-contain rounded-xl" />
                         </button>
                       ))}
                     </div>
                   )}
-                  {Array.isArray(selectedProduct.gallery) && selectedProduct.gallery.length > 1 && (
+                  {productGallery.length > 1 && (
                     <div className="gs-product-gallery-toolbar flex items-center justify-between gap-3" role="group"
                       aria-label={currentLang === 'en' ? 'Product gallery navigation' : currentLang === 'ru' ? 'Управление галереей товара' : 'პროდუქტის გალერეის მართვა'}>
                       <span className="gs-product-gallery-counter text-xs font-bold" role="status" aria-live="polite">
-                        {Math.max(0, activeGalleryIndex) + 1} / {selectedProduct.gallery.length}
+                        {Math.max(0, activeGalleryIndex) + 1} / {productGallery.length}
                       </span>
                       <div className="flex items-center gap-2">
                         <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Previous product photo' : currentLang === 'ru' ? 'Предыдущее фото товара' : 'წინა ფოტო'}
-                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) - 1 + selectedProduct.gallery.length) % selectedProduct.gallery.length])}>
+                          onClick={() => setActiveImage(productGallery[(Math.max(0, activeGalleryIndex) - 1 + productGallery.length) % productGallery.length])}>
                           <span aria-hidden="true">‹</span>
                         </button>
                         <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Next product photo' : currentLang === 'ru' ? 'Следующее фото товара' : 'შემდეგი ფოტო'}
-                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) + 1) % selectedProduct.gallery.length])}>
+                          onClick={() => setActiveImage(productGallery[(Math.max(0, activeGalleryIndex) + 1) % productGallery.length])}>
                           <span aria-hidden="true">›</span>
                         </button>
                       </div>
@@ -1247,9 +1266,9 @@ export default function StoreView({
                   <div className="gs-product-detail-heading space-y-2">
                     <div className="gs-product-detail-meta flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
-                      <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
+                      {selectedProduct.sku && <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku}</span>}
                     </div>
-                    <h2 data-visual-editor-target="product.detail.title" style={videoElementStyle('product.detail.title')} className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
+                    <h2 data-visual-editor-target="product.detail.title" style={videoElementStyle('product.detail.title')} id="gs-product-name" className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
                     <p className="gs-product-detail-vendor text-slate-400 text-xs">{storeText.vendor} <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                   </div>
 
@@ -1258,6 +1277,11 @@ export default function StoreView({
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
                     {!hasCustomProductVariants(selectedProduct) && Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                  </div>
+
+                  <div data-stock-state={purchaseUnavailableReason ? 'unavailable' : 'available'} className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
+                    {purchaseUnavailableReason ? <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0"/> : <CheckCircle2 aria-hidden="true" className="w-5 h-5 shrink-0"/>}
+                    <span>{purchaseUnavailableReason || <>{storeText.inStock} <b>{currentAvailableStock}</b> {storeText.deliveryFit}</>}</span>
                   </div>
 
                   {(selectedProduct.material || selectedProduct.durability) && (
@@ -1440,10 +1464,7 @@ export default function StoreView({
                     <p data-visual-editor-target="product.detail.description" style={videoElementStyle('product.detail.description')} className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
                   </section>
 
-                  <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
-                    <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{currentAvailableStock > 0 ? currentAvailableStock : storeText.outOfStock}</b> {currentAvailableStock > 0 ? storeText.deliveryFit : ''}</span>
-                  </div>
+
 
                   <section className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20" aria-labelledby="gs-product-reviews-title">
                     <h3 id="gs-product-reviews-title" className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">

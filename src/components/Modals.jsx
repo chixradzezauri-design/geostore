@@ -6,6 +6,7 @@ import {
   Search, PackageCheck, Clock, Navigation, Map, Bell, Sparkles, Tag 
 } from 'lucide-react';
 import { normalizeTrackingLookup } from '../utils/orderSafety';
+import CustomerOrderProgress from './CustomerOrderProgress.jsx';
 import { filterCustomerNotifications, summarizeSupportReplies } from '../utils/customerNotificationCenter.js';
 import './customerNotificationCenter.css';
 import {supportsBrowserPasswordSave} from '../utils/customerPasswordManager.js';
@@ -15,6 +16,7 @@ export default function Modals({
   isCheckoutOpen,
   setIsCheckoutOpen,
   checkoutForm,
+  checkoutDisplayTotal = '',
   setCheckoutForm,
   handlePlaceOrder,
   isSubmittingOrder = false,
@@ -327,6 +329,28 @@ export default function Modals({
   const [trackerError, setTrackerError] = useState('');
   const trackerFeedbackRef = useRef(null);
   const trackerDialogRef = useRef(null);
+  const notificationsDialogRef = useRef(null);
+  useEffect(() => {
+    if (!isNotificationsOpen && !isTrackerOpen) return undefined;
+    const dialog = isNotificationsOpen ? notificationsDialogRef.current : trackerDialogRef.current;
+    const previous = document.activeElement;
+    dialog?.querySelector('button')?.focus();
+    const onKey = event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (isNotificationsOpen) setIsNotificationsOpen(false);
+        else { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const nodes = [...(dialog?.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex="0"]') || [])].filter(node => node.getClientRects().length);
+      if (!nodes.length) return;
+      if (!dialog.contains(document.activeElement) || (event.shiftKey && document.activeElement === nodes[0])) { event.preventDefault(); (event.shiftKey ? nodes[nodes.length-1] : nodes[0]).focus(); }
+      else if (!event.shiftKey && document.activeElement === nodes[nodes.length-1]) { event.preventDefault(); nodes[0].focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); if (previous?.isConnected) previous.focus?.(); };
+  }, [isNotificationsOpen, isTrackerOpen, setIsNotificationsOpen, setIsTrackerOpen]);
   // Checkout errors are below long phone forms; keep feedback keyboard-readable.
   const checkoutErrorRef = useRef(null);
   const checkoutFormRef = useRef(null);
@@ -469,14 +493,6 @@ export default function Modals({
     }
   };
 
-  const getStatusProgress = (status) => {
-    const s = String(status || '').trim().toLowerCase();
-    if (['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(s)) return 0;
-    if (['ჩაბარებულია', 'დასრულებული', 'delivered', 'completed', 'доставлен', 'завершён'].includes(s)) return 100;
-    if (['გზაშია', 'გაგზავნილი', 'კურიერთან', 'shipped', 'on the way', 'в пути', 'отправлен'].includes(s)) return 75;
-    if (['მზადდება', 'მუშავდება', 'processing', 'в обработке'].includes(s)) return 40;
-    return 15;
-  };
 
   const getTrackerStatusClasses = (status) => {
     const s = String(status || '').trim().toLowerCase();
@@ -510,7 +526,7 @@ export default function Modals({
           >
             <header className="gs-checkout-header flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4 sm:px-7 sm:py-5">
               <div className="gs-checkout-heading min-w-0">
-                <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-neutral-500">GEOSTORE · CHECKOUT</p>
+                <p className="gs-checkout-brand mb-1 text-[9px] font-semibold text-neutral-500">GEOSTORE</p>
                 <h3 id="geostore-checkout-title" className="text-lg font-semibold tracking-tight sm:text-xl">{copy.checkoutTitle}</h3>
                 <p id="geostore-checkout-intro" className="mt-1 text-[11px] text-neutral-500">{copy.checkoutIntro}</p>
               </div>
@@ -561,7 +577,7 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.region} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <Truck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <select value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
+                  <select name="region" value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
                     className="w-full appearance-none rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:bg-white">
                     <option value="tbilisi">{copy.tbilisi} ({deliveryFees.tbilisi} ₾)</option>
                     <option value="bigCities">{copy.bigCities} ({deliveryFees.bigCities} ₾)</option>
@@ -587,6 +603,7 @@ export default function Modals({
               )}
 
               <div className="gs-checkout-submit-area border-t border-neutral-200 pt-4">
+                {checkoutDisplayTotal && <div className="gs-checkout-total-preview"><span>{currentLang === 'en' ? 'Order total' : currentLang === 'ru' ? 'Итого заказа' : 'შეკვეთის ჯამი'}</span><strong>{checkoutDisplayTotal}</strong></div>}
                 <button type="submit" disabled={isSubmittingOrder}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-55">
                   {isSubmittingOrder ? copy.sending : copy.confirmOrder}
@@ -720,27 +737,7 @@ export default function Modals({
                   </div>
                 </div>
 
-                <div className="gs-order-tracker-progress space-y-3 bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20">
-                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> {copy.deliveryProgress}
-                  </h4>
-
-                  <div className="relative pt-2">
-                    <div className="overflow-hidden h-2.5 mb-4 text-xs flex rounded-full bg-[#08080a] border border-amber-500/20">
-                      <div 
-                        style={{ width: `${getStatusProgress(trackedOrder.status)}%` }} 
-                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 transition-all duration-700"
-                      ></div>
-                    </div>
-
-                    <div className="grid grid-cols-4 text-[9px] sm:text-[10px] text-center font-bold text-slate-400">
-                      <div className={getStatusProgress(trackedOrder.status) >= 15 ? 'text-amber-400' : ''} >1. {copy.accepted}</div>
-                      <div className={getStatusProgress(trackedOrder.status) >= 40 ? 'text-amber-400' : ''} >2. {copy.preparing}</div>
-                      <div className={getStatusProgress(trackedOrder.status) >= 75 ? 'text-amber-400' : ''} >3. {copy.onTheWay}</div>
-                      <div className={getStatusProgress(trackedOrder.status) >= 100 ? 'text-emerald-400' : ''} >4. {copy.delivered}</div>
-                    </div>
-                  </div>
-                </div>
+                <CustomerOrderProgress order={trackedOrder} lang={currentLang}/>
 
                 <div className="bg-[#121216] border border-amber-500/20 rounded-3xl p-4 sm:p-5 space-y-2">
                   <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
@@ -764,7 +761,7 @@ export default function Modals({
       {/* 🔔 3. ADVANCED NOTIFICATIONS CENTER MODAL */}
       {isNotificationsOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--notifications fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div role="dialog" aria-modal="true" aria-labelledby="gs-video-notifications-title" className="gs-commerce-dialog gs-commerce-dialog--notifications bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
+          <div ref={notificationsDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-video-notifications-title" className="gs-commerce-dialog gs-commerce-dialog--notifications bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 id="gs-video-notifications-title" className="font-black text-white text-base flex items-center gap-2.5">
                 <Bell className="w-5 h-5 text-amber-400" aria-hidden="true" /> {copy.notifications}
@@ -788,8 +785,9 @@ export default function Modals({
                 {['all','unread','read'].map(filter=><button key={filter} type="button" aria-pressed={notificationFilter===filter} onClick={()=>setNotificationFilter(filter)}>{notificationWords[filter]} ({filter==='all'?notifications.length:filter==='unread'?unreadCount:notifications.length-unreadCount})</button>)}
               </div>
               <input type="search" aria-label={notificationWords.search} placeholder={notificationWords.search} maxLength={100} value={notificationSearch} onChange={e=>setNotificationSearch(e.target.value)}/>
+              {notificationSearch && <button type="button" className="gs-notification-clear-search" onClick={()=>setNotificationSearch("")}>{currentLang==="en"?"Clear search":currentLang==="ru"?"Очистить поиск":"ძებნის გასუფთავება"}</button>}
             </div>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+            <div className="gs-notification-results flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin" aria-busy={notificationsLoading}>
               {currentUser?.id && <section className="gs-notification-support-summary" aria-label={notificationWords.support}>
                 <strong>{notificationWords.support}</strong>
                 <p role="status">{supportNotificationsError?notificationWords.unknown:supportNotificationsLoading?notificationWords.loading:supportReplyCount+' · '+notificationWords.replies}</p>

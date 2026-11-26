@@ -11,7 +11,9 @@ test('Stage 43: wishlist removal, correct starting prices, and variant-safe stor
   assert.match(app,/onClick=\{\(\) => handleAddSavedProduct\(savedProd\)\}/);
   assert.match(app,/onClick=\{\(\) => toggleWishlist\(savedProd\)\}/);
   assert.match(app,/getProductAvailableStock\(prod\) <= 0/);
-  assert.match(app,/getProductStartingPrice\(prod\) === null/);
+  assert.match(app,/const savedPrice = liveProduct \? getProductStartingPrice\(prod\) : null/);
+  assert.match(app,/savedPrice === null \? '—' : formatPrice\(savedPrice\)/);
+  assert.match(compare,/const price = liveProduct \? getProductStartingPrice\(prod\) : null/);
 });
 test('Stage 43: comparison modal focus, keyboard closure, clear and variant/stock safety',()=>{
   assert.match(compare,/role="dialog" aria-modal="true"/);

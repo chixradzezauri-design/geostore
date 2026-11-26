@@ -25,7 +25,8 @@ test('premium appearance styles keep original product action and disabled stock 
   assert.ok(view.includes('data-flash-'+attr+'-style='));
   for(const [id] of FLASH_PRODUCT_APPEARANCE.find(g=>g.key===key).options.slice(1))assert.ok(css.includes('data-flash-'+attr+'-style="'+id+'"'));
  }
- assert.ok(view.includes('disabled={getProductAvailableStock(prod) <= 0}'));
+ assert.match(view, /const availableStock = getProductAvailableStock\(prod\)/);
+ assert.match(view, /disabled=\{availableStock <= 0\}/);
  assert.ok(view.includes('addToCart(prod)'));
  assert.ok(css.includes('.gs-video-flash-add:disabled'));
 });

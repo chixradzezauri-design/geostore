@@ -27,7 +27,7 @@ export default function ProductCompareModal({
         event.preventDefault();
         setIsComparisonOpen(false);
       } else if (event.key === 'Tab') {
-        const focusables = [...(dialogRef.current?.querySelectorAll('button:not([disabled]), [tabindex="0"]') || [])]
+        const focusables = [...(dialogRef.current?.querySelectorAll('button:not([disabled]), summary, [tabindex="0"]') || [])]
           .filter(node => node.getClientRects().length > 0);
         if (!focusables.length) return;
         const first = focusables[0], last = focusables[focusables.length - 1];
@@ -65,7 +65,7 @@ export default function ProductCompareModal({
             </div>
             <div>
               <h2 id="gs-product-compare-title" className="text-xl font-black text-white">{localized('პროდუქტების შედარება', 'Compare products', 'Сравнение товаров')} ({comparisonList.length}/4)</h2>
-              <p className="text-xs text-slate-400 mt-0.5">შეადარეთ არჩეული ნივთები გვერდიგვერდ</p>
+              <p className="text-xs text-slate-400 mt-0.5">{localized('შეადარეთ არჩეული ნივთები გვერდიგვერდ', 'Compare selected products side by side', 'Сравните выбранные товары рядом')}</p>
             </div>
           </div>
           {comparisonList.length > 0 && <button type="button" className="gs-product-compare-clear px-3" onClick={() => setComparisonList([])}>{localized('ყველას წაშლა', 'Clear all', 'Очистить всё')}</button>}
@@ -77,8 +77,8 @@ export default function ProductCompareModal({
         {comparisonList.length === 0 ? (
           <div className="text-center py-20 space-y-4">
             <Scale className="w-12 h-12 text-slate-600 mx-auto" />
-            <p className="text-slate-400 text-sm font-bold">შედარების სია ცარიელია.</p>
-            <p className="text-xs text-slate-500">დაამატეთ პროდუქტები ვიტრინიდან სასწორის ღილაკით ⚖️</p>
+            <p className="text-slate-400 text-sm font-bold">{localized('შედარების სია ცარიელია.', 'Your comparison list is empty.', 'Список сравнения пуст.')}</p>
+            <p className="text-xs text-slate-500">{localized('დაამატეთ პროდუქტები კატალოგიდან შედარების ღილაკით.', 'Add products from the catalogue using the compare button.', 'Добавьте товары из каталога кнопкой сравнения.')}</p>
           </div>
         ) : (
           <div className="gs-product-compare-scroll overflow-x-auto pb-4" role="region" tabIndex={0} aria-label={localized('პროდუქტების შედარების ცხრილი', 'Comparison of products', 'Сравнение товаров')}>
@@ -86,6 +86,9 @@ export default function ProductCompareModal({
               {comparisonList.map(savedProd => {
                 const liveProduct = findCurrentSavedProduct(catalogProducts, savedProd);
                 const prod = liveProduct || savedProd;
+                const price = liveProduct ? getProductStartingPrice(prod) : null;
+                const stock = liveProduct ? getProductAvailableStock(prod) : null;
+                const actionLabel = !liveProduct ? localized("მიუწვდომელია", "Unavailable", "Недоступен") : stock <= 0 ? localized("მარაგში არ არის", "Out of stock", "Нет в наличии") : hasProductVariantOptions(prod) ? localized("აირჩიეთ ვარიანტი", "Choose options", "Выбрать вариант") : localized("კალათაში დამატება", "Add to cart", "В корзину");
                 return (
                 <div key={savedProd.id} className="gs-product-compare-card bg-[#121216] border border-amber-500/20 rounded-[2rem] p-6 space-y-5 shadow-2xl relative flex flex-col justify-between">
                   
@@ -94,12 +97,12 @@ export default function ProductCompareModal({
                     onClick={() => handleRemoveFromCompare(savedProd.id)}
                     aria-label={`${localized('შედარებიდან წაშლა', 'Remove from comparison', 'Удалить из сравнения')}: ${prod.name}`}
                     className="gs-product-compare-remove absolute top-4 right-4 text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
-                    title="სიიდან ამოშლა"
+                    title={localized("სიიდან ამოშლა", "Remove", "Удалить")}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
 
-                  <div className="space-y-4">
+                  <div className="gs-product-compare-content space-y-4">
                     <div className="gs-product-compare-media bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 flex items-center justify-center h-48">
                       {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="max-h-full object-contain" /> : <span className="text-[10px] font-black tracking-[0.2em] text-amber-400/60">GEOSTORE</span>}
                     </div>
@@ -115,16 +118,16 @@ export default function ProductCompareModal({
 
                     <div className="gs-product-compare-specs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 space-y-3 text-xs">
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
-                        <span className="text-slate-400">ფასი:</span>
-                        <span className="text-amber-400 font-black text-sm">{getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}</span>
+                        <span className="text-slate-400">{localized("ფასი", "Price", "Цена")}:</span>
+                        <span className="text-amber-400 font-black text-sm">{price === null ? "—" : formatPrice(price)}</span>
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
-                        <span className="text-slate-400">მომწოდებელი:</span>
+                        <span className="text-slate-400">{localized("მომწოდებელი", "Vendor", "Поставщик")}:</span>
                         <span className="text-white font-bold">{prod.vendor || 'GEOSTORE'}</span>
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
-                        <span className="text-slate-400">მარაგში:</span>
-                        <span className="text-emerald-400 font-bold">{getProductAvailableStock(prod) > 0 ? `${getProductAvailableStock(prod)} ${localized('ცალი', 'items', 'шт.')}` : localized('მარაგში არ არის', 'Out of stock', 'Нет в наличии')}</span>
+                        <span className="text-slate-400">{localized("მარაგი", "Availability", "Наличие")}:</span>
+                        <span className="text-emerald-400 font-bold">{stock === null ? localized("მიუწვდომელია", "Unavailable", "Недоступен") : stock > 0 ? `${stock} ${localized("ცალი", "items", "шт.")}` : localized("მარაგში არ არის", "Out of stock", "Нет в наличии")}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">SKU:</span>
@@ -133,19 +136,18 @@ export default function ProductCompareModal({
                     </div>
 
                     <div className="gs-product-compare-description text-slate-300 text-xs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10">
-                      <b className="text-amber-300 block mb-1">აღწერა:</b>
-                      <p className="line-clamp-3 leading-relaxed text-slate-400">{prod.description || 'აღწერა არ არის.'}</p>
+                      <details><summary className="gs-compare-description-toggle">{localized("აღწერა", "Description", "Описание")}</summary><p className="leading-relaxed text-slate-400">{prod.description || localized("აღწერა არ არის.", "No description.", "Нет описания.")}</p></details>
                     </div>
                   </div>
 
                   <button
                     type="button"
                     disabled={!liveProduct || getProductAvailableStock(prod) <= 0}
-                    aria-label={`${hasProductVariantOptions(prod) ? localized('აირჩიეთ ვარიანტი', 'Choose options', 'Выбрать вариант') : localized('კალათაში დამატება', 'Add to cart', 'В корзину')}: ${prod.name}`}
+                    aria-label={`${actionLabel}: ${prod.name}`}
                     onClick={() => hasProductVariantOptions(prod) ? onFindProduct?.(savedProd) : addToCart(prod)}
                     className="gs-product-compare-action w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer mt-4"
                   >
-                    <ShoppingBag className="w-4 h-4" /> {!liveProduct ? localized('მიუწვდომელია', 'Unavailable', 'Недоступен') : getProductAvailableStock(prod) <= 0 ? localized('მარაგში არ არის', 'Out of stock', 'Нет в наличии') : hasProductVariantOptions(prod) ? localized('აირჩიეთ ვარიანტი', 'Choose options', 'Выбрать вариант') : localized('კალათაში დამატება', 'Add to cart', 'В корзину')}
+                    <ShoppingBag className="w-4 h-4" /> {actionLabel}
                   </button>
 
                 </div>

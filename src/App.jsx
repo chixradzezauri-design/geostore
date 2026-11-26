@@ -4151,6 +4151,10 @@ export default function App() {
                 {wishlist.map((savedProd) => {
                   const liveProduct = findCurrentSavedProduct(products, savedProd);
                   const prod = liveProduct || savedProd;
+                  const savedPrice = liveProduct ? getProductStartingPrice(prod) : null;
+                  const savedAction = !liveProduct ? (currentLang === 'en' ? 'Unavailable' : currentLang === 'ru' ? 'Недоступен' : 'მიუწვდომელია')
+                    : getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
+                    : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart;
                   return (
                   <div
                     key={savedProd.id}
@@ -4175,7 +4179,7 @@ export default function App() {
                         </h4>
 
                         <p className="gs-wishlist-product-price font-black text-xs mt-1">
-                          {getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}
+                          {savedPrice === null ? '—' : formatPrice(savedPrice)}
                         </p>
                       </div>
                     </div>
@@ -4184,11 +4188,9 @@ export default function App() {
                       <button type="button"
                         onClick={() => handleAddSavedProduct(savedProd)}
                         disabled={!liveProduct || getProductAvailableStock(prod) <= 0}
-                        aria-label={`${hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}: ${prod.name}`}
+                        aria-label={`${savedAction}: ${prod.name}`}
                         className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                        {!liveProduct ? (currentLang === 'en' ? 'Unavailable' : currentLang === 'ru' ? 'Недоступен' : 'მიუწვდომელია')
-                          : getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
-                          : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}
+                        {savedAction}
                       </button>
                       <button type="button" className="gs-wishlist-remove inline-flex items-center justify-center rounded-xl border px-3 cursor-pointer"
                         onClick={() => toggleWishlist(savedProd)} aria-label={`${currentLang === 'en' ? 'Remove from wishlist' : currentLang === 'ru' ? 'Удалить из избранного' : 'სურვილებიდან წაშლა'}: ${prod.name}`}>
@@ -4207,7 +4209,7 @@ export default function App() {
           <div className="gs-cart-page gs-cart-layout space-y-6">
             <h2 className="gs-cart-title text-xl font-black text-white tracking-tight flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-400" />
-              {t.cart}
+              {t.cart} <span className="gs-cart-count">{cart.reduce((sum,item)=>sum + Number(item.quantity || 0),0)}</span>
             </h2>
 
             {CART_SYNC_ENABLED && !authLoading && !adminLoggedIn && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><CartSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getCart={()=>cartRef.current} validateStock={lines=>catalogueVerifiedEpoch===productsAccessEpoch.current&&validateCartReviewStock(lines,products)} planRestore={planSyncedCartRestore} restoreLine={restoreSyncedCartLine} lang={currentLang}/></Suspense>}
@@ -4272,9 +4274,10 @@ export default function App() {
                             {currentLang === 'en' ? 'Gift message:' : currentLang === 'ru' ? 'Текст открытки:' : 'სასაჩუქრე ტექსტი:'} {item.giftMessage}
                           </p>
                         )}
-                        <p className="gs-cart-item-price text-emerald-400 font-bold">
-                          {formatPrice(item.priceGEL)} × {item.quantity}
-                        </p>
+                        <div className="gs-cart-line-pricing">
+                          <p className="gs-cart-item-price text-emerald-400 font-bold">{formatPrice(item.priceGEL)} × {item.quantity}</p>
+                          <strong className="gs-cart-line-total" aria-label={currentLang === 'en' ? 'Item total' : currentLang === 'ru' ? 'Сумма позиции' : 'პროდუქტის ჯამი'}>{formatPrice(calculateCartSubtotalGEL([item]))}</strong>
+                        </div>
                         <div role="group" className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? `Quantity for ${item.name}` : currentLang === 'ru' ? `Количество: ${item.name}` : `რაოდენობა: ${item.name}`}>
                           <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? `Decrease quantity: ${item.name}` : currentLang === 'ru' ? `Уменьшить количество: ${item.name}` : `რაოდენობის შემცირება: ${item.name}`} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
                           <span aria-live="polite" aria-atomic="true" className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
@@ -4296,6 +4299,7 @@ export default function App() {
                 </div>
 
                 <div className="gs-cart-summary bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
+                  <h3 className="gs-cart-summary-heading">{currentLang === 'en' ? 'Order summary' : currentLang === 'ru' ? 'Итого заказа' : 'შეკვეთის შეჯამება'}</h3>
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs">
                       <Truck className="w-3.5 h-3.5" />
@@ -4434,7 +4438,7 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="gs-profile-page gs-profile-pro max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+          <div className="gs-profile-page gs-profile-pro mx-auto space-y-6 animate-in fade-in duration-300">
             <div className="gs-profile-card gs-profile-pro-account bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" />
@@ -4478,7 +4482,7 @@ export default function App() {
                 <button type="button" className="gs-profile-pro-primary" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)}>
                   <span>{currentLang==='en'?'Notifications':currentLang==='ru'?'Уведомления':'შეტყობინებები'}</span>{unreadNotificationsCount>0&&<span className="gs-profile-pro-count" aria-label={String(unreadNotificationsCount)}>{unreadNotificationsCount}</span>}
                 </button>
-                <button type="button" className="gs-profile-pro-secondary" onClick={()=>document.getElementById('gs-profile-pro-orders')?.scrollIntoView({block:'start',behavior:'instant'})}>{t.orderHistory}</button>
+                <button type="button" className="gs-profile-pro-secondary" onClick={()=>document.getElementById('gs-profile-pro-orders')?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>{t.orderHistory}</button>
               </nav>
               <div className="gs-video-profile-security pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
@@ -4511,6 +4515,7 @@ export default function App() {
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
+                {!myOrdersLoading && !myOrdersError && <span className="gs-profile-order-count">{myOrders.length}</span>}
               </h3>
 
               <button type="button" disabled={supportOpen || isSubmittingSupport} className="gs-profile-pro-secondary w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
@@ -4540,9 +4545,7 @@ export default function App() {
                           <div className="flex items-center gap-2">
                             <span className="gs-profile-order-code font-black text-emerald-400">#{order.id}</span>
 
-                            <span className="text-slate-500 text-[10px]">
-                              ({order.date})
-                            </span>
+                            <span className="gs-profile-order-date text-slate-500 text-[10px]">{order.date}</span>
                           </div>
 
                           {Array.isArray(order.items) && order.items.length > 0 && (
@@ -4553,6 +4556,7 @@ export default function App() {
                               {order.items.length > 3 ? ` +${order.items.length - 3}` : ''}
                             </p>
                           )}
+                          {Array.isArray(order.items) && order.items.length > 3 && <details className="gs-profile-order-more"><summary>{currentLang === 'en' ? 'All products in this order' : currentLang === 'ru' ? 'Все товары заказа' : 'შეკვეთის ყველა პროდუქტი'} ({order.items.length})</summary><ul>{order.items.map((item,index)=><li key={index}><span>{item.name || (currentLang === 'en' ? 'Product' : currentLang === 'ru' ? 'Товар' : 'პროდუქტი')}{item.customVariantName ? ` — ${item.customVariantName}` : ''}</span><b>×{Math.max(1,Number(item.quantity)||1)}</b></li>)}</ul></details>}
                         </div>
 
                         <div className="gs-video-profile-order-summary text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
@@ -4604,11 +4608,11 @@ export default function App() {
 
       <div className={`gs-floating-support${supportOpen ? " gs-video-support-open" : ""}${isCheckoutOpen || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen ? " gs-video-assistance-obscured" : ""}`}>
         {supportOpen ? (
-          <div className="gs-support-panel">
+          <div className="gs-support-panel" role="region" aria-labelledby="gs-support-panel-title">
             <div className="gs-support-panel-heading">
               <span className="gs-support-heading-icon"><MessageSquare aria-hidden="true" /></span>
               <span className="gs-support-heading-copy">
-                <strong>{t.supportChat}</strong>
+                <strong id="gs-support-panel-title">{t.supportChat}</strong>
                 <small>{currentLang === 'en' ? 'GEOSTORE · Customer care' : currentLang === 'ru' ? 'GEOSTORE · Поддержка клиентов' : 'GEOSTORE · მომხმარებელთა დახმარება'}</small>
               </span>
               <button
@@ -5080,9 +5084,9 @@ export default function App() {
                       )}
                     </div>
                   )}
-                  <div ref={supportThreadMessagesRef} className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
+                  <div ref={supportThreadMessagesRef} className="gs-support-conversation max-h-64 overflow-y-auto space-y-2 pr-1" role="log" aria-live="polite" aria-label={currentLang === 'en' ? 'Conversation' : currentLang === 'ru' ? 'Переписка' : 'მიმოწერა'}>
                     {supportThreadMessages.length ? supportThreadMessages.map((item) => (
-                      <div key={item.id} className={`rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
+                      <div key={item.id} data-support-sender={item.sender_role === 'admin' ? 'support' : 'customer'} className={`gs-support-message rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <strong className="text-slate-100">{item.sender_role === 'admin' ? (currentLang === 'en' ? 'GEOSTORE Support' : currentLang === 'ru' ? 'Поддержка GEOSTORE' : 'GEOSTORE მხარდაჭერა') : (item.sender_name || (currentLang === 'en' ? 'You' : currentLang === 'ru' ? 'Вы' : 'თქვენ'))}</strong>
                           <time className="text-[10px] text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : ''}</time>
@@ -5191,6 +5195,7 @@ export default function App() {
                   >
                     <textarea
                       name="supportReply"
+                      aria-label={currentLang === 'en' ? 'Write a reply' : currentLang === 'ru' ? 'Напишите ответ' : 'დაწერე პასუხი'}
                       rows={2}
                       maxLength={4000}
                       required
@@ -5232,6 +5237,7 @@ export default function App() {
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
         checkoutForm={checkoutForm}
+        checkoutDisplayTotal={formatPrice(cartTotalGEL)}
         setCheckoutForm={setCheckoutForm}
         handlePlaceOrder={handlePlaceOrder}
         isSubmittingOrder={isSubmittingOrder}
@@ -5285,6 +5291,7 @@ export default function App() {
       {isImageSearchOpen && (
         <Suspense fallback={null}>
           <ImageSearchModal
+            currentLang={currentLang}
             isImageSearchOpen={isImageSearchOpen}
             setIsImageSearchOpen={setIsImageSearchOpen}
             products={products}

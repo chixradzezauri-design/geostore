@@ -13,11 +13,13 @@ test('Stage 41: product modal traps Tab only when nested guides are closed and r
   assert.match(jsx,/returnTarget\.focus\(\)/);
 });
 test('Stage 41: multiple product photos can navigate both directions and preserve thumbnails', () => {
+  assert.match(jsx,/const productGallery = selectedProduct \? \[\.\.\.new Set\(\[selectedProduct\.image,/);
+  assert.match(jsx,/productGallery\.map\(\(img, idx\)/);
   assert.match(jsx,/gs-product-gallery-toolbar/);
   assert.match(jsx,/gs-product-gallery-counter/);
   assert.match(jsx,/gs-product-gallery-step/);
-  assert.match(jsx,/Math\.max\(0, activeGalleryIndex\) - 1 \+ selectedProduct\.gallery\.length/);
-  assert.match(jsx,/Math\.max\(0, activeGalleryIndex\) \+ 1\) % selectedProduct\.gallery\.length/);
+  assert.match(jsx,/Math\.max\(0, activeGalleryIndex\) - 1 \+ productGallery\.length/);
+  assert.match(jsx,/Math\.max\(0, activeGalleryIndex\) \+ 1\) % productGallery\.length/);
   assert.match(jsx,/onClick=\{\(\) => setActiveImage\(img\)\}/);
   assert.match(css,/Stage 41 — keyboard-contained product dialog/);
   assert.match(browser,/galleryStepMinHeight >= 43/);
