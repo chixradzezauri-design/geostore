@@ -26,6 +26,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   const [profileLang,setProfileLang]=useState('ka');
   const [presetUndo,setPresetUndo]=useState(null);
   const [previewMobile,setPreviewMobile]=useState(false);
+  const [visitorPreview,setVisitorPreview]=useState(true);
   const [scenarioKey,setScenarioKey]=useState('flash');
   const [libraryLang,setLibraryLang]=useState('ka');
   const [adviceLang,setAdviceLang]=useState('ka');
@@ -216,13 +217,17 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
         <label className="block space-y-1 text-xs text-slate-300">ბუშტის ფორმა<select className={field} value={s.appearance.bubbleShape} disabled={busy} onChange={e=>updateAppearance({bubbleShape:e.target.value})}><option value="rounded">მომრგვალებული</option><option value="pill">ოვალური</option><option value="square">კუთხეებიანი</option></select></label>
         <button type="button" disabled={busy} className="self-end rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-100" onClick={()=>update({appearance:DEFAULT_CHARACTER_APPEARANCE,palette:{}})}>ვიზუალური პარამეტრების აღდგენა</button>
       </div>
-      <p className="text-xs text-slate-400">თითოეულ პერსონაჟს დამოუკიდებელი ფერი აქვს. ტექსტის კონტრასტი ავტომატურად შეირჩევა. ზომები შეზღუდულია, რათა არ დაიფაროს მნიშვნელოვანი ღილაკები.</p>
+      <p className="text-xs text-slate-400">თითოეულ პერსონაჟს დამოუკიდებელი ფერი აქვს. ტექსტის კონტრასტი ავტომატურად შეირჩევა. საჯარო გვერდზე ზომები დამატებით ერგება ეკრანს, რათა არ დაიფაროს მნიშვნელოვანი ღილაკები. ანიმაციის გაშვებით შეამოწმეთ 3D ვიზუალი.</p>
       <div className="gs-character-preview p-3" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined,marginInline:'auto'}}><CharacterScene character={styledCharacter(CHARACTERS.find(c=>c.id===s.character),s)} settings={{...s,behavior:'still'}} lang={lang} preview/></div>
     </details>
     <div className="flex flex-wrap gap-2 items-center"><button type="button" aria-pressed={!previewMobile} onClick={()=>{setPreviewMobile(false);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">კომპიუტერი</button><button type="button" aria-pressed={previewMobile} onClick={()=>{setPreviewMobile(true);setPreview(null);}} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">ტელეფონი</button><button type="button" onClick={()=>{setEventPreview(null);setPreview({settings:s,character:selectCharacter(s),key:Date.now()});}} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-slate-950">ანიმაციის გაშვება</button></div>
+    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+      <button type="button" data-character-visitor-preview-toggle aria-pressed={visitorPreview} onClick={()=>setVisitorPreview(v=>!v)} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-100">{visitorPreview?'მომხმარებლის კომპაქტური ხედვა':'რედაქტორის გაშლილი ხედვა'}</button>
+      <span>საიტზე ტექსტი სტაბილურია; დამატებითი მოქმედებები მოთხოვნისას იხსნება.</span>
+    </div>
     <div data-character-playback data-playing={preview?'true':'false'} className="gs-character-preview mx-auto w-full" data-device={previewMobile?'mobile':'desktop'} style={{maxWidth:previewMobile?320:undefined}}>
       <span className="gs-character-preview-label text-xs">GEOSTORE · {previewMobile?'მობილური':'კომპიუტერი'} · {preview?'ანიმაცია':'გადახედვა'}</span>
-      {preview?<PreviewPlayback key={preview.key} preview={preview} lang={lang}/>:<CharacterScene character={selectedCharacter} settings={{...s,behavior:'still'}} lang={lang} preview/>}
+      {preview?<PreviewPlayback key={preview.key} preview={preview} lang={lang} visitorPreview={visitorPreview}/>:<CharacterScene key={String(visitorPreview)} character={selectedCharacter} settings={{...s,behavior:'still'}} lang={lang} preview visitorPreview={visitorPreview}/>}
     </div>
     <details className="gs-character-admin-section" data-character-calendar onToggle={e=>{if(!e.currentTarget.open)setEventPreview(null);}}>
       <summary className="cursor-pointer text-sm font-bold text-white">ღონისძიებების კალენდარი</summary>
@@ -264,10 +269,10 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
     <p className="gs-character-admin-save text-xs text-slate-300 leading-relaxed">ცვლილებები საერთო მონახაზშია. გამოიყენეთ ქვემოთ მონახაზის შენახვა და შემდეგ გამოქვეყნება. გადახედვა საიტზე არ ჩანს.</p>
   </section>;
 }
-function PreviewPlayback({preview,lang}){
+function PreviewPlayback({preview,lang,visitorPreview=false}){
   const [visible,setVisible]=useState(false);
   useEffect(()=>{const timer=setTimeout(()=>setVisible(true),preview.settings.delay*1000);return()=>clearTimeout(timer);},[preview]);
-  return visible?<CharacterScene character={preview.character} settings={preview.settings} lang={lang} preview/>:null;
+  return visible?<CharacterScene key={String(visitorPreview)} character={preview.character} settings={preview.settings} lang={lang} preview visitorPreview={visitorPreview}/>:null;
 }
 
 function ConciergeFunctionalDemo({settings,lang}){

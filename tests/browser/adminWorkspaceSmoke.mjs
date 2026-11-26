@@ -232,6 +232,14 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
           await studio.locator('[data-character-playback][data-playing="true"] .gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
           assert.match(await studio.locator('[data-character-playback][data-playing="true"] .gs-character-preview-scene').innerText(),/Mini Robot/);
+          const visitorScene=studio.locator('[data-character-playback] .gs-character-preview-scene');
+          assert.equal(await visitorScene.getAttribute('data-character-visitor-preview'),'true');
+          assert.equal(await visitorScene.getAttribute('data-character-details'),'compact');
+          assert.equal(await visitorScene.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).animationName),'none');
+          await studio.locator('[data-character-visitor-preview-toggle]').click();
+          assert.equal(await visitorScene.getAttribute('data-character-details'),'expanded');
+          await studio.locator('[data-character-visitor-preview-toggle]').click();
+          assert.equal(await visitorScene.getAttribute('data-character-details'),'compact');
           assert.equal(await page.locator('.gs-character-scene:not(.gs-character-preview-scene)').count(),0,'Admin preview does not start public mascot');
           const box=await studio.locator('[data-character-playback]').boundingBox();
           assert.ok(box.width<=321,'Phone preview is constrained to phone width');

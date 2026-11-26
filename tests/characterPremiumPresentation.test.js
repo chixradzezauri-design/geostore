@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('premium public character actions are opt-in and the text does not bounce',()=>{
  const jsx=read('src/components/CharacterMascot.jsx'),css=read('src/components/characterStudio.css'),smoke=read('tests/browser/characterStudioSmoke.mjs');
- for(const term of ['const [detailsOpen,setDetailsOpen]=useState(false)','const expanded=preview||detailsOpen','aria-expanded={expanded}','aria-controls={detailsId}','hidden={!expanded}','data-character-product','data-character-help','gs-character-mute','gs-character-dismiss'])assert.ok(jsx.includes(term),term);
+ for(const term of ['const [detailsOpen,setDetailsOpen]=useState(false)','const expanded=(preview&&!visitorPreview)||detailsOpen','aria-expanded={expanded}','aria-controls={detailsId}','hidden={!expanded}','data-character-product','data-character-help','gs-character-mute','gs-character-dismiss'])assert.ok(jsx.includes(term),term);
  assert.ok(css.includes('.gs-character-details[hidden]{display:none!important}'));
  assert.ok(css.includes('animation:none!important;transform:none!important;box-sizing:border-box'));
  assert.ok(smoke.includes('Recommendations do not occupy catalogue space before opening'));
@@ -74,4 +74,14 @@ test('premium gestures settle, preserve reduced motion and use bounded rendering
  assert.ok(renderer.includes('premiumMascotBlink(elapsed,motion.matches)'));
  assert.ok(renderer.includes('Math.min(256,Math.max(64'));
  assert.ok(css.includes('gs-premium-figure-arrive'));
+});
+
+test('visitor preview mirrors compact public text without replacing the functional editor demo',()=>{
+ const jsx=read('src/components/CharacterMascot.jsx'),admin=read('src/components/AdminCharacterStudio.jsx'),css=read('src/components/characterStudio.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(jsx.includes('visitorPreview=false'));
+ assert.ok(jsx.includes('const expanded=(preview&&!visitorPreview)||detailsOpen'));
+ assert.ok(admin.includes('const [visitorPreview,setVisitorPreview]=useState(true)'));
+ assert.ok(admin.includes('preview interactivePreview'));
+ assert.ok(css.includes('.gs-character-preview-scene[data-character-visitor-preview="true"]'));
+ assert.ok(smoke.includes("getAttribute('data-character-details'),'compact'"));
 });

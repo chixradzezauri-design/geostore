@@ -238,8 +238,17 @@ export async function runConciergeV3Smoke(browser,host){
       assert.equal(await dismiss.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Dismiss remains reachable '+width+'x'+height);
     }
     await page.setViewportSize({width:390,height:850});
+    // Verify ordinary motion too, rather than only relying on reduced-motion CSS.
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    assert.equal(await scene.evaluate(n=>getComputedStyle(n).animationName),'none','Public root remains stationary in ordinary motion');
+    assert.equal(await scene.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).animationName),'none','Public text remains stationary in ordinary motion');
+    await page.emulateMedia({reducedMotion:'reduce'});
     await toggle.click();
     assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+    assert.equal(await product.isVisible(),false,'Disclosure closes without discarding the recommendation');
+    await toggle.click();
     await product.waitFor({state:'visible',timeout:15000});
     assert.equal(await scene.getAttribute('data-side'),'left');
     const initial=await product.getAttribute('data-character-product');

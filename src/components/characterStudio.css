@@ -277,9 +277,11 @@
   --gs-premium-edge:max(10px,env(safe-area-inset-right,0px));
   left:auto;right:var(--gs-premium-edge);
 }
-.geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){
-  --gs-premium-bottom:calc(92px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
-  bottom:var(--gs-premium-bottom);
+@media(max-width:767px){
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(92px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+    bottom:var(--gs-premium-bottom);
+  }
 }
 .gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{
   width:var(--gs-premium-figure);flex:0 0 var(--gs-premium-figure);min-width:0;
@@ -421,4 +423,40 @@
   .gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig,
   .gs-character-scene[data-character-depth="grounded"] .gs-character-hand,
   .gs-character-scene[data-character-depth="grounded"] .gs-character-tail{animation:none!important;transform:none!important}
+}
+
+/* Premium phase 6: visitor-mode editor preview mirrors the compact presentation
+   without inheriting fixed viewport coordinates. Preserve the raw sizing preview. */
+.gs-character-preview-scene[data-character-visitor-preview="true"]{
+  animation:none!important;gap:3px;max-width:calc(100% - 24px);
+}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-bubble{
+  animation:none!important;transform:none!important;display:flex;flex-direction:column;
+  box-sizing:border-box;width:min(208px,100%);min-width:0;max-height:126px;overflow:hidden;
+  padding:9px 10px 8px;box-shadow:0 4px 14px #17233b24;
+}
+.gs-character-preview-scene[data-character-visitor-preview="true"][data-character-details="compact"] :is(.gs-character-role-label,.gs-character-advice-label){display:none}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-message{min-height:0;overflow:auto;pointer-events:auto}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-details-toggle{flex:0 0 auto}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-details{min-height:0;overflow:auto;pointer-events:auto}
+.gs-character-preview[data-device="mobile"] .gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-figure{
+  width:min(var(--gs-mascot-mobile,76px),64px);flex-basis:min(var(--gs-mascot-mobile,76px),64px)
+}
+.gs-character-preview[data-device="desktop"] .gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-figure{
+  width:min(var(--gs-mascot-desktop,116px),128px);flex-basis:min(var(--gs-mascot-desktop,116px),128px)
+}
+/* Match or exceed the earlier enhanced/interactive rules' specificity. */
+.gs-character-scene[data-character-depth="grounded"][data-prominence]:not(.gs-character-preview-scene){
+  max-width:min(284px,calc(100vw - 2 * var(--gs-premium-edge)));
+}
+.gs-character-scene[data-character-depth="grounded"][data-character-details="compact"]:not(.gs-character-preview-scene) .gs-character-bubble{
+  max-height:min(126px,32vh,var(--gs-premium-room));padding:9px 10px 8px;
+}
+@media(min-width:768px){
+  .gs-character-scene[data-character-depth="grounded"][data-prominence]:not(.gs-character-preview-scene){max-width:350px}
+  .gs-character-scene[data-character-depth="grounded"][data-prominence][data-side="right"]:not(.gs-character-preview-scene){max-width:min(350px,calc(100vw - var(--gs-premium-edge) - 24px))}
+}
+@media(max-width:767px) and (max-height:480px){
+  .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){--gs-premium-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){--gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
 }
