@@ -538,6 +538,14 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.equal(await shell.locator('#admin-workspace-crm-filter').inputValue(),'all');
           const segments=shell.locator('.admin-marketing-segments');
           await segments.getByRole('combobox',{name:'სეგმენტის ფილტრი'}).selectOption('vip');
+          const metric=segments.locator('[data-admin-segment-card] > p.text-white');
+          await metric.waitFor({state:'visible'});
+          assert.equal(await metric.count(),1,'VIP filter shows one segment');
+          const metricInk=await metric.evaluate(el=>getComputedStyle(el).color);
+          assert.equal(metricInk,'rgb(24, 34, 48)','Segment number uses readable workspace foreground');
+          const warning=segments.locator('.admin-marketing-campaigns > p.text-amber-200').first();
+          const warningPalette=await warning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+          assert.deepEqual(warningPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Sending restriction remains readable on a paired warning surface');
           await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
           assert.ok(moduleRequests.has('AdminMarketingSegments'),'Marketing module loads on entering users');
           assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
