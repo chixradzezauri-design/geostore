@@ -391,6 +391,9 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         }
         if (tab === 'users') {
           await page.locator('#admin-workspace-crm-filter').selectOption('vip');
+          assert.ok(await shell.locator('[data-admin-pro-crm-summary]').isVisible());
+          await shell.locator('.admin-workspace-crm-filters').getByRole('button',{name:'გასუფთავება',exact:true}).click();
+          assert.equal(await shell.locator('#admin-workspace-crm-filter').inputValue(),'all');
           const segments=shell.locator('.admin-marketing-segments');
           await segments.getByRole('combobox',{name:'სეგმენტის ფილტრი'}).selectOption('vip');
           await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
@@ -475,7 +478,12 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.deepEqual(writes,[],'Local visual editor changes must not save or publish automatically');
           console.log('PASS isolated storefront editor: template undo, responsive DOM order and width inheritance at '+width+'px');
         }
-        if (tab === 'support') await page.locator('#admin-workspace-support-status').selectOption('ღია');
+        if (tab === 'support') {
+          await page.locator('#admin-workspace-support-status').selectOption('ღია');
+          assert.ok(await shell.locator('[data-admin-pro-support-summary]').isVisible());
+          await shell.getByRole('button',{name:'ფილტრების გასუფთავება',exact:true}).click();
+          assert.equal(await shell.locator('#admin-workspace-support-status').inputValue(),'all');
+        }
       }
       assert.equal(visualBaseline.length,Object.keys(modules).length,'Every permitted module has a visual baseline');
       assert.equal(new Set(visualBaseline.map(row=>row.module)).size,Object.keys(modules).length);

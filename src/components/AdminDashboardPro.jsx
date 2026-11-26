@@ -6870,7 +6870,7 @@ export default function AdminDashboardPro({
             <div className="min-w-0"><label htmlFor="admin-workspace-support-type" className="block text-xs text-slate-300 mb-1">მოთხოვნის ტიპი</label><select id="admin-workspace-support-type" value={supportRequestFilter} onChange={e => { setSupportRequestFilter(e.target.value); setSelectedSupportTicketId(null); }} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white text-xs"><option value="all">ყველა მიმართვა</option><option value="requests">დაბრუნება და გაცვლა</option><option value="return">დაბრუნება</option><option value="exchange">გაცვლა</option></select></div>
             {supportRequestFilter !== 'all' && <p className="text-xs text-slate-400">ტიპი მითითებულია მიმართვის თემის მიხედვით. გადაწყვეტილებამდე გადაამოწმეთ შეკვეთა და მისი მფლობელი. მხარდაჭერის სტატუსი არ ცვლის ფინანსურ ან მარაგის მონაცემებს.</p>}
             {(supportSearch || supportStatusFilter !== 'all' || supportRequestFilter !== 'all') && <button type="button" onClick={() => { setSupportSearch(''); setSupportStatusFilter('all'); setSupportRequestFilter('all'); setSelectedSupportTicketId(null); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">ფილტრების გასუფთავება</button>}
-            <p role="status" className="text-xs text-slate-300">{supportTicketsReady ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
+            <p data-admin-pro-support-summary="true" role="status" className="text-xs text-slate-300">{supportTicketsReady && !supportTicketsError ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
             <div className="admin-support-list space-y-3">
               {visibleSupportTickets.length === 0 ? (
                 <p className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
@@ -6881,6 +6881,7 @@ export default function AdminDashboardPro({
                       <div className="admin-support-ticket-meta flex items-center gap-3 flex-wrap">
                         <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
                         <span className="text-white font-black text-sm">{t.subject}</span>
+                        <span data-admin-pro-ticket-status={t.status === "ღია" ? "open" : t.status === "მუშავდება" ? "working" : t.status === "მოგვარებული" ? "resolved" : "unknown"}>{t.status === "ღია" || t.status === "მუშავდება" || t.status === "მოგვარებული" ? t.status : "უცნობი სტატუსი"}</span>
                         <span className="text-slate-500 text-[10px]">({t.date})</span>
                       </div>
                       
@@ -6930,7 +6931,7 @@ export default function AdminDashboardPro({
                           : (
                             <div className="space-y-2.5 max-h-96 overflow-y-auto">
                               {(supportTicketThreads[String(t.id)] || []).map(entry => (
-                                <div key={entry.id} className={`rounded-xl border p-3 ${entry.sender_role === 'admin' ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-700 bg-slate-950/70'}`}>
+                                <div key={entry.id} data-admin-pro-thread-role={entry.sender_role === "admin" ? "admin" : "customer"} className={`rounded-xl border p-3 ${entry.sender_role === 'admin' ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-700 bg-slate-950/70'}`}>
                                   <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                                     <b className={entry.sender_role === 'admin' ? 'text-emerald-300' : 'text-cyan-200'}>{entry.sender_role === 'admin' ? 'ადმინისტრატორი' : (entry.sender_name || 'მომხმარებელი')}</b>
                                     <span className="text-[10px] text-slate-500">{entry.created_at ? new Date(entry.created_at).toLocaleString('ka-GE') : ''}</span>
@@ -7450,7 +7451,7 @@ export default function AdminDashboardPro({
                       <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>
                       <span className="text-[10px] text-slate-400">{message.created_at ? new Date(message.created_at).toLocaleString('ka-GE') : (message.time || '')}</span>
                     </div>
-                    <p className="text-[10px] uppercase tracking-wide text-emerald-300">{message.sender || 'უცნობი გამომგზავნი'}</p>
+                    <p data-admin-pro-legacy-sender="true" className="text-[10px] uppercase tracking-wide text-emerald-300">{message.sender || 'უცნობი გამომგზავნი'}</p>
                     <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200">{message.text || 'ტექსტური შეტყობინება არ არის.'}</p>
                     {message.image && <p className="text-[10px] text-slate-400">მიმაგრებულია სურათი</p>}
                     <p className="text-[10px] text-slate-500">ჩანაწერის ID: {message.id}</p>
@@ -8078,7 +8079,7 @@ export default function AdminDashboardPro({
               {(userSearchQuery || crmStatusFilter !== 'all') && <button type="button" onClick={() => { setUserSearchQuery(''); setCrmStatusFilter('all'); setCrmPage(1); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}
               <button type="button" disabled={crmLoading || crmSaving} onClick={() => void fetchAdminCustomers()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
             </div>
-            <p role="status" className="text-xs text-slate-300">ნაპოვნია {filteredUsers.length} / {crmUsers.length} · სერვერული პროფილები: {crmReady ? serverCustomers.length : "—"}</p>
+            <p data-admin-pro-crm-summary="true" role="status" className="text-xs text-slate-300">ნაპოვნია {filteredUsers.length} / {crmUsers.length} · სერვერული პროფილები: {crmReady ? serverCustomers.length : "—"}</p>
             <div className="admin-crm-list space-y-3">
               {(!filteredUsers || filteredUsers.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">{crmLoading ? "მომხმარებლები იტვირთება…" : !crmReady ? "სერვერული სია ჯერ არ არის დადასტურებული." : "მომხმარებლები ვერ მოიძებნა."}</p>
@@ -8094,12 +8095,12 @@ export default function AdminDashboardPro({
                         <div>
                           <div className="flex items-center gap-2.5 flex-wrap">
                             <h4 className="font-black text-white text-sm break-words">{u.name || "მომხმარებელი"}</h4>
-                            {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
-                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
-                            {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
+                            {u.isVip && <span data-admin-pro-crm-badge="vip" className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
+                            {u.isBlocked && <span data-admin-pro-crm-badge="restricted" className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
+                            {u.discountPercent > 0 && <span data-admin-pro-crm-badge="discount" className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
                           <p className="admin-crm-contact-line text-slate-400 text-[11px] mt-1">{u.email || "ელფოსტა არ არის მითითებული"} · {u.phone || "ტელეფონი არ არის მითითებული"}</p>
-                          <p className="text-xs text-slate-300 mt-1">{u.isServerCustomer ? "სერვერული პროფილი" : u.isLocalCrmRecord ? "ლოკალური ჩანაწერი" : "შეკვეთიდან მიღებული ჩანაწერი"}</p>
+                          <p className="text-xs text-slate-300 mt-1"><span data-admin-pro-crm-badge={u.isServerCustomer ? "server" : u.isLocalCrmRecord ? "local" : "order"}>{u.isServerCustomer ? "სერვერული პროფილი" : u.isLocalCrmRecord ? "ლოკალური ჩანაწერი" : "შეკვეთიდან მიღებული ჩანაწერი"}</span></p>
                           {u.isServerCustomer && <p className="text-xs text-slate-300">შეკვეთები (სერვერული რაოდენობა): {crmReady ? u.orderCount : "—"}</p>}
                           {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
                         </div>
