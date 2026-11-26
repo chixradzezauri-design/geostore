@@ -888,9 +888,30 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis {
   display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 10px !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis > [data-admin-pro-finance-kpi] {
-  display: flex !important; flex-direction: column; align-items: stretch; justify-content: flex-start;
+/* Atelier finance: keep values, evidence notes and controls in separate tracks. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi] {
+  display: grid !important; grid-template-rows: auto auto 1fr;
+  align-items: start; align-content: start; min-inline-size: 0;
   gap: 8px !important; background-image: none !important; box-shadow: none !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis > :is([data-admin-pro-finance-kpi="revenue"],[data-admin-pro-finance-kpi="net"]) {
+  border-inline-start: 3px solid var(--av-accent) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics [data-admin-pro-finance-kpi] > p:first-child {
+  display: grid !important; grid-template-columns: 18px minmax(0,1fr);
+  align-content: start; gap: 6px !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics [data-admin-pro-finance-kpi] > p:first-child > svg {
+  width: 16px !important; height: 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics [data-admin-pro-finance-kpi] > .admin-analytics-value {
+  min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums; line-height: 1.3 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics [data-admin-pro-finance-kpi] > .admin-analytics-note {
+  display: block; min-inline-size: 0; max-inline-size: 100%;
+  align-self: end; line-height: 1.5; overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-finance-kpi] > p:first-child { min-height: 2.8em; align-items: flex-start !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-finance-kpi] .admin-analytics-note { margin-block-start: auto !important; font-weight: 500 !important; }
@@ -901,7 +922,13 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses > div, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator {
   background-image: none !important; box-shadow: none !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-toolbar { flex-wrap: wrap; gap: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-toolbar { flex-wrap: wrap; gap: 12px !important; border-inline-start: 3px solid var(--av-accent) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions {
+  display: flex !important; flex-wrap: wrap; min-inline-size: 0; max-inline-size: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > :is(button,select) {
+  flex: 1 1 140px; max-inline-size: 100%; white-space: normal !important;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading h3 { font-size: 16px !important; line-height: 1.5; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading p { font-size: 12px !important; line-height: 1.6; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-actions > :is(button,select) { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
@@ -941,8 +968,51 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-expense-state="pending"] { background: #fff0cc !important; color: #754300 !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-layout { grid-template-columns: minmax(0,1fr) !important; gap: 14px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results { background: var(--av-inset) !important; border-color: var(--av-border) !important; box-shadow: none !important; min-width: 0; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results > div { font-size: 13px; line-height: 1.5; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results > div > b { min-width: 0; max-width: 55%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-fields {
+  min-inline-size: 0; padding: 12px; border: 1px solid var(--av-border);
+  border-radius: var(--admin-vd-cardRadius-active,12px); background: var(--av-surface);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid > div {
+  display: grid; align-content: end; min-inline-size: 0; gap: 4px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid :is(label,input) {
+  min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid input {
+  box-sizing: border-box; min-height: 44px !important; width: 100% !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results > div {
+  display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,auto);
+  gap: 8px; align-items: baseline; padding-block: 9px;
+  border-block-end: 1px solid var(--av-border); font-size: 13px; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results > div > :is(span,b) {
+  min-inline-size: 0; overflow-wrap: anywhere; max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results > div > b { text-align: end; font-variant-numeric: tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results > [data-admin-pro-calculator-net] {
+  border: 1px solid var(--av-border); border-inline-start: 3px solid var(--av-accent);
+  border-radius: 8px; padding: 12px 8px;
+}
+@container (max-width: 340px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results > div {grid-template-columns: minmax(0,1fr);}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results > div > b {text-align: start;}
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-form {
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field :is(input,select) {
+  box-sizing: border-box; width: 100% !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field label {line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-submit {
+  background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-submit:disabled {opacity: .55 !important; cursor: not-allowed;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-workspace-expense-summary {border-inline-start: 3px solid var(--av-accent);}
 @container (min-width: 400px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-field-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }

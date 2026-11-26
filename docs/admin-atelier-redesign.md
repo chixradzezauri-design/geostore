@@ -28,3 +28,6 @@ Separate order identity, totals, customer data and status transitions using boun
 
 ## Stage 6 — inventory, suppliers and purchases
 Keep inventory history horizontally scrollable within its own region, distinguish measured stock and editable thresholds, and highlight verified totals and primary actions using existing theme tokens. Reflow the purchase draft into independent product, quantity and cost tracks according to its container width; supplier cards keep readable identity and separate actions. Add device-matrix geometry assertions for inventory and supply controls. No modifications to business logic, supplier commission, stock receipt, payments, permissions or database. Browser fixtures do not cover every populated purchase state; actual interaction QA and the exact-HEAD checks remain outstanding.
+
+## Stage 7 — finance, analytics, calculator and expenses
+Separate KPI icon/label, amount and evidence-note tracks, distinguish primary financial measures without altering profit/loss/pending states, and improve calculator field and result alignment, expense form sizing and primary action styling. Add device-matrix containment assertions for all three modules. No financial formulas, report filters, server queries, permissions, expense mutations or database changes. Exact-HEAD browser testing and populated financial-state visual QA remain required.

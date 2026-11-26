@@ -75,3 +75,13 @@ test('Atelier inventory and supply forms keep native controls and monetary opera
  for(const token of ['onSubmit={create}','receive(currentOrder,l)','transition(currentOrder,\'approve\')','transition(currentOrder,\'cancel\')','!ready||!valid'])assert.ok(purchase.includes(token),token);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('inventory and supply controls stay inside their regions'));
 });
+
+
+test('Atelier finance separates financial presentation from the existing calculation and data guards',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const stage=css.split('/* Atelier finance:')[1].split('/* Stage 10')[0];
+ for(const token of ['grid-template-rows: auto auto 1fr','grid-template-columns: 18px minmax(0,1fr)','font-variant-numeric: tabular-nums','data-admin-pro-calculator-net','min-height: 44px','admin-expense-submit:disabled'])assert.ok(stage.includes(token),token);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const token of ['ordersVerifiedForReports','expensesVerifiedForReports','verifiedFinanceSnapshot','calculatedSalesMetrics.netProfit','handleAddExpense','handleDeleteExpense'])assert.ok(app.includes(token),token);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('financial content stays within its own region'));
+});

@@ -197,6 +197,32 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (['analytics','calculator','expenses'].includes(tab)) {
+              const financeIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='analytics'?'.admin-analytics':module==='calculator'?'.admin-profit-calculator':'.admin-expenses');
+                const issues=[];
+                const fits=(inner,outer)=>inner.left>=outer.left-2&&inner.right<=outer.right+2;
+                if(module==='analytics'){
+                  const cards=[...scope.querySelectorAll('[data-admin-pro-finance-kpi]')];
+                  if(cards.length!==8)issues.push('financial KPI missing');
+                  for(const card of cards){
+                    const outer=card.getBoundingClientRect();
+                    for(const el of card.querySelectorAll(':scope > p,:scope > span'))if(!fits(el.getBoundingClientRect(),outer))issues.push('KPI content outside card');
+                  }
+                }else{
+                  const groups=scope.querySelectorAll(module==='calculator'?'.admin-calculator-field-grid > div,.admin-calculator-results > div':'.admin-expense-field');
+                  for(const group of groups){
+                    const outer=group.getBoundingClientRect();
+                    for(const el of group.querySelectorAll('input,select,:scope > span,:scope > b')){
+                      const inner=el.getBoundingClientRect();
+                      if(inner.height>0&&!fits(inner,outer))issues.push('financial field outside its group');
+                    }
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(financeIssues,[],engine+' '+targetWidth+'px: financial content stays within its own region');
+            }
             if (['inventory','replenishment','vendors'].includes(tab)) {
               const supplyIssues=await shell.evaluate((root, module) => {
                 const scope=root.querySelector(module==='vendors'?'.admin-vendors-panel':module==='inventory'?'[data-admin-inventory-view="history"]':'[data-admin-inventory-view="planning"]');
