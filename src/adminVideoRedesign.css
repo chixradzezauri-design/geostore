@@ -1281,11 +1281,11 @@
  font-size:12px!important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="primary"],
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="primary"] {--admin-command-tone-bg:#dff3eb;--admin-command-tone-fg:#14594a;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center :is([data-admin-command-status="primary"],[data-admin-kpi-tone="primary"]) {--admin-command-tone-bg:#dff3eb;--admin-command-tone-fg:#14594a;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="warning"],
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="warning"] {--admin-command-tone-bg:#fff0cc;--admin-command-tone-fg:#754300;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center :is([data-admin-command-status="warning"],[data-admin-kpi-tone="warning"]) {--admin-command-tone-bg:#fff0cc;--admin-command-tone-fg:#754300;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="danger"],
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="danger"] {--admin-command-tone-bg:#fce5e8;--admin-command-tone-fg:#9c2538;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center :is([data-admin-command-status="danger"],[data-admin-kpi-tone="danger"]) {--admin-command-tone-bg:#fce5e8;--admin-command-tone-fg:#9c2538;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="info"] {--admin-command-tone-bg:#e4eefc;--admin-command-tone-fg:#254b8a;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="neutral"] {--admin-command-tone-bg:#e7edf3;--admin-command-tone-fg:#39495a;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone] > span:first-child > svg {

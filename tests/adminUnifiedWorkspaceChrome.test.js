@@ -128,3 +128,15 @@ test('Atelier editor controls are scoped away from preview content and retain pu
  for(const token of ['undoChange','redoChange','resetViewport','onRetrySave','onReloadRemote','directSelectionMode'])assert.ok(admin.includes(token),token);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('editor tools remain bounded and publication actions unique'));
 });
+
+
+test('Atelier cascade uses one primary product edit treatment and preserves KPI status colors',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const rule=css.split('/* Atelier dashboard:')[1].match(/\.admin-command-kpi\s*\{[^}]+\}/)[0];
+ assert.ok(rule.indexOf('border-color:')<rule.indexOf('border-block-start: 3px solid'));
+ const video=read('src/adminVideoRedesign.css');
+ for(const tone of ['primary','warning','danger'])assert.ok(video.includes('[data-admin-command-status="'+tone+'"],[data-admin-kpi-tone="'+tone+'"]'));
+ assert.equal((css.match(/\.admin-product-controls > \.admin-video-edit\s*\{/g)||[]).length,1);
+ assert.ok(!css.includes('background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset))'));
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('KPI semantic borders survive card border-color shorthand'));
+});

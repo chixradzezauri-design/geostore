@@ -186,6 +186,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.equal(positions.length, 4);
               assert.ok(positions.every(box => box.width >= 43.5 && box.height >= 43.5 && Math.abs(box.top - positions[0].top) < 2), 'Four category actions fit on one row when each has a 44px touch target');
             }
+            if (tab === 'support' && targetWidth < 640) {
+              const form= shell.locator('.admin-support-reply-form').first();
+              await form.waitFor();
+              const basis=await form.locator('textarea').evaluate(el=>getComputedStyle(el).flexBasis);
+              assert.equal(basis,'auto','Mobile reply composer does not inherit desktop vertical flex basis');
+            }
             if (tab === 'support' && targetWidth === 320) {
               const ticket = shell.locator('.admin-support-ticket').first();
               await ticket.waitFor();
@@ -404,6 +410,9 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               });
               assert.deepEqual(overviewIssues,[],engine+' '+targetWidth+'px: dashboard tracks do not collide');
+              const toneBorders=await shell.locator('.admin-command-kpi[data-admin-kpi-tone]').evaluateAll(cards=>cards.map(card=>{const s=getComputedStyle(card);return {tone:card.dataset.adminKpiTone,color:s.borderTopColor,width:parseFloat(s.borderTopWidth)};}));
+              assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
+              assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');
             }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();

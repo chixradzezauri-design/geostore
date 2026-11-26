@@ -55,11 +55,7 @@
   background-image: none !important;
   backdrop-filter: none !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-edit {
-  background: var(--av-surface) !important;
-  border-color: var(--av-border) !important;
-  color: var(--av-text) !important;
-}
+
 /* Atelier page header: separate page context, title and role from actions. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
   display: grid !important;
@@ -1227,7 +1223,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-support-thread-list { overscroll-behavior-block: contain; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-support-reply-title { color: var(--av-text) !important; font-size: 13px !important; font-weight: 600; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form {
-  display: flex !important; flex-wrap: wrap; align-items: stretch !important;
+  display: flex !important; flex-direction: row; flex-wrap: wrap; align-items: stretch !important;
   min-inline-size: 0; gap: 8px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form > textarea {
@@ -1275,6 +1271,11 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form > button:disabled {opacity: .55 !important; cursor: not-allowed;}
 @container (max-width: 480px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form {flex-direction: column;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form > textarea {flex: 0 1 auto; width: 100% !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form > button {width: 100% !important;}
+}
+@media (max-width: 639px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form {flex-direction: column;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form > textarea {flex: 0 1 auto; width: 100% !important;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form > button {width: 100% !important;}
@@ -1647,9 +1648,6 @@
   }
 }
 @media (max-width: 767px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > [data-admin-replenishment-metric="recommended"] {
-    background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset)) !important;
-  }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > .admin-replenishment-metric {
     padding: 8px !important;
   }
@@ -2115,10 +2113,10 @@
   align-content: start;
   min-inline-size: 0;
   gap: 6px !important;
-  border-block-start: 3px solid var(--admin-command-tone-fg,var(--av-accent)) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px) !important;
   background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
   border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-block-start: 3px solid var(--admin-command-tone-fg,var(--av-accent)) !important;
   box-shadow: none !important;
   transform: none !important;
 }
