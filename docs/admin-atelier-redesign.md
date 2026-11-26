@@ -34,3 +34,6 @@ Separate KPI icon/label, amount and evidence-note tracks, distinguish primary fi
 
 ## Stage 8 — staff, accounts and CRM
 Give permission selectors dedicated native-checkbox and caption tracks with a full-label touch area; improve account identity, status and action layout, disabled controls, and CRM contact/action separation. Retain existing server authorization, Auth invitation and reactivation handlers, permissions and CRM semantics. Add device-matrix control containment tests. Populated staff and CRM records and the exact-HEAD browser suite remain to be verified; no database or account writes.
+
+## Stage 9 — support, correspondence and test notifications
+Reorganize ticket metadata, status controls, conversation bubbles and reply composer; improve legacy message headers and local-only notification preview and delivery warning. Add containment assertions across device widths. Existing ticket transitions, reply submission, history loading and local-only broadcast behavior remain unchanged. No real messages sent or data modified. Populated thread and legacy message QA and exact-HEAD browser checks remain required.

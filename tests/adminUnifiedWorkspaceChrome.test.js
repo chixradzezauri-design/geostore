@@ -95,3 +95,13 @@ test('Atelier account management keeps native permissions, authorization and CRM
  for(const token of ['handleInviteStaff','handleAddExistingUser','saveStaff(staff)','revokeStaff(staff)','reactivateStaff(staff)','canEditCrmCustomer(u)','handleToggleVipUser','handleToggleBlockUser','handleSaveUserCrm'])assert.ok(app.includes(token),token);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('staff and CRM controls remain bounded'));
 });
+
+
+test('Atelier correspondence preserves message delivery limitations and existing support operations',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const stage=css.split('/* Atelier correspondence:')[1].split('/* Stage 12')[0];
+ for(const token of ['grid-template-columns: minmax(0,auto) minmax(0,1fr)','aria-expanded="true"','min-height: 44px','data-admin-pro-thread-role="admin"','data-admin-pro-delivery-disabled','admin-support-reply-form'])assert.ok(stage.includes(token),token);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const token of ['handleUpdateTicketStatus(t.id','handleSendTicketReply(t.id)','fetchSupportTicketThread(t.id)','fetchLegacyMessages','handleSendBroadcast','მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.'])assert.ok(app.includes(token),token);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('communication regions stay bounded'));
+});

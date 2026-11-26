@@ -197,6 +197,24 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (['support','messages','broadcasts'].includes(tab)) {
+              const communicationIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='broadcasts'?'.admin-broadcasts-panel':'.admin-support-panel');
+                const issues=[];
+                const groups=scope.querySelectorAll(module==='broadcasts'?'.admin-unified-broadcast-form':module==='messages'?'.admin-workspace-support-filters,.admin-legacy-message-card':'.admin-support-ticket-meta,.admin-support-ticket-controls,.admin-support-reply-form');
+                for(const group of groups){
+                  const outer=group.getBoundingClientRect();
+                  for(const el of group.querySelectorAll('button,input,select,textarea,:scope > span')){
+                    const rect=el.getBoundingClientRect();
+                    if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('communication element outside group');
+                  }
+                }
+                if(module==='support'&&!scope.querySelector('.admin-support-reply-form'))issues.push('support composer missing');
+                if(module==='broadcasts'&&!scope.querySelector('[data-admin-pro-delivery-disabled]'))issues.push('delivery limitation missing');
+                return issues;
+              },tab);
+              assert.deepEqual(communicationIssues,[],engine+' '+targetWidth+'px: communication regions stay bounded');
+            }
             if (tab === 'staff' || tab === 'users') {
               const identityIssues=await shell.evaluate((root,module)=>{
                 const scope=root.querySelector(module==='staff'?'.admin-staff':'.admin-crm-panel');
