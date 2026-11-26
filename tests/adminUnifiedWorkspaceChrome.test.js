@@ -52,3 +52,14 @@ test('Atelier catalogue separates image, labels and action regions without repla
  for(const token of ['handleQuickUpdateProduct','handleSaveProduct','handleEditProduct(p)','handleDeleteProduct(p.id)','moveCategory(parentCat.id, -1)','moveCategory(sub.id, 1)']) assert.ok(app.includes(token),token);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('catalogue identity and actions do not overlap'));
 });
+
+
+test('Atelier orders isolate amount, customer and status actions while preserving transition guards',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const order=css.split('/* Atelier orders:')[1].split('/* Stage 06')[0];
+ for(const term of ['grid-template-columns: minmax(0,1fr) minmax(120px,auto)','repeat(5,minmax(0,1fr))','min-height: 44px','aria-pressed="true"','grid-column: 1 / -1'])assert.ok(order.includes(term),term);
+ assert.doesNotMatch(order,/overflow:\s*(hidden|clip)|position:\s*absolute/);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const term of ['handleExportOrders','handlePrintInvoice(o)','handleUpdateOrderStatus(o.id,','setSelectedOrderForModal(o)','handleSaveOrderAdminNote(selectedOrderForModal.id)','isDeliveredOrderStatus(o.status)','isShippedOrderStatus(o.status)','orderDetailTriggerRef.current'])assert.ok(app.includes(term),term);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('order filters fit without duplicate controls'));
+});

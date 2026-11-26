@@ -197,6 +197,19 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (tab === 'orders') {
+              const filterIssues = await shell.locator('.admin-orders-toolbar').evaluate(toolbar => {
+                const bounds=toolbar.getBoundingClientRect();
+                const controls=[...toolbar.querySelectorAll('input,select,button')].filter(el=>el.getClientRects().length);
+                const issues=[];
+                for(const el of controls){const rect=el.getBoundingClientRect();if(rect.left<bounds.left-2||rect.right>bounds.right+2||rect.height<43.5)issues.push('order filter control geometry');}
+                const picker=toolbar.querySelector('.admin-order-status-picker');
+                const rail=toolbar.querySelector('.admin-order-status-filters');
+                if(Boolean(picker.getClientRects().length)===Boolean(rail.getClientRects().length))issues.push('duplicate or missing order status control');
+                return issues;
+              });
+              assert.deepEqual(filterIssues,[],engine+' '+targetWidth+'px: order filters fit without duplicate controls');
+            }
             if (tab === 'products' || tab === 'categories') {
               const catalogIssues = await shell.evaluate((root, currentTab) => {
                 const scope = root.querySelector(currentTab === 'products' ? '.admin-products-panel' : '.admin-category-manager');

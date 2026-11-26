@@ -22,3 +22,6 @@ Rework header hierarchy and publication action styling through the active editor
 
 ## Stage 4 — products and categories
 Use fixed image and flexible identity tracks, editor-compatible catalog card and action colors, clear separation of metadata and quick-edit fields, and distinct category/form accent borders. Retain the existing gallery actions, price/stock mutation handlers, category hierarchy, order controls and publication logic. Extend the isolated browser device matrix with identity/action overlap and action bounds checks for both modules. No changes to product records, database, or operational code. New commit verification is required.
+
+## Stage 5 — orders
+Separate order identity, totals, customer data and status transitions using bounded grid tracks; highlight active status filters and adapt status actions from two to three to five columns by available module width. Keep order editor colors and existing status warnings; improve detail header/footer layout and financial total emphasis. Existing order handlers, owner reactivation checks, invoice generation, export, permissions and database remain untouched. Browser assertions cover visible order filters; the existing workspace fixture has an empty order ledger, so populated order card and detail interaction QA remains outstanding. No claims of completed rendered verification.
