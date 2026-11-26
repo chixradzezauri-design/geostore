@@ -1200,3 +1200,111 @@
   outline: 2px solid var(--av-focus);
   outline-offset: 2px;
 }
+
+/* Settings workspace: pair foreground and background without recoloring
+   storefront character artwork, playback scenes or customizable bubbles. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-security-notice,.admin-delivery-settings,.admin-global-settings) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-delivery-fee-fields > div,.admin-global-settings > div:last-child > div.space-y-2 > div) {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel [data-admin-pro-security-warning] {
+  color: #754300 !important;
+  background: #fff0cc !important;
+  border-color: #e3c78b !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-global-settings > div:last-child > div.space-y-2 > div p:first-child {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-global-settings-form > button,.admin-delivery-settings > div:last-child > button:last-child) {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  box-shadow: none !important;
+  min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-global-settings > div:last-child button,.admin-delivery-settings > div:last-child > button:not(:last-child)) {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-fee-fields label {
+  min-height: 0;
+  display: block;
+  font-size: 13px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is([data-character-publish-status],.gs-character-admin-status > div,.gs-concierge-presets,.gs-concierge-demo-panel,.gs-character-admin-section,.gs-character-complete-setup,.gs-character-profile-heading) {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  box-shadow: none !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(label.text-slate-100,details.gs-character-admin-section > summary) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin details.gs-character-admin-section > summary {
+  min-height: 44px;
+  align-content: center;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(p.text-amber-300,p.text-amber-200):not(:where(.gs-character-preview *)) {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 6px;
+  padding: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed="false"] {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed="true"] {
+  background: #dff3eb !important;
+  border-color: #82b7a1 !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+  outline: 2px solid #14594a;
+  outline-offset: -2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed] > span {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(button,summary):not(:where(.gs-character-preview *)):focus-visible {
+  outline: 2px solid var(--av-focus) !important;
+  outline-offset: 2px;
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-fee-fields > div {
+    padding: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-settings > div:last-child > button {
+    flex: 1 1 140px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-delivery-fee-fields,.admin-global-settings-form) :is(input,textarea) {
+    font-size: max(16px,var(--admin-vd-inputFontSize-active,16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button { min-width: 0; }
+}
