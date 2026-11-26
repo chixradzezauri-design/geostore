@@ -813,7 +813,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
   });
 
   return (
-    <div className="admin-staff space-y-4">
+    <div className="admin-staff space-y-4" data-admin-pro-staff>
       <div role="note" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
         <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
         მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
@@ -912,13 +912,13 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
           {filteredStaff.map((staff) => {
             const editing = editingStaffId === staff.id;
             return (
-              <article key={staff.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
+              <article key={staff.id} data-admin-pro-staff-card className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <strong className="text-sm text-white">{staff.display_name || staff.email}</strong>
                       <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
+                      <span data-admin-pro-staff-state={staff.is_active ? "active" : "inactive"} className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ დადასტურდა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
                     {staff.last_sign_in_at && <p className="mt-1 text-[10px] text-slate-500">ბოლო შესვლა: {new Date(staff.last_sign_in_at).toLocaleString('ka-GE')}</p>}
@@ -938,7 +938,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                 {!editing && (
                   <div className="flex flex-wrap gap-1.5">
                     {STAFF_PERMISSION_OPTIONS.map((permission) => (
-                      <span key={permission.key} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
+                      <span key={permission.key} data-admin-pro-permission={staff.permissions?.[permission.key] ? "granted" : "not-granted"} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
                         {permission.label}: {staff.permissions?.[permission.key] ? '✓' : '—'}
                       </span>
                     ))}
@@ -7587,8 +7587,8 @@ export default function AdminDashboardPro({
               {!activityLogsLoading && !activityLogsError && activityLogs.length > 0 && filteredActivityLogs.length === 0 && <p className="text-xs text-slate-400">ჩატვირთულ ჟურნალში შედეგი ვერ მოიძებნა.</p>}
               {paginatedActivityLogs.map(log => (
                 <div key={log.id} className="admin-audit-log-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
-                  <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
-                  <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
+                  <span data-admin-pro-log-action className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
+                  <span data-admin-pro-log-time className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
               ))}
               {filteredActivityLogs.length > 0 && (
@@ -8227,7 +8227,7 @@ export default function AdminDashboardPro({
                 ადმინისტრატორის წვდომა მოწმდება Supabase Auth-ის სერვერული სესიით და დაცული app_metadata.role მნიშვნელობით.
                 ბრაუზერში შენახული PIN/პაროლი და სატესტო Face ID/Passkey ავტორიზაცია გამორთულია.
               </p>
-              <p className="text-xs text-amber-300 leading-6">
+              <p data-admin-pro-security-warning className="text-xs text-amber-300 leading-6">
                 რეალური Passkey-ის დასამატებლად საჭიროა სერვერული challenge და კრედენციალის ვერიფიკაცია.
                 მანამდე ეს ფუნქცია უსაფრთხოების მიზნით გათიშულია.
               </p>
@@ -8251,7 +8251,7 @@ export default function AdminDashboardPro({
                   <input id="admin-workspace-delivery-other" type="number" inputMode="decimal" disabled={deliveryFeeSaving} value={(deliveryFeeDraft || deliveryFees)?.other ?? 15} min="0" step="0.01" onChange={e => { const value = e.target.value; setDeliveryFeeDraft(previous => ({ ...(previous || deliveryFees), other: value })); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
               </div>
-              <p className="text-xs text-slate-300">ტარიფები მოქმედ ფასებს მხოლოდ სერვერზე წარმატებული შენახვის შემდეგ შეცვლის.</p>
+              <p data-admin-pro-settings-draft className="text-xs text-slate-300">ტარიფები მოქმედ ფასებს მხოლოდ სერვერზე წარმატებული შენახვის შემდეგ შეცვლის.</p>
               <div className="flex flex-wrap gap-2">
               {deliveryFeeDraft && <button type="button" disabled={deliveryFeeSaving} onClick={() => setDeliveryFeeDraft(null)} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">მონახაზის გაუქმება</button>}
               <button type="button" disabled={!deliveryFeeDraft || deliveryFeeSaving} aria-busy={deliveryFeeSaving} onClick={handleSaveDeliveryFees} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
@@ -8264,7 +8264,7 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
               </h3>
-              <p className="text-xs text-slate-300">პარამეტრები ინახება საერთო მონახაზში; საიტზე გამოჩნდება ცალკე გამოქვეყნების შემდეგ.</p>
+              <p data-admin-pro-settings-draft className="text-xs text-slate-300">პარამეტრები ინახება საერთო მონახაზში; საიტზე გამოჩნდება ცალკე გამოქვეყნების შემდეგ.</p>
               <form onSubmit={handleSaveSettings} className="admin-global-settings-form space-y-4 text-xs">
                 <div className="space-y-1.5">
                   <label htmlFor="admin-workspace-setting-storeName" className="text-slate-300 font-bold">მაღაზიის დასახელება</label>
