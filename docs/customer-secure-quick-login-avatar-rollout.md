@@ -22,3 +22,6 @@ Profile-only compact layout, avatar placement, two account shortcuts, readable m
 
 ## Stage 06 audit
 Private avatar state is remounted on access-scope changes, stale operation generations are ignored, and save now checks a fresh authenticated server read before showing success. Passkey UI prevents local close/mode changes during a credential ceremony. Added disposable Stage78 real-Auth checks for two independent sessions, account isolation, forged owner metadata and preserved admin denial. This is a CI rehearsal, not a live iPhone/Android test. The Passkey rollout remains disabled; production Auth configuration is not exposed by the available connector and has not been modified. Actual WebAuthn enrollment, sign-in, revocation and recovery still need a supported isolated Auth runtime and browser testing before enabling the rollout.
+
+## Stage 07 CI correction
+Build check on stage 06 exposed a ReferenceError in the new post-save verification (two failing regression tests). Corrected the Auth reference to use the supplied session client. Existing assertions for persisted values and stale sessions remain intact; rerun CI before release.

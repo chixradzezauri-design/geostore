@@ -34,7 +34,7 @@ export async function saveAvatarProfile(config,choice,fetchImpl=fetch){
  if(!response.ok)throw Error('avatar_save_failed');
  const updated=await response.json();
  if(updated.id!==config.ownerId||!config.isCurrentOwner()||updated.user_metadata?.[AVATAR_METADATA_KEY]?.id!==value.id||updated.user_metadata?.[AVATAR_METADATA_KEY]?.background!==value.background)throw Error('avatar_save_unverified');
- const confirmed=await auth.getUser(token);
+ const confirmed=await config.auth.getUser(token);
  if(confirmed.error||confirmed.data?.user?.id!==config.ownerId||!config.isCurrentOwner()||!validAvatarChoice(value,isOwnerAdmin(confirmed.data.user))||confirmed.data.user.user_metadata?.[AVATAR_METADATA_KEY]?.id!==value.id||confirmed.data.user.user_metadata?.[AVATAR_METADATA_KEY]?.background!==value.background)throw Error('avatar_save_unverified');
  return value;
 }
