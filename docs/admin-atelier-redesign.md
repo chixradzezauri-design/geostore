@@ -13,3 +13,6 @@ The existing professional preset now selects Atelier. Untouched legacy owner set
 - Review permission boundaries and security checks separately; never modify live data or deploy without explicit approval.
 
 Stage 1 is not a completed visual redesign or a production release.
+
+## Stage 2 — navigation
+The existing unified chrome now uses bounded icon, label and count tracks, a non-color active indicator, and visible group headings on tablets as well as desktop. Phone retains the native permission-filtered picker. No new stylesheet or authorization changes. Rendered geometry checks verify target height, label/icon/count separation, group visibility, and mutually exclusive desktop/mobile navigation across the existing device matrix. Browser verification is required for the new commit.

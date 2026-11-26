@@ -933,7 +933,7 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group:first-child { padding-top:3px; }
 }
 @media(min-width:768px) and (max-width:1023px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group { display:none!important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group { display:block!important; }
 }
 
 /* Workspace audit 02 — readable operational overview, preserving editor colors and card geometry. */

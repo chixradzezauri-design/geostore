@@ -17,3 +17,15 @@ test('workspace chrome retains real navigation, owner checks, publish and logout
  const app=read('src/components/AdminDashboardPro.jsx');
  for(const token of ['onClick={() => setAdminTab(tab.id)}','onChange={(event) => setAdminTab(event.target.value)}','hasModulePermission(\'settings\')','onSaveStorefrontDraft()','onPublishStorefront()','handleLogout()','aria-label="სისტემიდან გასვლა"','aria-current={isActive ? "page" : undefined}'])assert.ok(app.includes(token),token);
 });
+
+
+test('Atelier navigation uses bounded icon and label tracks with visible active and grouped states',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const stage=css.split('/* Atelier navigation:')[1].split('@media')[0];
+ for(const token of ['grid-template-columns: minmax(0,1fr) auto','grid-template-columns: 18px minmax(0,1fr)','min-inline-size: 0','inset 3px 0 currentColor','white-space: normal']) assert.ok(stage.includes(token),token);
+ assert.doesNotMatch(stage,/position:\s*absolute|overflow:\s*hidden/);
+ const video=read('src/adminVideoRedesign.css');
+ assert.match(video,/@media\(min-width:768px\) and \(max-width:1023px\) \{[^}]*admin-workspace-nav-group \{ display:block!important;/);
+ const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(smoke.includes('menu tracks do not collide'));
+});

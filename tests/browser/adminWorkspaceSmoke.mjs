@@ -207,6 +207,29 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(pairedControls, 'Phone product controls keep both prices and both secondary actions together');
             }
+            if (tab === 'command') {
+              const navigation = await shell.evaluate(root => {
+                const rail = root.querySelector('#geostore-admin-desktop-modules');
+                const picker = root.querySelector('#geostore-admin-mobile-section');
+                const visible = node => Boolean(node.getBoundingClientRect().width && node.getBoundingClientRect().height);
+                const buttons = [...rail.querySelectorAll('[data-admin-visual-nav-item="true"]')];
+                const groups = [...rail.querySelectorAll('.admin-workspace-nav-group')];
+                const issues = buttons.filter(visible).flatMap(button => {
+                  const rect = button.getBoundingClientRect();
+                  const label = button.querySelector(':scope > div > span');
+                  const icon = button.querySelector(':scope > div > svg');
+                  const count = button.querySelector(':scope > span');
+                  const l = label.getBoundingClientRect(), i = icon.getBoundingClientRect();
+                  const c = count?.getBoundingClientRect();
+                  return rect.height < 43.5 || l.left < i.right - 2 || l.right > rect.right + 2 || (c && l.right > c.left + 2) ? ['navigation track collision'] : [];
+                });
+                return {rail:visible(rail),picker:visible(picker),groups:groups.filter(visible).length,issues};
+              });
+              assert.equal(navigation.rail,targetWidth >= 768,'Only the appropriate navigation control is visible');
+              assert.equal(navigation.picker,targetWidth < 768,'Native phone module selector stays visible');
+              if(targetWidth >= 768) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
+              assert.deepEqual(navigation.issues,[],engine+' '+targetWidth+'px: menu tracks do not collide');
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();

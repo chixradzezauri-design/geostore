@@ -1509,22 +1509,68 @@
   max-inline-size: 46%;
   white-space: normal !important;
 }
+/* Atelier navigation: stable icon/label/count tracks. No absolute positioning
+   or text clipping; the real authorized module controls remain mounted. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center !important;
+  column-gap: 8px !important;
+  min-inline-size: 0 !important;
   box-shadow: none !important;
   transform: none !important;
   text-align: start;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > div > span {
-  line-height: 1.45;
-  word-break: normal;
-  overflow-wrap: break-word;
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > div {
+  display: grid !important;
+  grid-template-columns: 18px minmax(0,1fr);
+  align-items: center;
+  gap: 9px !important;
+  min-inline-size: 0 !important;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > div > svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > div > span {
+  min-inline-size: 0;
+  line-height: 1.45;
+  white-space: normal !important;
+  word-break: normal;
+  overflow-wrap: break-word !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > span {
+  max-inline-size: 100%;
+  padding-inline: 6px !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="true"] {
+  box-shadow: inset 3px 0 currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="false"]:hover {
+  background: color-mix(in srgb,var(--av-nav-bg) 88%,var(--av-nav-text)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand {
+  min-inline-size: 0;
+  align-items: center;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand-mark {
+  border-radius: 9px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+}
+
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
   grid-column: 1 / -1;
   color: var(--av-nav-text) !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   line-height: 1.5;
   opacity: 1;
+  letter-spacing: normal;
+  font-weight: 600 !important;
 }
 @container (min-width: 290px) and (max-width: 799px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {
@@ -1541,7 +1587,7 @@
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
-    border-top: 1px solid var(--av-border);
+    border-top: 1px solid color-mix(in srgb,var(--av-nav-text) 22%,transparent);
     padding-block-start: 8px;
     margin-block: 6px 0 !important;
   }
