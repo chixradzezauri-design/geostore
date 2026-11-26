@@ -2133,3 +2133,32 @@
 @media(prefers-reduced-motion:reduce) {
   :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid :is(.gs-catalog-product-image,.gs-catalog-image-overlay,.gs-catalog-media-toggle,.gs-catalog-product-cta) {transition:none!important;transform:none!important;}
 }
+
+
+/* Customer experience audit 07 — product detail readability and purchase hierarchy. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-availability {padding:10px 12px!important;box-shadow:none!important;line-height:1.5;min-width:0;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-availability[data-stock-state="available"] {background:#edf5ef!important;color:#24563a!important;border-color:#c5dfcd!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-availability[data-stock-state="unavailable"] {background:var(--gs-surface-soft,#f0ebe4)!important;color:var(--gs-ink,#302820)!important;border-color:var(--gs-line,#e5d8c8)!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-availability :is(span,b) {color:inherit!important;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-availability svg {color:inherit!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-title {overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-meta > span {max-width:100%;min-width:0;white-space:normal!important;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-gallery-thumbnails {scroll-snap-type:x proximity;overscroll-behavior-x:contain;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-gallery-thumb {scroll-snap-align:start;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-gallery-counter {font-variant-numeric:tabular-nums;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-gallery-step {font-size:22px!important;line-height:1!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-gallery-step:focus-visible,:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-gallery-thumb:focus-visible {outline:2px solid var(--gs-ink,#302820);outline-offset:-2px;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-option-card {box-shadow:none!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-option-card label,:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog label.gs-product-option-card {gap:12px;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-option-checkbox {width:20px!important;height:20px!important;min-width:20px;min-height:20px;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-specs > div {min-width:0;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-info {display:flex;flex-direction:column;gap:12px!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-info > * {margin-block:0!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-heading {padding-bottom:4px;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-description-panel {background:var(--gs-surface,#fffdfa)!important;box-shadow:none!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-modal-add-price {white-space:normal;overflow-wrap:anywhere;}
+@media(max-width:640px) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront:where([data-signature-commerce="true"]) .gs-product-dialog .gs-product-detail-info {gap:10px!important;}
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-product-detail-info .gs-product-option-card :is(h4,p) {line-height:1.5;}
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-product-dialog .gs-video-size-tools {flex-wrap:wrap;min-width:0;}
+}
