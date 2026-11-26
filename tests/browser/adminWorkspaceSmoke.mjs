@@ -229,6 +229,22 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.equal(navigation.picker,targetWidth < 768,'Native phone module selector stays visible');
               if(targetWidth >= 768) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
               assert.deepEqual(navigation.issues,[],engine+' '+targetWidth+'px: menu tracks do not collide');
+              const overviewIssues = await shell.locator('.admin-command-center').evaluate(node => {
+                const cards = [...node.querySelectorAll('.admin-command-kpi')];
+                const panels = [...node.querySelectorAll('.admin-command-panel')];
+                const issues = [];
+                for (const card of cards) {
+                  const bounds = card.getBoundingClientRect();
+                  const label = card.querySelector(':scope > span:first-child > span').getBoundingClientRect();
+                  const icon = card.querySelector(':scope > span:first-child > svg').getBoundingClientRect();
+                  const value = card.querySelector(':scope > strong').getBoundingClientRect();
+                  if(label.right > icon.left + 2 || icon.right > bounds.right + 2 || value.top < Math.max(label.bottom,icon.bottom)-2 || bounds.height < 44) issues.push('KPI label/icon/value collision');
+                }
+                const overlaps = (a,b) => Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+                for(const list of [cards,panels]) for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++) if(overlaps(list[i].getBoundingClientRect(),list[j].getBoundingClientRect())) issues.push('Dashboard card overlap');
+                return issues;
+              });
+              assert.deepEqual(overviewIssues,[],engine+' '+targetWidth+'px: dashboard tracks do not collide');
             }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();

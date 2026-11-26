@@ -29,3 +29,13 @@ test('Atelier navigation uses bounded icon and label tracks with visible active 
  const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
  assert.ok(smoke.includes('menu tracks do not collide'));
 });
+
+
+test('Atelier dashboard geometry reserves actual icon size and reflows operational panels by container width',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const overview=css.split('/* Atelier dashboard:')[1].split('/* Atelier navigation:')[0];
+ for(const term of ['grid-template-columns: minmax(0,1fr) 30px','width: 30px !important','@container (min-width: 720px)','border-block-start: 3px solid','min-inline-size: 0']) assert.ok(overview.includes(term),term);
+ const header=css.split('/* Atelier page header:')[1].split('/* Workspace chrome')[0];
+ for(const term of ['grid-template-columns: minmax(0,1fr)','border-inline-start: 3px solid','--admin-vd-primaryButtonBackground-active','button:disabled']) assert.ok(header.includes(term),term);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('dashboard tracks do not collide'));
+});
