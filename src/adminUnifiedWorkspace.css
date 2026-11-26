@@ -566,3 +566,78 @@
 @media (max-width: 359px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
 }
+
+/* Stage 09 — finance and analytics. Presentation, not accounting. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-analytics,.admin-expenses,.admin-profit-calculator) { container-type: inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-finance-section-title {
+  color: var(--av-text) !important; font-size: 16px !important; font-weight: 700; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis {
+  display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis > [data-admin-pro-finance-kpi] {
+  display: flex !important; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  gap: 8px !important; background-image: none !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-finance-kpi] > p:first-child { min-height: 2.8em; align-items: flex-start !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-finance-kpi] .admin-analytics-note { margin-block-start: auto !important; font-weight: 500 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-net="loss"] .admin-analytics-value { color: #9c2538 !important; background: #fce5e8 !important; border-radius: 6px; padding: 4px 6px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-net="nonnegative"] .admin-analytics-value { color: #14594a !important; background: #dff3eb !important; border-radius: 6px; padding: 4px 6px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics > :is(.admin-analytics-toolbar,.admin-business-comparison,div), 
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics > div.grid > div, 
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses > div, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator {
+  background-image: none !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-toolbar { flex-wrap: wrap; gap: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading h3 { font-size: 16px !important; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading p { font-size: 12px !important; line-height: 1.6; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-actions > :is(button,select) { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-actions > button {
+  background: var(--av-surface) !important; color: var(--av-text) !important; border: 1px solid var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div:first-child { align-items: flex-start !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div:first-child h3 { font-size: 16px !important; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div.grid > div { min-width: 0; background: var(--av-inset) !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div.grid > div > strong { color: var(--av-text) !important; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars { gap: 6px !important; padding-block-start: 12px; height: 180px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] { gap: 5px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-chart-column {
+  flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: flex-end;
+  border-bottom: 1px solid var(--av-border); background: repeating-linear-gradient(to top,var(--av-border) 0px,var(--av-border) 1px,transparent 1px,transparent 25%);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-chart-column > [data-admin-pro-finance-bar] { max-height: 100%; flex-shrink: 0; background: var(--av-accent) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-finance-orders-warning,.admin-finance-data-warning) {
+  background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-breakdown-row, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-recent-row {
+  gap: 8px !important; align-items: baseline; border-color: var(--av-border) !important; font-size: 12px !important; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-breakdown-row > :first-child, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-recent-row > :first-child { min-width: 0; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-field-grid { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-field { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-field :is(input,select) { min-width: 0; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-submit { min-height: 44px !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row { background-image: none !important; box-shadow: none !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-history-heading h3 { line-height: 1.5; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-expense-summary {
+  background: var(--av-inset); border: 1px solid var(--av-border); padding: 10px; border-radius: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-expense-state] { padding: 10px; border-radius: 8px; line-height: 1.6; background: var(--av-inset); }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-expense-state="verified"] { background: #dff3eb !important; color: #14594a !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-expense-state="error"] { background: #fce5e8 !important; color: #9c2538 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-unified-expense-state="pending"] { background: #fff0cc !important; color: #754300 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-layout { grid-template-columns: minmax(0,1fr) !important; gap: 14px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results { background: var(--av-inset) !important; border-color: var(--av-border) !important; box-shadow: none !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results > div { font-size: 13px; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-results > div > b { min-width: 0; max-width: 55%; }
+@container (min-width: 400px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-field-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@container (min-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-fields { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+}
+@container (min-width: 850px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis { grid-template-columns: repeat(4,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-layout { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
