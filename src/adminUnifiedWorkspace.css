@@ -1143,7 +1143,7 @@
 }
 
 @media (max-width: 639px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(button, select, textarea, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(button, select, textarea, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])):not(.sr-only, [hidden], .geostore-fashion-store *) {
     min-height: 44px !important;
   }
 }
