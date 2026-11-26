@@ -4434,8 +4434,8 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="gs-profile-page max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
-            <div className="gs-profile-card bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+          <div className="gs-profile-page gs-profile-pro max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+            <div className="gs-profile-card gs-profile-pro-account bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" />
                 {t.profile}
@@ -4474,22 +4474,26 @@ export default function App() {
                 </div>
               </div>
 
+              <nav className="gs-profile-pro-shortcuts" aria-label={currentLang==='en'?'Account shortcuts':currentLang==='ru'?'Быстрые действия':'სწრაფი მოქმედებები'}>
+                <button type="button" className="gs-profile-pro-primary" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)}>
+                  <span>{currentLang==='en'?'Notifications':currentLang==='ru'?'Уведомления':'შეტყობინებები'}</span>{unreadNotificationsCount>0&&<span className="gs-profile-pro-count" aria-label={String(unreadNotificationsCount)}>{unreadNotificationsCount}</span>}
+                </button>
+                <button type="button" className="gs-profile-pro-secondary" onClick={()=>document.getElementById('gs-profile-pro-orders')?.scrollIntoView({block:'start',behavior:'instant'})}>{t.orderHistory}</button>
+              </nav>
               <div className="gs-video-profile-security pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" />
                   {t.security}
                 </h3>
 
-                <p className="gs-passkey-description">{currentLang==='en'?'Account protection is managed by Supabase Auth. Quick sign-in uses your device passkey; GEOSTORE never collects a face scan or device PIN.':currentLang==='ru'?'Защита аккаунта обеспечивается Supabase Auth. Быстрый вход использует ключ устройства; GEOSTORE не получает биометрию или PIN.':'ანგარიშს იცავს Supabase Auth. სწრაფი შესვლა იყენებს მოწყობილობის გასაღებს; GEOSTORE არ იღებს სახის სკანს ან მოწყობილობის PIN-ს.'}</p>
+                <p className="gs-passkey-description">{currentLang==='en'?'Your device verifies Face ID or PIN. GEOSTORE never collects them.':currentLang==='ru'?'Face ID или PIN проверяет ваше устройство. GEOSTORE их не получает.':'Face ID-სა და PIN-ს შენი მოწყობილობა ამოწმებს. GEOSTORE მათ არ ინახავს.'}</p>
                 {passkeyAvailable&&!adminLoggedIn&&!authLoading&&<button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={handleRegisterPasskey}>{currentLang==='en'?'Add Face ID / device passkey':currentLang==='ru'?'Добавить Face ID / ключ устройства':'Face ID / სწრაფი შესვლის გააქტიურება'}</button>}
                 {!passkeyAvailable&&<p className="gs-passkey-description">{currentLang==='en'?'Quick sign-in is not available on this device or version yet. Password login remains available.':currentLang==='ru'?'Быстрый вход пока недоступен на этом устройстве или в этой версии. Вход по паролю доступен.':'სწრაფი შესვლა ამ მოწყობილობაზე ან ვერსიაში ჯერ მიუწვდომელია. პაროლით შესვლა კვლავ შესაძლებელია.'}</p>}
                 {passkeyAvailable&&!adminLoggedIn&&!authLoading&&currentUser.id===activeCartOwnerRef.current.userId&&<CustomerPasskeyManager key={currentUser.id+':'+customerPrivateEpochRef.current+':'+passkeyRevision} lang={currentLang} busy={passkeyBusy} onManage={handleManageCustomerPasskeys}/>}
                 {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
               </div>
 
-              <button type="button" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)} className="w-full min-h-11 rounded-xl border border-amber-500/40 bg-slate-950/60 px-3 py-2 font-bold text-amber-200 disabled:opacity-50">
-                {currentLang === 'en' ? 'Notification center' : currentLang === 'ru' ? 'Центр уведомлений' : 'შეტყობინებების ცენტრი'}{unreadNotificationsCount > 0 ? ' · '+unreadNotificationsCount : ''}
-              </button>
+
               <CustomerMarketingConsent key={currentUser.id+':'+currentUser.email} userId={currentUser.id} lang={currentLang} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>
               <button
                 type="button"
@@ -4503,13 +4507,13 @@ export default function App() {
 
             {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && !adminLoggedIn && <CustomerPersonalOffers key={currentUser.id} products={products} wishlist={wishlist} ready={catalogueVerifiedEpoch===productsAccessEpoch.current} lang={currentLang} formatPrice={formatPrice} onOpenProduct={handleFindSavedProduct}/>}
             {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && <CustomerPurchaseStatistics key={currentUser.id} orders={myOrders} loading={myOrdersLoading} error={myOrdersError} lang={currentLang} formatPrice={formatPrice}/>}
-            <div className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+            <div id="gs-profile-pro-orders" className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
               </h3>
 
-              <button type="button" disabled={supportOpen || isSubmittingSupport} className="w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
+              <button type="button" disabled={supportOpen || isSubmittingSupport} className="gs-profile-pro-secondary w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
                 {currentLang === 'en' ? 'My returns & exchanges' : currentLang === 'ru' ? 'Мои возвраты и обмены' : 'ჩემი დაბრუნება და გაცვლა'}
               </button>
               <div className="gs-video-profile-order-list space-y-3" aria-busy={myOrdersLoading}>
