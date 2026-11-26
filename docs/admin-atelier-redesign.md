@@ -40,3 +40,6 @@ Reorganize ticket metadata, status controls, conversation bubbles and reply comp
 
 ## Stage 10 — marketing, flash promotions, coupons and banners
 Separate editable flash pricing, time window, price comparison and draft actions, while retaining risk indicators and the storefront preview boundary. Improve banner image/identity tracks, coupon amounts and marketing segment cards. Add responsive containment assertions for all promotion modules. Existing discount limits, price restoration, schedule, coupon validation, publication, consent and sending gates remain untouched. Exact-HEAD CI and populated campaign/banner/coupon state QA are outstanding. No production changes or prices modified.
+
+## Stage 11 — visual editors and settings
+Refine the explicitly scoped admin/storefront editor header, undo/redo/reset controls, synchronization status, device preview selector and draft/publish actions. Keep storefront preview artwork and administrator-selected values unchanged. Reflow delivery tariff fields based on their actual container width; improve global settings inputs and draft warning. Add responsive geometry and unique save/publish toolbar assertions. Existing sync conflict recovery, preview read-only gates, owner-only publication, saved designs and database unchanged. Exact-HEAD browser checks remain outstanding.

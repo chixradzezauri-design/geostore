@@ -115,3 +115,16 @@ test('Atelier promotions retain draft and pricing contracts while bounding promo
  for(const token of ['handleApplyFlashSale','selectedFlashRows','handleCreateCoupon','handleDeleteCoupon(c.id)','handleAddBanner','handleDeleteBanner(b.id)','moveBanner(b.id, -1)','onPublishStorefront','flashSalePlannedStart'])assert.ok(app.includes(token),token);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('promotion controls stay within their regions'));
 });
+
+
+test('Atelier editor controls are scoped away from preview content and retain publication safeguards',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const stage=css.split('/* Atelier editor chrome:')[1].split('/* Stage 14')[0];
+ for(const token of ['min-height: 44px','[data-admin-unified-editor-actions]','grid-template-columns: repeat(3,minmax(0,1fr))','button:disabled','admin-unified-preview-toolbar'])assert.ok(stage.includes(token),token);
+ assert.doesNotMatch(stage,/\.gs-visual-preview-content|\.gs-visual-preview-frame/);
+ const store=read('src/components/StorefrontVisualEditor.jsx');
+ for(const token of ['onClick={saveDraft}','onClick={publish}','heroImagePending || !isOwner','clearViewportOverrides','onRestoreStorefrontVersion'])assert.ok(store.includes(token),token);
+ const admin=read('src/components/AdminPanelVisualEditor.jsx');
+ for(const token of ['undoChange','redoChange','resetViewport','onRetrySave','onReloadRemote','directSelectionMode'])assert.ok(admin.includes(token),token);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('editor tools remain bounded and publication actions unique'));
+});

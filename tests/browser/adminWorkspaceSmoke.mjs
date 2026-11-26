@@ -197,6 +197,29 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (['settings','visual_editor','admin_visual_editor'].includes(tab)) {
+              const editorIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='settings'?'.admin-settings-panel':module==='visual_editor'?'.gs-storefront-visual-editor':'.admin-visual-editor-panel');
+                if(!scope)return ['editor or settings missing'];
+                const issues=[];
+                const selector=module==='settings'?'.admin-delivery-fee-fields > div,.admin-global-settings-form > div':module==='visual_editor'?'[data-admin-unified-editor-actions],.gs-visual-editor-preview-column > .admin-unified-preview-toolbar [data-admin-pro-editor-devices]':'.admin-unified-editor-header > div:last-child,.admin-unified-editor-jumps';
+                for(const group of scope.querySelectorAll(selector)){
+                  const outer=group.getBoundingClientRect();
+                  if(!outer.height)continue;
+                  for(const control of group.querySelectorAll('button,input,select,textarea')){
+                    const rect=control.getBoundingClientRect();
+                    if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('editor control outside its group');
+                  }
+                }
+                if(module==='visual_editor'){
+                  const bars=[...scope.querySelectorAll(':scope > [data-admin-unified-editor-actions]')].filter(el=>el.getClientRects().length);
+                  if(bars.length!==1)issues.push('duplicate or missing save/publish bar');
+                  if(bars.length===1&&bars[0].querySelectorAll('button').length!==2)issues.push('save/publish action missing');
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(editorIssues,[],engine+' '+targetWidth+'px: editor tools remain bounded and publication actions unique');
+            }
             if (['discounts','coupons','banners','users'].includes(tab)) {
               const promoIssues=await shell.evaluate((root,module)=>{
                 const scope=root.querySelector(module==='discounts'?'.admin-discounts-panel':module==='coupons'?'.admin-coupons-panel':module==='banners'?'.admin-banners':'.admin-marketing-segments');
