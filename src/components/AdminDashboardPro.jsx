@@ -5702,14 +5702,14 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'inventory' || adminContentTab === 'inventory') && (
-          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title" aria-busy={inventoryMovementLoading}>
+          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" data-admin-inventory-view="history" aria-labelledby="admin-inventory-title" aria-busy={inventoryMovementLoading}>
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">მარაგების კონტროლი</p>
                 <h3 id="admin-inventory-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის მოძრაობების ისტორია</h3>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">{adminVisualDesign.content.inventoryDescription}</p>
               </div>
-              <div className="admin-inventory-history-toolbar flex w-full flex-col sm:flex-row gap-2 xl:max-w-xl">
+              <div role="group" aria-label="მარაგის ისტორიის ფილტრები" className="admin-inventory-history-toolbar flex w-full flex-col sm:flex-row gap-2 xl:max-w-xl">
                 <input
                   type="search"
                   list="admin-workspace-inventory-products"
@@ -5780,6 +5780,8 @@ export default function AdminDashboardPro({
                 <p className="mt-1 text-xs text-slate-400">{inventoryMovementProductFilter ? 'ამ პროდუქტის ჩატვირთულ ისტორიაში ცვლილებები არ მოიძებნა.' : 'მარაგის ახალი მოძრაობები აქ გამოჩნდება, როცა სისტემაში ჩაიწერება.'}</p>
               </div>
             ) : inventoryMovementRows.length > 0 && (
+              <>
+              <p className="admin-unified-inventory-scroll-hint">ცხრილის დამატებითი სვეტების სანახავად გადაახვიეთ გვერდზე.</p>
               <div className="admin-inventory-table-scroll overflow-x-auto rounded-2xl border border-emerald-500/15" role="region" aria-label="მარაგის მოძრაობების ცხრილი — ჰორიზონტალური გადახვევა" tabIndex={0}>
                 <table data-admin-pro-inventory-table="true" className="w-full min-w-[900px] text-left text-xs">
                   <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
@@ -5818,6 +5820,7 @@ export default function AdminDashboardPro({
                   </tbody>
                 </table>
               </div>
+              </>
             )}
 
             {inventoryMovementHasMore && (
@@ -5834,7 +5837,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment') && (
-          <section className="admin-inventory-panel space-y-4 rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-5 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title" aria-busy={replenishmentLoading}>
+          <section className="admin-inventory-panel space-y-4 rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-5 shadow-2xl backdrop-blur-2xl" data-admin-inventory-view="planning" aria-labelledby="admin-replenishment-title" aria-busy={replenishmentLoading}>
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">მარაგების დაგეგმვა</p>
@@ -5846,7 +5849,7 @@ export default function AdminDashboardPro({
                 <button type="button" onClick={() => void fetchInventoryReplenishmentSettings()} disabled={replenishmentLoading || Boolean(replenishmentSavingKey)} className="min-h-11 rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-200 transition hover:border-emerald-400 disabled:opacity-50">{replenishmentLoading ? 'იტვირთება…' : 'განახლება'}</button>
               </div>
             </div>
-            <div className="admin-workspace-replenishment-filters">
+            <div role="group" aria-label="მარაგის შევსების ფილტრები" className="admin-workspace-replenishment-filters">
               <label htmlFor="admin-workspace-replenishment-filter">მარაგის მდგომარეობა</label>
               <select id="admin-workspace-replenishment-filter" value={replenishmentStockFilter} onChange={event => { setReplenishmentStockFilter(event.target.value); setReplenishmentPage(1); }}>
                 <option value="all">ყველა პოზიცია</option><option value="low">შევსება საჭიროა</option><option value="out">ამოწურული მარაგი</option><option value="healthy">მარაგი ნორმაშია</option>
@@ -5879,7 +5882,7 @@ export default function AdminDashboardPro({
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><span className="block text-[10px] text-slate-400">არსებული მარაგი</span><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
-                    <div className="admin-replenishment-metric rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><span className="block text-[10px] text-slate-400">შესავსები რაოდენობა</span><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{replenishmentSummaryVerified ? (draftPreview.valid ? draftPreview.suggestedQuantity : '—') : '—'}</strong></div>
+                    <div data-admin-replenishment-metric="recommended" className="admin-replenishment-metric rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><span className="block text-[10px] text-slate-400">შესავსები რაოდენობა</span><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{replenishmentSummaryVerified ? (draftPreview.valid ? draftPreview.suggestedQuantity : '—') : '—'}</strong></div>
                     <div className="admin-replenishment-save col-span-2 flex flex-col gap-1 xl:col-span-1"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading || !hasProductsPermission || hasConflict} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button>{(hasUnsavedChanges || hasConflict) && <div className="flex flex-wrap items-center gap-2">{hasConflict ? <span className="text-[10px] text-rose-300" role="alert">კონფლიქტი: სერვერის ვერსიის ჩატვირთვა გააუქმებს ამ პოზიციის ძველ ადგილობრივ ცვლილებებს</span> : <span className="text-[10px] text-amber-200" role="status">შეუნახავი ცვლილება</span>}{hasConflict ? <button type="button" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} onClick={() => void recoverInventoryReplenishmentConflict(position.key)} className="text-[10px] font-bold text-emerald-200 underline underline-offset-2 disabled:opacity-50">სერვერის ვერსიით ჩანაცვლება</button> : <button type="button" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} onClick={() => setReplenishmentDrafts(current => { const next = { ...current }; delete next[position.key]; return next; })} className="text-[10px] font-bold text-slate-300 underline underline-offset-2 disabled:opacity-50">ცვლილების გაუქმება</button>}</div>}</div>
                   </article>
                 );
@@ -7013,7 +7016,7 @@ export default function AdminDashboardPro({
                   <button key={target} type="button" onClick={() => { const section = document.getElementById(target); section?.scrollIntoView({block: 'start', behavior: 'auto'}); section?.focus({preventScroll: true}); }}>{label}</button>
                 ))}
               </nav>
-              <form tabIndex={-1} id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
+              <form id="geostore-product-form" tabIndex={-1} onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
                 <h4 className="admin-pro-product-section-title">ძირითადი ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
@@ -8040,6 +8043,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'vendors' || adminContentTab === 'vendors') && (
           <div className="admin-vendors-panel space-y-4">
+            <div className="admin-unified-supply-context"><h3>მომარაგების მართვა</h3><p>სერვერული მომწოდებლები, შესყიდვები და მხოლოდ ამ მოწყობილობაზე შენახული დაგეგმვის ჩანაწერები ერთმანეთისგან გამოყოფილია.</p></div>
             {isOwner && visibleAdminTab === 'vendors' && <React.Suspense fallback={<AdminSectionLoading />}><AdminSupplierWorkspace key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} localRows={vendorsList}/></React.Suspense>}
             {isOwner && visibleAdminTab === 'vendors' && <React.Suspense fallback={<AdminSectionLoading />}><AdminPurchaseWorkspace key={'purchases-'+adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} products={products} refreshProducts={refreshProducts}/></React.Suspense>}
             {visibleAdminTab === 'admin_visual_editor' && <p className="text-xs text-slate-400">სერვერული მომწოდებლების მართვა ხელმისაწვდომია რეალურ განყოფილებაში, არა დიზაინის წინასწარ ხედში.</p>}
@@ -8047,7 +8051,7 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Store className="w-5 h-5 text-emerald-400" /> {editingVendorId !== null ? "ლოკალური საკომისიოს რედაქტირება" : "ლოკალური დაგეგმვის ჩანაწერი"}
               </h3>
-              <p className="text-xs text-amber-200">მომწოდებლების დაგეგმვის სია ინახება მხოლოდ ამ მოწყობილობაზე. საკომისიო არ ცვლის შეკვეთების ფასებსა და ფინანსურ ანგარიშებს.</p>
+              <p className="admin-unified-local-supply-notice text-xs text-amber-200">მომწოდებლების დაგეგმვის სია ინახება მხოლოდ ამ მოწყობილობაზე. საკომისიო არ ცვლის შეკვეთების ფასებსა და ფინანსურ ანგარიშებს.</p>
               <form onSubmit={handleAddVendor} className="admin-vendor-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <input type="text" aria-label="მომწოდებლის სახელი" readOnly={editingVendorId !== null} placeholder="მომწოდებლის სახელი *" required maxLength={100} value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <input type="number" min="0" max="100" step="0.01" inputMode="decimal" aria-label="საკომისიო პროცენტებში" placeholder="საკომისიო %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
