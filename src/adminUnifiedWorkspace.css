@@ -1017,3 +1017,30 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td):nth-child(5) {
   min-inline-size: 130px;
 }
+
+/* Keep the stock snapshot above the editable planning fields on phones. */
+@media (min-width: 360px) and (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > .admin-replenishment-product {
+    grid-row: 1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > [data-admin-replenishment-metric="recommended"] {
+    grid-row: 2;
+    grid-column: 2;
+  }
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > [data-admin-replenishment-metric="recommended"] {
+    background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > .admin-replenishment-metric {
+    padding: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric > :is(label,span) {
+    font-size: 12px !important;
+    line-height: 1.45;
+    overflow-wrap: break-word;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric > input {
+    min-height: 44px !important;
+  }
+}
