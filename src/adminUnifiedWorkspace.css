@@ -444,8 +444,28 @@
 @container (min-width: 900px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-list .admin-product-row { grid-template-columns: minmax(180px,1fr) minmax(0,2fr); align-items: center !important; }
 }
-@media (max-width: 359px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls { grid-template-columns: minmax(0,1fr) !important; }
+/* The stock status belongs next to its field. Keep the two pricing fields
+   together on phones, with the stock and publication controls on their own rows. */
+@container (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > :is(div:has([data-admin-pro-stock]),.admin-video-publish) {
+    grid-column: 1 / -1 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > div:has([data-admin-pro-stock]) {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) max-content;
+    align-items: center !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > div:has([data-admin-pro-stock]) > .admin-unified-product-field-label {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > :is(.admin-video-edit,.admin-video-delete) {
+    grid-column: auto !important;
+  }
+}
+@container (max-width: 240px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
 }
 
 /* Stage 07 — inventory, suppliers and purchases. Presentation only. */

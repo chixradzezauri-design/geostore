@@ -148,8 +148,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (width === widths[0]) {
           for (const targetWidth of auditWidths) {
             await page.setViewportSize({ width: targetWidth, height: 850 });
-            await page.waitForFunction(expected => window.innerWidth === expected, targetWidth);
-            await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+            await page.waitForFunction(expected => window.innerWidth === expected, targetWidth, { polling: 50, timeout: 5000 });
             if (targetWidth < 640 && ['staff','vendors'].includes(tab)) {
               const fields = shell.locator(tab === 'staff' ? '.admin-staff-existing-form .admin-pro-native-control-boundary' : '.admin-purchase-workspace .admin-pro-native-control-boundary');
               assert.equal(await fields.count(),tab === 'staff' ? 1 : 3,'Native field boundaries preserve every existing field');
@@ -172,6 +171,16 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return rect.left < bounds.left - 2 || rect.right > bounds.right + 2 || rect.height < 43.5 ? [{tag:node.tagName, className:typeof node.className==='string'?node.className.slice(0,120):'',width:Math.round(rect.width),height:Math.round(rect.height)}] : [];
               });
             });
+            if (tab === 'products' && targetWidth === 390) {
+              const pairedControls = await shell.locator('.admin-product-controls').first().evaluate(group => {
+                const fields = group.querySelectorAll('input[type="number"]');
+                const [cost, price, stock] = Array.from(fields, field => field.getBoundingClientRect());
+                const edit = group.querySelector('.admin-video-edit').getBoundingClientRect();
+                const remove = group.querySelector('.admin-video-delete').getBoundingClientRect();
+                return Math.abs(cost.top - price.top) < 2 && stock.width > cost.width && Math.abs(edit.top - remove.top) < 2;
+              });
+              assert.ok(pairedControls, 'Phone product controls keep both prices and both secondary actions together');
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
@@ -203,7 +212,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             }
           }
           await page.setViewportSize({ width, height: 850 });
-          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          await page.waitForFunction(expected => window.innerWidth === expected, width, { polling: 50, timeout: 5000 });
         }
         if (layoutOnly) continue;
         if(tab==='analytics'){
