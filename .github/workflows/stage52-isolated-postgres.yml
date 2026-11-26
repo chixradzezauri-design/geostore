@@ -168,7 +168,7 @@ jobs:
           --health-retries 8
     steps:
       - name: Check out Draft PR only
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Run real Stage51 SQL in isolated PostgreSQL 17
