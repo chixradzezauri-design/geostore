@@ -4436,7 +4436,7 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="gs-profile-page gs-profile-pro max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+          <div className="gs-profile-page gs-profile-pro mx-auto space-y-6 animate-in fade-in duration-300">
             <div className="gs-profile-card gs-profile-pro-account bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" />
@@ -4480,7 +4480,7 @@ export default function App() {
                 <button type="button" className="gs-profile-pro-primary" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)}>
                   <span>{currentLang==='en'?'Notifications':currentLang==='ru'?'Уведомления':'შეტყობინებები'}</span>{unreadNotificationsCount>0&&<span className="gs-profile-pro-count" aria-label={String(unreadNotificationsCount)}>{unreadNotificationsCount}</span>}
                 </button>
-                <button type="button" className="gs-profile-pro-secondary" onClick={()=>document.getElementById('gs-profile-pro-orders')?.scrollIntoView({block:'start',behavior:'instant'})}>{t.orderHistory}</button>
+                <button type="button" className="gs-profile-pro-secondary" onClick={()=>document.getElementById('gs-profile-pro-orders')?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}>{t.orderHistory}</button>
               </nav>
               <div className="gs-video-profile-security pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
@@ -4513,6 +4513,7 @@ export default function App() {
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
+                {!myOrdersLoading && !myOrdersError && <span className="gs-profile-order-count">{myOrders.length}</span>}
               </h3>
 
               <button type="button" disabled={supportOpen || isSubmittingSupport} className="gs-profile-pro-secondary w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
@@ -4542,9 +4543,7 @@ export default function App() {
                           <div className="flex items-center gap-2">
                             <span className="gs-profile-order-code font-black text-emerald-400">#{order.id}</span>
 
-                            <span className="text-slate-500 text-[10px]">
-                              ({order.date})
-                            </span>
+                            <span className="gs-profile-order-date text-slate-500 text-[10px]">{order.date}</span>
                           </div>
 
                           {Array.isArray(order.items) && order.items.length > 0 && (
@@ -4555,6 +4554,7 @@ export default function App() {
                               {order.items.length > 3 ? ` +${order.items.length - 3}` : ''}
                             </p>
                           )}
+                          {Array.isArray(order.items) && order.items.length > 3 && <details className="gs-profile-order-more"><summary>{currentLang === 'en' ? 'All products in this order' : currentLang === 'ru' ? 'Все товары заказа' : 'შეკვეთის ყველა პროდუქტი'} ({order.items.length})</summary><ul>{order.items.map((item,index)=><li key={index}><span>{item.name || (currentLang === 'en' ? 'Product' : currentLang === 'ru' ? 'Товар' : 'პროდუქტი')}{item.customVariantName ? ` — ${item.customVariantName}` : ''}</span><b>×{Math.max(1,Number(item.quantity)||1)}</b></li>)}</ul></details>}
                         </div>
 
                         <div className="gs-video-profile-order-summary text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
