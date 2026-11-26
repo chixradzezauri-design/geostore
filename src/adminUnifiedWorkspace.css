@@ -188,3 +188,110 @@
   }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > .admin-pro-access-state { grid-column: 1 / -1; }
 }
+
+/* Stage 05 — orders. Existing editor-owned card radius, color and padding
+   are retained; only internal layout, action roles and presentation change. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-panel { container-type: inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header > div { min-width: 0; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header h3 { line-height: 1.45; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header h3 svg { flex-shrink: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header > button {
+  background: var(--av-surface) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-toolbar {
+  display: grid !important; grid-template-columns: minmax(0,1fr);
+  gap: 10px !important; align-items: stretch !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-search { width: 100% !important; max-width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters {
+  display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr));
+  width: 100% !important; padding: 4px !important;
+  border-color: var(--av-border) !important; background: var(--av-inset) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters > button {
+  min-height: 44px !important; padding: 6px 8px !important;
+  font-size: 12px !important; line-height: 1.4; overflow-wrap: break-word;
+  background-image: none !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters > button[aria-pressed="false"] {
+  background: transparent !important; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card {
+  background-image: none !important; box-shadow: none !important; gap: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-heading > div:last-child {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-order-amount-label,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-order-field-label {
+  display: block; color: var(--av-muted) !important; font-size: 12px !important;
+  line-height: 1.5; font-weight: 500 !important; font-style: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-customer > p,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-customer > div > p {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 3px; min-width: 0; margin: 0; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-order-field-value { color: inherit; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-footer { align-items: flex-start !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-actions > [data-admin-order-action] {
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  box-shadow: none !important; background-image: none !important; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-actions > [data-admin-order-action="details"] {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#ffffff) !important;
+  border-color: var(--admin-vd-primaryButtonBorder-active,#126b59) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-actions > [data-admin-order-action="details"] svg { color: currentColor !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-actions > [data-admin-order-action="invoice"] {
+  background: var(--av-surface) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions {
+  border-color: var(--av-border) !important; padding: 4px !important; gap: 4px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button {
+  font-size: 12px !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  background-image: none !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[aria-pressed="false"] {
+  background: var(--av-surface) !important; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[aria-pressed="true"] {
+  background: var(--admin-pro-order-bg,var(--av-surface)) !important;
+  color: var(--admin-pro-order-fg,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[data-admin-order-status="გაუქმებული"]:not(:disabled) {
+  background: #fce5e8 !important; color: #9c2538 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-stock-warning {
+  background: #fff0cc !important; color: #754300 !important;
+  border-color: #d4a65e !important; line-height: 1.6 !important; font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal :is(.admin-order-customer,.admin-order-item,.admin-order-financials) {
+  background-image: none !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header > div > div:first-child {
+  background-image: none !important; flex-shrink: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-header h3 { overflow-wrap: anywhere; line-height: 1.45; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-customer > div { gap: 12px 16px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-customer a {
+  color: inherit !important; text-decoration: underline; text-underline-offset: 3px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price { gap: 6px 12px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-footer > button { min-height: 44px !important; box-shadow: none !important; }
+@container (min-width: 480px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@container (min-width: 720px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters { grid-template-columns: repeat(6,minmax(0,1fr)); }
+}
+@container (min-width: 1050px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-toolbar { grid-template-columns: minmax(220px,1fr) minmax(600px,2fr); align-items: center !important; }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters { grid-template-columns: minmax(0,1fr); }
+}
