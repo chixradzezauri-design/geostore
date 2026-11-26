@@ -128,7 +128,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (['command','expenses'].includes(tab)) {
           const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
           const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
-          assert.equal(ink, 'rgb(24, 34, 48)', 'Workspace headings use the active foreground on light cards');
+          assert.equal(ink, 'rgb(37, 34, 56)', 'Workspace headings use the active foreground on light cards');
         }
         if (tab === 'orders' && width < 480) {
           const statusPicker = shell.getByLabel('შეკვეთის სტატუსი', { exact: true });
@@ -556,7 +556,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await metric.waitFor({state:'visible'});
           assert.equal(await metric.count(),1,'VIP filter shows one segment');
           const metricInk=await metric.evaluate(el=>getComputedStyle(el).color);
-          assert.equal(metricInk,'rgb(24, 34, 48)','Segment number uses readable workspace foreground');
+          assert.equal(metricInk,'rgb(37, 34, 56)','Segment number uses readable workspace foreground');
           const warning=segments.locator('.admin-marketing-campaigns > p.text-amber-200').first();
           const warningPalette=await warning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
           assert.deepEqual(warningPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Sending restriction remains readable on a paired warning surface');
