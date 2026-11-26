@@ -1,3 +1,50 @@
+/* Retain theme colors where older dark-mode rules outrank utility classes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(h1,h2,h3,h4,h5,h6):not(:where(.gs-visual-preview-frame *, .gs-character-preview-scene *)) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(.text-slate-200,.text-slate-300,.text-slate-400,.text-slate-500):not(:where(.gs-visual-preview-frame *, .gs-character-preview-scene *)) {
+  color: var(--av-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-page-identity {
+  display: flex !important;
+  flex-direction: column;
+  align-items: start;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-caption {
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-form,.admin-global-settings-form,.admin-vendor-form,.admin-crm-user-card,.gs-character-admin) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-marketing-segments [data-admin-segment-card] {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #admin-command-title {
+  font-size: clamp(18px, 3vw, 23px) !important;
+}
+
+/* Match native controls and readable text to the workspace palette. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-caption {
+  color: var(--av-muted);
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(select,textarea,input:not([type="checkbox"],[type="radio"],[type="color"],[type="range"])):not(.gs-visual-preview-frame *) {
+  color: var(--admin-vd-inputText-active,var(--av-text)) !important;
+  background-color: var(--av-inset) !important;
+  border-color: var(--admin-vd-inputBorder-active,var(--av-border)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(input,textarea):not(.gs-visual-preview-frame *)::placeholder {
+  color: var(--admin-vd-inputPlaceholder-active,var(--av-muted)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1;
+}
+
 /* Unified workspace foundation: remove decorative gradients from operational
    surfaces, without changing user-selected backgrounds, status colors or
    individual element geometry. Never select storefront/editor preview content. */
@@ -933,4 +980,20 @@
   font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important;
   line-height: 1.4 !important;
   box-sizing: border-box;
+}
+
+/* Keep each column readable within the keyboard-scrollable table region. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] {
+  min-inline-size: 900px !important;
+  table-layout: auto !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td) {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td):nth-child(2) {
+  min-inline-size: 160px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td):nth-child(5) {
+  min-inline-size: 130px;
 }

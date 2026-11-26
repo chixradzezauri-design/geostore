@@ -18012,22 +18012,22 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(h1,h2,h3,h4,h5,h6)[class] {
   color: #f8fafc !important;
   opacity: 1 !important;
   text-shadow: none !important;
-  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 body .admin-dashboard-pro.admin-dashboard-shell :is(p,span,label,small,li,dt,dd,th,td,legend) {
   text-shadow: none !important;
 }
 body .admin-dashboard-pro.admin-dashboard-shell :is(.text-slate-950,.text-slate-900,.text-slate-800,.text-slate-700,.text-gray-950,.text-gray-900,.text-gray-800,.text-stone-950,.text-stone-900,.text-stone-800,.text-stone-700) {
   color: #eaf1f8 !important;
-  -webkit-text-fill-color: #eaf1f8 !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 body .admin-dashboard-pro.admin-dashboard-shell :is(.text-slate-600,.text-slate-500,.text-slate-400,.text-gray-600,.text-gray-500,.text-gray-400,.text-stone-600,.text-stone-500,.text-stone-400) {
   color: #bdcadd !important;
-  -webkit-text-fill-color: #bdcadd !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 body .admin-dashboard-pro.admin-dashboard-shell :is(.text-amber-900,.text-amber-800,.text-amber-700,.text-yellow-900,.text-yellow-800,.text-orange-900,.text-orange-800) {
   color: #fde68a !important;
-  -webkit-text-fill-color: #fde68a !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 body .admin-dashboard-pro.admin-dashboard-shell :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
   color: #f8fafc !important;
@@ -18068,7 +18068,7 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
   }
   body .admin-dashboard-pro.admin-dashboard-shell :is(.text-slate-500,.text-slate-400,.text-gray-500,.text-gray-400,.text-stone-500,.text-stone-400) {
     color: #d0dbea !important;
-    -webkit-text-fill-color: #d0dbea !important;
+    -webkit-text-fill-color: currentColor !important;
   }
 }
 @media (max-width: 380px) {
@@ -18095,7 +18095,7 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(h1,h2,h3,h4,h5,h6) {
   color: #f8fbff !important;
-  -webkit-text-fill-color: #f8fbff !important;
+  -webkit-text-fill-color: currentColor !important;
   opacity: 1 !important;
   text-shadow: none !important;
   font-family: inherit !important;
@@ -18107,11 +18107,11 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(.text-slate-950,.text-slate-900,.text-slate-800,.text-slate-700,.text-gray-950,.text-gray-900,.text-gray-800,.text-stone-950,.text-stone-900,.text-stone-800,.text-stone-700) {
   color: #e7eef8 !important;
-  -webkit-text-fill-color: #e7eef8 !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(.text-slate-600,.text-slate-500,.text-slate-400,.text-gray-600,.text-gray-500,.text-gray-400,.text-stone-600,.text-stone-500,.text-stone-400) {
   color: #c1cede !important;
-  -webkit-text-fill-color: #c1cede !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(.admin-analytics-kpis,.admin-analytics-card,.admin-calculator-results,.admin-expense-row,.admin-staff-card,.admin-order-card,.admin-support-ticket,.admin-product-row,.admin-banner-card,.admin-category-card,.admin-subcategory-card,.admin-coupon-card,.admin-vendor-card) {
   background: #142238 !important;
@@ -18130,14 +18130,14 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 }
 .admin-dashboard-pro.admin-dashboard-shell .admin-product-identity h4 {
   color: #f8fbff !important;
-  -webkit-text-fill-color: #f8fbff !important;
+  -webkit-text-fill-color: currentColor !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell .admin-product-identity p,
 .admin-dashboard-pro.admin-dashboard-shell .admin-product-controls > div > span {
   color: #c1cede !important;
-  -webkit-text-fill-color: #c1cede !important;
+  -webkit-text-fill-color: currentColor !important;
   font-size: 12px !important;
   line-height: 1.5 !important;
 }
@@ -18155,7 +18155,7 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
   border-radius: 10px !important;
   background: #071321 !important;
   color: #f8fbff !important;
-  -webkit-text-fill-color: #f8fbff !important;
+  -webkit-text-fill-color: currentColor !important;
   font-size: 14px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(.admin-product-attributes,.admin-size-color-stock-editor,.admin-product-variants-editor,.admin-product-gallery,.admin-expense-form,.admin-staff-existing-form,.admin-staff-create-form,.admin-staff-permissions,.admin-staff-edit-panel,.admin-flash-sale-form,.admin-banner-form,.admin-category-form,.admin-coupon-form,.admin-vendor-form,.admin-delivery-settings,.admin-global-settings-form,.admin-ai-chat) {
@@ -18166,7 +18166,7 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 .admin-dashboard-pro.admin-dashboard-shell :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
   background: #071321 !important;
   color: #f8fbff !important;
-  -webkit-text-fill-color: #f8fbff !important;
+  -webkit-text-fill-color: currentColor !important;
   border: 1px solid #536780 !important;
   border-radius: 10px !important;
   min-height: 42px;
@@ -18174,7 +18174,7 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(input,select,textarea)::placeholder {
   color: #9fb0c5 !important;
-  -webkit-text-fill-color: #9fb0c5 !important;
+  -webkit-text-fill-color: currentColor !important;
   opacity: 1 !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell :is(input,select,textarea):focus-visible {
@@ -20401,4 +20401,18 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
   margin-inline: auto !important;
   align-self: center;
   width: 100%;
+}
+
+/* Preview with readable category cards even when the editor is narrow. */
+.gs-visual-preview-frame {
+  container: storefront-preview / inline-size;
+}
+@container storefront-preview (max-width: 420px) {
+  .gs-visual-preview-frame .geostore-storefront .gs-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .gs-visual-preview-frame .geostore-storefront [data-visual-editor-target="category.title"] {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
 }

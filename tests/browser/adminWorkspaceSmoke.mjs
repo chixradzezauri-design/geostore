@@ -50,6 +50,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (path === '/auth/v1/logout' && method === 'POST') return route.fulfill({ status: 204 });
         if (path === '/rest/v1/admin_suppliers' && method === 'GET') return respond([{id:'00000000-0000-4000-8000-000000000001',name:'Fixture supplier',commission:5,is_active:true,revision:1,updated_at:'2026-11-24T12:00:00Z'}]);
         if (path === '/rest/v1/products' && method === 'GET') return respond(stage49FixtureProductRows);
+        if (path === '/rest/v1/rpc/admin_list_inventory_movements' && method === 'POST') return respond({
+          items: [{id:1, product_name:'ტესტური პროდუქტი', variant_name:'სტანდარტული ვარიანტი', before_quantity:2, after_quantity:1, quantity_delta:-1, reason:'manual_adjustment', occurred_at:'2026-11-24T12:00:00Z'}],
+          has_more: false
+        });
         if (path === '/rest/v1/rpc/admin_list_products' && method === 'POST') return respond(stage49FixtureProductRows);
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
         if (path === '/rest/v1/rpc/get_admin_panel_visual_design_state' && method === 'POST') return respond({ design: null, updated_at: null });
@@ -91,11 +95,6 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
       await auth.locator('#geostore-auth-email').fill(owner.email);
       await auth.locator('#geostore-auth-password').fill('fixture-only-password');
       await auth.locator('form button[type="submit"]').click();
-      const shortcut = page.locator('.geostore-admin-shortcut button');
-      await shortcut.waitFor({ state: 'visible', timeout: 20000 });
-      // Owner authentication intentionally opens the admin tab automatically.
-      // The stylesheet can already be loading by the time the shortcut appears.
-      await shortcut.click();
       const shell = page.locator('.admin-dashboard-shell');
       await shell.waitFor({ state: 'visible', timeout: 20000 });
       assert.equal(await page.locator('link[data-gs-admin-core]').count(),1,'Admin CSS loads once on entry');
@@ -124,6 +123,23 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         // Capture the untouched module before any fixture edits or interactions.
         visualBaseline.push(await collectAdminVisualBaseline(shell,tab));
+        assert.equal(await shell.locator('.admin-pro-header-actions').count(), ['banners','settings','visual_editor','discounts'].includes(tab) ? 1 : 0);
+        if (['command','expenses'].includes(tab)) {
+          const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
+          const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
+          assert.equal(ink, 'rgb(24, 34, 48)', 'Workspace headings use the active foreground on light cards');
+        }
+        if (tab === 'inventory') {
+          const region = shell.locator('.admin-inventory-table-scroll');
+          await region.locator('tbody tr').first().waitFor();
+          const geometry = await region.evaluate(node => ({
+            scrollWidth: node.scrollWidth,
+            clientWidth: node.clientWidth,
+            reasonWidth: node.querySelector('tbody td:nth-child(5)').getBoundingClientRect().width
+          }));
+          assert.ok(geometry.reasonWidth >= 120, 'Inventory reason stays readable');
+          if (width < 768) assert.ok(geometry.scrollWidth > geometry.clientWidth, 'Inventory scrolls inside the table region');
+        }
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');

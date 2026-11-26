@@ -5439,6 +5439,7 @@ export default function AdminDashboardPro({
   const orderedAdminNavigationItems = adminNavigationGroups.flatMap(group => group.items.map((tab, index) => ({ ...tab, groupHeading: index === 0 ? group.label : null })));
   const currentAdminNavigationLabel = adminWorkspaceNavigationLabel(visibleAdminNavigationItems.find(tab => tab.id === visibleAdminTab)?.label || 'მართვის პანელი');
   const currentAdminNavigationGroup = adminNavigationGroups.find(group => group.items.some(tab => tab.id === visibleAdminTab));
+  const showStorefrontActions = hasSettingsPermission && ['banners', 'settings', 'visual_editor', 'discounts'].includes(visibleAdminTab);
 
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle} data-admin-visual-design="enabled" data-admin-video-layout="v1">
@@ -5523,11 +5524,11 @@ export default function AdminDashboardPro({
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
               {currentAdminNavigationLabel}
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {isOwner ? 'მთავარი ადმინისტრატორი' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
+            <p className="admin-pro-access-caption text-xs mt-1">
+              {isOwner ? 'მთავარი ადმინისტრატორი · სრული სისტემური წვდომა' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
             </p>
           </div>
-          <div aria-label="მაღაზიის დიზაინის მოქმედებები და წვდომა" role="group" className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
+          {showStorefrontActions && <div aria-label="მაღაზიის დიზაინის მოქმედებები" role="group" className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
             {hasModulePermission('settings') && (
               <button
                 type="button"
@@ -5548,11 +5549,7 @@ export default function AdminDashboardPro({
                 {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
               </button>
             )}
-            <div className="admin-pro-access-state col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
-              <span aria-hidden="true" className="admin-pro-access-dot w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
-            </div>
-          </div>
+          </div>}
         </div>
 
         {!isOwner && (
@@ -5788,7 +5785,7 @@ export default function AdminDashboardPro({
               <>
               <p className="admin-unified-inventory-scroll-hint">ცხრილის დამატებითი სვეტების სანახავად გადაახვიეთ გვერდზე.</p>
               <div className="admin-inventory-table-scroll overflow-x-auto rounded-2xl border border-emerald-500/15" role="region" aria-label="მარაგის მოძრაობების ცხრილი — ჰორიზონტალური გადახვევა" tabIndex={0}>
-                <table data-admin-pro-inventory-table="true" className="w-full min-w-[900px] text-left text-xs">
+                <table data-admin-pro-inventory-table="true" className="w-full text-left text-xs">
                   <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
                     <tr>
                       <th className="px-4 py-3">თარიღი</th>
