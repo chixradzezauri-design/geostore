@@ -1291,6 +1291,7 @@ export default function AdminDashboardPro({
   const [quickProductDrafts, setQuickProductDrafts] = useState({});
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const orderStatusOptions = ['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'];
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
@@ -6581,8 +6582,15 @@ export default function AdminDashboardPro({
                 {orderSearchQuery && <button type="button" className="admin-workspace-order-clear" aria-label="ძიების გასუფთავება" onClick={() => { setOrderSearchQuery(''); setOrderPageByStatus({}); }}><X className="w-4 h-4" aria-hidden="true" /></button>}
               </div>
 
+              <div className="admin-order-status-picker">
+                <label htmlFor="admin-order-status-filter">შეკვეთის სტატუსი</label>
+                <select id="admin-order-status-filter" value={orderStatusFilter} onChange={event => setOrderStatusFilter(event.target.value)}>
+                  {orderStatusOptions.map(status => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </div>
+
               <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto" role="group" aria-label="შეკვეთების სტატუსის ფილტრები">
-                {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
+                {orderStatusOptions.map(st => (
                   <button 
                     key={st}
                     type="button"

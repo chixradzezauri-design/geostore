@@ -129,6 +129,14 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
           assert.equal(ink, 'rgb(24, 34, 48)', 'Workspace headings use the active foreground on light cards');
         }
+        if (tab === 'orders' && width < 480) {
+          const statusPicker = shell.getByLabel('შეკვეთის სტატუსი', { exact: true });
+          await statusPicker.selectOption('დასრულებული');
+          const activeFilter = shell.locator('.admin-order-status-filters button[aria-pressed="true"]');
+          assert.equal(await activeFilter.textContent().then(text => text.trim()), 'დასრულებული');
+          assert.equal(await activeFilter.isVisible(), false, 'Phone shows a single status control');
+          await statusPicker.selectOption('ყველა');
+        }
         if (tab === 'inventory') {
           const region = shell.locator('.admin-inventory-table-scroll');
           await region.locator('tbody tr').first().waitFor();

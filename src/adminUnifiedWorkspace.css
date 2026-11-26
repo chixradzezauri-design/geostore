@@ -1044,3 +1044,23 @@
     min-height: 44px !important;
   }
 }
+
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-picker {
+  display: none;
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-toolbar .admin-order-status-filters {
+    display: none !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-picker {
+    display: grid;
+    gap: 4px;
+    min-inline-size: 0;
+    color: var(--av-muted) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-picker > select {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active,16px)) !important;
+  }
+}
