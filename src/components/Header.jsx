@@ -235,7 +235,7 @@ export default function Header({
               title={currentLang === 'en' ? 'Clear search' : currentLang === 'ru' ? 'Очистить поиск' : 'ძებნის გასუფთავება'}
             ><X aria-hidden="true" /></button>
           )}
-          {signature && <button type="button" className="gs-signature-search-dismiss" aria-label={currentLang === 'en' ? 'Close search' : currentLang === 'ru' ? 'Закрыть поиск' : 'ძებნის დახურვა'} onClick={() => { setSearchOpen(false); headerRef.current?.querySelector('.gs-signature-actions button')?.focus(); }} disabled={Boolean(searchQuery)}><X aria-hidden="true" /></button>}
+          {signature && !String(searchQuery || '').length && <button type="button" className="gs-signature-search-dismiss" aria-label={currentLang === 'en' ? 'Close search' : currentLang === 'ru' ? 'Закрыть поиск' : 'ძებნის დახურვა'} onClick={() => { setSearchOpen(false); headerRef.current?.querySelector('.gs-signature-actions button')?.focus(); }} disabled={Boolean(searchQuery)}><X aria-hidden="true" /></button>}
           <button
             type="button"
             data-visual-editor-target="header.search.button" style={visualStyle('header.search.button')} className="gs-header-image-search"

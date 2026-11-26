@@ -128,6 +128,30 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    }));
    assert.ok(cardsFit,'Signature cards retain accessible and contained actions at '+width);
    const hero=page.locator('[data-signature-hero="true"]');
+   // Regression gate for the visitor recording: measure actual rendered boxes,
+   // not just overall document width or whether an element exists.
+   const filtersFit=await page.locator('.gs-catalog-controls').evaluate(panel=>{
+     const outer=panel.getBoundingClientRect();
+     const children=[...panel.children].filter(el=>el.getClientRects().length).map(el=>el.getBoundingClientRect());
+     const inside=r=>r.left>=outer.left-2&&r.right<=outer.right+2&&r.top>=outer.top-2&&r.bottom<=outer.bottom+2;
+     const overlap=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+     return children.every(inside)&&children.every((a,i)=>children.slice(i+1).every(b=>!overlap(a,b)));
+   });
+   assert.ok(filtersFit,'Filter controls and results must not overlap or escape their panel at '+width);
+   if(width<=640){
+     const heroGeometry=await hero.evaluate(el=>{
+       const outer=el.getBoundingClientRect(),image=el.querySelector('.gs-fashion-hero__image').getBoundingClientRect(),
+         copy=el.querySelector('.gs-fashion-hero__content').getBoundingClientRect(),
+         controls=el.querySelector('.gs-signature-hero-controls').getBoundingClientRect(),
+         action=el.querySelector('.gs-fashion-primary').getBoundingClientRect();
+       const inside=r=>r.left>=outer.left-2&&r.right<=outer.right+2&&r.top>=outer.top-2&&r.bottom<=outer.bottom+2;
+       return {inside:[image,copy,controls,action].every(inside),
+         separated:image.bottom<=copy.top+2&&copy.bottom<=controls.top+2,
+         actionInsideCopy:action.left>=copy.left-2&&action.right<=copy.right+2&&action.bottom<=copy.bottom+2};
+     });
+     assert.ok(heroGeometry.inside&&heroGeometry.separated&&heroGeometry.actionInsideCopy,
+       'Mobile hero photo, copy, action and carousel must occupy separate rows at '+width+': '+JSON.stringify(heroGeometry));
+   }
    await hero.locator('.gs-signature-hero-dot').nth(1).click();
    await hero.getByRole('heading',{name:'Signature campaign'}).waitFor({state:'visible'});
    await hero.locator('.gs-signature-hero-dot').first().click();
@@ -136,6 +160,7 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await page.locator('.gs-signature-actions button').first().click();
    await search.waitFor({state:'visible'});
    await search.locator('input').fill('Stage46 Everyday Wallet');
+   assert.equal(await search.locator('.gs-signature-search-dismiss').count(),0,'No duplicate search dismiss while query is nonempty');
    await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-product-card').length===1);
    await search.locator('.gs-header-search-clear').click();
    assert.equal(await search.isVisible(),true,'Search remains open after clearing');
@@ -143,6 +168,35 @@ export async function runSignatureStorefrontSmoke(browser,host,widths=[320,390,7
    await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-product-card').length===4);
    await search.locator('.gs-signature-search-dismiss').click();
    await search.waitFor({state:'hidden'});
+   // Open actual dialogs through user controls. Hit-test the close button
+   // against the fixed bottom navigation and verify it is not obscured.
+   await page.locator('.gs-signature-actions button').first().click();
+   await search.waitFor({state:'visible'});
+   await search.locator('.gs-header-image-search').click();
+   const photoDialog=page.locator('.gs-image-search-dialog');
+   await photoDialog.waitFor({state:'visible'});
+   if(width<=640)assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),false,'Photo dialog must hide bottom nav');
+   const photoClose=photoDialog.locator('.gs-image-search-header > button');
+   assert.ok(await photoClose.evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+     return r.width>=43&&r.height>=43&&el.contains(hit);
+   }),'Photo dialog close button must be unobstructed at '+width);
+   await photoClose.click();
+   await photoDialog.waitFor({state:'detached'});
+   if(await search.isVisible())await search.locator('.gs-signature-search-dismiss').click();
+   await page.locator('.gs-menu-toggle').click();
+   await page.locator('.gs-menu-register').click();
+   const authDialog=page.locator('.gs-commerce-dialog--account');
+   await authDialog.waitFor({state:'visible'});
+   if(width<=640)assert.equal(await page.locator('.gs-signature-mobile-nav').isVisible(),false,'Auth dialog must hide bottom nav');
+   const authClose=authDialog.locator('div:first-child > button').first();
+   assert.ok(await authClose.evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     return r.width>=43&&r.height>=43&&el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));
+   }),'Auth dialog close button must be unobstructed at '+width);
+   await authClose.click();
+   await authDialog.waitFor({state:'detached'});
    const card=page.locator('.gs-catalog-product-card').filter({hasText:'Stage46 Everyday Wallet'});
    await card.locator('.gs-catalog-product-title-action').click();
    await page.locator('.gs-product-dialog').waitFor({state:'visible'});
