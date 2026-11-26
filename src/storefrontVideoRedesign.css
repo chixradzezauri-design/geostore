@@ -2040,3 +2040,33 @@
   :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) > a:hover img {transform:none!important;}
   :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-published-banners:where([data-signature-banners="true"]) img {transition:none!important;}
 }
+
+
+/* Customer experience audit 04 — flash offer legibility.
+   Preserve campaign grid/compact modes and the independent appearance controls. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-product-name {min-width:0;display:block!important;overflow:visible!important;line-height:1.45;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-product-name .gs-flash-sale-title-action {display:block;min-height:0;width:100%;padding-block:5px;text-align:start;white-space:normal!important;line-height:inherit;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-video-flash-copy > div {flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:2px;font-variant-numeric:tabular-nums;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-video-flash-copy :is(.gs-flash-sale-savings,.gs-flash-sale-stock-note) {max-width:100%;white-space:normal;overflow-wrap:break-word;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown .gs-flash-sale-timer > span:first-child {font-variant-numeric:tabular-nums;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown .gs-flash-sale-timer > span:last-child {text-transform:none;line-height:1.4;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-video-flash-add:disabled {cursor:not-allowed;}
+@media(max-width:640px) {
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-video-flash-heading {align-items:stretch!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown {
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;align-self:stretch!important;width:min(100%,300px);margin-inline:auto;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown > .gs-flash-sale-timer {width:100%;min-width:0!important;box-sizing:border-box;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown > span {text-align:center;}
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-flash-sale-section .gs-video-flash-heading {align-items:stretch!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown {
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;align-self:stretch!important;width:min(100%,300px);margin-inline:auto;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown > .gs-flash-sale-timer {width:100%;min-width:0!important;box-sizing:border-box;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-flash-sale-section .gs-flash-sale-countdown > span {text-align:center;}
+@media(prefers-reduced-motion:reduce) {
+  :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-video-flash-image {transition:none!important;transform:none!important;}
+}
