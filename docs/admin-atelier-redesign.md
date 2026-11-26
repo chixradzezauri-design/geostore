@@ -31,3 +31,6 @@ Keep inventory history horizontally scrollable within its own region, distinguis
 
 ## Stage 7 — finance, analytics, calculator and expenses
 Separate KPI icon/label, amount and evidence-note tracks, distinguish primary financial measures without altering profit/loss/pending states, and improve calculator field and result alignment, expense form sizing and primary action styling. Add device-matrix containment assertions for all three modules. No financial formulas, report filters, server queries, permissions, expense mutations or database changes. Exact-HEAD browser testing and populated financial-state visual QA remain required.
+
+## Stage 8 — staff, accounts and CRM
+Give permission selectors dedicated native-checkbox and caption tracks with a full-label touch area; improve account identity, status and action layout, disabled controls, and CRM contact/action separation. Retain existing server authorization, Auth invitation and reactivation handlers, permissions and CRM semantics. Add device-matrix control containment tests. Populated staff and CRM records and the exact-HEAD browser suite remain to be verified; no database or account writes.

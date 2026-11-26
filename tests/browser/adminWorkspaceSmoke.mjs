@@ -197,6 +197,25 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (tab === 'staff' || tab === 'users') {
+              const identityIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='staff'?'.admin-staff':'.admin-crm-panel');
+                const issues=[];
+                const groups=scope.querySelectorAll(module==='staff'?'.admin-staff-permission-grid > label,.admin-staff-create-fields,.admin-unified-staff-actions':'.admin-workspace-crm-filters,.admin-crm-user-actions,.admin-crm-edit-panel');
+                for(const group of groups){
+                  const outer=group.getBoundingClientRect();
+                  for(const el of group.querySelectorAll('input,select,button')){
+                    const rect=el.getBoundingClientRect();
+                    if(!rect.height)continue;
+                    const checkbox=el.matches('input[type="checkbox"]');
+                    if(rect.left<outer.left-2||rect.right>outer.right+2||(!checkbox&&rect.height<43.5))issues.push('account control outside its group');
+                    if(checkbox&&(rect.width<16||outer.height<43.5))issues.push('permission touch area too small');
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(identityIssues,[],engine+' '+targetWidth+'px: staff and CRM controls remain bounded');
+            }
             if (['analytics','calculator','expenses'].includes(tab)) {
               const financeIssues=await shell.evaluate((root,module)=>{
                 const scope=root.querySelector(module==='analytics'?'.admin-analytics':module==='calculator'?'.admin-profit-calculator':'.admin-expenses');

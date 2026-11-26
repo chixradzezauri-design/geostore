@@ -1042,8 +1042,55 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-permissions {
   background: var(--av-inset) !important; border-color: var(--av-border) !important; min-width: 0;
 }
+/* Atelier staff: independent permission and account-state tracks. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-create-fields { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-panel > h3 {
+  min-inline-size: 0; line-height: 1.5; overflow-wrap: anywhere;
+  padding-block-end: 10px; border-block-end: 1px solid var(--av-border);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-panel > h3 > svg { flex-shrink: 0; color: var(--av-accent) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(.admin-staff-create-fields,.admin-staff-existing-form,.admin-unified-staff-permissions) :is(input:not([type="checkbox"]),select) {
+  min-inline-size: 0; max-inline-size: 100%; width: 100% !important;
+  min-height: 44px !important; box-sizing: border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-existing-form > button {
+  min-height: 44px !important; min-inline-size: 0; white-space: normal !important;
+  background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(.admin-staff-existing-form,.admin-staff-create-form) button:disabled {
+  opacity: .55 !important; cursor: not-allowed;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label {
+  display: grid !important; grid-template-columns: 20px minmax(0,1fr);
+  align-items: center !important; gap: 8px !important;
+  min-inline-size: 0; min-height: 44px !important; padding: 8px !important;
+  border: 1px solid var(--av-border); border-radius: 8px;
+  white-space: normal !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label > input[type="checkbox"] {
+  width: 18px !important; height: 18px !important;
+  min-width: 18px !important; min-height: 18px !important;
+  margin: 0 !important; accent-color: var(--av-accent);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label > span {min-inline-size: 0; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-context {border-inline-start: 3px solid var(--av-accent) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card] > div:first-child {
+  display: grid !important; grid-template-columns: minmax(0,1fr);
+  align-items: start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-actions {
+  display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-actions > button:disabled {opacity: .55 !important; cursor: not-allowed;}
+@container (min-width: 650px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card] > div:first-child {grid-template-columns: minmax(0,1.2fr) minmax(0,1fr);}
+}
+@container (max-width: 300px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-actions {grid-template-columns: minmax(0,1fr);}
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid > label:has(input:checked) { border-color: var(--av-accent) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid > label:focus-within { outline: 2px solid var(--av-focus); outline-offset: 2px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-list-panel > div:first-child { flex-wrap: wrap; }
@@ -1089,7 +1136,33 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-panel,.admin-support-panel,.admin-broadcasts-panel) { container-type: inline-size; background-image: none !important; box-shadow: none !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-user-card,.admin-support-ticket,.admin-legacy-message-card) { background-image: none !important; box-shadow: none !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-crm-context { color: var(--av-text) !important; background: var(--av-inset) !important; border-color: var(--av-border) !important; line-height: 1.65; }
+/* Atelier CRM: contact information and management actions never compete for space. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-crm-card-header { display: grid !important; grid-template-columns: minmax(0,1fr); align-items: start !important; gap: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-context {border-inline-start: 3px solid var(--av-accent) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-card {min-inline-size: 0;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity > div:first-child {
+  min-inline-size: 0; align-items: center; gap: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {font-size: 15px !important; line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity [data-admin-pro-crm-badge] {max-inline-size: 100%; overflow-wrap: anywhere; white-space: normal !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions {
+  border-block-start: 1px solid var(--av-border); padding-block-start: 10px;
+  gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions > button {justify-content: center; line-height: 1.5;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions > button[aria-expanded="true"] {
+  outline: 2px solid var(--av-accent); outline-offset: -2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions > button:disabled {opacity: .55 !important; cursor: not-allowed;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel :is(input,select) {
+  width: 100% !important; max-inline-size: 100%; min-inline-size: 0;
+  box-sizing: border-box; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel > div:last-child {flex-wrap: wrap;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel > div:last-child > button {min-height: 44px !important; flex: 1 1 120px; white-space: normal;}
+@container (min-width: 850px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions {border-block-start: 0; padding-block-start: 0; border-inline-start: 1px solid var(--av-border); padding-inline-start: 10px;}
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-crm-identity { min-width: 0; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-crm-contact { display: grid; grid-template-columns: minmax(0,1fr); gap: 5px; margin-block: 8px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-crm-contact > p { display: grid; gap: 2px; min-width: 0; }
