@@ -5290,6 +5290,7 @@ export default function App() {
       {isImageSearchOpen && (
         <Suspense fallback={null}>
           <ImageSearchModal
+            currentLang={currentLang}
             isImageSearchOpen={isImageSearchOpen}
             setIsImageSearchOpen={setIsImageSearchOpen}
             products={products}
