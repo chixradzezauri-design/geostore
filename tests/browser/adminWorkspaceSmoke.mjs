@@ -491,6 +491,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:eligible});
           await thumbnail.waitFor({state:'visible',timeout:20000});
           assert.equal(await thumbnail.evaluate(el=>getComputedStyle(el).objectFit),'contain','Photo preview preserves the full composition');
+          const galleryLayout=await thumbnail.evaluate(img=>{
+            const card=img.closest('.admin-workspace-gallery-card');
+            const action=card.querySelector('.admin-product-gallery-remove');
+            const photo=img.getBoundingClientRect(),button=action.getBoundingClientRect();
+            return {height:button.height,below:button.top>=photo.bottom-2,position:getComputedStyle(action).position};
+          });
+          assert.ok(galleryLayout.height>=43.5&&galleryLayout.below&&galleryLayout.position==='static','Gallery removal stays below the photo and retains a touch target');
           const optimized=await thumbnail.getAttribute('src');
           assert.ok(optimized?.startsWith('data:image/webp;base64,'),'Eligible JPEG must convert to WebP');
           const encoded=Buffer.from(optimized.split(',')[1],'base64');
@@ -565,6 +572,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           const editor=design.locator('[data-gs-flash-editor="true"]');
           await editor.waitFor({state:'visible',timeout:20000});
           assert.equal(await pricing.isVisible(),false);
+          const modePalette=await workspace.locator('button[aria-pressed="true"]').evaluate(el=>{
+            const style=getComputedStyle(el);return [style.color,style.backgroundColor];
+          });
+          assert.deepEqual(modePalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Active promotion mode uses a readable paired palette');
           const controls=editor.locator('[data-gs-campaign-controls="true"]');
           const name=controls.getByPlaceholder('მაგ. შავი პარასკევი');
           await name.waitFor({state:'visible'});
@@ -640,6 +651,16 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.ok(await shell.locator('[data-admin-pro-support-summary]').isVisible());
           await shell.getByRole('button',{name:'ფილტრების გასუფთავება',exact:true}).click();
           assert.equal(await shell.locator('#admin-workspace-support-status').inputValue(),'all');
+          const message= shell.locator('.admin-support-ticket-message').first();
+          await message.waitFor({state:'visible'});
+          const messageContrast=await message.evaluate(el=>{
+            const style=getComputedStyle(el);
+            const rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
+            const luminance=value=>rgb(value).map(v=>v/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[0.2126,0.7152,0.0722][i],0);
+            const a=luminance(style.webkitTextFillColor||style.color),b=luminance(style.backgroundColor);
+            return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+          });
+          assert.ok(messageContrast>=4.5,'Support message text meets WCAG AA normal-text contrast on its own surface');
         }
       }
       assert.equal(visualBaseline.length,Object.keys(modules).length,'Every permitted module has a visual baseline');
