@@ -682,7 +682,7 @@ export default function StoreView({
                 <div className="gs-signature-banner-copy relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
                   <h2 data-visual-editor-target="banner.title" style={videoElementStyle('banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
                   {banner?.subtitle && <p data-visual-editor-target="banner.description" style={videoElementStyle('banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
-                  {safeTarget && <span data-visual-editor-target="banner.button" style={videoElementStyle('banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
+                  {safeTarget && <span data-visual-editor-target="banner.button" style={videoElementStyle('banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || storeText.viewCollection} ↗</span>}
                 </div>
               </div>
             );
