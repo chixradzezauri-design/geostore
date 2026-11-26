@@ -836,7 +836,7 @@ export default function Modals({
 
       {/* 4. Supabase email/password sign-in and registration */}
       {isAuthOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center overflow-y-auto p-3 py-4 sm:p-4 animate-in fade-in duration-300">
+        <div className="gs-commerce-overlay gs-commerce-overlay--auth fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center overflow-y-auto p-3 py-4 sm:p-4 animate-in fade-in duration-300">
           <div role="dialog" aria-modal="true" aria-labelledby="geostore-auth-dialog-title" className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 id="geostore-auth-dialog-title" className="font-black text-white text-base flex items-center gap-2.5">
@@ -853,7 +853,7 @@ export default function Modals({
               <p className="gs-passkey-description">{currentLang==='en'?'Your device chooses biometrics, device PIN or a security key. If unavailable, use your password or email recovery.':currentLang==='ru'?'Устройство выбирает биометрию, PIN или ключ безопасности. Если они недоступны, используйте пароль или восстановление по почте.':'მოწყობილობა თავად გთავაზობს ბიომეტრიას, PIN-ს ან უსაფრთხოების გასაღებს. საჭიროებისას გამოიყენე პაროლი ან ელ-ფოსტით აღდგენა.'}</p>
               {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
             </div>}
-            <form onSubmit={handleAuthSubmit} autoComplete="on" className="space-y-4 text-xs animate-in fade-in">
+            <form onSubmit={handleAuthSubmit} autoComplete="on" className="gs-auth-form space-y-4 text-xs animate-in fade-in">
               {authMode === 'register' && (
                 <>
                   <div className="space-y-1">
@@ -905,7 +905,7 @@ export default function Modals({
               </button>
             </form>
 
-            <div className="text-center pt-2 border-t border-amber-500/20 space-y-3">
+            <div className="gs-auth-secondary-actions text-center pt-2 border-t border-amber-500/20 space-y-3">
               {authMode === 'login' && (
                 <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
                   {copy.forgotPassword}
