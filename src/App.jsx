@@ -4151,6 +4151,10 @@ export default function App() {
                 {wishlist.map((savedProd) => {
                   const liveProduct = findCurrentSavedProduct(products, savedProd);
                   const prod = liveProduct || savedProd;
+                  const savedPrice = liveProduct ? getProductStartingPrice(prod) : null;
+                  const savedAction = !liveProduct ? (currentLang === 'en' ? 'Unavailable' : currentLang === 'ru' ? 'Недоступен' : 'მიუწვდომელია')
+                    : getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
+                    : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart;
                   return (
                   <div
                     key={savedProd.id}
@@ -4175,7 +4179,7 @@ export default function App() {
                         </h4>
 
                         <p className="gs-wishlist-product-price font-black text-xs mt-1">
-                          {getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}
+                          {savedPrice === null ? '—' : formatPrice(savedPrice)}
                         </p>
                       </div>
                     </div>
@@ -4184,11 +4188,9 @@ export default function App() {
                       <button type="button"
                         onClick={() => handleAddSavedProduct(savedProd)}
                         disabled={!liveProduct || getProductAvailableStock(prod) <= 0}
-                        aria-label={`${hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}: ${prod.name}`}
+                        aria-label={`${savedAction}: ${prod.name}`}
                         className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                        {!liveProduct ? (currentLang === 'en' ? 'Unavailable' : currentLang === 'ru' ? 'Недоступен' : 'მიუწვდომელია')
-                          : getProductAvailableStock(prod) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'მარაგში არ არის')
-                          : hasProductVariantOptions(prod) ? (currentLang === 'en' ? 'Choose options' : currentLang === 'ru' ? 'Выбрать вариант' : 'აირჩიეთ ვარიანტი') : t.addToCart}
+                        {savedAction}
                       </button>
                       <button type="button" className="gs-wishlist-remove inline-flex items-center justify-center rounded-xl border px-3 cursor-pointer"
                         onClick={() => toggleWishlist(savedProd)} aria-label={`${currentLang === 'en' ? 'Remove from wishlist' : currentLang === 'ru' ? 'Удалить из избранного' : 'სურვილებიდან წაშლა'}: ${prod.name}`}>
