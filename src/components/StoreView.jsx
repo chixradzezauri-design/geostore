@@ -605,8 +605,10 @@ export default function StoreView({
     : currentAvailableStock <= 0 ? storeText.outOfStock : '';
   const productCharacter=getCharacterScenario(publishedCharacterSettings,'product',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&!!selectedProduct&&currentAvailableStock>0&&!purchaseUnavailableReason});
   const searchEmptyCharacter=getCharacterScenario(publishedCharacterSettings,'searchEmpty',{mobile:characterMobile,eligible:catalogueNavigation&&catalogueReady&&!campaignPreviewOnly&&Boolean(String(searchQuery||'').trim())&&processedProducts.length===0});
-  const activeGalleryIndex = selectedProduct && Array.isArray(selectedProduct.gallery)
-    ? selectedProduct.gallery.indexOf(activeImage) : -1;
+  const productGallery = selectedProduct ? [...new Set([selectedProduct.image, ...(Array.isArray(selectedProduct.gallery) ? selectedProduct.gallery : [])].filter(image => typeof image === 'string' && image.trim()))] : [];
+  const activeGalleryIndex = productGallery.indexOf(activeImage || selectedProduct?.image);
+  const galleryPhotoLabel = currentLang === 'en' ? 'Photo' : currentLang === 'ru' ? 'Фото' : 'ფოტო';
+  const galleryPhotosLabel = currentLang === 'en' ? 'Photos' : currentLang === 'ru' ? 'Фотографии' : 'ფოტოები';
 
   const renderCustomSections = placement => customSections.filter(section => section.visible && (section.placement || 'after-products') === placement).map(section => {
     const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
@@ -1199,7 +1201,7 @@ export default function StoreView({
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div ref={productDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title" className={`gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]${purchaseUnavailableReason ? ' gs-product-dialog--purchase-unavailable' : ''}`}>
+          <div ref={productDialogRef} role="dialog" aria-modal="true" aria-labelledby="gs-product-name" className={`gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]${purchaseUnavailableReason ? ' gs-product-dialog--purchase-unavailable' : ''}`}>
             
             <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
               <span id="gs-product-dialog-title" className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -1226,28 +1228,28 @@ export default function StoreView({
                     {(activeImage || selectedProduct.image) ? <img data-visual-editor-target="product.detail.image" style={videoElementStyle('product.detail.image')} src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} loading="eager" fetchPriority={catalogueNavigation && !visualEditorViewport ? "high" : "auto"} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>
                   
-                  {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
-                    <div className="gs-product-gallery-thumbnails flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none" role="group" aria-label={`${selectedProduct.name || storeText.productDetails} — ფოტოები`}>
-                      {selectedProduct.gallery.map((img, idx) => (
-                        <button key={idx} type="button" onClick={() => setActiveImage(img)} aria-label={`${selectedProduct.name || storeText.productDetails} — ფოტო ${idx + 1}`} aria-pressed={activeImage === img} className={`gs-product-gallery-thumb w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
+                  {productGallery.length > 1 && (
+                    <div className="gs-product-gallery-thumbnails flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none" role="group" aria-label={`${selectedProduct.name || storeText.productDetails} — ${galleryPhotosLabel}`}>
+                      {productGallery.map((img, idx) => (
+                        <button key={idx} type="button" onClick={() => setActiveImage(img)} aria-label={`${selectedProduct.name || storeText.productDetails} — ${galleryPhotoLabel} ${idx + 1}`} aria-pressed={activeImage === img} className={`gs-product-gallery-thumb w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
                           <img src={img} alt={`${selectedProduct.name || storeText.productDetails} ${idx + 1}`} loading="lazy" decoding="async" draggable={false} className="w-full h-full object-contain rounded-xl" />
                         </button>
                       ))}
                     </div>
                   )}
-                  {Array.isArray(selectedProduct.gallery) && selectedProduct.gallery.length > 1 && (
+                  {productGallery.length > 1 && (
                     <div className="gs-product-gallery-toolbar flex items-center justify-between gap-3" role="group"
                       aria-label={currentLang === 'en' ? 'Product gallery navigation' : currentLang === 'ru' ? 'Управление галереей товара' : 'პროდუქტის გალერეის მართვა'}>
                       <span className="gs-product-gallery-counter text-xs font-bold" role="status" aria-live="polite">
-                        {Math.max(0, activeGalleryIndex) + 1} / {selectedProduct.gallery.length}
+                        {Math.max(0, activeGalleryIndex) + 1} / {productGallery.length}
                       </span>
                       <div className="flex items-center gap-2">
                         <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Previous product photo' : currentLang === 'ru' ? 'Предыдущее фото товара' : 'წინა ფოტო'}
-                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) - 1 + selectedProduct.gallery.length) % selectedProduct.gallery.length])}>
+                          onClick={() => setActiveImage(productGallery[(Math.max(0, activeGalleryIndex) - 1 + productGallery.length) % productGallery.length])}>
                           <span aria-hidden="true">‹</span>
                         </button>
                         <button type="button" className="gs-product-gallery-step rounded-xl border px-3" aria-label={currentLang === 'en' ? 'Next product photo' : currentLang === 'ru' ? 'Следующее фото товара' : 'შემდეგი ფოტო'}
-                          onClick={() => setActiveImage(selectedProduct.gallery[(Math.max(0, activeGalleryIndex) + 1) % selectedProduct.gallery.length])}>
+                          onClick={() => setActiveImage(productGallery[(Math.max(0, activeGalleryIndex) + 1) % productGallery.length])}>
                           <span aria-hidden="true">›</span>
                         </button>
                       </div>
@@ -1259,9 +1261,9 @@ export default function StoreView({
                   <div className="gs-product-detail-heading space-y-2">
                     <div className="gs-product-detail-meta flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
-                      <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
+                      {selectedProduct.sku && <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku}</span>}
                     </div>
-                    <h2 data-visual-editor-target="product.detail.title" style={videoElementStyle('product.detail.title')} className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
+                    <h2 data-visual-editor-target="product.detail.title" style={videoElementStyle('product.detail.title')} id="gs-product-name" className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
                     <p className="gs-product-detail-vendor text-slate-400 text-xs">{storeText.vendor} <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                   </div>
 
@@ -1270,6 +1272,11 @@ export default function StoreView({
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
                     {!hasCustomProductVariants(selectedProduct) && Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                  </div>
+
+                  <div data-stock-state={purchaseUnavailableReason ? 'unavailable' : 'available'} className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
+                    {purchaseUnavailableReason ? <ShieldAlert aria-hidden="true" className="w-5 h-5 shrink-0"/> : <CheckCircle2 aria-hidden="true" className="w-5 h-5 shrink-0"/>}
+                    <span>{purchaseUnavailableReason || <>{storeText.inStock} <b>{currentAvailableStock}</b> {storeText.deliveryFit}</>}</span>
                   </div>
 
                   {(selectedProduct.material || selectedProduct.durability) && (
@@ -1452,10 +1459,7 @@ export default function StoreView({
                     <p data-visual-editor-target="product.detail.description" style={videoElementStyle('product.detail.description')} className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
                   </section>
 
-                  <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
-                    <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{currentAvailableStock > 0 ? currentAvailableStock : storeText.outOfStock}</b> {currentAvailableStock > 0 ? storeText.deliveryFit : ''}</span>
-                  </div>
+
 
                   <section className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20" aria-labelledby="gs-product-reviews-title">
                     <h3 id="gs-product-reviews-title" className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
