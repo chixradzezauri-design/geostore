@@ -42,6 +42,7 @@ import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADM
 import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
+import '../adminUnifiedWorkspace.css';
 import {resolveAdminWorkspaceAppearance} from '../utils/adminProfessionalDesign.js';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 import AdminFlashSchedule from './AdminFlashSchedule.jsx';
@@ -5501,9 +5502,10 @@ export default function AdminDashboardPro({
 
         <button type="button"
           onClick={() => { if (typeof handleLogout === 'function') handleLogout(); }} 
+          aria-label="სისტემიდან გასვლა"
           className="admin-video-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-4"
         >
-          <LogOut className="w-4 h-4" /> სისტემიდან გასვლა
+          <LogOut className="w-4 h-4 shrink-0" /> <span>გასვლა</span>
         </button>
       </div>
 
@@ -5520,7 +5522,7 @@ export default function AdminDashboardPro({
               {isOwner ? 'მთავარი ადმინისტრატორი' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
             </p>
           </div>
-          <div className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
+          <div aria-label="მაღაზიის დიზაინის მოქმედებები და წვდომა" role="group" className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
             {hasModulePermission('settings') && (
               <button
                 type="button"
@@ -5592,7 +5594,7 @@ export default function AdminDashboardPro({
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{ordersVerifiedForReports ? `მოლოდინში: ${commandCenterPendingOrders.length} შეკვეთა` : "მონაცემები ჯერ არ დადასტურებულა"}</span>
               </button>
               <button type="button" onClick={() => setAdminTab('support')} data-admin-kpi-tone="warning" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-amber-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-amber-300/60">
-                <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-4 w-4 shrink-0 text-amber-300" /></span>
+                <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ვადაგადაცილებული მოთხოვნები</span><HelpCircle className="h-4 w-4 shrink-0 text-amber-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterSupportVerified ? commandCenterOverdueTickets.length : "—"}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{supportTicketsError ? "ჩატვირთვის შეცდომა" : !commandCenterSupportVerified ? "მონაცემები დასადასტურებელია" : "ღიაა 24 საათზე მეტხანს"}</span>
               </button>

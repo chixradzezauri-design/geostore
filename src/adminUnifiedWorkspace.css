@@ -1,0 +1,190 @@
+/* Unified workspace foundation: remove decorative gradients from operational
+   surfaces, without changing user-selected backgrounds, status colors or
+   individual element geometry. Never select storefront/editor preview content. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] {
+  background-image: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-sidebar="true"],[data-admin-visual-header="true"],.admin-command-hero,.admin-command-kpi,.admin-command-panel,.admin-orders-panel,.admin-inventory-panel,.admin-staff-panel,.admin-staff-list-panel,.admin-support-panel,.admin-crm-panel,.admin-finance-sources-panel,.admin-finance-expenses-panel,.admin-finance-products-panel,.admin-finance-vendors-panel,.admin-discounts-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) {
+  background-image: none !important;
+  backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-edit {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-page-identity {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > button {
+  text-wrap: balance;
+}
+@media (min-width: 1024px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+    align-items: start !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions {
+    width: 100% !important;
+    justify-content: flex-start;
+  }
+}
+@media (min-width: 1440px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
+    grid-template-columns: minmax(0,1fr) minmax(0,auto);
+    align-items: center !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions { justify-content: flex-end; }
+}
+
+/* Workspace chrome and operational overview. Keep the permission-filtered
+   navigation, native picker and all existing event handlers in place. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand-mark {
+  background-image: none !important;
+  border-color: transparent !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] {
+  background-image: none !important;
+  min-height: 44px !important;
+  border-radius: var(--admin-vd-navItemRadius-active, 8px) !important;
+  font-size: max(12px, var(--admin-vd-navItemFontSize-active, 13px)) !important;
+  font-weight: var(--admin-vd-navItemFontWeight-active, 600) !important;
+  letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"]:focus-visible {
+  outline: 2px solid var(--av-nav-text) !important;
+  outline-offset: -3px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="true"]:focus-visible {
+  outline-color: var(--av-nav-active-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="false"]:hover {
+  background: var(--av-nav-bg) !important;
+  border-color: var(--av-nav-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout {
+  background-image: none !important;
+  min-height: 44px !important;
+  gap: 6px !important;
+  margin-block-start: 0 !important;
+  white-space: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > button {
+  font-weight: var(--admin-vd-buttonFontWeight-active,600) !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > .admin-pro-access-state {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  font-weight: 500;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-state > span:last-child {
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) !important;
+  gap: clamp(8px,var(--admin-vd-sectionGap-active,12px),16px) !important;
+  align-items: stretch;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi {
+  align-self: stretch;
+  min-height: 0 !important;
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),24px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {
+  min-height: 0;
+  align-items: center;
+  gap: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > span {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong {
+  margin-block-start: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel {
+  min-height: 0;
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child {
+  padding-block-end: 10px;
+  border-bottom: 1px solid var(--av-border);
+  gap: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > button {
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .admin-workspace-command-row-title {
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > p:not([role]) {
+  background: var(--av-surface) !important;
+  color: var(--av-muted) !important;
+  border-color: var(--av-border) !important;
+  line-height: 1.6;
+}
+@container (min-width: 320px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@container (min-width: 800px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis { grid-template-columns: repeat(4,minmax(0,1fr)) !important; }
+}
+@media (min-width: 1024px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group:not(:first-child) {
+    border-top: 1px solid color-mix(in srgb,var(--av-nav-text) 18%,transparent);
+    padding-block-start: 12px;
+    margin-block-start: 8px !important;
+  }
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: center !important;
+    gap: 8px 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand {
+    grid-row: 1; grid-column: 1;
+    border-bottom: 0 !important; padding-block-end: 0 !important;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout {
+    grid-row: 1; grid-column: 2;
+    width: auto !important;
+    min-width: 44px !important;
+    max-width: 100% !important;
+    padding: 8px 10px !important;
+    margin: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker {
+    grid-row: 2; grid-column: 1 / -1;
+    margin: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > button {
+    padding-inline: 8px !important;
+  }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand-mark { flex-shrink: 0; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > .admin-pro-access-state { grid-column: 1 / -1; }
+}
