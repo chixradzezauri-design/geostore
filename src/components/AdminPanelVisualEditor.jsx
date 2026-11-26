@@ -1515,7 +1515,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           box-shadow: 0 0 0 4px rgba(52, 211, 153, .16) !important;
         }
       `}</style>
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <header className="admin-unified-editor-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-300">GEOSTORE / ADMIN STUDIO</p>
           <h2 id="admin-visual-editor-title" className="mt-1 text-lg font-black text-white">ადმინ პანელის დიზაინის რედაქტორი</h2>
@@ -1597,7 +1597,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </p>
       )}
 
-      <div className="min-w-0 rounded-2xl border border-slate-700 bg-slate-950/65 p-3" role="search" aria-label="ადმინპანელის დიზაინის პარამეტრების ძებნა">
+      <div className="admin-unified-editor-search min-w-0 rounded-2xl border border-slate-700 bg-slate-950/65 p-3" role="search" aria-label="ადმინპანელის დიზაინის პარამეტრების ძებნა">
         <label htmlFor="admin-studio-group-search" className="block text-xs font-bold text-slate-200">პარამეტრების ძებნა</label>
         <input id="admin-studio-group-search" type="search" autoComplete="off" value={panelGroupSearch} onChange={event => setPanelGroupSearch(event.target.value)} placeholder="ფერები, შრიფტი, ზომები, ტექსტები…" className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-base text-white placeholder:text-slate-500 sm:text-sm" />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
@@ -1607,7 +1607,19 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         {visiblePanelGroupCount === 0 && <p className="mt-2 text-xs text-amber-200" role="status">ჯგუფი ვერ მოიძებნა. შეცვალეთ საძიებო სიტყვა.</p>}
       </div>
 
-      <details hidden={!isPanelGroupVisible('palette')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <nav className="admin-unified-editor-jumps" aria-label="დიზაინის პარამეტრების სწრაფი გადასვლები">
+        {[[ 'palette','ფერები / PRO' ],['typography','შრიფტები'],['layout','ზომები'],['content','ტექსტები'],['modules','მოდულები'],['elements','ელემენტები']].filter(([key]) => isPanelGroupVisible(key)).map(([key,label]) => (
+          <button key={key} type="button" onClick={event => {
+            const group = event.currentTarget.closest('.admin-visual-editor-panel')?.querySelector('[data-admin-studio-group="'+key+'"]');
+            if (!group || group.hidden) return;
+            group.open = true;
+            group.scrollIntoView({block:'start',behavior:'auto'});
+            group.querySelector('summary')?.focus({preventScroll:true});
+          }}>{label}</button>
+        ))}
+      </nav>
+
+      <details hidden={!isPanelGroupVisible('palette')} data-admin-studio-group="palette" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ფერების პალიტრა <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-3">
@@ -1628,7 +1640,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <div className="mt-2 flex flex-wrap gap-2" aria-label="GEOSTORE PRO ფერთა პალიტრა">
             {['canvas','panel','nav','accent','muted','border'].map(key=><span key={key} aria-label={ADMIN_PRO_PALETTE[key]} className="h-8 w-8 rounded-md border border-slate-400" style={{backgroundColor:ADMIN_PRO_PALETTE[key]}}/>)}
           </div>
-          <p className="mt-2 text-xs leading-relaxed" style={{color:'#526174'}}>ერთიანი ფერები, კომპაქტური ზომები და მკაფიო ტექსტები. ინდივიდუალური ცვლილებები შენარჩუნდება. საერთო ფერებისა და ზომების გამოყენება Desktop ხედიდან.</p>
+          <p className="mt-2 text-xs leading-relaxed" style={{color:'#526174'}}>ერთიანი ფერები, კომპაქტური ზომები და მკაფიო ტექსტები. ინდივიდუალური ელემენტების ცვლილებები და მოწყობილობის გადაფარვები შენარჩუნდება. საერთო ფერები და ზომები შეიცვლება. გამოიყენეთ Desktop ხედიდან.</p>
           <button type="button" data-admin-pro-apply="true" disabled={viewport!=='desktop'} onClick={applyProfessionalPreset} className="mt-2 min-h-11 w-full rounded-lg px-3 py-2 text-xs font-bold disabled:opacity-50" style={{backgroundColor:'#126b59',color:'#ffffff'}}>PRO დიზაინის გამოყენება</button>
         </section>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -1649,7 +1661,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('typography')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('typography')} data-admin-studio-group="typography" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ტიპოგრაფია და შრიფტები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-3">
@@ -1674,7 +1686,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('layout')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('layout')} data-admin-studio-group="layout" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">განლაგება და ზომები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-4">
@@ -1703,7 +1715,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('content')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('content')} data-admin-studio-group="content" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ტექსტები და წარწერები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-3">
@@ -1728,7 +1740,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('modules')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('modules')} data-admin-studio-group="modules" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">მოდულების ინდივიდუალური დიზაინი <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-4">
@@ -1798,7 +1810,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details ref={elementEditorDetailsRef} hidden={!isPanelGroupVisible('elements')} className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details ref={elementEditorDetailsRef} hidden={!isPanelGroupVisible('elements')} data-admin-studio-group="elements" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">შიდა ელემენტების რედაქტირება <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-4 rounded-2xl border border-emerald-400/20 bg-slate-950/50 p-3 sm:p-4">
