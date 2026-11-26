@@ -1322,3 +1322,32 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {grid-template-columns:minmax(0,1fr)!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {min-height:0}
 }
+
+/* Admin PRO 05 — order readability, existing element editor retains card geometry. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-order-result-row {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-order-result-row [data-admin-pro-order-reset] {min-height:44px!important;max-width:100%;white-space:normal!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-order-heading] > div:first-child {display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-order-number] {font-variant-numeric:tabular-nums;overflow-wrap:anywhere;font-size:14px!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-order-date] {margin-inline-start:0!important;color:var(--av-muted)!important;font-size:12px!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-order-total] {font-size:clamp(16px,var(--admin-vd-titleFontSize-active,18px),24px)!important;font-variant-numeric:tabular-nums;line-height:1.4}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-card-customer > p {font-size:var(--admin-vd-bodyFontSize-active,13px)!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item {align-items:flex-start!important;min-width:0}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-order-image] {width:64px!important;height:64px!important;flex:0 0 64px;object-fit:contain;border-radius:10px!important;background:var(--av-inset)!important;border:1px solid var(--av-border)!important;color:var(--av-muted)!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-item-info h5 {font-size:14px!important;line-height:1.45;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal :is(.admin-order-customer,.admin-order-items-section,.admin-order-financials) > h4 {font-size:16px!important;line-height:1.4}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price {font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-note-controls {min-width:0}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-order-status="ახალი"] {--admin-pro-order-bg:#e4eefc;--admin-pro-order-fg:#254b8a}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-order-status="მუშავდება"] {--admin-pro-order-bg:#fff0cc;--admin-pro-order-fg:#754300}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-order-status="გაგზავნილი"] {--admin-pro-order-bg:#dff2f5;--admin-pro-order-fg:#155661}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-order-status="დასრულებული"] {--admin-pro-order-bg:#dff3eb;--admin-pro-order-fg:#14594a}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-order-status="გაუქმებული"] {--admin-pro-order-bg:#fce5e8;--admin-pro-order-fg:#9c2538}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-badge[data-admin-order-status] {background:var(--admin-pro-order-bg,var(--av-inset))!important;color:var(--admin-pro-order-fg,var(--av-text))!important;-webkit-text-fill-color:currentColor!important;line-height:1.4;max-width:100%;overflow-wrap:anywhere}
+@media(max-width:640px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item {display:grid!important;grid-template-columns:64px minmax(0,1fr);gap:10px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info {width:auto!important;min-width:0}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price {grid-column:1/-1;width:100%!important}
+}
+@media(max-width:359px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item {grid-template-columns:minmax(0,1fr)}
+}

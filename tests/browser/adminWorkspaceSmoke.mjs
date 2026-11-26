@@ -123,6 +123,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
+        if(tab==='orders'){
+          const search=shell.getByRole('textbox',{name:'შეკვეთების ძებნა'});
+          await search.fill('synthetic-no-match');
+          await shell.getByRole('button',{name:'ფილტრების გასუფთავება',exact:true}).first().click();
+          assert.equal(await search.inputValue(),'','Order reset restores unfiltered search');
+          assert.equal(await shell.locator('.admin-order-status-filters button[aria-pressed="true"]').textContent().then(x=>x.trim()),'ყველა');
+        }
         if(tab==='command'){
           const cards=shell.locator('.admin-command-kpi[data-admin-kpi-tone]');
           assert.equal(await cards.count(),4,'All four operational KPI cards retained');

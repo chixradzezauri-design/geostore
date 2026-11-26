@@ -6574,7 +6574,7 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            {!ordersReady || ordersError ? <p role={ordersError ? "alert" : "status"} className="admin-workspace-orders-notice rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">{ordersError ? "შეკვეთების სრული სია ვერ ჩაიტვირთა. ნაჩვენები ჩანაწერები შესაძლოა არასრული იყოს." : "შეკვეთების სრული სია ჯერ არ დადასტურებულა."}</p> : <p className="admin-workspace-orders-result text-xs text-slate-400" role="status">ნაპოვნია {filteredOrders.length} / {orders.length} შეკვეთა</p>}
+            {!ordersReady || ordersError ? <p role={ordersError ? "alert" : "status"} className="admin-workspace-orders-notice rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">{ordersError ? "შეკვეთების სრული სია ვერ ჩაიტვირთა. ნაჩვენები ჩანაწერები შესაძლოა არასრული იყოს." : "შეკვეთების სრული სია ჯერ არ დადასტურებულა."}</p> : <div className="admin-pro-order-result-row"><p className="admin-workspace-orders-result text-xs text-slate-400" role="status">ნაპოვნია {filteredOrders.length} / {orders.length} შეკვეთა</p>{filteredOrders.length > 0 && (orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" data-admin-pro-order-reset="true" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>}
             {/* შეკვეთების სია */}
             <div className="admin-orders-list space-y-4">
               {filteredOrders.length === 0 ? (
@@ -6582,13 +6582,13 @@ export default function AdminDashboardPro({
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
-                    <div className="admin-order-card-heading flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                    <div data-admin-pro-order-heading="true" className="admin-order-card-heading flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
-                        <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
-                        <span className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
+                        <span data-admin-pro-order-number="true" className="font-black text-emerald-400 text-sm">#{o.id}</span>
+                        <span data-admin-pro-order-date="true" className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
                       </div>
                       <div className="text-left sm:text-right">
-                        <span className="font-black text-white text-base">{typeof formatPrice === 'function' ? formatPrice(o.totalGEL) : o.totalGEL + ' ₾'}</span>
+                        <span data-admin-pro-order-total="true" className="font-black text-white text-base">{typeof formatPrice === 'function' ? formatPrice(o.totalGEL) : o.totalGEL + ' ₾'}</span>
                       </div>
                     </div>
 
@@ -6608,7 +6608,7 @@ export default function AdminDashboardPro({
                     <div className="admin-order-card-footer flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
-                        <span className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(o.status))} px-3 py-1 rounded-xl text-[10px] font-black`}>
+                        <span data-admin-order-status={getOrderStatusFilterKey(o.status)} className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(o.status))} px-3 py-1 rounded-xl text-[10px] font-black`}>
                           {getOrderStatusFilterKey(o.status) || 'სტატუსი უცნობია'}
                         </span>
                       </div>
@@ -6727,28 +6727,28 @@ export default function AdminDashboardPro({
 
               {/* 1. მომხმარებლის სრული ინფორმაცია */}
               <div className="admin-order-customer bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
-                <h4 className="font-black text-emerald-400 text-sm mb-3">👤 მომხმარებლის სრული ინფორმაცია</h4>
+                <h4 className="font-black text-emerald-400 text-sm mb-3">მომხმარებლის ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
                   <p>სახელი და გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
                   <p>ტელეფონი: <a href={`tel:${selectedOrderForModal.phone}`} className="text-emerald-300 font-black hover:underline">📞 {selectedOrderForModal.phone}</a></p>
                   <p>ელფოსტა: <b className="text-white">{selectedOrderForModal.user_email || 'მითითებული არ არის'}</b></p>
-                  <p>სტატუსი: <span className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(selectedOrderForModal.status))} px-2.5 py-0.5 rounded-full font-bold`}>{getOrderStatusFilterKey(selectedOrderForModal.status) || 'სტატუსი უცნობია'}</span></p>
+                  <p>სტატუსი: <span data-admin-order-status={getOrderStatusFilterKey(selectedOrderForModal.status)} className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(selectedOrderForModal.status))} px-2.5 py-0.5 rounded-full font-bold`}>{getOrderStatusFilterKey(selectedOrderForModal.status) || 'სტატუსი უცნობია'}</span></p>
                   <p className="sm:col-span-2 text-slate-300 pt-1">📍 სრული მისამართი: <b className="text-white">{selectedOrderForModal.address}</b></p>
                 </div>
               </div>
 
               {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
               <div className="admin-order-items-section space-y-3">
-                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length})</h4>
+                <h4 className="font-black text-emerald-400 text-sm">შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length})</h4>
                 
                 <div className="space-y-3">
                   {normalizeOrderItems(selectedOrderForModal.items).length > 0 ? (
                     normalizeOrderItems(selectedOrderForModal.items).map((item, idx) => (
                       <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         {resolveOrderItemImage(item, products) ? (
-                          <img src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
+                          <img data-admin-pro-order-image="true" src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
-                          <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">ფოტო არ არის</div>
+                          <div data-admin-pro-order-image="true" className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">ფოტო არ არის</div>
                         )}
                         <div className="admin-order-item-info flex-1 space-y-1">
                           <h5 className="font-black text-white text-sm">{item.name}</h5>
@@ -6779,7 +6779,7 @@ export default function AdminDashboardPro({
 
               {/* 3. შეკვეთის ფინანსური დეტალები */}
               <div className="admin-order-financials bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
-                <h4 className="font-black text-emerald-400 text-sm mb-2">💳 შეკვეთის თანხა</h4>
+                <h4 className="font-black text-emerald-400 text-sm mb-2">შეკვეთის თანხა</h4>
                 <p className="text-slate-400 text-[11px] leading-relaxed">გადახდის მეთოდი და გადახდის სტატუსი ამ შეკვეთის მონაცემებში ხელმისაწვდომი არ არის.</p>
                 {selectedOrderForModal.checkoutBreakdown && (
                   <div className="space-y-2 border-y border-slate-800 py-3 text-sm">
