@@ -123,6 +123,23 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
+        if(tab==='analytics'){
+          assert.equal(await shell.locator('[data-admin-pro-finance-kpi]').count(),8,'All eight financial KPI cards retained');
+          assert.ok(await shell.locator('[data-admin-pro-finance-state]').isVisible());
+          const period=shell.locator('#admin-analytics-period');
+          await period.selectOption('30');
+          assert.equal(await period.inputValue(),'30');
+          await period.selectOption('all');
+        }
+        if(tab==='calculator'){
+          const cost=shell.locator('#admin-calc-purchase-cost'),price=shell.locator('#admin-calc-selling-price');
+          const oldCost=await cost.inputValue(),oldPrice=await price.inputValue();
+          await cost.fill('100');
+          await price.fill('0');
+          assert.equal(await shell.locator('[data-admin-pro-calculator-net]').getAttribute('data-admin-pro-calculator-net'),'loss');
+          await cost.fill(oldCost);
+          await price.fill(oldPrice);
+        }
         if(tab==='inventory'){
           assert.equal(await shell.locator('[data-admin-pro-inventory-summary="history"] > div').count(),3,'Three inventory history metrics remain');
         }
