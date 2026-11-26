@@ -639,6 +639,28 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.ok(await palette.evaluate(node=>node.open),'Shortcut opens existing palette without modifying a setting');
           await palette.locator(':scope > summary').click();
           assert.deepEqual(writes,[],'Opening editor sections never writes settings');
+          // Exercise the actual preview's document-capture guard against a
+          // populated support ticket, without allowing any server mutation.
+          const previewModule=editor.locator('[data-admin-pro-editor-preview-tools] select');
+          const initialModule=await previewModule.inputValue();
+          await previewModule.selectOption('support');
+          const previewTicket=shell.locator('.admin-support-ticket').first();
+          await previewTicket.waitFor({state:'visible'});
+          const previewStatus=previewTicket.locator('[data-admin-pro-ticket-status]');
+          const beforeStatus=await previewStatus.getAttribute('data-admin-pro-ticket-status');
+          const statusAction=previewTicket.locator('.admin-support-status-actions > button[aria-pressed="false"]:not(:disabled)').first();
+          await statusAction.waitFor({state:'visible'});
+          const intercepted=await statusAction.evaluate(button=>{
+            const click=new MouseEvent('click',{bubbles:true,cancelable:true});
+            const keyboard=new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
+            const clickCancelled=!button.dispatchEvent(click)&&click.defaultPrevented;
+            const keyCancelled=!button.dispatchEvent(keyboard)&&keyboard.defaultPrevented;
+            return {clickCancelled,keyCancelled};
+          });
+          assert.deepEqual(intercepted,{clickCancelled:true,keyCancelled:true},'Real admin preview blocks pointer and keyboard status actions');
+          assert.equal(await previewStatus.getAttribute('data-admin-pro-ticket-status'),beforeStatus,'Preview cannot change ticket status');
+          assert.deepEqual(writes,[],'Preview actions cannot call a mutation endpoint');
+          await previewModule.selectOption(initialModule);
         }
         if(tab==='products'){
           const productSearch=shell.getByRole('searchbox',{name:'პროდუქტის ძებნა'});

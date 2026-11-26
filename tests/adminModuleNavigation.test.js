@@ -43,3 +43,12 @@ test('storefront draft saving is settings-only and publishing remains owner-only
   assert.match(source, /hasModulePermission\('settings'\) && \(/);
   assert.match(source, /isOwner && \(/);
 });
+
+
+test('Atelier admin preview remains owner-only and its appearance is separate from persistence',()=>{
+ assert.match(source,/admin_visual_editor:\s*'owner'/);
+ assert.ok(source.includes("visibleAdminTab === 'admin_visual_editor' && isOwner && ("));
+ assert.ok(source.includes('if (!adminLoggedIn || !isOwner || !adminVisualDesignReady) return;'));
+ assert.ok(source.includes('buildAdminPanelVisualStyle(resolveAdminWorkspaceAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))'));
+ assert.ok(!source.includes('saveAdminPanelVisualDesignToCloud(effectiveAdminVisualDesign'));
+});
