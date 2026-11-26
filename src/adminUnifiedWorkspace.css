@@ -1141,3 +1141,9 @@
     overflow-wrap: normal;
   }
 }
+
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(button, select, textarea, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])) {
+    min-height: 44px !important;
+  }
+}
