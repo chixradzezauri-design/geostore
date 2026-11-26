@@ -1318,3 +1318,129 @@
     box-sizing: border-box;
   }
 }
+
+/* Second video review: operational density, readable supply summaries, and
+   an independent assistant/log workspace. No data or action changes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-audit-logs-panel,.admin-purchase-workspace,.admin-supplier-workspace,.admin-unified-supply-context) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  color: var(--av-text) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-chat {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  padding: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [data-admin-pro-assistant-role] {
+  max-inline-size: 92% !important;
+  min-inline-size: 0;
+  padding: 10px 12px !important;
+  line-height: 1.65;
+  font-size: 13px !important;
+  overflow-wrap: anywhere;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [data-admin-pro-assistant-role="assistant"] {
+  background: var(--av-surface) !important;
+  border: 1px solid var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [data-admin-pro-assistant-role="user"] {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [aria-label="სწრაფი კითხვები"] > button,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > button {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border) !important;
+  min-height: 44px;
+  white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer > input { min-inline-size: 0; width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer > button {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  min-height: 44px;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel [data-admin-pro-supply-metric] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel [data-admin-pro-supply-metric] > p {
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel [data-admin-pro-supply-metric] > p:last-child,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-pro-purchase-total > strong {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel :is(.admin-purchase-workspace,.admin-supplier-workspace) p.text-amber-200 {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel :is(.admin-purchase-workspace,.admin-supplier-workspace) p.text-emerald-300 {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-audit-log-row {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  box-shadow: none !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel [data-admin-pro-log-action] {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 13px !important;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel [data-admin-pro-log-time] {
+  color: var(--av-muted) !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > div { flex: 1 1 180px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel nav[aria-label="აქტივობების ისტორიის გვერდები"] > button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  font-size: 12px !important;
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer { grid-template-columns: minmax(0,1fr); }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [aria-label="სწრაფი კითხვები"] > button { flex: 1 1 120px; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > div { flex-basis: 100%; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > button { flex: 1 1 120px; }
+}
+@container (min-width: 260px) and (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-purchase-workspace .grid:has(> [data-admin-pro-supply-metric]) {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-purchase-workspace .grid:has(> [data-admin-pro-supply-metric]) > [data-admin-pro-supply-metric]:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
