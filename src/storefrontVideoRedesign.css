@@ -2395,8 +2395,6 @@
   .geostore-shell.geostore-fashion-store .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {grid-template-columns:repeat(min(4,var(--gs-product-columns,4)),minmax(0,1fr))!important;}
 }
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]).gs-catalog-product-grid--single {grid-template-columns:minmax(0,min(100%,320px))!important;}
-.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter > input {width:100%!important;}
-.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter {gap:8px!important;}
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-select {font-size:max(16px,var(--gs-video-filters-sortSelect-fontSize,16px))!important;}
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-input {font-size:max(16px,var(--gs-video-filters-input-fontSize,16px))!important;}
 @media(max-width:359px){
