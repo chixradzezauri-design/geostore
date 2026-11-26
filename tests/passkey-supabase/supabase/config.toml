@@ -1,0 +1,29 @@
+# Disposable passkey CI only. Never link to a hosted project.
+project_id = "geostore-passkey-ci"
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+[auth]
+enabled = true
+site_url = "http://localhost:4188"
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+[auth.passkey]
+enabled = true
+[auth.webauthn]
+rp_display_name = "GEOSTORE CI only"
+rp_id = "localhost"
+rp_origins = ["http://localhost:4188"]
+[studio]
+enabled = false
+[storage]
+enabled = false
+[realtime]
+enabled = false

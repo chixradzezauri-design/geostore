@@ -25,3 +25,6 @@ Private avatar state is remounted on access-scope changes, stale operation gener
 
 ## Stage 07 CI correction
 Build check on stage 06 exposed a ReferenceError in the new post-save verification (two failing regression tests). Corrected the Auth reference to use the supplied session client. Existing assertions for persisted values and stale sessions remain intact; rerun CI before release.
+
+## Stage 08 isolated passkey release rehearsal
+Stage78 real Auth two-device avatar persistence and account isolation succeeded at 8f73f36. Added a separate disposable local passkey Auth workflow using pinned CLI 2.106.0, Chromium CDP virtual authenticator and the existing production helper functions. Tests require signed registration, real Auth-issued session, rename, deletion, rejection after revocation and password fallback. No hosted credentials or production configuration are used. The actual physical Face ID/PIN interaction and hosted RP configuration remain manual release gates. Source: https://supabase.com/docs/guides/auth/passkeys and https://supabase.com/docs/guides/local-development/cli/config .
