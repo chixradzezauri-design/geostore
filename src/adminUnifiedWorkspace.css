@@ -630,8 +630,21 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-row { grid-template-columns: minmax(0,1fr) auto !important; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(4,44px) !important; width: auto !important; }
 }
-@media (max-width: 359px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%,44px),1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity > [data-admin-pro-category-photo],
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity > .admin-unified-category-placeholder {
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > [data-admin-pro-category-photo] {
+    flex-basis: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
 }
 
 /* Stage 09 — finance and analytics. Presentation, not accounting. */

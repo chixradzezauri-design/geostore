@@ -180,6 +180,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return rect.left < bounds.left - 2 || rect.right > bounds.right + 2 || rect.height < 43.5 ? [{tag:node.tagName, className:typeof node.className==='string'?node.className.slice(0,120):'',width:Math.round(rect.width),height:Math.round(rect.height)}] : [];
               });
             });
+            if (tab === 'categories' && targetWidth === 320) {
+              const buttons = shell.locator('.admin-category-card .admin-video-category-actions').first().locator('button');
+              const positions = await buttons.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().toJSON()));
+              assert.equal(positions.length, 4);
+              assert.ok(positions.every(box => box.width >= 43.5 && box.height >= 43.5 && Math.abs(box.top - positions[0].top) < 2), 'Four category actions fit on one row when each has a 44px touch target');
+            }
             if (tab === 'support' && targetWidth === 320) {
               const ticket = shell.locator('.admin-support-ticket').first();
               await ticket.waitFor();
