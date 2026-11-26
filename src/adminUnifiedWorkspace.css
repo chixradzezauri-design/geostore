@@ -2109,9 +2109,12 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi {
   display: grid !important;
-  grid-template-rows: auto auto 1fr;
+  grid-template-columns: minmax(0,1fr);
+  grid-template-rows: auto auto minmax(0,1fr);
   align-content: start;
+  justify-items: stretch;
   min-inline-size: 0;
+  height: auto !important;
   gap: 6px !important;
   border-radius: var(--admin-vd-cardRadius-active,12px) !important;
   background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
@@ -2123,7 +2126,11 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {
   display: grid !important;
   grid-template-columns: minmax(0,1fr) 30px;
+  grid-template-rows: auto;
   align-items: start !important;
+  min-block-size: 0;
+  width: 100%;
+  box-sizing: border-box;
   gap: 8px !important;
   min-inline-size: 0;
   font-size: 12px !important;
@@ -2131,11 +2138,17 @@
   color: var(--av-text) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > span {
+  grid-column: 1;
+  grid-row: 1;
   min-inline-size: 0;
+  max-inline-size: 100%;
   white-space: normal !important;
-  overflow-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > svg {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
   box-sizing: border-box;
   width: 30px !important;
   height: 30px !important;
@@ -2233,10 +2246,17 @@
   letter-spacing: normal;
   font-weight: 600 !important;
 }
-@container (min-width: 290px) and (max-width: 799px) {
+/* WebKit 320px regression: do not squeeze long Georgian KPI labels into two tracks. */
+@container (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {grid-template-columns: minmax(0,1fr) !important;}
+}
+@container (min-width: 360px) and (max-width: 799px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {
     grid-template-columns: repeat(2,minmax(0,1fr)) !important;
   }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {grid-template-columns: minmax(0,1fr) !important;}
 }
 @media (max-width: 479px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi {

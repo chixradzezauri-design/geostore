@@ -403,13 +403,19 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   const label = card.querySelector(':scope > span:first-child > span').getBoundingClientRect();
                   const icon = card.querySelector(':scope > span:first-child > svg').getBoundingClientRect();
                   const value = card.querySelector(':scope > strong').getBoundingClientRect();
-                  if(label.right > icon.left + 2 || icon.right > bounds.right + 2 || value.top < Math.max(label.bottom,icon.bottom)-2 || bounds.height < 44) issues.push('KPI label/icon/value collision');
+                  if(label.right > icon.left + 2 || icon.right > bounds.right + 2 || value.top < Math.max(label.bottom,icon.bottom)-2 || bounds.height < 44) {
+                    issues.push({issue:'KPI label/icon/value collision',tone:card.dataset.adminKpiTone,card:bounds.toJSON(),label:label.toJSON(),icon:icon.toJSON(),value:value.toJSON(),tracks:getComputedStyle(card.querySelector(':scope > span:first-child')).gridTemplateColumns});
+                  }
                 }
                 const overlaps = (a,b) => Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
                 for(const list of [cards,panels]) for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++) if(overlaps(list[i].getBoundingClientRect(),list[j].getBoundingClientRect())) issues.push('Dashboard card overlap');
                 return issues;
               });
               assert.deepEqual(overviewIssues,[],engine+' '+targetWidth+'px: dashboard tracks do not collide');
+              if(targetWidth===320){
+                const columns=await shell.locator('.admin-command-kpis').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+                assert.equal(columns,1,'320px dashboard has one readable KPI column');
+              }
               const toneBorders=await shell.locator('.admin-command-kpi[data-admin-kpi-tone]').evaluateAll(cards=>cards.map(card=>{const s=getComputedStyle(card);return {tone:card.dataset.adminKpiTone,color:s.borderTopColor,width:parseFloat(s.borderTopWidth)};}));
               assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
               assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');

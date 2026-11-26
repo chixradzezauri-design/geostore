@@ -140,3 +140,12 @@ test('Atelier cascade uses one primary product edit treatment and preserves KPI 
  assert.ok(!css.includes('background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset))'));
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('KPI semantic borders survive card border-color shorthand'));
 });
+
+
+test('Atelier narrow dashboard keeps explicit label and icon tracks and one column at 320px',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ assert.match(css,/@media \(max-width: 359px\)\s*\{[^}]*\.admin-command-kpis\s*\{grid-template-columns: minmax\(0,1fr\) !important;/);
+ assert.match(css,/\.admin-command-kpi > span:first-child > span\s*\{[^}]*grid-column: 1;[^}]*overflow-wrap: anywhere !important;/);
+ assert.match(css,/\.admin-command-kpi > span:first-child > svg\s*\{[^}]*grid-column: 2;/);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('320px dashboard has one readable KPI column'));
+});
