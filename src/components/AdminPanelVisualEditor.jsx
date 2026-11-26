@@ -1520,7 +1520,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-300">GEOSTORE / ADMIN STUDIO</p>
           <h2 id="admin-visual-editor-title" className="mt-1 text-lg font-black text-white">ადმინ პანელის დიზაინის რედაქტორი</h2>
           <p className="mt-1 text-xs leading-5 text-slate-400">ცვლილებები მყისიერად აისახება პანელზე და ინახება საერთო საცავში, რათა იმავე ადმინ-ანგარიშით ყველა მოწყობილობაზე გამოჩნდეს. მაღაზიის მომხმარებლის მხარეს არ ცვლის.</p>
-          <p role="status" aria-live="polite" className={`mt-2 text-[11px] font-semibold ${syncStatus === 'error' || syncStatus === 'conflict' ? 'text-rose-300' : syncStatus === 'saving' || syncStatus === 'loading' ? 'text-amber-200' : 'text-emerald-300'}`}>
+          <p data-admin-pro-editor-sync={syncStatus} role="status" aria-live="polite" className={`mt-2 text-[11px] font-semibold ${syncStatus === 'error' || syncStatus === 'conflict' ? 'text-rose-300' : syncStatus === 'saving' || syncStatus === 'loading' ? 'text-amber-200' : 'text-emerald-300'}`}>
             {syncStatus === 'loading' ? 'საერთო დიზაინი იტვირთება…' : syncStatus === 'saving' ? 'ცვლილებები ყველა მოწყობილობისთვის ინახება…' : syncStatus === 'error' ? 'საერთო შენახვა ვერ მოხერხდა — ცვლილებები ჯერ სხვა მოწყობილობაზე არ გამოჩნდება.' : syncStatus === 'conflict' ? 'კონფლიქტი: სხვა მოწყობილობის უფრო ახალი ვერსია არსებობს.' : syncStatus === 'saved' ? 'შენახულია საერთო საცავში — ხელმისაწვდომია ყველა მოწყობილობიდან.' : 'საერთო შენახვის მდგომარეობა ჯერ არ დადასტურებულა.'}
           </p>
           {syncStatus === 'error' && (
@@ -1545,7 +1545,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       </header>
 
       <AdminDesignTemplates design={normalized} onChange={commitChange} syncStatus={syncStatus}/>
-      <section className="rounded-2xl border border-sky-400/25 bg-slate-950/70 p-3 space-y-3" aria-label="რეალური ადმინპანელის Preview">
+      <section data-admin-pro-editor-preview-tools className="rounded-2xl border border-sky-400/25 bg-slate-950/70 p-3 space-y-3" aria-label="რეალური ადმინპანელის Preview">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h3 className="text-sm font-black text-white">ცოცხალი ადმინპანელის Preview</h3>
@@ -1577,7 +1577,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </section>
 
-      <div className="admin-visual-viewport-picker grid grid-cols-3 gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
+      <div data-admin-pro-editor-devices className="admin-visual-viewport-picker grid grid-cols-3 gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
         {VIEWPORTS.map(item => (
           <button
             key={item.id}

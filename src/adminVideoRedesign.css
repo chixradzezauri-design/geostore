@@ -1582,3 +1582,36 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-create-fields {grid-template-columns:minmax(0,1fr)!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-delivery-fee-fields {grid-template-columns:minmax(0,1fr)!important}
 }
+
+/* Admin PRO 13 — visual editor chrome only; do not style the rendered storefront/character previews. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > header {min-width:0;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > header button {min-height:44px;max-width:100%;white-space:normal;line-height:1.5}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-sync] {--editor-bg:#e7edf3;--editor-fg:#39495a}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-editor-sync="saved"],[data-admin-pro-editor-save][role="status"],[data-admin-pro-character-state="published"]) {--editor-bg:#dff3eb;--editor-fg:#14594a}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-editor-sync="error"],[data-admin-pro-editor-save][role="alert"]) {--editor-bg:#fce5e8;--editor-fg:#9c2538}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-editor-sync="conflict"],[data-admin-pro-editor-sync="saving"],[data-admin-pro-editor-sync="loading"],[data-admin-pro-character-state="draft"],[data-admin-pro-character-state="unknown"]) {--editor-bg:#fff0cc;--editor-fg:#754300}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-editor-sync],[data-admin-pro-editor-save],[data-admin-pro-character-state]) {background:var(--editor-bg)!important;color:var(--editor-fg)!important;-webkit-text-fill-color:currentColor!important;border:1px solid currentColor!important;border-radius:8px!important;padding:10px 12px!important;line-height:1.6!important;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-character-state] :is(p,strong) {color:var(--editor-fg)!important;-webkit-text-fill-color:currentColor!important;line-height:1.6}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-character-state] .grid > div {border-color:currentColor!important;min-width:0;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-editor-preview-tools],[data-admin-pro-editor-history],.admin-visual-editor-panel > .admin-studio-group,.gs-visual-editor-controls > details,.gs-character-admin > .gs-character-admin-section) {min-width:0;max-width:100%;border-color:var(--av-border)!important;background:var(--av-inset)!important;box-shadow:none!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-visual-editor-panel > .admin-studio-group,.gs-visual-editor-controls > details,[data-admin-pro-editor-history],.gs-character-admin > .gs-character-admin-section) > summary {min-height:44px;cursor:pointer;line-height:1.55;color:var(--av-text)!important;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-visual-editor-panel > .admin-studio-group,.gs-visual-editor-controls > details,[data-admin-pro-editor-history],.gs-character-admin > .gs-character-admin-section)[open] > summary {border-bottom:1px solid var(--av-border);padding-bottom:8px}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-devices] {min-width:0;max-width:100%;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--av-inset)!important;border:1px solid var(--av-border);border-radius:10px;padding:4px}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-devices] button {min-height:44px;min-width:0;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;line-height:1.4}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-devices] button[aria-pressed="false"] {background:var(--av-surface)!important;color:var(--av-text)!important;-webkit-text-fill-color:currentColor!important;border-color:var(--av-border)!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-devices] button[aria-pressed="true"] {background:#dff3eb!important;color:#14594a!important;-webkit-text-fill-color:currentColor!important;border-color:#82b7a1!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-editor-devices] button,[data-admin-pro-editor-history] > summary,.admin-studio-group > summary,.gs-visual-editor-controls > details > summary,.gs-character-admin-section > summary):focus-visible {outline:2px solid var(--av-accent);outline-offset:2px}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin-status > div {min-width:0;background:var(--av-inset)!important;border-color:var(--av-border)!important;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin-status > div > span {color:var(--av-muted)!important;line-height:1.5}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin-status > div > strong {color:var(--av-text)!important;line-height:1.5;font-variant-numeric:tabular-nums}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-presets] {min-width:0;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-concierge-preset-controls :is(select,button) {min-height:44px;min-width:0;max-width:100%;white-space:normal}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-concierge-summary > button {min-height:44px;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:767px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-devices] {width:100%}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-editor-devices] button {padding-inline:4px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-visual-editor-preview-column > div:first-child > div {min-width:0;max-width:100%}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin-status {grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-concierge-preset-controls {grid-template-columns:minmax(0,1fr)!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-concierge-preset-controls select {font-size:16px}
+}

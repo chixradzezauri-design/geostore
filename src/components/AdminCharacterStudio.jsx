@@ -88,7 +88,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">12 პერსონაჟი · რჩევები · შეთავაზებები</p></div>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
     </div>
-    <div data-character-publish-status role="status" className="rounded-lg border border-slate-600 bg-slate-950 p-3 text-xs text-slate-200 space-y-1">
+    <div data-character-publish-status data-admin-pro-character-state={!publishedKnown?"unknown":draftDiffers?"draft":"published"} role="status" className="rounded-lg border border-slate-600 bg-slate-950 p-3 text-xs text-slate-200 space-y-1">
       <p className="font-bold">{publishedKnown?(publishedSettings.enabled?'საჯარო საიტზე: ჩართულია':'საჯარო საიტზე: გამორთულია'):'საჯარო ვერსია ჯერ ვერ დადასტურდა'}</p>
       {draftDiffers?<p className="text-amber-300">მონახაზი განსხვავდება გამოქვეყნებული ვერსიისგან. ზედა ღილაკით „ცვლილებების გამოქვეყნება“ გაააქტიურეთ საიტზე.</p>:<p>საიტზე გამოჩნდება მხოლოდ დადასტურებული გამოქვეყნებული პარამეტრები. ადმინისტრატორსაც შეუძლია საჯარო გვერდზე ნახვა.</p>}
       <p>ახალი გამოქვეყნებული პარამეტრები ხილულ გვერდზე ავტომატურად მოწმდება ყოველ 30 წამში და ჩანართზე დაბრუნებისას.</p>
@@ -97,7 +97,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <p className="text-slate-300">ტესტი გადაგიყვანს მთავარ გვერდზე და ამ ბრაუზერში ერთხელ გაიმეორებს გამოქვეყნებულ მისალმებას, სიხშირის ლიმიტის მიუხედავად. მონახაზი არ ქვეყნდება და სხვა მომხმარებლების პარამეტრები არ იცვლება.</p>
     </div>
     <div className="gs-character-admin-status" aria-label="Character Studio მდგომარეობა">
-      <div><span>საიტის რეჟიმი</span><strong>{s.enabled?'ჩართული':'გამორთული'}</strong></div>
+      <div><span>საიტის რეჟიმი (მონახაზი)</span><strong>{s.enabled?'ჩართული':'გამორთული'}</strong></div>
       <div><span>პერსონაჟი</span><strong>{s.rotation==='fixed'?selectedCharacter.name:'ავტომატური შერჩევა'}</strong></div>
       <div><span>სცენარები</span><strong>{enabledScenarios}/{Object.keys(CHARACTER_SCENARIOS).length}</strong></div>
       <div><span>დაგეგმილი ღონისძიებები</span><strong>{s.calendarEnabled?enabledEvents:'გამორთული'}</strong></div>
