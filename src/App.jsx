@@ -4207,7 +4207,7 @@ export default function App() {
           <div className="gs-cart-page gs-cart-layout space-y-6">
             <h2 className="gs-cart-title text-xl font-black text-white tracking-tight flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-400" />
-              {t.cart}
+              {t.cart} <span className="gs-cart-count">{cart.reduce((sum,item)=>sum + Number(item.quantity || 0),0)}</span>
             </h2>
 
             {CART_SYNC_ENABLED && !authLoading && !adminLoggedIn && currentUser?.id && activeCartOwnerRef.current.userId===currentUser.id && <Suspense fallback={null}><CartSyncPanel key={currentUser.id+':'+wishlistSyncScopeRef.current.epoch} client={supabase} getScope={()=>wishlistSyncScopeRef.current} getCart={()=>cartRef.current} validateStock={lines=>catalogueVerifiedEpoch===productsAccessEpoch.current&&validateCartReviewStock(lines,products)} planRestore={planSyncedCartRestore} restoreLine={restoreSyncedCartLine} lang={currentLang}/></Suspense>}
@@ -4272,9 +4272,10 @@ export default function App() {
                             {currentLang === 'en' ? 'Gift message:' : currentLang === 'ru' ? 'Текст открытки:' : 'სასაჩუქრე ტექსტი:'} {item.giftMessage}
                           </p>
                         )}
-                        <p className="gs-cart-item-price text-emerald-400 font-bold">
-                          {formatPrice(item.priceGEL)} × {item.quantity}
-                        </p>
+                        <div className="gs-cart-line-pricing">
+                          <p className="gs-cart-item-price text-emerald-400 font-bold">{formatPrice(item.priceGEL)} × {item.quantity}</p>
+                          <strong className="gs-cart-line-total" aria-label={currentLang === 'en' ? 'Item total' : currentLang === 'ru' ? 'Сумма позиции' : 'პროდუქტის ჯამი'}>{formatPrice(calculateCartSubtotalGEL([item]))}</strong>
+                        </div>
                         <div role="group" className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? `Quantity for ${item.name}` : currentLang === 'ru' ? `Количество: ${item.name}` : `რაოდენობა: ${item.name}`}>
                           <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? `Decrease quantity: ${item.name}` : currentLang === 'ru' ? `Уменьшить количество: ${item.name}` : `რაოდენობის შემცირება: ${item.name}`} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
                           <span aria-live="polite" aria-atomic="true" className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
@@ -4296,6 +4297,7 @@ export default function App() {
                 </div>
 
                 <div className="gs-cart-summary bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
+                  <h3 className="gs-cart-summary-heading">{currentLang === 'en' ? 'Order summary' : currentLang === 'ru' ? 'Итого заказа' : 'შეკვეთის შეჯამება'}</h3>
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs">
                       <Truck className="w-3.5 h-3.5" />
@@ -5232,6 +5234,7 @@ export default function App() {
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
         checkoutForm={checkoutForm}
+        checkoutDisplayTotal={formatPrice(cartTotalGEL)}
         setCheckoutForm={setCheckoutForm}
         handlePlaceOrder={handlePlaceOrder}
         isSubmittingOrder={isSubmittingOrder}
