@@ -64,8 +64,8 @@ test('focus and reduced-motion protections are scoped to storefront and admin', 
 
 
 test('product detail dialog is labelled, modal and keyboard closable without altering the purchase handler', () => {
-  assert.match(store, /role="dialog" aria-modal="true" aria-labelledby="gs-product-dialog-title"/);
-  assert.match(store, /id="gs-product-dialog-title"/);
+  assert.match(store, /role="dialog" aria-modal="true" aria-labelledby="gs-product-name"/);
+  assert.match(store, /<h2[^>]*id="gs-product-name"[^>]*>\{selectedProduct\.name\}/);
   assert.match(store, /ref=\{productCloseButtonRef\}/);
   assert.match(store, /productCloseButtonRef\.current\?\.focus\(\)/);
   assert.match(store, /returnTarget\?\.isConnected/);
