@@ -30,6 +30,10 @@ export default function Modals({
   authForm,
   setAuthForm,
   handleAuthSubmit,
+  passkeyAvailable=false,
+  passkeyBusy=false,
+  passkeyFeedback='',
+  onPasskeySignIn,
   isTermsOpen,
   setIsTermsOpen,
   isWarrantyOpen,
@@ -846,6 +850,10 @@ export default function Modals({
               </button>
             </div>
 
+            {authMode==='login'&&passkeyAvailable&&<div className="gs-passkey-login">
+              <button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={onPasskeySignIn}>{currentLang==='en'?'Sign in with Face ID / device passkey':currentLang==='ru'?'Войти с Face ID / ключом устройства':'Face ID / სწრაფი შესვლა'}</button>
+              {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
+            </div>}
             <form onSubmit={handleAuthSubmit} autoComplete="on" className="space-y-4 text-xs animate-in fade-in">
               {authMode === 'register' && (
                 <>
@@ -893,7 +901,7 @@ export default function Modals({
                 {passwordHelpOpen&&<p id="gs-password-manager-help">{passwordWords.hint}</p>}
               </div>}
               {authMode === 'reset-request' && <p className="text-[11px] text-slate-400">{copy.resetEmailHint}</p>}
-              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
+              <button type="submit" disabled={passkeyBusy} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2 disabled:opacity-50">
                 {authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
               </button>
             </form>

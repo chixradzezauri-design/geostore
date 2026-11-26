@@ -2,6 +2,8 @@ import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
 import CustomerPersonalOffers from './components/CustomerPersonalOffers.jsx';
 import CustomerPurchaseStatistics from './components/CustomerPurchaseStatistics.jsx';
 import {readLoginFields,offerBrowserPasswordSave} from './utils/customerPasswordManager.js';
+import {customerPasskeyAvailable,registerCustomerPasskey,signInCustomerPasskey} from './utils/customerPasskeys.js';
+import './components/customerPasskeys.css';
 import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
 import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
@@ -790,6 +792,10 @@ export default function App() {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
   const authSubmitLock = useRef(false);
+  const [passkeyBusy,setPasskeyBusy]=useState(false);
+  const [passkeyFeedback,setPasskeyFeedback]=useState('');
+  const passkeyAvailable=customerPasskeyAvailable(typeof window==='undefined'?null:window,supabase.auth);
+  useEffect(()=>{setPasskeyFeedback('');},[currentUser?.id]);
   const pendingCheckoutRef = useRef(null);
   const [checkoutError, setCheckoutError] = useState('');
   const [checkoutErrorField, setCheckoutErrorField] = useState(null);
@@ -2923,6 +2929,39 @@ export default function App() {
     }
   };
 
+  const passkeyMessage = (success) => success
+    ? (currentLang==='en'?'Passkey registered.':currentLang==='ru'?'Ключ доступа зарегистрирован.':'სწრაფი შესვლის გასაღები დაემატა.')
+    : (currentLang==='en'?'Passkey could not be verified. Try again or use your password.':currentLang==='ru'?'Не удалось проверить ключ доступа. Повторите попытку или используйте пароль.':'სწრაფი შესვლის დადასტურება ვერ მოხერხდა. სცადე ხელახლა ან გამოიყენე პაროლი.');
+  const handleRegisterPasskey = async () => {
+    const owner=currentUser?.id;
+    const epoch=customerPrivateEpochRef.current;
+    const stillCurrent=()=>customerPrivateEpochRef.current===epoch&&activeCartOwnerRef.current.userId===owner;
+    if(!passkeyAvailable||!owner||authLoading||adminLoggedIn||authSubmitLock.current||!stillCurrent())return;
+    authSubmitLock.current=true;setPasskeyBusy(true);setPasskeyFeedback('');
+    try{
+      await registerCustomerPasskey(supabase.auth,owner,()=>{
+        if(!stillCurrent())throw new Error('passkey_session_changed');
+        return coordinatedAuth('registerPasskey');
+      });
+      if(stillCurrent())setPasskeyFeedback(passkeyMessage(true));
+    }catch{if(stillCurrent())setPasskeyFeedback(passkeyMessage(false));}
+    finally{authSubmitLock.current=false;setPasskeyBusy(false);}
+  };
+  const handlePasskeySignIn = async () => {
+    if(!passkeyAvailable||currentUser?.id||authLoading||authMode!=='login'||authSubmitLock.current)return;
+    authSubmitLock.current=true;setPasskeyBusy(true);setPasskeyFeedback('');
+    try{
+      const {data,error}=await supabase.auth.getSession();
+      if(error||data?.session)throw new Error('passkey_session_changed');
+      await signInCustomerPasskey(()=>coordinatedAuth('signInWithPasskey'));
+      // SIGNED_IN from the Auth SDK is the only authority for account state.
+      // Existing permission resolution and admin MFA remain unchanged.
+      setIsAuthOpen(false);
+      setAuthForm({name:'',phone:'',email:'',password:''});
+    }catch{setPasskeyFeedback(passkeyMessage(false));}
+    finally{authSubmitLock.current=false;setPasskeyBusy(false);}
+  };
+
   // Supabase Auth რეგისტრაცია და შესვლა.
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
@@ -4425,13 +4464,10 @@ export default function App() {
                   {t.security}
                 </h3>
 
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  {currentLang === 'en'
-                    ? 'Account security and password management are handled by Supabase Auth. PIN and Face ID sign-in are disabled in this version because the previous implementation did not provide reliable authentication.'
-                    : currentLang === 'ru'
-                      ? 'Защита аккаунта и управление паролем обеспечиваются Supabase Auth. Вход по PIN и Face ID отключён в этой версии, поскольку прежняя реализация не обеспечивала надёжную аутентификацию.'
-                      : 'ანგარიშის დაცვა და პაროლის მართვა ხორციელდება Supabase Auth-ის მეშვეობით. PIN და Face ID ფუნქციები ამ ვერსიაში გამორთულია, რადგან ძველი იმპლემენტაცია რეალურ უსაფრთხო ავტორიზაციას არ უზრუნველყოფდა.'}
-                </p>
+                <p className="gs-passkey-description">{currentLang==='en'?'Account protection is managed by Supabase Auth. Quick sign-in uses your device passkey; GEOSTORE never collects a face scan or device PIN.':currentLang==='ru'?'Защита аккаунта обеспечивается Supabase Auth. Быстрый вход использует ключ устройства; GEOSTORE не получает биометрию или PIN.':'ანგარიშს იცავს Supabase Auth. სწრაფი შესვლა იყენებს მოწყობილობის გასაღებს; GEOSTORE არ იღებს სახის სკანს ან მოწყობილობის PIN-ს.'}</p>
+                {passkeyAvailable&&!adminLoggedIn&&!authLoading&&<button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={handleRegisterPasskey}>{currentLang==='en'?'Add Face ID / device passkey':currentLang==='ru'?'Добавить Face ID / ключ устройства':'Face ID / სწრაფი შესვლის გააქტიურება'}</button>}
+                {!passkeyAvailable&&<p className="gs-passkey-description">{currentLang==='en'?'Quick sign-in is not available on this device or version yet. Password login remains available.':currentLang==='ru'?'Быстрый вход пока недоступен на этом устройстве или в этой версии. Вход по паролю доступен.':'სწრაფი შესვლა ამ მოწყობილობაზე ან ვერსიაში ჯერ მიუწვდომელია. პაროლით შესვლა კვლავ შესაძლებელია.'}</p>}
+                {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
               </div>
 
               <button type="button" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)} className="w-full min-h-11 rounded-xl border border-amber-500/40 bg-slate-950/60 px-3 py-2 font-bold text-amber-200 disabled:opacity-50">
@@ -5192,6 +5228,10 @@ export default function App() {
         authForm={authForm}
         setAuthForm={setAuthForm}
         handleAuthSubmit={handleAuthSubmit}
+        passkeyAvailable={passkeyAvailable&&!currentUser?.id&&!authLoading}
+        passkeyBusy={passkeyBusy}
+        passkeyFeedback={passkeyFeedback}
+        onPasskeySignIn={handlePasskeySignIn}
         isTermsOpen={isTermsOpen}
         setIsTermsOpen={setIsTermsOpen}
         isWarrantyOpen={isWarrantyOpen}
