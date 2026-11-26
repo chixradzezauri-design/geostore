@@ -149,13 +149,13 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       <div className="gs-wardrobe-hero relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-xl text-center md:text-left z-10">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" /> AI Personal Stylist & Wardrobe
+            <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" /> GEOSTORE · გარდერობი
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-snug">
-            შენი ციფრული გარდერობი და AI სტილისტი 👗 👟
+            ციფრული გარდერობი და სტილისტი
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-            ატვირთე შენი ტანსაცმელი, შექმენი ციფრული კოლექცია და მიიღე AI რეკომენდაციები ამინდისა და ღონისძიების მიხედვით!
+            დაამატე ტანსაცმელი და შეარჩიე კომბინაციები ამინდისა და ღონისძიების მიხედვით.
           </p>
           <button 
             onClick={() => setIsAddModalOpen(true)}
@@ -236,7 +236,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl transition shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isGenerating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-              {isGenerating ? 'ვაწყობ კომბინაციას...' : 'ლუქის შეთავაზება 🚀'}
+              {isGenerating ? 'ვაწყობ კომბინაციას...' : 'ლუქის შეთავაზება'}
             </button>
           </div>
         </div>
@@ -279,7 +279,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
                     {generatedOutfit.storeAddon.image ? <img src={generatedOutfit.storeAddon.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                   </div>
-                  <h4 className="font-bold text-white text-xs line-clamp-1">{generatedOutfit.storeAddon.name}</h4>
+                  <h4 className="font-bold text-white text-xs">{generatedOutfit.storeAddon.name}</h4>
                   <p className="text-emerald-400 font-black text-xs">{formatPrice ? formatPrice(generatedOutfit.storeAddon.priceGEL) : `${generatedOutfit.storeAddon.priceGEL} ₾`}</p>
                   
                   {addToCart && (
@@ -325,7 +325,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                 </div>
                 <div>
                   <span className="text-[9px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">{item.category}</span>
-                  <h4 className="font-bold text-white text-xs line-clamp-1 mt-1">{item.name}</h4>
+                  <h4 className="font-bold text-white text-xs mt-1">{item.name}</h4>
                   <p className="text-slate-400 text-[10px]">{item.color} • {item.season}</p>
                 </div>
                 <button 
@@ -350,28 +350,28 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
             <h3 className="text-base font-black text-white border-b border-emerald-500/20 pb-3">ახალი ნივთის დამატება გარდერობში</h3>
 
             <div className="space-y-1.5">
-              <label className="text-slate-300 font-bold">დასახელება *</label>
-              <input type="text" placeholder="მაგ: შავი ტყავის ქურთუკი" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400" />
+              <label htmlFor="gs-wardrobe-name" className="text-slate-300 font-bold">დასახელება *</label>
+              <input id="gs-wardrobe-name" type="text" placeholder="მაგ: შავი ტყავის ქურთუკი" required value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold">კატეგორია</label>
-                <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-bold outline-none cursor-pointer">
+                <label htmlFor="gs-wardrobe-category" className="text-slate-300 font-bold">კატეგორია</label>
+                <select id="gs-wardrobe-category" value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-bold outline-none cursor-pointer">
                   <option value="ტანსაცმელი">👕 ტანსაცმელი</option>
                   <option value="ფეხსაცმელი">👟 ფეხსაცმელი</option>
                 </select>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold">ფერი</label>
-                <input type="text" placeholder="მაგ: შავი" value={newItem.color} onChange={e => setNewItem({...newItem, color: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400" />
+                <label htmlFor="gs-wardrobe-color" className="text-slate-300 font-bold">ფერი</label>
+                <input id="gs-wardrobe-color" type="text" placeholder="მაგ: შავი" value={newItem.color} onChange={e => setNewItem({...newItem, color: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400" />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-slate-300 font-bold">სეზონი</label>
-              <select value={newItem.season} onChange={e => setNewItem({...newItem, season: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none cursor-pointer">
+              <label htmlFor="gs-wardrobe-season" className="text-slate-300 font-bold">სეზონი</label>
+              <select id="gs-wardrobe-season" value={newItem.season} onChange={e => setNewItem({...newItem, season: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none cursor-pointer">
                 <option value="ყველა სეზონი">ყველა სეზონი</option>
                 <option value="ზაფხული">ზაფხული</option>
                 <option value="ზამთარი / შემოდგომა">ზამთარი / შემოდგომა</option>
@@ -380,8 +380,8 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
 
             <div className="space-y-1.5">
               <label className="text-slate-300 font-bold">ატვირთეთ ფოტო ან ჩასვით URL</label>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageUpload} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-black hover:file:bg-emerald-400 cursor-pointer" />
-              <input type="text" placeholder="ან ფოტოს URL..." value={newItem.image} onChange={e => {imageGeneration.current+=1;setNewItem({...newItem, image: e.target.value});}} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400 mt-2" />
+              <input aria-label="ფოტოს არჩევა" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageUpload} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-black hover:file:bg-emerald-400 cursor-pointer" />
+              <input aria-label="ფოტოს მისამართი" type="text" placeholder="ან ფოტოს URL..." value={newItem.image} onChange={e => {imageGeneration.current+=1;setNewItem({...newItem, image: e.target.value});}} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400 mt-2" />
             </div>
 
             <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-xl transition cursor-pointer">
