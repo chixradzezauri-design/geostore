@@ -270,7 +270,17 @@ export async function runConciergeV3Smoke(browser,host){
     await page.clock.fastForward(45000);
     await scene.waitFor({state:'visible',timeout:10000});
     assert.equal(await scene.getAttribute('data-side'),'right');
-    assert.match(await scene.innerText(),/Tech Panda/);
+    // The mobile collapsed disclosure intentionally hides the greeting copy.
+    // Preserve character identity in the accessible trigger and verify the
+    // actual visible name on expansion, without weakening rotation checks.
+    assert.match(await toggle.getAttribute('aria-label'),/Tech Panda/);
+    assert.equal(await scene.locator('.gs-character-name-row').isVisible(),false,'Mobile collapsed greeting does not obscure the catalogue');
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    assert.ok(await scene.locator('.gs-character-name-row').isVisible(),'Expanded assistant displays character identity');
+    assert.match(await scene.locator('.gs-character-name-row').innerText(),/Tech Panda/);
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
     for(const [width,height] of [[640,360],[720,400]]){
       await page.setViewportSize({width,height});
       const close=scene.locator('.gs-character-dismiss');
