@@ -178,7 +178,7 @@ export default function Header({
               const name = categoryName(category);
               return <button key={category?.id || name || index} type="button" aria-pressed={activeTab === 'store' && selectedCategory === name} onClick={() => { setSelectedCategory?.(name); goTo('store'); }}>{name}</button>;
             })}
-            <button type="button" className="gs-signature-all" onClick={() => { setSelectedCategory?.('ყველა'); goTo('store'); }}>{allCategoriesLabel}</button>
+            <button type="button" className="gs-signature-all" aria-pressed={activeTab === 'store' && selectedCategory === 'ყველა'} onClick={() => { setSelectedCategory?.('ყველა'); goTo('store'); }}>{allCategoriesLabel}</button>
           </nav>
         )}
 
@@ -195,7 +195,7 @@ export default function Header({
         </button>
         {signature && <div className="gs-signature-actions">
           <button type="button" aria-label={searchLabel} aria-expanded={activeTab === 'store' && searchVisible} aria-controls={activeTab === 'store' ? searchId : undefined} onClick={openSearch}><Search aria-hidden="true" /></button>
-          <button type="button" aria-label={`${t.wishlist || 'ფავორიტები'} (${wishlistCount})`} onClick={() => goTo('wishlist')}><Heart aria-hidden="true" />{wishlistCount > 0 && <span aria-hidden="true">{wishlistCount}</span>}</button>
+          <button type="button" className="gs-signature-wishlist-action" aria-label={`${t.wishlist || 'ფავორიტები'} (${wishlistCount})`} onClick={() => goTo('wishlist')}><Heart aria-hidden="true" />{wishlistCount > 0 && <span aria-hidden="true">{wishlistCount}</span>}</button>
           <button type="button" aria-label={t.profile || 'პროფილი'} onClick={openProfile}><User aria-hidden="true" /></button>
           <button type="button" aria-label={`${t.cart || 'კალათა'} (${cartCount})`} onClick={() => goTo('cart')}><ShoppingBag aria-hidden="true" />{cartCount > 0 && <span aria-hidden="true">{cartCount}</span>}</button>
         </div>}
