@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {sphereMesh,mascotRgb,mascotPose,mascotLimb} from '../utils/mascot3DGeometry.js';
+import {sphereMesh,mascotRgb,premiumMascotPose,premiumMascotBlink,PREMIUM_MASCOT_MOTION_SECONDS,mascotLimb} from '../utils/mascot3DGeometry.js';
 import {drawMascot3DModel,drawPremiumMascotEye} from '../utils/mascot3DModels.js';
 import {mascotLighting} from '../utils/mascot3DLighting.js';
 
@@ -35,13 +35,15 @@ void main(){
   float rimLight=max(dot(n,rim),0.0)*pow(1.0-max(dot(n,view),0.0),1.6);
   float spec=pow(max(dot(n,normalize(key+view)),0.0),mix(12.0,52.0,clamp(gloss,0.0,1.0)));
   float fresnel=pow(1.0-max(dot(n,view),0.0),4.0);
-  float strands=sin(local.x*82.0+sin(local.y*34.0)*3.0)*sin(local.z*73.0+local.y*25.0);
-  float featherBands=sin(local.y*43.0+abs(local.x)*12.0);
-  float surface=mix(strands,featherBands,feather)*.045*fur;
-  float occlusion=mix(.78,1.0,smoothstep(-1.0,.5,local.y));
+  // Broad irregular coat shading plus fine directional strands; no texture assets.
+  float coat=sin(local.x*11.0+sin(local.y*7.0)*1.8)*sin(local.z*13.0-local.y*5.0);
+  float strands=sin(local.x*41.0+sin(local.y*15.0)*2.3)*sin(local.z*37.0+local.y*12.0);
+  float featherBands=sin(local.y*25.0+abs(local.x)*8.0);
+  float surface=(mix(strands,featherBands,feather)*.025+coat*.024)*fur;
+  float occlusion=mix(.72,1.0,smoothstep(-1.0,.65,local.y));
   vec3 base=max(tint,vec3(.008));
   vec3 illumination=vec3(ambient)+keyColor*diffuse*lightStrength.x+fillColor*softFill*lightStrength.y+rimColor*rimLight*lightStrength.z;
-  vec3 rgb=base*illumination*occlusion+base*surface+keyColor*spec*gloss*.31+rimColor*fresnel*.055*gloss;
+  vec3 rgb=base*illumination*occlusion+base*surface+keyColor*spec*gloss*.24+rimColor*fresnel*(.035*gloss+.022*fur);
   // Gentle tone curve keeps pale fur from clipping and dark materials legible.
   rgb=pow(clamp(rgb,0.0,1.0),vec3(.88));
   gl_FragColor=vec4(rgb,1.0);
@@ -101,15 +103,15 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
         try{
           if(start===null)start=now;
           const elapsed=(now-start)/1000;
-          if(now-last>=32||last===-Infinity){
+          if(now-last>=32||last===-Infinity||elapsed>=PREMIUM_MASCOT_MOTION_SECONDS){
             last=now;
             const dpr=Math.min(1.6,window.devicePixelRatio||1);
             const width=Math.min(256,Math.max(64,Math.round(node.clientWidth*dpr))),height=Math.round(width*1.13);
             if(node.width!==width||node.height!==height){node.width=width;node.height=height;}
             gl.viewport(0,0,width,height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-            const pose=mascotPose(characterId,elapsed,behavior,motion.matches);
+            const pose=premiumMascotPose(characterId,elapsed,behavior,motion.matches);
             gl.uniform1f(loc.aspect,width/height);gl.uniform1f(loc.yaw,pose.yaw);gl.uniform1f(loc.rootLean,pose.lean);gl.uniform1f(loc.rootLift,pose.lift);
-            if(characterId!=='fox')drawMascot3DModel(characterId,draw,base,pose,{emotion,blink:!motion.matches&&elapsed%3.1>2.92,season});
+            if(characterId!=='fox')drawMascot3DModel(characterId,draw,base,pose,{emotion,blink:premiumMascotBlink(elapsed,motion.matches),season});
             else{
             // Tail, feet, trunk and limbs are independently posed ellipsoid meshes.
             draw([-.74,-.48,-.35],[.29,.78,.32],base,-.85+pose.tail);
@@ -138,7 +140,7 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
             draw([0,.06,.70],[.14,.055,.09],dark,0,.1,0);
             for(const sign of [-1,1]){
               const wink=emotion==='wink'&&sign===1;
-              const blink=!motion.matches&&elapsed%3.1>2.92;
+              const blink=premiumMascotBlink(elapsed,motion.matches);
               drawPremiumMascotEye(draw,{x:sign*.30,y:.62,z:.49,radius:.165,opening:emotion==='surprise'?1.32:1,tilt:-sign*.10,coat:base,iris,closed:wink||blink});
             }
             if(season==='winter')draw([0,-.02,.06],[.52,.13,.42],[.65,.05,.12],0,.1,0);
@@ -146,7 +148,7 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
             if(gl.getError()!==gl.NO_ERROR)throw Error('draw failed');
             if(firstFrame){firstFrame=false;setReady(true);}
           }
-          if(!motion.matches&&elapsed<15)frame=requestAnimationFrame(render);
+          if(!motion.matches&&elapsed<PREMIUM_MASCOT_MOTION_SECONDS)frame=requestAnimationFrame(render);
         }catch{fail();}
       };
       frame=requestAnimationFrame(render);

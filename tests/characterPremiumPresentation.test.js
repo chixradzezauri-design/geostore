@@ -52,3 +52,26 @@ test('sculpted eyes and species meshes retain finite bounded geometry, expressio
  assert.ok(renderer.includes('drawPremiumMascotEye(draw'));
  assert.ok(renderer.includes('gl.enable(gl.DEPTH_TEST)'));
 });
+
+test('premium gestures settle, preserve reduced motion and use bounded rendering',async()=>{
+ const {mascotPose,premiumMascotPose,premiumMascotBlink,PREMIUM_MASCOT_MOTION_SECONDS}=await import('../src/utils/mascot3DGeometry.js');
+ const {MASCOT_3D_IDS}=await import('../src/utils/mascot3DModels.js');
+ const {MASCOT_LIGHTING}=await import('../src/utils/mascot3DLighting.js');
+ for(const id of MASCOT_3D_IDS)for(const behavior of ['run-wave','walk-wave','patrol','jump','dance','celebrate','wave','bow','look-around','point','peek','slide','sneak','still']){
+   for(const t of [0,.2,.7,1.4,2.6,4,6,8,15]){
+     const p=premiumMascotPose(id,t,behavior),legacy=mascotPose(id,Math.min(t,8),behavior);
+     for(const key of Object.keys(p)){assert.ok(Number.isFinite(p[key]),id+' '+key);assert.ok(Math.abs(p[key])<=Math.abs(legacy[key])+1e-8,key);}
+     assert.ok(p.lift<=.06400001);
+   }
+   assert.ok(Object.values(premiumMascotPose(id,8,behavior)).every(v=>v===0));
+   assert.ok(Object.values(premiumMascotPose(id,2,behavior,true)).every(v=>v===0));
+ }
+ assert.equal(PREMIUM_MASCOT_MOTION_SECONDS,8);
+ assert.equal(premiumMascotBlink(2.4),true);assert.equal(premiumMascotBlink(2.4,true),false);assert.equal(premiumMascotBlink(8),false);
+ for(const light of Object.values(MASCOT_LIGHTING))assert.ok([...light.key,...light.fill,...light.rim,...light.strength,light.ambient].every(v=>v>=0&&v<=1));
+ const renderer=read('src/components/FlagshipFox3D.jsx'),css=read('src/components/characterStudio.css');
+ assert.ok(renderer.includes('elapsed<PREMIUM_MASCOT_MOTION_SECONDS'));
+ assert.ok(renderer.includes('premiumMascotBlink(elapsed,motion.matches)'));
+ assert.ok(renderer.includes('Math.min(256,Math.max(64'));
+ assert.ok(css.includes('gs-premium-figure-arrive'));
+});

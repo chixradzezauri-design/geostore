@@ -72,3 +72,21 @@ export function mascotLimb(anchor,length,angle){
  const delta=[Math.sin(angle)*length,-Math.cos(angle)*length,0];
  return {center:anchor.map((v,i)=>v+delta[i]*.5),tip:anchor.map((v,i)=>v+delta[i]),tilt:angle};
 }
+
+// A calmer presentation envelope preserves the authored gesture and species gait,
+// but ends in a relaxed pose. Keep the original pose API for existing consumers.
+export const PREMIUM_MASCOT_MOTION_SECONDS=8;
+export function premiumMascotPose(id,time,behavior='wave',reduced=false){
+ const t=clamp(Number.isFinite(time)?time:0,0,PREMIUM_MASCOT_MOTION_SECONDS);
+ const p=mascotPose(id,t,behavior,reduced);
+ const fade=1-smooth((t-5.5)/2.5);
+ const gesture=1-smooth((t-2.8)/1.8);
+ return {...p,yaw:p.yaw*.58*fade,breath:p.breath*.72*fade,
+   step:p.step*.65*gesture,wave:p.wave*.68*gesture,tail:p.tail*.60*fade,
+   lift:p.lift*.32*gesture,lean:p.lean*.48*gesture,ear:p.ear*.55*fade,
+   wing:p.wing*.65*gesture,head:p.head*.68*fade};
+}
+export function premiumMascotBlink(time,reduced=false){
+ if(reduced||!Number.isFinite(time)||time<0||time>=PREMIUM_MASCOT_MOTION_SECONDS)return false;
+ return (time>=2.35&&time<2.47)||(time>=5.12&&time<5.24);
+}

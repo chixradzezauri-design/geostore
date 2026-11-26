@@ -388,3 +388,37 @@
   .gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before,
   .gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{animation:none!important;transition:none!important}
 }
+
+/* Premium phase 5: short, calm figure-only arrival. The greeting never travels
+   with the character. WebGL owns its articulated motion; vector fallback keeps
+   a restrained, finite version of the original gestures. */
+.gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){
+  animation:none!important;--gs-premium-enter:-14px;
+}
+.gs-character-scene[data-character-depth="grounded"][data-side="right"]{--gs-premium-enter:14px}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-figure{
+  animation:gs-premium-figure-arrive .65s cubic-bezier(.22,.72,.24,1) both;
+}
+@keyframes gs-premium-figure-arrive{
+  from{opacity:0;transform:translateX(var(--gs-premium-enter,-14px)) scale(.97)}
+  to{opacity:1;transform:none}
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig:has(.gs-character-3d[data-character-3d="ready"]){animation:none!important;transform:none!important}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-body-rig:not(:has(.gs-character-3d[data-character-3d="ready"])){
+  animation:gs-premium-breath 2.8s ease-in-out 2;
+}
+@keyframes gs-premium-breath{0%,100%{transform:none}50%{transform:scale(1.012,1.018)}}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-hand{
+  animation:gs-premium-wave .85s ease-in-out 2;
+}
+@keyframes gs-premium-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(12deg)}}
+.gs-character-scene[data-character-depth="grounded"]:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) :is(.gs-character-leg-left,.gs-character-leg-right,.gs-character-arm-free,.gs-character-ground){animation:none}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-tail{animation:gs-premium-tail 1.6s ease-in-out 2}
+@keyframes gs-premium-tail{0%,100%{transform:none}50%{transform:rotate(4deg)}}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-effects>span{font-size:10px;text-shadow:none;animation-duration:.8s}
+@media(prefers-reduced-motion:reduce){
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-figure,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-hand,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-tail{animation:none!important;transform:none!important}
+}
