@@ -1,0 +1,33 @@
+# GEOSTORE Admin PRO — professional interface redesign
+
+Baseline: 42c11625b57e37e58f89bd087842b6dd4a1c24d5. One draft PR, no production merge without explicit approval, no paid resources, no automatic preview deployment for this branch.
+
+## Evidence and constraints
+- AdminDashboardPro.jsx: 8,363 lines at baseline; 23 permission-filtered modules in five groups. Preserve all IDs, permission gates, handlers, server contracts, data, and access scopes.
+- adminPanelVisualDesign.css: 2,219 lines and 1,047 !important occurrences; adminVideoRedesign.css: 1,190 lines and 427 occurrences; adminDashboardPolish.css: 1,431 lines and 227 occurrences. Existing overlapping legacy and visual editor layers are a maintainability risk, not proof of specific runtime visual defects. Replace only verified conflicts incrementally; do not add indiscriminate override layers.
+- Existing owner visual editor has independent device settings, saved presets, cloud synchronization and conflict protection. Preserve saved designs, explicit per-element overrides and mobile/tablet inheritance.
+- Existing admin browser fixture exercises 23 real SPA modules at 390 and 1440 pixels with intercepted backend and no live writes. Extend current tests, don't replace them. No current authenticated production screenshots or actual-device audit performed in this initial source review.
+- Keep delayed admin CSS partition, lazy loaded modules, storefront isolation, existing photo optimization and responsive contracts.
+
+## Design direction (proposed)
+Neutral professional light workspace: #F4F6F9 background, #FFFFFF surfaces, #182230 primary text, #526174 secondary text, #DCE2EA lines, #126B59 primary accent; navy sidebar with high contrast and distinct selected state. Preserve existing owner custom design settings; introduce a compatible opt-in preset rather than resetting them. Semantic status palette, not decoration. Georgian-capable existing font stack, page titles 20–24 px, section headings 15–17 px, body 13–14 px, labels 12–13 px, minimum 44 px touch controls. Verify contrast (WCAG AA targets), keyboard focus and text reflow. Spacing scale 4/8/12/16/24 px; restrained shadows, consistent corners, real product thumbnails and reusable icons, no unrelated stock images. Desktop fixed-width navigation with independently scrolling content where appropriate, tablet compact nav, mobile grouped picker/accessible navigation. Exact dimensions subject to real browser tests and existing editor tokens.
+
+## Implementation phases
+01. Baseline and design contract: inventory CSS ownership, precedence and responsive tokens; capture isolated fixture baseline for every module (local CI, no external preview); prioritize confirmed defects.
+02. Shared foundations: semantic components/tokens for typography, spacing, surfaces, focus, control sizes and status colors; preserve owner overrides and staff fallback. Audit cascade before changing.
+03. Workspace chrome: sidebar, grouped navigation, header/title, role status, save/publish hierarchy, compact mobile navigation and accessible focus. Preserve all authorized modules.
+04. Command center: coherent verified KPI cards, recent orders, support, low stock and activity panels; distinguish unavailable/empty/zero, no invented metrics.
+05. Orders: desktop dense list, mobile card flow, search/status filters, money and dates, order detail and progress; preserve stock/reactivation/MFA actions and CSV.
+06. Products: catalogue thumbnails, compact filter/action row, editor sections, variant fields, image gallery, primary photo, existing optimization and error states.
+07. Inventory and replenishment: readable SKU/variant identifiers, status and quantities, table overflow limited to table, planning settings and verified totals.
+08. Categories and suppliers: hierarchy, thumbnails, move/edit/delete hierarchy, supplier and purchase/payment workspaces. Keep all existing actions and contracts.
+09. Analytics, expenses, calculator, business assistant: numbers aligned, date filters, charts and financial tables, clear verified/partial states, unchanged math and permissions.
+10. Customer CRM, support and legacy messages: compact search/filter, thread layout, unread/status indicators, identity wrapping, preserve role gates and scope.
+11. Marketing: flash campaigns, coupons, banners, broadcasts, CRM segments/templates/preflight; consistent controls, image previews, explicit disabled delivery states.
+12. Staff, roles, system logs, settings, security: readable permissions, status, forms and confirmation states, role-specific navigation; no auth/RLS change without separate evidence and review.
+13. Visual editors and character studio: coherent controls, responsive previews, preset/history UX, draft/save/conflict status; preserve every customization and server sync.
+14. Shared empty/loading/error/success states, image fallbacks, Georgian copy, keyboard navigation, reduced motion; targeted CSS de-duplication after parity evidence.
+15. Device audit and regression: 320/360/390/430/768/1024/1440 widths, Chromium + WebKit, long Georgian strings, tables, image ratios, focus, no page-level horizontal overflow, owner/staff access isolation, owner explicit design override precedence. Keep existing tests; use synthetic data and intercept mutations. Actual device and authenticated production validation explicitly separate from CI.
+16. Final release gate: production build, unit tests, dependency and CodeQL, database/auth contract tests where affected, browser scenarios, no writes or unintended changes; record baseline comparison and remaining limits. Merge/deploy only with explicit confirmation; verify Vercel production SHA, alias and error logs. If regression, stop and resolve before proceeding.
+
+Every phase records audited files, exact changes, verification results and unresolved blockers. Avoid repeated completed fixes and unnecessary builds: batch related fixes, run full release checks on final head. No blanket reset or database changes for visual polish.
