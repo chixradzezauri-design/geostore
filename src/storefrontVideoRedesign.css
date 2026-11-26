@@ -1902,3 +1902,105 @@
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links > span[aria-hidden="true"] {display:none!important;}
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links > button {width:100%!important;max-width:none!important;justify-content:center;text-align:center;}
 .gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-footer-links > button:last-child {grid-column:1 / -1;}
+
+
+/* Customer experience audit 02 — editorial mobile hero.
+   Separate image and copy so Georgian headlines have the full phone width.
+   Keep configured height, image source, crop, typography, section visibility,
+   carousel controls and desktop layout; mirror the layout in the phone editor. */
+@media(max-width:640px){
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) {
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__image {
+  position:relative!important;
+  inset:auto!important;
+  z-index:0;
+  width:100%!important;
+  max-width:100%;
+  flex:0 0 auto;
+  height:clamp(150px,calc(var(--gs-hero-height,420px) * .46),260px);
+  overflow:hidden;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"])::after {background:none!important;}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__content {
+  width:100%!important;
+  max-width:100%!important;
+  flex:1 0 auto;
+  padding:20px 18px 64px!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):not(:has(.gs-signature-hero-controls)) .gs-fashion-hero__content {
+  padding-bottom:22px!important;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__content h1 {
+  text-wrap:balance!important;
+  overflow-wrap:break-word;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__description {
+  max-width:100%!important;
+  overflow-wrap:break-word;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__actions {gap:10px!important;}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-primary {min-height:44px;justify-content:center;}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__stamp {
+  position:static!important;
+  padding:0 18px 16px;
+  text-align:start;
+  color:var(--gs-muted,#62574d);
+  text-shadow:none;
+}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):has(.gs-fashion-hero__stamp):has(.gs-signature-hero-controls) .gs-fashion-hero__stamp {padding-bottom:64px;}
+.geostore-shell.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):has(.gs-fashion-hero__stamp):has(.gs-signature-hero-controls) .gs-fashion-hero__content {padding-bottom:16px!important;}
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) {
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__image {
+  position:relative!important;
+  inset:auto!important;
+  z-index:0;
+  width:100%!important;
+  max-width:100%;
+  flex:0 0 auto;
+  height:clamp(150px,calc(var(--gs-hero-height,420px) * .46),260px);
+  overflow:hidden;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"])::after {background:none!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__content {
+  width:100%!important;
+  max-width:100%!important;
+  flex:1 0 auto;
+  padding:20px 18px 64px!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):not(:has(.gs-signature-hero-controls)) .gs-fashion-hero__content {
+  padding-bottom:22px!important;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__content h1 {
+  text-wrap:balance!important;
+  overflow-wrap:break-word;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__description {
+  max-width:100%!important;
+  overflow-wrap:break-word;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__actions {gap:10px!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-primary {min-height:44px;justify-content:center;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]) .gs-fashion-hero__stamp {
+  position:static!important;
+  padding:0 18px 16px;
+  text-align:start;
+  color:var(--gs-muted,#62574d);
+  text-shadow:none;
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):has(.gs-fashion-hero__stamp):has(.gs-signature-hero-controls) .gs-fashion-hero__stamp {padding-bottom:64px;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-fashion-hero:where([data-signature-hero="true"]):has(.gs-fashion-hero__stamp):has(.gs-signature-hero-controls) .gs-fashion-hero__content {padding-bottom:16px!important;}
