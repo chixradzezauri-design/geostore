@@ -63,3 +63,15 @@ test('Atelier orders isolate amount, customer and status actions while preservin
  for(const term of ['handleExportOrders','handlePrintInvoice(o)','handleUpdateOrderStatus(o.id,','setSelectedOrderForModal(o)','handleSaveOrderAdminNote(selectedOrderForModal.id)','isDeliveredOrderStatus(o.status)','isShippedOrderStatus(o.status)','orderDetailTriggerRef.current'])assert.ok(app.includes(term),term);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('order filters fit without duplicate controls'));
 });
+
+
+test('Atelier inventory and supply forms keep native controls and monetary operations independent',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const stage=css.split('/* Atelier inventory:')[1].split('/* Stage 08')[0];
+ for(const token of ['overflow-x: auto !important','overscroll-behavior-inline: contain','grid-template-columns: minmax(0,2fr) repeat(2,minmax(0,1fr))','min-height: 44px','font-variant-numeric: tabular-nums','button[type="submit"]:disabled'])assert.ok(stage.includes(token),token);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const token of ['saveInventoryReplenishmentSetting(position)','recoverInventoryReplenishmentConflict(position.key)','handleAddVendor'])assert.ok(app.includes(token),token);
+ const purchase=read('src/components/AdminPurchaseWorkspace.jsx');
+ for(const token of ['onSubmit={create}','receive(currentOrder,l)','transition(currentOrder,\'approve\')','transition(currentOrder,\'cancel\')','!ready||!valid'])assert.ok(purchase.includes(token),token);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('inventory and supply controls stay inside their regions'));
+});

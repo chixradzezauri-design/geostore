@@ -622,7 +622,25 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-inventory-scroll-hint {
   color: var(--av-muted) !important; font-size: 12px; line-height: 1.5;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-inventory-table-scroll { border-color: var(--av-border) !important; }
+/* Atelier inventory: retain readable table columns in their own scroll region. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-inventory-table-scroll {
+  min-inline-size: 0; max-inline-size: 100%; overflow-x: auto !important;
+  overscroll-behavior-inline: contain; border-color: var(--av-border) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-table] :is(th,td) {
+  padding-block: 12px !important; font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-table] tbody tr:hover {
+  background: var(--admin-vd-tableRowHover-active,var(--av-inset)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div:first-child {
+  border-inline-start: 3px solid var(--av-accent) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-inventory-history-toolbar {
+  min-inline-size: 0; align-items: stretch !important;
+  gap: 8px !important;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead { background: var(--av-inset) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead th { color: var(--av-text) !important; font-size: 12px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] tbody tr { background: var(--av-surface) !important; border-color: var(--av-border) !important; }
@@ -639,7 +657,23 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric > strong { color: var(--av-text) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-replenishment-metric="recommended"] { border-color: var(--av-accent) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-save > button { box-shadow: none !important; min-height: 44px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-product {
+  border-block-end: 1px solid var(--av-border); padding-block-end: 10px;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric input[type="number"] {
+  width: 100% !important; min-inline-size: 0; max-inline-size: 100%;
+  min-height: 44px !important; box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-save > button {
+  box-shadow: none !important; min-height: 44px !important;
+  background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  border-color: var(--admin-vd-primaryButtonBorder-active,var(--av-accent)) !important;
+  -webkit-text-fill-color: currentColor !important; white-space: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-save > button:disabled { opacity: .55 !important; cursor: not-allowed; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-supply-context {
   padding: 12px 16px; border: 1px solid var(--av-border); border-radius: var(--admin-vd-cardRadius-active,12px); background: var(--av-surface);
 }
@@ -654,11 +688,48 @@
   background: var(--av-inset) !important; border: 1px solid var(--av-border) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px); padding: 12px; min-width: 0;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-purchase-line { background: var(--av-surface) !important; border-color: var(--av-border) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-purchase-line label { min-width: 0; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-purchase-total {
+/* Atelier supply workspace: independent form tracks, no native field clipping. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line {
+  display: grid !important; grid-template-columns: minmax(0,1fr);
+  align-items: start; gap: 10px !important; min-inline-size: 0;
+  background: var(--av-surface) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line > label {
+  display: grid; gap: 4px; min-inline-size: 0;
+  line-height: 1.5; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line :is(input,select) {
+  box-sizing: border-box; width: 100% !important; min-inline-size: 0;
+  max-inline-size: 100%; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line > button {
+  grid-column: 1 / -1; min-height: 44px !important;
+  color: #9c2538 !important; background: #fce5e8 !important;
+  border-color: #e4b4bf !important;
+}
+@container (min-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line {grid-template-columns: repeat(2,minmax(0,1fr));}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line > label:first-child {grid-column: 1 / -1;}
+}
+@container (min-width: 650px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line {grid-template-columns: minmax(0,2fr) repeat(2,minmax(0,1fr));}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-unified-purchase-line > label:first-child {grid-column: auto;}
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-pro-purchase-total {
   display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-  border: 1px solid var(--av-border);
+  border: 1px solid var(--av-border); border-inline-start: 3px solid var(--av-accent);
+  border-radius: 8px; padding: 10px 12px; background: var(--av-surface) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace .admin-pro-purchase-total > strong {font-variant-numeric: tabular-nums; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-purchase-draft,.admin-unified-supplier-form) button[type="submit"] {
+  min-height: 44px !important;
+  background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  border-color: var(--admin-vd-primaryButtonBorder-active,var(--av-accent)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-purchase-draft,.admin-unified-supplier-form) button[type="submit"]:disabled {
+  opacity: .55 !important; cursor: not-allowed;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-supply-section-heading { border-top: 1px solid var(--av-border); padding-block-start: 12px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-purchase-workspace [data-purchase-state],
@@ -671,7 +742,15 @@
   background: #fff0cc !important; color: #754300 !important; border-radius: 8px; padding: 8px 10px;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-supplier-list { grid-template-columns: minmax(0,1fr) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-supplier-card > div:last-child > button { flex: 1 1 120px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-supplier-workspace .admin-supplier-card {
+  display: grid; grid-template-columns: minmax(0,1fr); gap: 10px;
+  min-inline-size: 0; background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-supplier-workspace .admin-supplier-card > h4 { overflow-wrap: anywhere; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-supplier-workspace .admin-pro-supplier-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-supplier-workspace .admin-supplier-card > div:last-child { border-top: 1px solid var(--av-border); padding-block-start: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-supplier-workspace .admin-supplier-card > div:last-child > button { flex: 1 1 120px; min-height: 44px !important; min-inline-size: 0; white-space: normal !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-supply-metric] { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; padding: 10px !important; }
 @container (min-width: 460px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
@@ -683,6 +762,7 @@
 @container (min-width: 1050px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row { grid-template-columns: minmax(160px,1.5fr) repeat(4,minmax(0,1fr)) minmax(110px,1fr) !important; align-items: center; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > :is(.admin-replenishment-product,.admin-replenishment-save) { grid-column: auto !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-product {border-block-end: 0; padding-block-end: 0;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-inventory-scroll-hint { display: none; }
 }
 @media (max-width: 359px) {

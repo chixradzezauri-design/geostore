@@ -197,6 +197,27 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (['inventory','replenishment','vendors'].includes(tab)) {
+              const supplyIssues=await shell.evaluate((root, module) => {
+                const scope=root.querySelector(module==='vendors'?'.admin-vendors-panel':module==='inventory'?'[data-admin-inventory-view="history"]':'[data-admin-inventory-view="planning"]');
+                const issues=[];
+                if(module==='inventory'){
+                  const region=scope.querySelector('.admin-inventory-table-scroll');
+                  const box=region.getBoundingClientRect(), panel=scope.getBoundingClientRect();
+                  if(box.left<panel.left-2||box.right>panel.right+2||getComputedStyle(region).overflowX!=='auto')issues.push('inventory table escapes scroll region');
+                }else{
+                  const groups=scope.querySelectorAll(module==='vendors'?'.admin-unified-purchase-line,.admin-unified-supplier-form':'.admin-replenishment-row');
+                  if(module==='vendors'&&!scope.querySelector('.admin-unified-purchase-line'))issues.push('purchase line missing');
+                  for(const group of groups){
+                    const outer=group.getBoundingClientRect();
+                    const fields=[...group.querySelectorAll('input:not([type="hidden"]),select,button')].filter(n=>n.getBoundingClientRect().height>0);
+                    for(const el of fields){const rect=el.getBoundingClientRect();if(rect.left<outer.left-2||rect.right>outer.right+2||rect.height<43.5)issues.push('supply field geometry');}
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(supplyIssues,[],engine+' '+targetWidth+'px: inventory and supply controls stay inside their regions');
+            }
             if (tab === 'orders') {
               const filterIssues = await shell.locator('.admin-orders-toolbar').evaluate(toolbar => {
                 const bounds=toolbar.getBoundingClientRect();
