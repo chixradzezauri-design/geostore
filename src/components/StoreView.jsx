@@ -171,7 +171,7 @@ export default function StoreView({
 
   useEffect(() => {
     setProductPage(1);
-  }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy]);
+  }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, searchQuery]);
 
   // Countdown is always derived from the server-persisted end timestamp.
   // Refreshing or reopening the storefront never starts a new sale timer.
@@ -540,7 +540,7 @@ export default function StoreView({
     const targetPage = Math.min(totalProductPages, Math.max(1, Number(nextPage) || 1));
     setProductPage(targetPage);
     if (typeof document !== 'undefined') {
-      document.getElementById('gs-catalog-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('gs-catalog-products')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     }
   };
 
@@ -964,7 +964,7 @@ export default function StoreView({
 
       {/* Filters & Sorting */}
       <div id="gs-video-catalog-anchor" data-visual-editor-target="filters" {...sectionGeometryProps('filters',videoElementStyle('filters'))} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
+        <div role="group" aria-label={storeText.price} className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
           <div data-visual-editor-target="filters.priceLabel" style={videoElementStyle('filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
@@ -996,11 +996,11 @@ export default function StoreView({
             data-visual-editor-target="filters.input" style={videoElementStyle('filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button data-visual-editor-target="filters.clearButton" style={videoElementStyle('filters.clearButton')} type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
+            <button data-visual-editor-target="filters.clearButton" style={videoElementStyle('filters.clearButton')} type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }} aria-label={currentLang === 'en' ? 'Clear price range' : currentLang === 'ru' ? 'Сбросить диапазон цен' : 'ფასის დიაპაზონის გასუფთავება'} className="gs-price-filter-clear text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
           )}
         </div>
 
-        <div className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
+        <div role="group" aria-label={storeText.sort} className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
           <div data-visual-editor-target="filters.sortLabel" style={videoElementStyle('filters.sortLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
@@ -1023,6 +1023,10 @@ export default function StoreView({
             </button>
           )}
         </div>
+        <div className="gs-catalog-filter-summary">
+          <p role="status" aria-live="polite" className="gs-catalog-result-count">{processedProducts.length} {storeText.productsOnDisplay}</p>
+          {String(searchQuery || '').trim() && <button type="button" className="gs-catalog-search-chip" onClick={() => setSearchQuery?.('')} aria-label={currentLang === 'en' ? 'Clear search query' : currentLang === 'ru' ? 'Очистить запрос' : 'ძებნის ტექსტის გასუფთავება'}><span>{String(searchQuery).trim()}</span><X size={14} aria-hidden="true"/></button>}
+        </div>
       </div>
 
       {hasInvalidPriceRange && (
@@ -1043,7 +1047,8 @@ export default function StoreView({
       {/* Products Grid */}
       {processedProducts.length === 0 ? (
         <div id="gs-catalog-products" {...sectionGeometryProps('products')} className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
-          <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
+          <p className="gs-empty-products-title text-slate-400 text-sm font-bold">{hasInvalidPriceRange ? (currentLang === 'en' ? 'Check the price range' : currentLang === 'ru' ? 'Проверьте диапазон цен' : 'შეამოწმეთ ფასის დიაპაზონი') : storeText.noFilterResults}</p>
+          {!hasInvalidPriceRange && hasActiveCatalogFilters && <p className="gs-empty-products-help">{currentLang === 'en' ? 'Try another search or remove filters.' : currentLang === 'ru' ? 'Измените запрос или сбросьте фильтры.' : 'სცადეთ სხვა საძიებო სიტყვა ან გაასუფთავეთ ფილტრები.'}</p>
           {searchEmptyCharacter&&<div className="gs-character-search-context"><React.Suspense fallback={null}><CharacterContextCard scenario={searchEmptyCharacter} lang={currentLang}/></React.Suspense></div>}
           {hasActiveCatalogFilters && (
             <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
