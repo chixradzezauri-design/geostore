@@ -55,8 +55,18 @@ const AdminPurchaseWorkspace = React.lazy(() => import('./AdminPurchaseWorkspace
 const AdminMarketingSegments = React.lazy(() => import('./AdminMarketingSegments.jsx'));
 
 // Local Suspense keeps the surrounding workspace and navigation available.
-function AdminSectionLoading(){
-  return <div role="status" aria-live="polite" className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">განყოფილება იტვირთება…</div>;
+function AdminSectionLoading({ label = 'განყოფილება იტვირთება…' } = {}){
+  return <div data-admin-pro-feedback="loading" role="status" aria-live="polite" className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300"><span aria-hidden="true" className="admin-pro-loading-indicator" />{label}</div>;
+}
+
+// Display-only local fallback: never alters saved image data.
+const ADMIN_THUMBNAIL_FALLBACK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="8" fill="#e7edf3"/><g fill="none" stroke="#526174" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="20" width="40" height="40" rx="5"/><circle cx="33" cy="33" r="4"/><path d="M21 53l12-12 9 9 8-8 10 10"/></g></svg>');
+function AdminThumbnailImage({ src, alt = '', ...props }) {
+  const [failed, setFailed] = useState(false);
+  return <img {...props} src={failed ? ADMIN_THUMBNAIL_FALLBACK : src} alt={alt} data-admin-pro-image-fallback={failed ? 'true' : undefined} onError={failed ? undefined : () => setFailed(true)} />;
+}
+function AdminThumbnail({ src, ...props }) {
+  return <AdminThumbnailImage key={src} src={src} {...props} />;
 }
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -813,7 +823,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
   });
 
   return (
-    <div className="admin-staff space-y-4">
+    <div className="admin-staff space-y-4" data-admin-pro-staff>
       <div role="note" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
         <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
         მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
@@ -824,15 +834,17 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
-        <form onSubmit={handleAddExistingUser} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+        <form onSubmit={handleAddExistingUser} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3">
+          <span className="admin-pro-native-control-boundary">
           <select aria-label="არსებული მომხმარებლის არჩევა" value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
             <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
             {(usersList || []).filter((user) => user.email).map((user) => (
               <option key={user.id || user.email} value={user.email}>{user.name || user.email} — {user.email}</option>
             ))}
           </select>
+          </span>
           <button type="submit" disabled={staffActionBusy || !staffListReady || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
-            {staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}
+            <span className="admin-pro-control-caption">{staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}</span>
           </button>
         </form>
       </section>
@@ -857,13 +869,13 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                     ...current,
                     permissions: { ...current.permissions, [permission.key]: event.target.checked }
                   }))} className="accent-emerald-400" />
-                  {permission.label}
+                  <span className="admin-pro-control-caption">{permission.label}</span>
                 </label>
               ))}
             </div>
           </div>
           <button type="submit" disabled={staffActionBusy || !staffListReady} className="admin-staff-create-submit rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
-            {staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}
+            <span className="admin-pro-control-caption">{staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}</span>
           </button>
         </form>
       </section>
@@ -912,13 +924,13 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
           {filteredStaff.map((staff) => {
             const editing = editingStaffId === staff.id;
             return (
-              <article key={staff.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
+              <article key={staff.id} data-admin-pro-staff-card className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <strong className="text-sm text-white">{staff.display_name || staff.email}</strong>
                       <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
+                      <span data-admin-pro-staff-state={staff.is_active ? "active" : "inactive"} className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ დადასტურდა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
                     {staff.last_sign_in_at && <p className="mt-1 text-[10px] text-slate-500">ბოლო შესვლა: {new Date(staff.last_sign_in_at).toLocaleString('ka-GE')}</p>}
@@ -938,7 +950,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                 {!editing && (
                   <div className="flex flex-wrap gap-1.5">
                     {STAFF_PERMISSION_OPTIONS.map((permission) => (
-                      <span key={permission.key} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
+                      <span key={permission.key} data-admin-pro-permission={staff.permissions?.[permission.key] ? "granted" : "not-granted"} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
                         {permission.label}: {staff.permissions?.[permission.key] ? '✓' : '—'}
                       </span>
                     ))}
@@ -5352,6 +5364,7 @@ export default function AdminDashboardPro({
       String(value ?? '').toLocaleLowerCase().includes(legacyMessageSearchTerm)));
   const commandCenterOpenTickets = (Array.isArray(supportTickets) ? supportTickets : [])
     .filter(ticket => ['ღია', 'მუშავდება', 'open', 'in progress', 'pending', 'new'].includes(normalizeOrderStatus(ticket?.status)));
+  const commandCenterSupportVerified = hasSupportPermission && supportTicketsReady && !supportTicketsError;
   const commandCenterOverdueTickets = commandCenterOpenTickets.filter(ticket => {
     const createdAt = Date.parse(ticket?.createdAt || '');
     return Number.isFinite(createdAt) && flashSaleStatusClock - createdAt >= 24 * 60 * 60 * 1000;
@@ -5417,18 +5430,19 @@ export default function AdminDashboardPro({
   const adminNavigationGroups = groupAdminWorkspaceNavigation(visibleAdminNavigationItems);
   const orderedAdminNavigationItems = adminNavigationGroups.flatMap(group => group.items.map((tab, index) => ({ ...tab, groupHeading: index === 0 ? group.label : null })));
   const currentAdminNavigationLabel = adminWorkspaceNavigationLabel(visibleAdminNavigationItems.find(tab => tab.id === visibleAdminTab)?.label || 'მართვის პანელი');
+  const currentAdminNavigationGroup = adminNavigationGroups.find(group => group.items.some(tab => tab.id === visibleAdminTab));
 
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined} data-admin-video-layout="v1">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div data-admin-sidebar="true" className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
-        <div className="flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
+        <div className="admin-pro-brand flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
+          <div className="admin-pro-brand-mark bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
             <Shield className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h3 className="font-black text-white text-sm">GEOSTORE Admin</h3>
+            <h3 className="font-black text-white text-sm">GEOSTORE Admin PRO</h3>
             <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">მართვის პანელი</p>
           </div>
         </div>
@@ -5495,7 +5509,8 @@ export default function AdminDashboardPro({
       <div className="admin-workspace-main flex-1 w-full space-y-6">
 
         <div data-admin-visual-header="true" className="flex w-full min-w-0 flex-col justify-start lg:flex-row lg:justify-between items-start lg:items-center bg-slate-900/80 border border-emerald-500/30 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 lg:p-5 gap-3 shadow-2xl backdrop-blur-3xl">
-          <div>
+          <div className="admin-pro-page-identity">
+            {currentAdminNavigationGroup && <span className="admin-pro-section-context">{currentAdminNavigationGroup.label}</span>}
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
               {currentAdminNavigationLabel}
             </h2>
@@ -5503,7 +5518,7 @@ export default function AdminDashboardPro({
               {isOwner ? 'მთავარი ადმინისტრატორი' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
             </p>
           </div>
-          <div className="grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
+          <div className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
             {hasModulePermission('settings') && (
               <button
                 type="button"
@@ -5524,8 +5539,8 @@ export default function AdminDashboardPro({
                 {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
               </button>
             )}
-            <div className="col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div className="admin-pro-access-state col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
+              <span aria-hidden="true" className="admin-pro-access-dot w-2 h-2 rounded-full bg-emerald-400"></span>
               <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
             </div>
           </div>
@@ -5555,12 +5570,12 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
           <section className="admin-command-center space-y-3 sm:space-y-5" aria-labelledby="admin-command-title">
-            <div className="admin-command-hero rounded-2xl border border-emerald-400/25 p-3 sm:p-5">
+            <div className="admin-command-hero admin-pro-overview-intro rounded-2xl border border-emerald-400/25 p-3 sm:p-5">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[.22em] text-emerald-300">დღიური ოპერაციები</p>
-                  <h3 id="admin-command-title" className="mt-1 text-lg sm:text-2xl font-black tracking-tight text-white">მთავარი მართვის ცენტრი</h3>
-                  <p className="mt-1 max-w-2xl text-[11px] sm:text-xs leading-5 text-slate-300">შეკვეთები, მხარდაჭერა, მარაგები და აქციები — ერთ სივრცეში.</p>
+                  <p className="admin-pro-overview-eyebrow text-xs font-semibold text-slate-400">ოპერაციული მიმოხილვა</p>
+                  <h3 id="admin-command-title" className="mt-1 text-lg sm:text-2xl font-black tracking-tight text-white">დღის ამოცანები</h3>
+                  <p className="mt-1 max-w-2xl text-[11px] sm:text-xs leading-5 text-slate-300">ახალი შეკვეთები, საყურადღებო მოთხოვნები და მარაგის საჭიროებები.</p>
                 </div>
                 <button type="button" onClick={() => setAdminTab('analytics')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-slate-950/50 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/10">
                   <BarChart3 className="h-4 w-4" /> ფინანსური ანალიტიკა
@@ -5568,23 +5583,23 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            <div className="admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3">
-              <button type="button" onClick={() => setAdminTab('orders')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-emerald-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
+            <div className="admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3" aria-label="მთავარი ოპერაციული მაჩვენებლები">
+              <button type="button" onClick={() => setAdminTab('orders')} data-admin-kpi-tone="primary" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-emerald-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-4 w-4 shrink-0 text-emerald-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{ordersVerifiedForReports ? commandCenterNewOrders.length : "—"}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{ordersVerifiedForReports ? `მოლოდინში: ${commandCenterPendingOrders.length} შეკვეთა` : "მონაცემები ჯერ არ დადასტურებულა"}</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('support')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-amber-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-amber-300/60">
+              <button type="button" onClick={() => setAdminTab('support')} data-admin-kpi-tone="warning" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-amber-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-amber-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-4 w-4 shrink-0 text-amber-300" /></span>
-                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{supportTicketsError ? "—" : commandCenterOverdueTickets.length}</strong>
-                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{supportTicketsError ? "ჩატვირთვის შეცდომა" : "ღიაა 24 საათზე მეტხანს"}</span>
+                <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterSupportVerified ? commandCenterOverdueTickets.length : "—"}</strong>
+                <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{supportTicketsError ? "ჩატვირთვის შეცდომა" : !commandCenterSupportVerified ? "მონაცემები დასადასტურებელია" : "ღიაა 24 საათზე მეტხანს"}</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('replenishment')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-rose-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-rose-300/60">
+              <button type="button" onClick={() => setAdminTab('replenishment')} data-admin-kpi-tone="danger" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-rose-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-rose-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-4 w-4 shrink-0 text-rose-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{replenishmentSettingsReady && !replenishmentError ? commandCenterLowStockPositions.length : "—"}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{replenishmentSettingsReady && !replenishmentError ? "შესავსები პოზიციები" : "პარამეტრები დასადასტურებელია"}</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group min-w-0 text-left rounded-xl border border-sky-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-sky-300/60">
+              <button type="button" onClick={() => setAdminTab('discounts')} data-admin-kpi-tone="info" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-sky-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-sky-300/60">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-4 w-4 shrink-0 text-sky-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მომდევნო 24 საათში</span>
@@ -5606,7 +5621,7 @@ export default function AdminDashboardPro({
                     {commandCenterPendingOrders.slice(0, 5).map(order => (
                       <button type="button" key={String(order.id)} onClick={() => setAdminTab('orders')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-emerald-400/40">
                         <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">#{order.id} · {order.customerName || 'მომხმარებელი'}</strong><span className="mt-1 block text-[10px] text-slate-400">{order.status || 'სტატუსი უცნობია'}</span></span>
-                        <span className="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">ნახვა</span>
+                        <span data-admin-command-status="primary" className="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">ნახვა</span>
                       </button>
                     ))}
                   </div>
@@ -5620,6 +5635,8 @@ export default function AdminDashboardPro({
                 </div>
                 {supportTicketsError ? (
                   <p role="alert" className="rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-xs text-rose-200">მხარდაჭერის მონაცემები ვერ ჩაიტვირთა. გახსენით მხარდაჭერის განყოფილება და შეამოწმეთ კავშირი.</p>
+                ) : !commandCenterSupportVerified ? (
+                  <p role="status" className="admin-workspace-command-notice rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">მხარდაჭერის მონაცემები ჯერ არ დადასტურებულა.</p>
                 ) : commandCenterOpenTickets.length === 0 ? (
                   <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">ღია მხარდაჭერის მოთხოვნები არ არის.</p>
                 ) : (
@@ -5629,7 +5646,7 @@ export default function AdminDashboardPro({
                       return (
                         <button type="button" key={String(ticket.id)} onClick={() => setAdminTab('support')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-amber-400/40">
                           <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">{ticket.subject || 'მხარდაჭერის მოთხოვნა'}</strong><span className="mt-1 block text-[10px] text-slate-400">{ticket.customerName || ticket.email || 'მომხმარებელი'}</span></span>
-                          <span className={`max-w-[45%] shrink-0 break-words rounded-full px-2 py-1 text-right text-[10px] leading-4 font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
+                          <span data-admin-command-status={isOverdue ? "warning" : "neutral"} className={`max-w-[45%] shrink-0 break-words rounded-full px-2 py-1 text-right text-[10px] leading-4 font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
                         </button>
                       );
                     })}
@@ -5651,7 +5668,7 @@ export default function AdminDashboardPro({
                     {commandCenterLowStockGroups.slice(0, 5).map(group => (
                       <div key={group.key} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3">
                         <span className="min-w-0"><strong className="admin-workspace-command-row-title block text-xs text-white">{group.name}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{group.positions.map(position => position.variantName).filter(Boolean).join(', ') || group.sku}</span></span>
-                        <span className="shrink-0 rounded-full bg-rose-400/10 px-2.5 py-1 text-[10px] font-bold text-rose-200">{group.positions.length} პოზიცია</span>
+                        <span data-admin-command-status="danger" className="shrink-0 rounded-full bg-rose-400/10 px-2.5 py-1 text-[10px] font-bold text-rose-200">{group.positions.length} პოზიცია</span>
                       </div>
                     ))}
                   </div>
@@ -5729,17 +5746,17 @@ export default function AdminDashboardPro({
             {inventoryMovementProductFilter && <div className="admin-workspace-inventory-filter-state"><span>აქტიური ფილტრი: {(products || []).find(product => String(product.id) === inventoryMovementProductFilter)?.name || inventoryMovementProductFilter}</span><button type="button" onClick={() => { setInventoryMovementProductQuery(''); setInventoryMovementProductFilter(''); }}>გასუფთავება</button></div>}
             <p className="admin-workspace-inventory-hint">მაჩვენებლები ასახავს მხოლოდ ჩატვირთულ ჩანაწერებს, არა სრულ ისტორიულ ჯამს.</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div data-admin-pro-inventory-summary="history" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="admin-inventory-history-metric rounded-2xl border border-white/5 bg-slate-950/70 p-4">
                 <p className="text-[10px] font-bold text-slate-400">ჩატვირთული ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-white">{inventoryMovementRows.length}</strong>
               </div>
               <div className="admin-inventory-history-metric rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
-                <p className="text-[10px] font-bold text-slate-400">მარაგის ზრდის ჩანაწერები</p>
+                <p className="text-[10px] font-bold text-slate-400"><TrendingUp aria-hidden="true" className="admin-pro-inventory-icon" /> მარაგის ზრდის ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) > 0).length}</strong>
               </div>
               <div className="admin-inventory-history-metric rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4">
-                <p className="text-[10px] font-bold text-slate-400">მარაგის შემცირების ჩანაწერები</p>
+                <p className="text-[10px] font-bold text-slate-400"><Activity aria-hidden="true" className="admin-pro-inventory-icon" /> მარაგის შემცირების ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) < 0).length}</strong>
               </div>
             </div>
@@ -5751,7 +5768,7 @@ export default function AdminDashboardPro({
             )}
 
             {inventoryMovementLoading && inventoryMovementRows.length === 0 ? (
-              <div role="status" className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400">მარაგის ისტორია იტვირთება…</div>
+              <div role="status" className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400" data-admin-pro-feedback="loading"><span aria-hidden="true" className="admin-pro-loading-indicator" />მარაგის ისტორია იტვირთება…</div>
             ) : inventoryMovementRows.length === 0 && !inventoryMovementError ? (
               <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center">
                 <Layers className="mx-auto h-8 w-8 text-emerald-400" />
@@ -5760,7 +5777,7 @@ export default function AdminDashboardPro({
               </div>
             ) : inventoryMovementRows.length > 0 && (
               <div className="admin-inventory-table-scroll overflow-x-auto rounded-2xl border border-emerald-500/15" role="region" aria-label="მარაგის მოძრაობების ცხრილი — ჰორიზონტალური გადახვევა" tabIndex={0}>
-                <table className="w-full min-w-[900px] text-left text-xs">
+                <table data-admin-pro-inventory-table="true" className="w-full min-w-[900px] text-left text-xs">
                   <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
                     <tr>
                       <th className="px-4 py-3">თარიღი</th>
@@ -5781,7 +5798,7 @@ export default function AdminDashboardPro({
                           <span className="mt-1 block text-[10px] text-slate-400">{movement.variant_name || movement.variant_id || 'ძირითადი მარაგი'}</span>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 font-bold tabular-nums text-slate-300">{movement.before_quantity} → {movement.after_quantity}</td>
-                        <td className={`whitespace-nowrap px-4 py-3 font-black tabular-nums ${Number(movement.quantity_delta) > 0 ? 'text-emerald-300' : Number(movement.quantity_delta) < 0 ? 'text-rose-300' : 'text-slate-400'}`}>{Number(movement.quantity_delta) > 0 ? '+' : ''}{movement.quantity_delta}</td>
+                        <td data-admin-pro-inventory-delta={Number(movement.quantity_delta) > 0 ? "increase" : Number(movement.quantity_delta) < 0 ? "decrease" : "neutral"} className={`whitespace-nowrap px-4 py-3 font-black tabular-nums ${Number(movement.quantity_delta) > 0 ? 'text-emerald-300' : Number(movement.quantity_delta) < 0 ? 'text-rose-300' : 'text-slate-400'}`}>{Number(movement.quantity_delta) > 0 ? '+' : ''}{movement.quantity_delta}</td>
                         <td className="px-4 py-3 text-slate-300">
                           {movement.reason === 'order_deduction' ? 'შეკვეთის გაფორმება' :
                            movement.reason === 'order_cancellation' ? 'შეკვეთის გაუქმება' :
@@ -5834,9 +5851,9 @@ export default function AdminDashboardPro({
               <span role="status">ნაპოვნია {filteredReplenishmentPositions.length} / {replenishmentPositions.length} პოზიცია</span>
             </div>
             <p className="admin-workspace-inventory-hint">{replenishmentSummaryVerified ? 'ჯამური რეკომენდაციები ეფუძნება შენახულ პარამეტრებს; დაუმახსოვრებელი ცვლილებები ჩანს შესაბამის ბარათზე.' : 'შევსების რეკომენდაციები ჯერ არ არის დადასტურებული. განაახლეთ პარამეტრები.'}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div data-admin-pro-inventory-summary="planning" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">დაბალი მარაგის პოზიციები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{replenishmentSummaryVerified ? replenishmentPositions.filter(position => position.isLowStock).length : "—"}</strong></div>
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი (ჩატვირთული)</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">სულ შესავსები ერთეულები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{replenishmentSummaryVerified ? replenishmentPositions.reduce((sum, position) => sum + position.suggestedQuantity, 0) : "—"}</strong></div>
             </div>
             {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">{replenishmentError}</div>}
@@ -5854,7 +5871,7 @@ export default function AdminDashboardPro({
                 const hasConflict = Boolean(replenishmentConflictKeys[position.key]);
                 return (
                   <article key={position.key} className="admin-replenishment-row grid min-w-0 grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-2 sm:gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 sm:p-4">
-                    <div className="admin-replenishment-product col-span-2 min-w-0 xl:col-span-1"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : !draftPreview.valid ? 'bg-rose-500/15 text-rose-200' : draftPreview.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : !replenishmentSettingsReady || replenishmentError ? 'პარამეტრები დასადასტურებელია' : !draftPreview.valid ? 'გადაამოწმეთ პარამეტრები' : draftPreview.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
+                    <div className="admin-replenishment-product col-span-2 min-w-0 xl:col-span-1"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span data-admin-pro-replenishment-status={position.isOutOfStock ? "out" : !replenishmentSummaryVerified ? "pending" : !draftPreview.valid ? "invalid" : draftPreview.isLowStock ? "low" : "healthy"} className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : !draftPreview.valid ? 'bg-rose-500/15 text-rose-200' : draftPreview.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : !replenishmentSummaryVerified ? 'პარამეტრები დასადასტურებელია' : !draftPreview.valid ? 'გადაამოწმეთ პარამეტრები' : draftPreview.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><span className="block text-[10px] text-slate-400">არსებული მარაგი</span><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
@@ -5906,7 +5923,7 @@ export default function AdminDashboardPro({
                 </button>
               </div>
             </div>
-            <p role="status" className="admin-workspace-finance-state text-xs text-slate-300">{verifiedFinanceSnapshot ? "შეკვეთებისა და ხარჯების სრული ისტორია დადასტურებულია." : "ანგარიში ნაწილობრივ ან სრულად დაუდასტურებელია."} პერიოდის მიხედვით ნაჩვენებია მხოლოდ შესაბამისი ჩანაწერები.</p>
+            <p data-admin-pro-finance-state={verifiedFinanceSnapshot ? "verified" : "pending"} role="status" className="admin-workspace-finance-state text-xs text-slate-300">{verifiedFinanceSnapshot ? "შეკვეთებისა და ხარჯების სრული ისტორია დადასტურებულია." : "ანგარიში ნაწილობრივ ან სრულად დაუდასტურებელია."} პერიოდის მიხედვით ნაჩვენებია მხოლოდ შესაბამისი ჩანაწერები.</p>
             {!ordersVerifiedForReports && (
               <div role="alert" aria-live="polite" className="admin-finance-orders-warning rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
                 <strong className="block mb-1">შეკვეთების სრული ისტორია არ არის დადასტურებული</strong>
@@ -6042,42 +6059,42 @@ export default function AdminDashboardPro({
               <p className="text-xs text-slate-400">კუპონით ბრუნვა არ ადასტურებს აქციის მიერ გამოწვეულ დამატებით გაყიდვას ან მოგებას. სარეკლამო ხარჯი, ვიზიტები, კონვერსია, ROI და კონკრეტულ Flash Sale კამპანიასთან კავშირი ჯერ არ იზომება.</p>
             </section>
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
-              <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="revenue" className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-emerald-400">{ordersVerifiedForReports ? financialOverview.totalSalesRevenue.toFixed(2) + ' ₾' : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">მხოლოდ ჩაბარებული შეკვეთები</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="gross" className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> მთლიანი მოგება</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-cyan-400">{!ordersVerifiedForReports || financialOverview.grossProfit === null ? '—' : financialOverview.grossProfit.toFixed(2) + ' ₾'}</p>
                 <span className="admin-analytics-note text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unreconciledDeliveredOrders > 0 ? 'შეკვეთების თანხების შეუსაბამობა' : financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="expense" className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-400" /> სულ ხარჯები</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-rose-400">{expensesVerifiedForReports ? financialOverview.totalExpenses.toFixed(2) + ' ₾' : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="delivered" className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-blue-400" /> ჩაბარებული შეკვეთები</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-blue-400">{ordersVerifiedForReports ? financialOverview.deliveredOrders.length : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-slate-400">მიმდინარე შეკვეთები: {ordersVerifiedForReports ? financialOverview.pipelineOrders.length : "—"}</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-rose-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="cancelled" className="admin-analytics-card bg-slate-900/80 border border-rose-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><X className="w-4 h-4 text-rose-400" /> გაუქმებული შეკვეთები</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-rose-400">{ordersVerifiedForReports ? financialOverview.cancelledOrders.length : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-rose-300">ნომინალური ღირებულება: {ordersVerifiedForReports ? financialOverview.cancelledOrderValue.toFixed(2) + " ₾" : "—"} · არ არის დადასტურებული დაბრუნება</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="average" className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> საშუალო შეკვეთა</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-indigo-400">{ordersVerifiedForReports ? financialOverview.averageOrderValue.toFixed(2) + ' ₾' : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-violet-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="addons" className="admin-analytics-card bg-slate-900/80 border border-violet-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /> დამატებითი მომსახურებები</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-violet-300">{ordersVerifiedForReports ? financialOverview.totalAddonRevenue.toFixed(2) + ' ₾' : '—'}</p>
                 <span className="admin-analytics-note text-[10px] text-violet-300">შეფუთვა და VIP დაზღვევა · მოგებაში არ არის ჩათვლილი</span>
               </div>
-              <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
+              <div data-admin-pro-finance-kpi="net" className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-3 sm:p-4 rounded-2xl space-y-2 shadow-lg">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
                 <p className="admin-analytics-value text-xl sm:text-2xl font-black text-amber-400">{!verifiedFinanceSnapshot || financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
                 <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{!expensesVerifiedForReports ? 'ხარჯების სრული ისტორია არ არის დადასტურებული' : financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — თვითღირებულება ან შეკვეთების გაყოფა არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
@@ -6098,7 +6115,7 @@ export default function AdminDashboardPro({
                         const height = Math.max(4, (point.revenue / maxRevenue) * 100);
                         return (
                           <div key={point.key} role="listitem" aria-label={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`} className="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1" title={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`}>
-                            <div aria-hidden="true" className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
+                            <div data-admin-pro-finance-bar="true" aria-hidden="true" className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
                             <span aria-hidden="true" className="text-[8px] text-slate-500 whitespace-nowrap">{point.label}</span>
                           </div>
                         );
@@ -6346,8 +6363,8 @@ export default function AdminDashboardPro({
                 <p className="text-xs text-slate-300">სავარაუდო შედეგი — არ ცვლის ფინანსურ ანგარიშს ან შენახულ მონაცემებს.</p>
                 <div className="flex justify-between"><span>ფასდაკლებული ფასი ერთეულზე:</span><b className="text-white">{calculatedSalesMetrics.discountedPrice.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>ჯამური შემოსავალი:</span><b className="text-white">{calculatedSalesMetrics.revenue.toFixed(2)} ₾</b></div>
-                <div className="flex justify-between"><span>მთლიანი მოგება:</span><b className={calculatedSalesMetrics.grossProfit < 0 ? "text-rose-300" : "text-emerald-400"}>{calculatedSalesMetrics.grossProfit.toFixed(2)} ₾</b></div>
-                <div className="flex justify-between"><span>წმინდა მოგება:</span><b className={calculatedSalesMetrics.netProfit < 0 ? "text-rose-300 text-base" : "text-cyan-400 text-base"}>{calculatedSalesMetrics.netProfit.toFixed(2)} ₾</b></div>
+                <div data-admin-pro-calculator-gross={calculatedSalesMetrics.grossProfit < 0 ? "loss" : "nonnegative"} className="flex justify-between"><span>მთლიანი მოგება:</span><b className={calculatedSalesMetrics.grossProfit < 0 ? "text-rose-300" : "text-emerald-400"}>{calculatedSalesMetrics.grossProfit.toFixed(2)} ₾</b></div>
+                <div data-admin-pro-calculator-net={calculatedSalesMetrics.netProfit < 0 ? "loss" : "nonnegative"} className="flex justify-between"><span>წმინდა მოგება:</span><b className={calculatedSalesMetrics.netProfit < 0 ? "text-rose-300 text-base" : "text-cyan-400 text-base"}>{calculatedSalesMetrics.netProfit.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>მარჟა (Margin):</span><b className="text-amber-400">{calculatedSalesMetrics.revenue > 0 ? calculatedSalesMetrics.profitMargin.toFixed(1) + "%" : "—"}</b></div>
                 <div className="flex justify-between"><span>მარკაპი (Markup):</span><b className="text-indigo-400">{Number(calcForm.purchaseCost) > 0 ? calculatedSalesMetrics.markup.toFixed(1) + "%" : "—"}</b></div>
                 <p className="text-xs text-slate-300">მარჟა = წმინდა მოგება / შემოსავალი; მარკაპი = ფასდაკლებული ფასისა და თვითღირებულების სხვაობა / თვითღირებულება. ნულოვანი გამყოფისას მაჩვენებელი არ განისაზღვრება.</p>
@@ -6495,7 +6512,7 @@ export default function AdminDashboardPro({
             <div role="log" aria-label="ფინანსური ასისტენტის პასუხები" aria-live="polite" className="admin-ai-chat bg-slate-950/80 border border-emerald-500/20 p-5 rounded-3xl space-y-4 max-h-[400px] overflow-y-auto text-xs shadow-inner">
               {aiChatLogs.map((log, idx) => (
                 <div key={idx} className={`admin-ai-message flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`admin-ai-bubble max-w-[85%] p-4 rounded-2xl ${log.role === 'user' ? 'bg-emerald-500 text-slate-950 font-bold shadow' : 'bg-slate-900 text-slate-200 border border-emerald-500/20'}`}>
+                  <div data-admin-pro-assistant-role={log.role === "user" ? "user" : "assistant"} className={`admin-ai-bubble max-w-[85%] p-4 rounded-2xl ${log.role === 'user' ? 'bg-emerald-500 text-slate-950 font-bold shadow' : 'bg-slate-900 text-slate-200 border border-emerald-500/20'}`}>
                     {log.text}
                   </div>
                 </div>
@@ -6569,21 +6586,21 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            {!ordersReady || ordersError ? <p role={ordersError ? "alert" : "status"} className="admin-workspace-orders-notice rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">{ordersError ? "შეკვეთების სრული სია ვერ ჩაიტვირთა. ნაჩვენები ჩანაწერები შესაძლოა არასრული იყოს." : "შეკვეთების სრული სია ჯერ არ დადასტურებულა."}</p> : <p className="admin-workspace-orders-result text-xs text-slate-400" role="status">ნაპოვნია {filteredOrders.length} / {orders.length} შეკვეთა</p>}
+            {!ordersReady || ordersError ? <p role={ordersError ? "alert" : "status"} className="admin-workspace-orders-notice rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">{ordersError ? "შეკვეთების სრული სია ვერ ჩაიტვირთა. ნაჩვენები ჩანაწერები შესაძლოა არასრული იყოს." : "შეკვეთების სრული სია ჯერ არ დადასტურებულა."}</p> : <div className="admin-pro-order-result-row"><p className="admin-workspace-orders-result text-xs text-slate-400" role="status">ნაპოვნია {filteredOrders.length} / {orders.length} შეკვეთა</p>{filteredOrders.length > 0 && (orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" data-admin-pro-order-reset="true" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>}
             {/* შეკვეთების სია */}
             <div className="admin-orders-list space-y-4">
               {filteredOrders.length === 0 ? (
-                <div className="admin-workspace-orders-empty text-center py-8"><p className="text-slate-400 text-xs">{!ordersReady || ordersError ? "დადასტურებული ჩანაწერები ჯერ არ არის ხელმისაწვდომი." : orderSearchQuery || orderStatusFilter !== "ყველა" ? "შერჩეული ფილტრებით შეკვეთები ვერ მოიძებნა." : "შეკვეთები ჯერ არ არის."}</p>{(orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>
+                <div data-admin-pro-feedback="empty" className="admin-workspace-orders-empty text-center py-8"><p className="text-slate-400 text-xs">{!ordersReady || ordersError ? "დადასტურებული ჩანაწერები ჯერ არ არის ხელმისაწვდომი." : orderSearchQuery || orderStatusFilter !== "ყველა" ? "შერჩეული ფილტრებით შეკვეთები ვერ მოიძებნა." : "შეკვეთები ჯერ არ არის."}</p>{(orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
-                    <div className="admin-order-card-heading flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                    <div data-admin-pro-order-heading="true" className="admin-order-card-heading flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
-                        <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
-                        <span className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
+                        <span data-admin-pro-order-number="true" className="font-black text-emerald-400 text-sm">#{o.id}</span>
+                        <span data-admin-pro-order-date="true" className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
                       </div>
                       <div className="text-left sm:text-right">
-                        <span className="font-black text-white text-base">{typeof formatPrice === 'function' ? formatPrice(o.totalGEL) : o.totalGEL + ' ₾'}</span>
+                        <span data-admin-pro-order-total="true" className="font-black text-white text-base">{typeof formatPrice === 'function' ? formatPrice(o.totalGEL) : o.totalGEL + ' ₾'}</span>
                       </div>
                     </div>
 
@@ -6603,7 +6620,7 @@ export default function AdminDashboardPro({
                     <div className="admin-order-card-footer flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
-                        <span className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(o.status))} px-3 py-1 rounded-xl text-[10px] font-black`}>
+                        <span data-admin-order-status={getOrderStatusFilterKey(o.status)} className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(o.status))} px-3 py-1 rounded-xl text-[10px] font-black`}>
                           {getOrderStatusFilterKey(o.status) || 'სტატუსი უცნობია'}
                         </span>
                       </div>
@@ -6722,28 +6739,28 @@ export default function AdminDashboardPro({
 
               {/* 1. მომხმარებლის სრული ინფორმაცია */}
               <div className="admin-order-customer bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
-                <h4 className="font-black text-emerald-400 text-sm mb-3">👤 მომხმარებლის სრული ინფორმაცია</h4>
+                <h4 className="font-black text-emerald-400 text-sm mb-3">მომხმარებლის ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
                   <p>სახელი და გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
                   <p>ტელეფონი: <a href={`tel:${selectedOrderForModal.phone}`} className="text-emerald-300 font-black hover:underline">📞 {selectedOrderForModal.phone}</a></p>
                   <p>ელფოსტა: <b className="text-white">{selectedOrderForModal.user_email || 'მითითებული არ არის'}</b></p>
-                  <p>სტატუსი: <span className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(selectedOrderForModal.status))} px-2.5 py-0.5 rounded-full font-bold`}>{getOrderStatusFilterKey(selectedOrderForModal.status) || 'სტატუსი უცნობია'}</span></p>
+                  <p>სტატუსი: <span data-admin-order-status={getOrderStatusFilterKey(selectedOrderForModal.status)} className={`admin-order-status-badge ${getOrderStatusClasses(getOrderStatusFilterKey(selectedOrderForModal.status))} px-2.5 py-0.5 rounded-full font-bold`}>{getOrderStatusFilterKey(selectedOrderForModal.status) || 'სტატუსი უცნობია'}</span></p>
                   <p className="sm:col-span-2 text-slate-300 pt-1">📍 სრული მისამართი: <b className="text-white">{selectedOrderForModal.address}</b></p>
                 </div>
               </div>
 
               {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
               <div className="admin-order-items-section space-y-3">
-                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length})</h4>
+                <h4 className="font-black text-emerald-400 text-sm">შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length})</h4>
                 
                 <div className="space-y-3">
                   {normalizeOrderItems(selectedOrderForModal.items).length > 0 ? (
                     normalizeOrderItems(selectedOrderForModal.items).map((item, idx) => (
                       <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         {resolveOrderItemImage(item, products) ? (
-                          <img src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
+                          <AdminThumbnail data-admin-pro-order-image="true" src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
-                          <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">ფოტო არ არის</div>
+                          <div data-admin-pro-order-image="true" className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">ფოტო არ არის</div>
                         )}
                         <div className="admin-order-item-info flex-1 space-y-1">
                           <h5 className="font-black text-white text-sm">{item.name}</h5>
@@ -6774,7 +6791,7 @@ export default function AdminDashboardPro({
 
               {/* 3. შეკვეთის ფინანსური დეტალები */}
               <div className="admin-order-financials bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
-                <h4 className="font-black text-emerald-400 text-sm mb-2">💳 შეკვეთის თანხა</h4>
+                <h4 className="font-black text-emerald-400 text-sm mb-2">შეკვეთის თანხა</h4>
                 <p className="text-slate-400 text-[11px] leading-relaxed">გადახდის მეთოდი და გადახდის სტატუსი ამ შეკვეთის მონაცემებში ხელმისაწვდომი არ არის.</p>
                 {selectedOrderForModal.checkoutBreakdown && (
                   <div className="space-y-2 border-y border-slate-800 py-3 text-sm">
@@ -6865,10 +6882,10 @@ export default function AdminDashboardPro({
             <div className="min-w-0"><label htmlFor="admin-workspace-support-type" className="block text-xs text-slate-300 mb-1">მოთხოვნის ტიპი</label><select id="admin-workspace-support-type" value={supportRequestFilter} onChange={e => { setSupportRequestFilter(e.target.value); setSelectedSupportTicketId(null); }} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white text-xs"><option value="all">ყველა მიმართვა</option><option value="requests">დაბრუნება და გაცვლა</option><option value="return">დაბრუნება</option><option value="exchange">გაცვლა</option></select></div>
             {supportRequestFilter !== 'all' && <p className="text-xs text-slate-400">ტიპი მითითებულია მიმართვის თემის მიხედვით. გადაწყვეტილებამდე გადაამოწმეთ შეკვეთა და მისი მფლობელი. მხარდაჭერის სტატუსი არ ცვლის ფინანსურ ან მარაგის მონაცემებს.</p>}
             {(supportSearch || supportStatusFilter !== 'all' || supportRequestFilter !== 'all') && <button type="button" onClick={() => { setSupportSearch(''); setSupportStatusFilter('all'); setSupportRequestFilter('all'); setSelectedSupportTicketId(null); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">ფილტრების გასუფთავება</button>}
-            <p role="status" className="text-xs text-slate-300">{supportTicketsReady ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
+            <p data-admin-pro-support-summary="true" role="status" className="text-xs text-slate-300">{supportTicketsReady && !supportTicketsError ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
             <div className="admin-support-list space-y-3">
               {visibleSupportTickets.length === 0 ? (
-                <p className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
+                <p data-admin-pro-feedback={supportTicketsLoading ? "loading" : supportTicketsError ? "error" : !supportTicketsReady ? "pending" : "empty"} className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : supportTicketsError ? 'მოთხოვნების სია ვერ განახლდა. სცადეთ ხელახლა.' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
               ) : (
                 visibleSupportTickets.map(t => (
                   <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-3 sm:p-4 rounded-2xl border border-slate-700 space-y-3 text-xs shadow-inner">
@@ -6876,6 +6893,7 @@ export default function AdminDashboardPro({
                       <div className="admin-support-ticket-meta flex items-center gap-3 flex-wrap">
                         <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
                         <span className="text-white font-black text-sm">{t.subject}</span>
+                        <span data-admin-pro-ticket-status={t.status === "ღია" ? "open" : t.status === "მუშავდება" ? "working" : t.status === "მოგვარებული" ? "resolved" : "unknown"}>{t.status === "ღია" || t.status === "მუშავდება" || t.status === "მოგვარებული" ? t.status : "უცნობი სტატუსი"}</span>
                         <span className="text-slate-500 text-[10px]">({t.date})</span>
                       </div>
                       
@@ -6925,7 +6943,7 @@ export default function AdminDashboardPro({
                           : (
                             <div className="space-y-2.5 max-h-96 overflow-y-auto">
                               {(supportTicketThreads[String(t.id)] || []).map(entry => (
-                                <div key={entry.id} className={`rounded-xl border p-3 ${entry.sender_role === 'admin' ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-700 bg-slate-950/70'}`}>
+                                <div key={entry.id} data-admin-pro-thread-role={entry.sender_role === "admin" ? "admin" : "customer"} className={`rounded-xl border p-3 ${entry.sender_role === 'admin' ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-700 bg-slate-950/70'}`}>
                                   <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                                     <b className={entry.sender_role === 'admin' ? 'text-emerald-300' : 'text-cyan-200'}>{entry.sender_role === 'admin' ? 'ადმინისტრატორი' : (entry.sender_name || 'მომხმარებელი')}</b>
                                     <span className="text-[10px] text-slate-500">{entry.created_at ? new Date(entry.created_at).toLocaleString('ka-GE') : ''}</span>
@@ -6971,9 +6989,9 @@ export default function AdminDashboardPro({
           <div className="admin-products-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                <h3 className="font-black text-white text-base flex items-center gap-2.5">
+                <div className="min-w-0"><h3 className="font-black text-white text-base flex items-center gap-2.5">
                   <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება'}
-                </h3>
+                </h3><p className="admin-pro-product-helper">ძირითადი ინფორმაცია, მახასიათებლები და ფოტოები.</p></div>
                 <button 
                   onClick={handleExportProducts}
                   className="bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-emerald-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow"
@@ -6983,6 +7001,7 @@ export default function AdminDashboardPro({
               </div>
 
               <form id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
+                <h4 className="admin-pro-product-section-title">ძირითადი ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
                     <label htmlFor="admin-workspace-product-name" className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
@@ -7192,7 +7211,7 @@ export default function AdminDashboardPro({
                     <div className="admin-workspace-gallery-grid">
                       {selectedImages.map((img, idx) => (
                         <div key={idx} className="admin-workspace-gallery-card"><div className="admin-product-gallery-thumbnail relative w-20 h-20 bg-slate-900 border border-emerald-500/20 rounded-2xl p-1.5 shrink-0 shadow-lg">
-                          <img src={img} alt="" className="w-full h-full object-cover rounded-xl" />
+                          <AdminThumbnail data-admin-pro-gallery-image="true" src={img} alt="" className="w-full h-full object-cover rounded-xl" />
                           <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} aria-label={`ფოტო ${idx + 1} — წაშლა`} className="admin-product-gallery-remove absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-5 h-5 text-[11px] font-black flex items-center justify-center shadow cursor-pointer">×</button>
                         </div>
                         {idx === 0 ? <span className="admin-workspace-gallery-primary">მთავარი ფოტო</span> : <button type="button" className="admin-workspace-gallery-select" onClick={() => setSelectedImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])}>მთავრად არჩევა</button>}
@@ -7212,7 +7231,7 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <div>
-                  <h3 className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
+                  <h3 id="admin-pro-catalogue-title" className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
                   <p className="mt-1 text-[10px] text-slate-400">
                     გამოქვეყნებული: {(products || []).filter(product => (product.isPublished ?? product.is_published) !== false).length}
                     {' · '}დამალული: {(products || []).filter(product => (product.isPublished ?? product.is_published) === false).length}
@@ -7246,20 +7265,21 @@ export default function AdminDashboardPro({
                 </div>
               </div>
 
+              <div className="admin-pro-product-result-row"><p role="status" className="admin-pro-product-helper">ნაპოვნია {filteredProducts.length} / {(products || []).length} ჩატვირთული პროდუქტი</p>{filteredProducts.length > 0 && (productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" data-admin-pro-product-reset="true" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}</div>
               <div className="admin-products-list space-y-3.5">
                 {filteredProducts.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
+                  <div data-admin-pro-feedback="empty" className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
                     <p>{productSearchQuery || productCategoryFilter !== "ყველა" ? "შერჩეული ფილტრებით პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის."}</p>
                     {(productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}
                   </div>
                 ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="admin-product-identity flex min-w-0 items-center gap-3.5">
-                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
+                      {p.image ? <AdminThumbnail data-admin-pro-product-image="true" src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div data-admin-pro-product-image="true" className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
-                        <span className={`inline-flex mt-1 rounded-full px-2 py-1 text-[10px] font-bold ${(p.isPublished ?? p.is_published) === false ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
+                        <span data-admin-pro-publication={(p.isPublished ?? p.is_published) === false ? "hidden" : "published"} className={`inline-flex mt-1 rounded-full px-2 py-1 text-[10px] font-bold ${(p.isPublished ?? p.is_published) === false ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
                           {(p.isPublished ?? p.is_published) === false ? 'დამალულია მაღაზიაში' : 'გამოქვეყნებულია'}
                         </span>
                       </div>
@@ -7351,7 +7371,7 @@ export default function AdminDashboardPro({
                           }}
                           className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        <span className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        <span data-admin-pro-stock={Number(p.stock ?? 0) <= 0 ? "out" : Number(p.stock ?? 0) <= 3 ? "low" : "available"} className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
                           {Number(p.stock ?? 0) <= 0 ? 'არ არის' : Number(p.stock ?? 0) <= 3 ? 'ცოტაა' : 'მარაგშია'}
                         </span>
                       </div>
@@ -7443,7 +7463,7 @@ export default function AdminDashboardPro({
                       <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>
                       <span className="text-[10px] text-slate-400">{message.created_at ? new Date(message.created_at).toLocaleString('ka-GE') : (message.time || '')}</span>
                     </div>
-                    <p className="text-[10px] uppercase tracking-wide text-emerald-300">{message.sender || 'უცნობი გამომგზავნი'}</p>
+                    <p data-admin-pro-legacy-sender="true" className="text-[10px] uppercase tracking-wide text-emerald-300">{message.sender || 'უცნობი გამომგზავნი'}</p>
                     <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200">{message.text || 'ტექსტური შეტყობინება არ არის.'}</p>
                     {message.image && <p className="text-[10px] text-slate-400">მიმაგრებულია სურათი</p>}
                     <p className="text-[10px] text-slate-500">ჩანაწერის ID: {message.id}</p>
@@ -7475,7 +7495,7 @@ export default function AdminDashboardPro({
             </div>}
             <div data-gs-flash-pricing="true" hidden={visibleAdminTab==='discounts'&&isOwner&&flashWorkspaceTab==='design'} className="space-y-4">
             {flashSaleAdminSummary.count > 0 && (
-              <div className="gs-admin-flash-sale-active" aria-live="polite">
+              <div className="gs-admin-flash-sale-active" data-admin-pro-promotion-state="active" aria-live="polite">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[10px] font-black uppercase tracking-[0.14em]">{adminVisualDesign.content.discountsActiveLabel}</span>
                   <strong>{flashSaleAdminSummary.count} პროდუქტი</strong>
@@ -7491,7 +7511,7 @@ export default function AdminDashboardPro({
                 </details>
               </div>
             )}
-            {flashSaleAdminSummary.upcomingProducts.length > 0 && <div className="rounded-xl border border-sky-400/30 bg-sky-950/30 p-3 text-xs text-sky-100">
+            {flashSaleAdminSummary.upcomingProducts.length > 0 && <div data-admin-pro-promotion-state="scheduled" className="rounded-xl border border-sky-400/30 bg-sky-950/30 p-3 text-xs text-sky-100">
               <strong>მომავალი აქციის ჩანაწერები: {flashSaleAdminSummary.upcomingProducts.length} პროდუქტი</strong>
               <p className="mt-1">უახლოესი დაწყება: {formatFlashSaleTime(flashSaleAdminSummary.nextStartsAt)} (თბილისი)</p>
             </div>}
@@ -7523,7 +7543,7 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
+              <div data-admin-pro-flash-window className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
                 <h4 className="font-bold text-white">აქციის დროის წინასწარი ნახვა</h4>
                 <label htmlFor="admin-flash-planned-start" className="block text-slate-300">მომავალი დაწყების თარიღი (თბილისი)</label>
                 <div className="flex flex-wrap items-center gap-2">
@@ -7579,8 +7599,8 @@ export default function AdminDashboardPro({
               {!activityLogsLoading && !activityLogsError && activityLogs.length > 0 && filteredActivityLogs.length === 0 && <p className="text-xs text-slate-400">ჩატვირთულ ჟურნალში შედეგი ვერ მოიძებნა.</p>}
               {paginatedActivityLogs.map(log => (
                 <div key={log.id} className="admin-audit-log-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
-                  <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
-                  <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
+                  <span data-admin-pro-log-action className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
+                  <span data-admin-pro-log-time className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
               ))}
               {filteredActivityLogs.length > 0 && (
@@ -7624,7 +7644,7 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
-            <p className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
+            <p data-admin-pro-delivery-disabled className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
             <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label htmlFor="admin-broadcast-title" className="text-slate-400 font-bold">შეტყობინების სათაური</label>
@@ -7635,7 +7655,7 @@ export default function AdminDashboardPro({
                 <textarea id="admin-broadcast-message" rows="4" maxLength={2000} placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
               </div>
               <p className="text-xs text-slate-400">სათაური: {broadcastForm.title.length} / 120 · ტექსტი: {broadcastForm.message.length} / 2000</p>
-              <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 space-y-2" aria-label="სატესტო შეტყობინების წინასწარი ნახვა">
+              <div data-admin-pro-message-preview className="rounded-xl border border-slate-700 bg-slate-950 p-3 space-y-2" aria-label="სატესტო შეტყობინების წინასწარი ნახვა">
                 <p className="text-xs font-bold text-slate-400">წინასწარი ნახვა — მხოლოდ ეს მოწყობილობა</p>
                 <p className="text-sm font-bold text-white break-words">{broadcastForm.title.trim() || "შეტყობინების სათაური"}</p>
                 <p className="text-xs text-slate-300 whitespace-pre-wrap break-words">{broadcastForm.message.trim() || "შეტყობინების ტექსტი"}</p>
@@ -7648,7 +7668,7 @@ export default function AdminDashboardPro({
         )}
 
         {visibleAdminTab === 'visual_editor' && (
-          <React.Suspense fallback={<div role="status" className="rounded-2xl border border-slate-700 bg-slate-900 p-6 text-sm text-slate-300">ვიზუალური რედაქტორი იტვირთება…</div>}>
+          <React.Suspense fallback={<AdminSectionLoading label="ვიზუალური რედაქტორი იტვირთება…"/>}>
             <StorefrontVisualEditor
               siteSettings={siteSettings}
               setSiteSettings={setSiteSettings}
@@ -7680,7 +7700,7 @@ export default function AdminDashboardPro({
             />
             </React.Suspense>
           ) : (
-            <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
+            <section data-admin-pro-feedback={adminVisualSyncStatus === 'error' ? "error" : "loading"} role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
               <p>{adminVisualSyncStatus === 'error' ? 'საერთო დიზაინის ჩატვირთვა ვერ მოხერხდა. ცვლილებების დაკარგვის თავიდან ასაცილებლად რედაქტორი დროებით დაბლოკილია.' : 'ადმინპანელის საერთო დიზაინი იტვირთება…'}</p>
               {adminVisualSyncStatus === 'error' && (
                 <button type="button" onClick={() => setAdminVisualReloadKey(value => value + 1)} className="mt-3 rounded-xl border border-emerald-400/40 px-4 py-2 text-xs font-bold text-emerald-200">
@@ -7718,7 +7738,7 @@ export default function AdminDashboardPro({
                 {(bannersList || []).map((b, index) => (
                   <div key={b.id} className="admin-banner-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col items-stretch text-xs gap-3">
                     <div className="flex items-center gap-3.5">
-                      <img src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
+                      <AdminThumbnail data-admin-pro-banner-image src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-black text-white text-sm break-words">{index + 1}. {b.title}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
@@ -7775,7 +7795,7 @@ export default function AdminDashboardPro({
                   />
                   {newCatImage && (
                     <div className="relative w-24 h-24 bg-slate-900 border border-emerald-500/30 rounded-2xl p-1.5 mt-3 shadow-lg">
-                      <img src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
+                      <AdminThumbnail data-admin-pro-category-photo="true" src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
                       <button 
                         type="button" 
                         aria-label="ახალი ფოტოს წაშლა" onClick={() => { categoryPhotoRequestRef.current.create++; setNewCatImage(''); }} 
@@ -7801,7 +7821,7 @@ export default function AdminDashboardPro({
                 </div>
                 {categorySearch && <button type="button" onClick={() => setCategorySearch('')} className="min-h-11 px-3 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">ძიების გასუფთავება</button>}
               </div>
-              <p role="status" className="text-xs text-slate-300 break-words">მთავარი: {mainCategories.length} · სუბკატეგორიები: {safeCategories.filter(category => category.parentId).length}{categorySearchTerm ? ' · ნაჩვენები ჯგუფები: ' + filteredMainCategories.length : ''}</p>
+              <p data-admin-pro-category-summary="true" role="status" className="text-xs text-slate-300 break-words">მთავარი: {mainCategories.length} · სუბკატეგორიები: {safeCategories.filter(category => category.parentId).length}{categorySearchTerm ? ' · ნაჩვენები ჯგუფები: ' + filteredMainCategories.length : ''}</p>
               <div className="admin-category-tree space-y-3">
                 {filteredMainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">{categorySearchTerm ? "ძიების შედეგი არ მოიძებნა." : "მთავარი კატეგორიები არ არის."}</p>
@@ -7816,7 +7836,7 @@ export default function AdminDashboardPro({
                         <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
                           <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
-                              <img src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
+                              <AdminThumbnail data-admin-pro-category-photo="true" src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
                               <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">ფოტო არ არის</div>
                             )}
@@ -7878,7 +7898,7 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                               </select>
                               {editCatImage && <div className="flex items-center gap-2 flex-wrap">
-                                <img src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <AdminThumbnail data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
                                 <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
                               </div>}
                             </div>
@@ -7899,7 +7919,7 @@ export default function AdminDashboardPro({
                                   <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
                                     <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {subImg && <img src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
+                                      {subImg && <AdminThumbnail data-admin-pro-category-photo="true" src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200 min-w-0 break-words">{sub.name}</span>
                                     </div>
 
@@ -7947,7 +7967,7 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                               </select>
                               {editCatImage && <div className="flex items-center gap-2 flex-wrap">
-                                <img src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <AdminThumbnail data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
                                 <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
                               </div>}
                             </div>
@@ -7988,13 +8008,13 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.couponsListTitle} ({coupons?.length || 0})</h3>
               <p className="text-xs text-slate-300">ნაჩვენებია ჩატვირთული აქტიური კუპონები. მინიმუმი ეხება პროდუქციის ჯამს.</p>
               <div className="flex flex-wrap gap-2 items-end"><div className="min-w-0 flex-1"><label htmlFor="admin-workspace-coupon-search" className="block text-xs text-slate-300 mb-1">კუპონის კოდი</label><input id="admin-workspace-coupon-search" type="search" value={couponSearch} onChange={e => setCouponSearch(e.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" placeholder="კოდის ძიება" /></div>{couponSearch && <button type="button" onClick={() => setCouponSearch('')} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}</div>
-              {!(coupons || []).some(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())) && <p className="text-xs text-slate-400">კუპონი ვერ მოიძებნა.</p>}
+              {!(coupons || []).some(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())) && <p role="status" className="text-xs text-slate-400">{couponSearch.trim() ? "კუპონი ვერ მოიძებნა." : "აქტიური კუპონები ჯერ არ არის."}</p>}
               <div className="admin-coupon-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(coupons || []).filter(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())).map(c => (
                   <div key={c.id} className="admin-coupon-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
                     <div>
-                      <h4 className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
-                      <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: {c.discountPercent}%</p>
+                      <h4 data-admin-pro-coupon-code className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
+                      <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: <strong data-admin-pro-coupon-value>{c.discountPercent}%</strong></p>
                       <p className="text-xs text-slate-300 mt-1">მინიმუმი: {Number(c.minOrderGEL || 0).toFixed(2)} ₾</p>
                     </div>
                     <button type="button" disabled={couponBusy} aria-label={`კუპონის წაშლა: ${c.code}`} onClick={() => handleDeleteCoupon(c.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
@@ -8019,7 +8039,7 @@ export default function AdminDashboardPro({
                 <input type="text" aria-label="მომწოდებლის სახელი" readOnly={editingVendorId !== null} placeholder="მომწოდებლის სახელი *" required maxLength={100} value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <input type="number" min="0" max="100" step="0.01" inputMode="decimal" aria-label="საკომისიო პროცენტებში" placeholder="საკომისიო %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center gap-1.5">
-                  <Percent className="w-4 h-4" /> {editingVendorId !== null ? "საკომისიოს შენახვა" : "მომწოდებლის დამატება"}
+                  <Percent className="w-4 h-4 shrink-0" /> <span className="admin-pro-control-caption">{editingVendorId !== null ? "საკომისიოს შენახვა" : "მომწოდებლის დამატება"}</span>
                 </button>
               </form>
               {editingVendorId !== null && <button type="button" onClick={() => { setEditingVendorId(null); setVendorForm({ name: '', commission: '' }); }} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">რედაქტირების გაუქმება</button>}
@@ -8071,10 +8091,10 @@ export default function AdminDashboardPro({
               {(userSearchQuery || crmStatusFilter !== 'all') && <button type="button" onClick={() => { setUserSearchQuery(''); setCrmStatusFilter('all'); setCrmPage(1); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}
               <button type="button" disabled={crmLoading || crmSaving} onClick={() => void fetchAdminCustomers()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
             </div>
-            <p role="status" className="text-xs text-slate-300">ნაპოვნია {filteredUsers.length} / {crmUsers.length} · სერვერული პროფილები: {crmReady ? serverCustomers.length : "—"}</p>
+            <p data-admin-pro-crm-summary="true" role="status" className="text-xs text-slate-300">ნაპოვნია {filteredUsers.length} / {crmUsers.length} · სერვერული პროფილები: {crmReady ? serverCustomers.length : "—"}</p>
             <div className="admin-crm-list space-y-3">
               {(!filteredUsers || filteredUsers.length === 0) ? (
-                <p className="text-slate-500 text-xs py-8 text-center">{crmLoading ? "მომხმარებლები იტვირთება…" : !crmReady ? "სერვერული სია ჯერ არ არის დადასტურებული." : "მომხმარებლები ვერ მოიძებნა."}</p>
+                <p data-admin-pro-feedback={crmLoading ? "loading" : crmError ? "error" : !crmReady ? "pending" : "empty"} className="text-slate-500 text-xs py-8 text-center">{crmLoading ? "მომხმარებლები იტვირთება…" : crmError ? "სერვერული სია ვერ განახლდა. სცადეთ ხელახლა." : !crmReady ? "სერვერული სია ჯერ არ არის დადასტურებული." : "მომხმარებლები ვერ მოიძებნა."}</p>
               ) : (
                 paginatedCrmUsers.map((u, i) => {
                   const uId = u.id || u.email || (safeCrmPage - 1) * CRM_PER_PAGE + i;
@@ -8087,12 +8107,12 @@ export default function AdminDashboardPro({
                         <div>
                           <div className="flex items-center gap-2.5 flex-wrap">
                             <h4 className="font-black text-white text-sm break-words">{u.name || "მომხმარებელი"}</h4>
-                            {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
-                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
-                            {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
+                            {u.isVip && <span data-admin-pro-crm-badge="vip" className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
+                            {u.isBlocked && <span data-admin-pro-crm-badge="restricted" className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
+                            {u.discountPercent > 0 && <span data-admin-pro-crm-badge="discount" className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
                           <p className="admin-crm-contact-line text-slate-400 text-[11px] mt-1">{u.email || "ელფოსტა არ არის მითითებული"} · {u.phone || "ტელეფონი არ არის მითითებული"}</p>
-                          <p className="text-xs text-slate-300 mt-1">{u.isServerCustomer ? "სერვერული პროფილი" : u.isLocalCrmRecord ? "ლოკალური ჩანაწერი" : "შეკვეთიდან მიღებული ჩანაწერი"}</p>
+                          <p className="text-xs text-slate-300 mt-1"><span data-admin-pro-crm-badge={u.isServerCustomer ? "server" : u.isLocalCrmRecord ? "local" : "order"}>{u.isServerCustomer ? "სერვერული პროფილი" : u.isLocalCrmRecord ? "ლოკალური ჩანაწერი" : "შეკვეთიდან მიღებული ჩანაწერი"}</span></p>
                           {u.isServerCustomer && <p className="text-xs text-slate-300">შეკვეთები (სერვერული რაოდენობა): {crmReady ? u.orderCount : "—"}</p>}
                           {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
                         </div>
@@ -8219,7 +8239,7 @@ export default function AdminDashboardPro({
                 ადმინისტრატორის წვდომა მოწმდება Supabase Auth-ის სერვერული სესიით და დაცული app_metadata.role მნიშვნელობით.
                 ბრაუზერში შენახული PIN/პაროლი და სატესტო Face ID/Passkey ავტორიზაცია გამორთულია.
               </p>
-              <p className="text-xs text-amber-300 leading-6">
+              <p data-admin-pro-security-warning className="text-xs text-amber-300 leading-6">
                 რეალური Passkey-ის დასამატებლად საჭიროა სერვერული challenge და კრედენციალის ვერიფიკაცია.
                 მანამდე ეს ფუნქცია უსაფრთხოების მიზნით გათიშულია.
               </p>
@@ -8243,7 +8263,7 @@ export default function AdminDashboardPro({
                   <input id="admin-workspace-delivery-other" type="number" inputMode="decimal" disabled={deliveryFeeSaving} value={(deliveryFeeDraft || deliveryFees)?.other ?? 15} min="0" step="0.01" onChange={e => { const value = e.target.value; setDeliveryFeeDraft(previous => ({ ...(previous || deliveryFees), other: value })); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
               </div>
-              <p className="text-xs text-slate-300">ტარიფები მოქმედ ფასებს მხოლოდ სერვერზე წარმატებული შენახვის შემდეგ შეცვლის.</p>
+              <p data-admin-pro-settings-draft className="text-xs text-slate-300">ტარიფები მოქმედ ფასებს მხოლოდ სერვერზე წარმატებული შენახვის შემდეგ შეცვლის.</p>
               <div className="flex flex-wrap gap-2">
               {deliveryFeeDraft && <button type="button" disabled={deliveryFeeSaving} onClick={() => setDeliveryFeeDraft(null)} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">მონახაზის გაუქმება</button>}
               <button type="button" disabled={!deliveryFeeDraft || deliveryFeeSaving} aria-busy={deliveryFeeSaving} onClick={handleSaveDeliveryFees} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
@@ -8256,7 +8276,7 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
               </h3>
-              <p className="text-xs text-slate-300">პარამეტრები ინახება საერთო მონახაზში; საიტზე გამოჩნდება ცალკე გამოქვეყნების შემდეგ.</p>
+              <p data-admin-pro-settings-draft className="text-xs text-slate-300">პარამეტრები ინახება საერთო მონახაზში; საიტზე გამოჩნდება ცალკე გამოქვეყნების შემდეგ.</p>
               <form onSubmit={handleSaveSettings} className="admin-global-settings-form space-y-4 text-xs">
                 <div className="space-y-1.5">
                   <label htmlFor="admin-workspace-setting-storeName" className="text-slate-300 font-bold">მაღაზიის დასახელება</label>

@@ -1074,7 +1074,7 @@ export default function StorefrontVisualEditor({
           </div>
         </div>
         {heroImagePending && <p role="status" className="mt-2 text-xs text-amber-200">ფოტო იტვირთება — შენახვა დროებით შეჩერებულია.</p>}
-        {saveMessage && <p role={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'alert' : 'status'} aria-live={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'assertive' : 'polite'} className={`mt-3 rounded-xl border px-3 py-2 text-xs ${/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'border-rose-400/40 bg-rose-950/40 text-rose-200' : 'border-emerald-400/20 bg-slate-950/70 text-emerald-200'}`}>{saveMessage}</p>}
+        {saveMessage && <p data-admin-pro-editor-save role={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'alert' : 'status'} aria-live={/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'assertive' : 'polite'} className={`mt-3 rounded-xl border px-3 py-2 text-xs ${/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ|აირჩიეთ JPG|ფოტოს წაკითხვა შეწყდა/.test(saveMessage) ? 'border-rose-400/40 bg-rose-950/40 text-rose-200' : 'border-emerald-400/20 bg-slate-950/70 text-emerald-200'}`}>{saveMessage}</p>}
       </header>
 
       {/* Keep save/publish reachable above the long phone preview. Real handlers and server guards are shared. */}
@@ -1083,7 +1083,7 @@ export default function StorefrontVisualEditor({
         <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
       </div>
 
-      <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" hidden={campaignOnly} aria-label="გამოქვეყნებული ვერსიების ისტორია">
+      <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" hidden={campaignOnly} aria-label="გამოქვეყნებული ვერსიების ისტორია" data-admin-pro-editor-history>
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-black text-white">გამოქვეყნებული ვერსიების ისტორია</h3>
@@ -1526,7 +1526,7 @@ export default function StorefrontVisualEditor({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {!campaignOnly&&previewMode !== 'desktop' && <button type="button" onClick={clearViewportOverrides} disabled={!hasViewportOverrides} className="rounded-lg border border-amber-300/40 px-2.5 py-2 text-[10px] font-bold text-amber-100 disabled:opacity-40">ამ მოწყობილობის პარამეტრების გასუფთავება</button>}
-              <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
+              <div data-admin-pro-editor-devices role="group" aria-label="წინასწარი ჩვენების მოწყობილობა" className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
               <button type="button" onClick={() => setPreviewMode('tablet')} aria-pressed={previewMode === 'tablet'} className={previewMode === 'tablet' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Tablet</button>
               <button type="button" onClick={() => setPreviewMode('mobile')} aria-pressed={previewMode === 'mobile'} className={previewMode === 'mobile' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Smartphone className="mr-1 inline h-3.5 w-3.5" /> Mobile</button>

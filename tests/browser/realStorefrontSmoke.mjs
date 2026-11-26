@@ -33,6 +33,11 @@ async function awaitServer() {
 let browser;
 try {
   await awaitServer();
+  // Prioritize the release-blocking WebKit admin matrix.
+  // Retain the full Chromium and WebKit storefront suites below.
+  browser = await webkit.launch({ headless: true });
+  await runAdminWorkspaceSmoke(browser,host,{widths:[390],layoutOnly:true});
+  await browser.close();
   browser = await chromium.launch({ headless: true });
   for (const width of [320, 375, 430, 768, 1024, 1440]) {
     const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
@@ -127,11 +132,29 @@ try {
            }
          }
          assert.ok(categorySelectedWithKeyboard, 'Keyboard Enter selects a main category at ' + width + 'px');
-         await allCategoryCard.focus();
-         await page.keyboard.press('Space');
-         await page.waitForFunction(() =>
-           document.querySelector('.gs-signature-all-categories, .gs-category-card--all')?.getAttribute('aria-pressed') === 'true',
-           null, { timeout: 5000 });
+         // Reacquire focus if the live catalogue replaces its control.
+         // Always require the visible all-category state to be selected.
+         let allCategoryReset = false;
+         for (let attempt = 0; attempt < 3 && !allCategoryReset; attempt++) {
+           const liveAll = page.locator(allCategorySelector).filter({ visible: true }).first();
+           await liveAll.waitFor({ state: 'visible', timeout: 5000 });
+           const focused = await liveAll.evaluate(node => {
+             node.focus();
+             return node.isConnected && document.activeElement === node;
+           });
+           if (!focused) continue;
+           await page.keyboard.press('Space');
+           try {
+             await page.waitForFunction(selector =>
+               [...document.querySelectorAll(selector)].some(node =>
+                 node.getClientRects().length > 0 && node.getAttribute('aria-pressed') === 'true'),
+               allCategorySelector, { timeout: 5000 });
+             allCategoryReset = true;
+           } catch (error) {
+             if (attempt === 2) throw error;
+           }
+         }
+         assert.ok(allCategoryReset, 'Keyboard Space resets the category at ' + width + 'px');
        }
        const firstProduct = page.locator('.gs-catalog-product-card').first();
        if (await firstProduct.count()) {
