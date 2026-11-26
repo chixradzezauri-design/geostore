@@ -771,7 +771,7 @@ export default function StoreView({
                     {savedAmount > 0 && <span className="gs-flash-sale-savings">{flashLabels.save} {formatPrice(savedAmount)}</span>}
                     {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">{flashLabels.last(availableStock)}</span>}
                   </div>
-                  <button type="button" data-visual-editor-target="flashSale.button" style={videoElementStyle('flashSale.button')} onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${storeText.addToCartShort}: ${prod.name}`} disabled={availableStock <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button type="button" data-visual-editor-target="flashSale.button" style={videoElementStyle('flashSale.button')} onClick={(event) => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod, event.currentTarget) : addToCart(prod))} aria-label={`${availableStock <= 0 ? flashLabels.soldOut : storeText.addToCartShort}: ${prod.name}`} disabled={availableStock <= 0} className="gs-video-flash-add w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {availableStock <= 0 ? flashLabels.soldOut : storeText.addToCartShort}
                   </button>
                 </div>
