@@ -123,6 +123,17 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
+        if(tab==='inventory'){
+          assert.equal(await shell.locator('[data-admin-pro-inventory-summary="history"] > div').count(),3,'Three inventory history metrics remain');
+        }
+        if(tab==='replenishment'){
+          assert.equal(await shell.locator('[data-admin-pro-inventory-summary="planning"] > div').count(),3,'Three planning metrics remain');
+          const query=shell.getByRole('searchbox',{name:'მარაგის შევსების გეგმის ძიება'});
+          await query.fill('fixture-no-match-31c8');
+          await shell.getByRole('button',{name:'ფილტრების გასუფთავება',exact:true}).first().click();
+          assert.equal(await query.inputValue(),'','Stock planning reset restores search');
+          assert.equal(await shell.locator('#admin-workspace-replenishment-filter').inputValue(),'all');
+        }
         if(tab==='orders'){
           const search=shell.getByRole('textbox',{name:'შეკვეთების ძებნა'});
           await search.fill('synthetic-no-match');

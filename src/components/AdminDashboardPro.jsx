@@ -5734,17 +5734,17 @@ export default function AdminDashboardPro({
             {inventoryMovementProductFilter && <div className="admin-workspace-inventory-filter-state"><span>აქტიური ფილტრი: {(products || []).find(product => String(product.id) === inventoryMovementProductFilter)?.name || inventoryMovementProductFilter}</span><button type="button" onClick={() => { setInventoryMovementProductQuery(''); setInventoryMovementProductFilter(''); }}>გასუფთავება</button></div>}
             <p className="admin-workspace-inventory-hint">მაჩვენებლები ასახავს მხოლოდ ჩატვირთულ ჩანაწერებს, არა სრულ ისტორიულ ჯამს.</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div data-admin-pro-inventory-summary="history" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="admin-inventory-history-metric rounded-2xl border border-white/5 bg-slate-950/70 p-4">
                 <p className="text-[10px] font-bold text-slate-400">ჩატვირთული ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-white">{inventoryMovementRows.length}</strong>
               </div>
               <div className="admin-inventory-history-metric rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
-                <p className="text-[10px] font-bold text-slate-400">მარაგის ზრდის ჩანაწერები</p>
+                <p className="text-[10px] font-bold text-slate-400"><TrendingUp aria-hidden="true" className="admin-pro-inventory-icon" /> მარაგის ზრდის ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) > 0).length}</strong>
               </div>
               <div className="admin-inventory-history-metric rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4">
-                <p className="text-[10px] font-bold text-slate-400">მარაგის შემცირების ჩანაწერები</p>
+                <p className="text-[10px] font-bold text-slate-400"><Activity aria-hidden="true" className="admin-pro-inventory-icon" /> მარაგის შემცირების ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) < 0).length}</strong>
               </div>
             </div>
@@ -5765,7 +5765,7 @@ export default function AdminDashboardPro({
               </div>
             ) : inventoryMovementRows.length > 0 && (
               <div className="admin-inventory-table-scroll overflow-x-auto rounded-2xl border border-emerald-500/15" role="region" aria-label="მარაგის მოძრაობების ცხრილი — ჰორიზონტალური გადახვევა" tabIndex={0}>
-                <table className="w-full min-w-[900px] text-left text-xs">
+                <table data-admin-pro-inventory-table="true" className="w-full min-w-[900px] text-left text-xs">
                   <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
                     <tr>
                       <th className="px-4 py-3">თარიღი</th>
@@ -5786,7 +5786,7 @@ export default function AdminDashboardPro({
                           <span className="mt-1 block text-[10px] text-slate-400">{movement.variant_name || movement.variant_id || 'ძირითადი მარაგი'}</span>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 font-bold tabular-nums text-slate-300">{movement.before_quantity} → {movement.after_quantity}</td>
-                        <td className={`whitespace-nowrap px-4 py-3 font-black tabular-nums ${Number(movement.quantity_delta) > 0 ? 'text-emerald-300' : Number(movement.quantity_delta) < 0 ? 'text-rose-300' : 'text-slate-400'}`}>{Number(movement.quantity_delta) > 0 ? '+' : ''}{movement.quantity_delta}</td>
+                        <td data-admin-pro-inventory-delta={Number(movement.quantity_delta) > 0 ? "increase" : Number(movement.quantity_delta) < 0 ? "decrease" : "neutral"} className={`whitespace-nowrap px-4 py-3 font-black tabular-nums ${Number(movement.quantity_delta) > 0 ? 'text-emerald-300' : Number(movement.quantity_delta) < 0 ? 'text-rose-300' : 'text-slate-400'}`}>{Number(movement.quantity_delta) > 0 ? '+' : ''}{movement.quantity_delta}</td>
                         <td className="px-4 py-3 text-slate-300">
                           {movement.reason === 'order_deduction' ? 'შეკვეთის გაფორმება' :
                            movement.reason === 'order_cancellation' ? 'შეკვეთის გაუქმება' :
@@ -5839,9 +5839,9 @@ export default function AdminDashboardPro({
               <span role="status">ნაპოვნია {filteredReplenishmentPositions.length} / {replenishmentPositions.length} პოზიცია</span>
             </div>
             <p className="admin-workspace-inventory-hint">{replenishmentSummaryVerified ? 'ჯამური რეკომენდაციები ეფუძნება შენახულ პარამეტრებს; დაუმახსოვრებელი ცვლილებები ჩანს შესაბამის ბარათზე.' : 'შევსების რეკომენდაციები ჯერ არ არის დადასტურებული. განაახლეთ პარამეტრები.'}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div data-admin-pro-inventory-summary="planning" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">დაბალი მარაგის პოზიციები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{replenishmentSummaryVerified ? replenishmentPositions.filter(position => position.isLowStock).length : "—"}</strong></div>
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი (ჩატვირთული)</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">სულ შესავსები ერთეულები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{replenishmentSummaryVerified ? replenishmentPositions.reduce((sum, position) => sum + position.suggestedQuantity, 0) : "—"}</strong></div>
             </div>
             {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">{replenishmentError}</div>}
@@ -5859,7 +5859,7 @@ export default function AdminDashboardPro({
                 const hasConflict = Boolean(replenishmentConflictKeys[position.key]);
                 return (
                   <article key={position.key} className="admin-replenishment-row grid min-w-0 grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-2 sm:gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 sm:p-4">
-                    <div className="admin-replenishment-product col-span-2 min-w-0 xl:col-span-1"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : !draftPreview.valid ? 'bg-rose-500/15 text-rose-200' : draftPreview.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : !replenishmentSettingsReady || replenishmentError ? 'პარამეტრები დასადასტურებელია' : !draftPreview.valid ? 'გადაამოწმეთ პარამეტრები' : draftPreview.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
+                    <div className="admin-replenishment-product col-span-2 min-w-0 xl:col-span-1"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span data-admin-pro-replenishment-status={position.isOutOfStock ? "out" : !replenishmentSummaryVerified ? "pending" : !draftPreview.valid ? "invalid" : draftPreview.isLowStock ? "low" : "healthy"} className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : !draftPreview.valid ? 'bg-rose-500/15 text-rose-200' : draftPreview.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : !replenishmentSummaryVerified ? 'პარამეტრები დასადასტურებელია' : !draftPreview.valid ? 'გადაამოწმეთ პარამეტრები' : draftPreview.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><span className="block text-[10px] text-slate-400">არსებული მარაგი</span><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>

@@ -1379,3 +1379,41 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls input[type="number"] {font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-identity {gap:10px!important}
 }
+
+/* Admin PRO 07 — inventory history and replenishment presentation.
+   Preserve element-editor surfaces, per-variant thresholds and saving contracts. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] > div {min-width:0;overflow-wrap:anywhere;box-shadow:none!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary="planning"] > div {background:var(--admin-vd-contentCardBackground-active,var(--av-surface))!important;border-color:var(--admin-vd-contentCardBorder-active,var(--av-border))!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] > div > p {display:flex;align-items:center;gap:6px;font-size:12px!important;line-height:1.5;color:var(--av-muted)!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] > div > strong {font-size:clamp(20px,calc(var(--admin-vd-titleFontSize-active,18px) * 1.3),32px)!important;line-height:1.35;font-variant-numeric:tabular-nums}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary="planning"] > div > strong {color:var(--admin-vd-cardTitleText-active,var(--av-text))!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-inventory-icon {width:16px;height:16px;flex-shrink:0}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-inventory-table-scroll {max-inline-size:100%;min-inline-size:0;overflow-x:auto;overscroll-behavior-inline:contain}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td) {line-height:1.5;vertical-align:middle}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead th {letter-spacing:normal!important;text-transform:none!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] td[data-admin-pro-inventory-delta] {font-variant-numeric:tabular-nums;font-weight:700!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-delta="increase"] {color:#15803d!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-delta="decrease"] {color:#be123c!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-delta="neutral"] {color:var(--av-muted)!important}
+/* Explicit light/dark foreground and background pairs avoid theme-dependent
+   red/green contrast on stock status and movement cells. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-delta="increase"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-replenishment-status="healthy"] {--admin-stock-bg:#dff3eb;--admin-stock-fg:#14594a}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-replenishment-status="low"] {--admin-stock-bg:#fff0cc;--admin-stock-fg:#754300}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-delta="decrease"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-replenishment-status="out"],[data-admin-pro-replenishment-status="invalid"]) {--admin-stock-bg:#fce5e8;--admin-stock-fg:#9c2538}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-replenishment-status="pending"] {--admin-stock-bg:#e7edf3;--admin-stock-fg:#39495a}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-replenishment-status] {background:var(--admin-stock-bg)!important;color:var(--admin-stock-fg)!important;-webkit-text-fill-color:currentColor!important;border-radius:6px!important;font-size:11px!important;line-height:1.4}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is([data-admin-pro-inventory-delta="increase"],[data-admin-pro-inventory-delta="decrease"]) {background:var(--admin-stock-bg)!important;color:var(--admin-stock-fg)!important;-webkit-text-fill-color:currentColor!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric :is(label,span) {font-size:12px!important;line-height:1.4;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric input {font-variant-numeric:tabular-nums;min-height:44px!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric > strong {font-variant-numeric:tabular-nums;line-height:1.35}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-save > div {align-items:flex-start;min-width:0}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-save > div > span {overflow-wrap:anywhere;line-height:1.5}
+@media(max-width:767px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] {gap:8px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] > div {padding:12px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] > div > strong {margin-top:4px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric {min-width:0}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric input {font-size:max(16px,var(--admin-vd-inputFontSize-active,16px))!important}
+}
