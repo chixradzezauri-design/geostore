@@ -4608,11 +4608,11 @@ export default function App() {
 
       <div className={`gs-floating-support${supportOpen ? " gs-video-support-open" : ""}${isCheckoutOpen || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen ? " gs-video-assistance-obscured" : ""}`}>
         {supportOpen ? (
-          <div className="gs-support-panel">
+          <div className="gs-support-panel" role="region" aria-labelledby="gs-support-panel-title">
             <div className="gs-support-panel-heading">
               <span className="gs-support-heading-icon"><MessageSquare aria-hidden="true" /></span>
               <span className="gs-support-heading-copy">
-                <strong>{t.supportChat}</strong>
+                <strong id="gs-support-panel-title">{t.supportChat}</strong>
                 <small>{currentLang === 'en' ? 'GEOSTORE · Customer care' : currentLang === 'ru' ? 'GEOSTORE · Поддержка клиентов' : 'GEOSTORE · მომხმარებელთა დახმარება'}</small>
               </span>
               <button
@@ -5084,9 +5084,9 @@ export default function App() {
                       )}
                     </div>
                   )}
-                  <div ref={supportThreadMessagesRef} className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
+                  <div ref={supportThreadMessagesRef} className="gs-support-conversation max-h-64 overflow-y-auto space-y-2 pr-1" role="log" aria-live="polite" aria-label={currentLang === 'en' ? 'Conversation' : currentLang === 'ru' ? 'Переписка' : 'მიმოწერა'}>
                     {supportThreadMessages.length ? supportThreadMessages.map((item) => (
-                      <div key={item.id} className={`rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
+                      <div key={item.id} data-support-sender={item.sender_role === 'admin' ? 'support' : 'customer'} className={`gs-support-message rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <strong className="text-slate-100">{item.sender_role === 'admin' ? (currentLang === 'en' ? 'GEOSTORE Support' : currentLang === 'ru' ? 'Поддержка GEOSTORE' : 'GEOSTORE მხარდაჭერა') : (item.sender_name || (currentLang === 'en' ? 'You' : currentLang === 'ru' ? 'Вы' : 'თქვენ'))}</strong>
                           <time className="text-[10px] text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : ''}</time>
@@ -5195,6 +5195,7 @@ export default function App() {
                   >
                     <textarea
                       name="supportReply"
+                      aria-label={currentLang === 'en' ? 'Write a reply' : currentLang === 'ru' ? 'Напишите ответ' : 'დაწერე პასუხი'}
                       rows={2}
                       maxLength={4000}
                       required
