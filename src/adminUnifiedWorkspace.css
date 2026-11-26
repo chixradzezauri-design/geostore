@@ -1147,3 +1147,56 @@
     min-height: 44px !important;
   }
 }
+
+/* Video 1:26–1:34: pair the marketing surfaces with their own readable ink.
+   Keep consent warnings visible and leave the sending/permission gates untouched. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments {
+  color: var(--av-text) !important;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments :is([data-admin-segment-card], .admin-marketing-campaigns, [class~="bg-slate-950/60"], [class~="bg-slate-950/50"]) {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments :is(p,summary).text-white {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p {
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p.text-emerald-300 {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments :is(p,ul).text-amber-200 {
+  color: #754300 !important;
+  background: #fff0cc !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments ul.text-amber-200 { padding-inline-start: 24px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments button.text-white:not(.bg-emerald-900) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments button.bg-emerald-900 {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments button:focus-visible, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments summary:focus-visible {
+  outline: 2px solid var(--av-focus);
+  outline-offset: 2px;
+}
