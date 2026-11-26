@@ -96,3 +96,12 @@ test('visitor greeting playback explicitly opens the compact disclosure before t
  assert.ok(scenario.indexOf('await greetingDisclosure.click()')<scenario.indexOf('await waveButton.click()'));
  assert.ok(scenario.includes("getAttribute('aria-expanded'),'true'"));
 });
+
+test('short viewport concierge uses horizontal dock clearance and preserves navigation',()=>{
+ const css=read('src/components/characterStudio.css'),smoke=read('tests/browser/characterStudioSmoke.mjs');
+ const lane=css.slice(css.indexOf('/* Short mobile viewports use separate horizontal lanes'));
+ for(const term of ['14px + env(safe-area-inset-bottom,0px)','76px + env(safe-area-inset-right,0px)','258px + env(safe-area-inset-right,0px)','74px + env(safe-area-inset-bottom,0px)','max-width:640px'])assert.ok(lane.includes(term),term);
+ assert.ok(!lane.includes('z-index:'));
+ assert.ok(smoke.includes('Right-side landscape dismissal'));
+ assert.ok(smoke.includes('Assistance dock remains reachable'));
+});

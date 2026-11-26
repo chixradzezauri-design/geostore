@@ -456,7 +456,29 @@
   .gs-character-scene[data-character-depth="grounded"][data-prominence]:not(.gs-character-preview-scene){max-width:350px}
   .gs-character-scene[data-character-depth="grounded"][data-prominence][data-side="right"]:not(.gs-character-preview-scene){max-width:min(350px,calc(100vw - var(--gs-premium-edge) - 24px))}
 }
+/* Short mobile viewports use separate horizontal lanes instead of lifting
+   the concierge into the sticky header. Keep the existing overlay z-index. */
 @media(max-width:767px) and (max-height:480px){
-  .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){--gs-premium-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
-  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){--gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+  .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    bottom:var(--gs-premium-bottom);
+    max-width:min(260px,calc(100vw - var(--gs-premium-edge) - 12px));
+  }
+  .gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:calc(258px + env(safe-area-inset-right,0px));
+    right:var(--gs-premium-edge);
+    max-width:min(260px,calc(100vw - var(--gs-premium-edge) - 12px));
+  }
+}
+@media(max-width:640px) and (max-height:480px){
+  .gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:calc(76px + env(safe-area-inset-right,0px));
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px));
+    bottom:var(--gs-premium-bottom);
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:max(10px,env(safe-area-inset-right,0px));
+  }
 }

@@ -235,7 +235,14 @@ export async function runConciergeV3Smoke(browser,host){
       assert.ok(box.x>=-1&&box.y>=-1&&box.x+box.width<=width+1&&box.y+box.height<=height+1,'Compact concierge stays in viewport '+width+'x'+height);
       assert.ok(bubble.height<=127,'Compact text stays bounded '+width+'x'+height);
       const dismiss=scene.locator('.gs-character-dismiss');
-      assert.equal(await dismiss.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Dismiss remains reachable '+width+'x'+height);
+      const hit=await dismiss.evaluate(n=>{
+        const r=n.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+        return {reachable:n.contains(top),cover:top?.tagName+' '+(typeof top?.className==='string'?top.className:''),rect:{x:r.x,y:r.y,width:r.width,height:r.height}};
+      });
+      assert.ok(hit.reachable,'Dismiss remains reachable '+width+'x'+height+' '+JSON.stringify(hit));
+      for(const button of await page.locator('.gs-floating-support .gs-floating-action, .gs-floating-ai .gs-floating-action').all()){
+        if(await button.isVisible())assert.equal(await button.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Assistance dock remains reachable '+width+'x'+height);
+      }
     }
     await page.setViewportSize({width:390,height:850});
     // Verify ordinary motion too, rather than only relying on reduced-motion CSS.
@@ -264,6 +271,15 @@ export async function runConciergeV3Smoke(browser,host){
     await scene.waitFor({state:'visible',timeout:10000});
     assert.equal(await scene.getAttribute('data-side'),'right');
     assert.match(await scene.innerText(),/Tech Panda/);
+    for(const [width,height] of [[640,360],[720,400]]){
+      await page.setViewportSize({width,height});
+      const close=scene.locator('.gs-character-dismiss');
+      assert.ok(await close.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Right-side landscape dismissal '+width+'x'+height);
+      for(const button of await page.locator('.gs-floating-support .gs-floating-action, .gs-floating-ai .gs-floating-action').all()){
+        if(await button.isVisible())assert.ok(await button.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Right-side landscape dock remains reachable');
+      }
+    }
+    await page.setViewportSize({width:390,height:850});
     await scene.locator('.gs-character-details-toggle').click();
     await scene.locator('.gs-character-mute').click();
     await scene.waitFor({state:'detached'});
