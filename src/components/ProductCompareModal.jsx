@@ -27,7 +27,7 @@ export default function ProductCompareModal({
         event.preventDefault();
         setIsComparisonOpen(false);
       } else if (event.key === 'Tab') {
-        const focusables = [...(dialogRef.current?.querySelectorAll('button:not([disabled]), [tabindex="0"]') || [])]
+        const focusables = [...(dialogRef.current?.querySelectorAll('button:not([disabled]), summary, [tabindex="0"]') || [])]
           .filter(node => node.getClientRects().length > 0);
         if (!focusables.length) return;
         const first = focusables[0], last = focusables[focusables.length - 1];
