@@ -7483,7 +7483,7 @@ export default function AdminDashboardPro({
             </div>}
             <div data-gs-flash-pricing="true" hidden={visibleAdminTab==='discounts'&&isOwner&&flashWorkspaceTab==='design'} className="space-y-4">
             {flashSaleAdminSummary.count > 0 && (
-              <div className="gs-admin-flash-sale-active" aria-live="polite">
+              <div className="gs-admin-flash-sale-active" data-admin-pro-promotion-state="active" aria-live="polite">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[10px] font-black uppercase tracking-[0.14em]">{adminVisualDesign.content.discountsActiveLabel}</span>
                   <strong>{flashSaleAdminSummary.count} პროდუქტი</strong>
@@ -7499,7 +7499,7 @@ export default function AdminDashboardPro({
                 </details>
               </div>
             )}
-            {flashSaleAdminSummary.upcomingProducts.length > 0 && <div className="rounded-xl border border-sky-400/30 bg-sky-950/30 p-3 text-xs text-sky-100">
+            {flashSaleAdminSummary.upcomingProducts.length > 0 && <div data-admin-pro-promotion-state="scheduled" className="rounded-xl border border-sky-400/30 bg-sky-950/30 p-3 text-xs text-sky-100">
               <strong>მომავალი აქციის ჩანაწერები: {flashSaleAdminSummary.upcomingProducts.length} პროდუქტი</strong>
               <p className="mt-1">უახლოესი დაწყება: {formatFlashSaleTime(flashSaleAdminSummary.nextStartsAt)} (თბილისი)</p>
             </div>}
@@ -7531,7 +7531,7 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
+              <div data-admin-pro-flash-window className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
                 <h4 className="font-bold text-white">აქციის დროის წინასწარი ნახვა</h4>
                 <label htmlFor="admin-flash-planned-start" className="block text-slate-300">მომავალი დაწყების თარიღი (თბილისი)</label>
                 <div className="flex flex-wrap items-center gap-2">
@@ -7632,7 +7632,7 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
-            <p className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
+            <p data-admin-pro-delivery-disabled className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
             <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label htmlFor="admin-broadcast-title" className="text-slate-400 font-bold">შეტყობინების სათაური</label>
@@ -7643,7 +7643,7 @@ export default function AdminDashboardPro({
                 <textarea id="admin-broadcast-message" rows="4" maxLength={2000} placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
               </div>
               <p className="text-xs text-slate-400">სათაური: {broadcastForm.title.length} / 120 · ტექსტი: {broadcastForm.message.length} / 2000</p>
-              <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 space-y-2" aria-label="სატესტო შეტყობინების წინასწარი ნახვა">
+              <div data-admin-pro-message-preview className="rounded-xl border border-slate-700 bg-slate-950 p-3 space-y-2" aria-label="სატესტო შეტყობინების წინასწარი ნახვა">
                 <p className="text-xs font-bold text-slate-400">წინასწარი ნახვა — მხოლოდ ეს მოწყობილობა</p>
                 <p className="text-sm font-bold text-white break-words">{broadcastForm.title.trim() || "შეტყობინების სათაური"}</p>
                 <p className="text-xs text-slate-300 whitespace-pre-wrap break-words">{broadcastForm.message.trim() || "შეტყობინების ტექსტი"}</p>
@@ -7726,7 +7726,7 @@ export default function AdminDashboardPro({
                 {(bannersList || []).map((b, index) => (
                   <div key={b.id} className="admin-banner-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col items-stretch text-xs gap-3">
                     <div className="flex items-center gap-3.5">
-                      <img src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
+                      <img data-admin-pro-banner-image src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-black text-white text-sm break-words">{index + 1}. {b.title}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
@@ -7996,13 +7996,13 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.couponsListTitle} ({coupons?.length || 0})</h3>
               <p className="text-xs text-slate-300">ნაჩვენებია ჩატვირთული აქტიური კუპონები. მინიმუმი ეხება პროდუქციის ჯამს.</p>
               <div className="flex flex-wrap gap-2 items-end"><div className="min-w-0 flex-1"><label htmlFor="admin-workspace-coupon-search" className="block text-xs text-slate-300 mb-1">კუპონის კოდი</label><input id="admin-workspace-coupon-search" type="search" value={couponSearch} onChange={e => setCouponSearch(e.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" placeholder="კოდის ძიება" /></div>{couponSearch && <button type="button" onClick={() => setCouponSearch('')} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}</div>
-              {!(coupons || []).some(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())) && <p className="text-xs text-slate-400">კუპონი ვერ მოიძებნა.</p>}
+              {!(coupons || []).some(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())) && <p role="status" className="text-xs text-slate-400">{couponSearch.trim() ? "კუპონი ვერ მოიძებნა." : "აქტიური კუპონები ჯერ არ არის."}</p>}
               <div className="admin-coupon-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(coupons || []).filter(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())).map(c => (
                   <div key={c.id} className="admin-coupon-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
                     <div>
-                      <h4 className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
-                      <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: {c.discountPercent}%</p>
+                      <h4 data-admin-pro-coupon-code className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
+                      <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: <strong data-admin-pro-coupon-value>{c.discountPercent}%</strong></p>
                       <p className="text-xs text-slate-300 mt-1">მინიმუმი: {Number(c.minOrderGEL || 0).toFixed(2)} ₾</p>
                     </div>
                     <button type="button" disabled={couponBusy} aria-label={`კუპონის წაშლა: ${c.code}`} onClick={() => handleDeleteCoupon(c.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
