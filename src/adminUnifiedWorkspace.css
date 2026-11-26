@@ -1546,3 +1546,136 @@
     margin-block: 6px 0 !important;
   }
 }
+
+/* Product editor: keep form groups compact and make gallery actions separate
+   from the image itself. No product data, validation or mutation changes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form {
+  container: product-editor / inline-size;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-product-attributes,.admin-size-color-stock-editor,.admin-product-variants-editor,.admin-product-gallery,.admin-workspace-product-content) {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-product-field {
+  min-inline-size: 0;
+  display: grid;
+  gap: 6px;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-product-field > small {
+  color: var(--av-muted) !important;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-product-featured {
+  min-height: 44px;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-row,.admin-custom-variant-row) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  padding: 10px !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-identity,.admin-custom-variant-identity) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-identity,.admin-custom-variant-identity) > b {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-identity > span {
+  display: block;
+  margin-inline-start: 0;
+  color: var(--av-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row > button {
+  background: #fce5e8 !important;
+  border: 1px solid #e4b4bf !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-editor > button,.admin-product-variants-editor > .grid > button) {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card {
+  border: 1px solid var(--av-border);
+  border-radius: 10px;
+  padding: 6px;
+  background: var(--av-surface);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card .admin-product-gallery-thumbnail {
+  display: grid;
+  grid-template-rows: minmax(0,1fr) auto;
+  gap: 6px;
+  aspect-ratio: auto !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-product-gallery-thumbnail > img {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+  object-fit: contain;
+  min-width: 0;
+  border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card:first-child {
+  border: 2px solid var(--av-accent);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card .admin-product-gallery-remove {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 44px !important;
+  border-radius: 6px !important;
+  background: #fce5e8 !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 20px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card .admin-workspace-gallery-select {
+  min-height: 44px !important;
+  white-space: normal;
+}
+@container product-editor (min-width: 250px) and (max-width: 699px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form > .grid:has(#admin-workspace-product-name) {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form > .grid > div:has(#admin-workspace-product-name) {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-product-variants-editor > .grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-product-variants-editor > .grid > :is(input[aria-label="ვარიანტის სახელი"],button) {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row > .admin-custom-variant-identity {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-stock {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+    gap: 4px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-stock input {
+    width: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row > button { align-self: end; }
+}
