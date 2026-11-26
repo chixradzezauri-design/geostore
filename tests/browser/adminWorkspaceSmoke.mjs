@@ -345,6 +345,13 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           await shell.getByRole('button', { name: 'მონახაზის გაუქმება', exact: true }).click();
           assert.equal(await fee.inputValue(), before, 'Delivery draft cancellation restores the original value');
         }
+        if(tab==='categories'){
+          const search=shell.locator('#admin-workspace-category-search');
+          await search.fill('fixture-no-match-b31');
+          await shell.getByRole('button',{name:'ძიების გასუფთავება',exact:true}).click();
+          assert.equal(await search.inputValue(),'','Category search resets without mutations');
+          assert.ok(await shell.locator('[data-admin-pro-category-summary]').isVisible());
+        }
         if (tab === 'vendors') {
           const purchase = shell.locator('.admin-purchase-workspace');
           await purchase.locator('[data-purchase-state="ready"]').waitFor({state:'visible'});
@@ -363,6 +370,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           assert.equal(await supplier.locator('.admin-supplier-card').count(),0);
           await supplier.getByRole('combobox',{name:'სერვერული მომწოდებლის სტატუსი'}).selectOption('all');
           assert.equal(await supplier.locator('.admin-supplier-card').count(),1);
+          assert.equal(await supplier.locator('[data-admin-pro-supplier-status="active"]').count(),1,'Active supplier status retains server identity');
         }
         if (tab === 'users') {
           await page.locator('#admin-workspace-crm-filter').selectOption('vip');

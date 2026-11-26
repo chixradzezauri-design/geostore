@@ -7782,7 +7782,7 @@ export default function AdminDashboardPro({
                   />
                   {newCatImage && (
                     <div className="relative w-24 h-24 bg-slate-900 border border-emerald-500/30 rounded-2xl p-1.5 mt-3 shadow-lg">
-                      <img src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
+                      <img data-admin-pro-category-photo="true" src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
                       <button 
                         type="button" 
                         aria-label="ახალი ფოტოს წაშლა" onClick={() => { categoryPhotoRequestRef.current.create++; setNewCatImage(''); }} 
@@ -7808,7 +7808,7 @@ export default function AdminDashboardPro({
                 </div>
                 {categorySearch && <button type="button" onClick={() => setCategorySearch('')} className="min-h-11 px-3 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">ძიების გასუფთავება</button>}
               </div>
-              <p role="status" className="text-xs text-slate-300 break-words">მთავარი: {mainCategories.length} · სუბკატეგორიები: {safeCategories.filter(category => category.parentId).length}{categorySearchTerm ? ' · ნაჩვენები ჯგუფები: ' + filteredMainCategories.length : ''}</p>
+              <p data-admin-pro-category-summary="true" role="status" className="text-xs text-slate-300 break-words">მთავარი: {mainCategories.length} · სუბკატეგორიები: {safeCategories.filter(category => category.parentId).length}{categorySearchTerm ? ' · ნაჩვენები ჯგუფები: ' + filteredMainCategories.length : ''}</p>
               <div className="admin-category-tree space-y-3">
                 {filteredMainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">{categorySearchTerm ? "ძიების შედეგი არ მოიძებნა." : "მთავარი კატეგორიები არ არის."}</p>
@@ -7823,7 +7823,7 @@ export default function AdminDashboardPro({
                         <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
                           <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
-                              <img src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
+                              <img data-admin-pro-category-photo="true" src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
                               <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">ფოტო არ არის</div>
                             )}
@@ -7885,7 +7885,7 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                               </select>
                               {editCatImage && <div className="flex items-center gap-2 flex-wrap">
-                                <img src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <img data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
                                 <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
                               </div>}
                             </div>
@@ -7906,7 +7906,7 @@ export default function AdminDashboardPro({
                                   <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
                                     <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {subImg && <img src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
+                                      {subImg && <img data-admin-pro-category-photo="true" src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200 min-w-0 break-words">{sub.name}</span>
                                     </div>
 
@@ -7954,7 +7954,7 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                               </select>
                               {editCatImage && <div className="flex items-center gap-2 flex-wrap">
-                                <img src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <img data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
                                 <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
                               </div>}
                             </div>
