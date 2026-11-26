@@ -1,6 +1,6 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {sphereMesh,mascotRgb,mascotPose,mascotLimb} from '../utils/mascot3DGeometry.js';
-import {drawMascot3DModel} from '../utils/mascot3DModels.js';
+import {drawMascot3DModel,drawPremiumMascotEye} from '../utils/mascot3DModels.js';
 import {mascotLighting} from '../utils/mascot3DLighting.js';
 
 // Actual depth-tested geometry, with no external scripts, downloads, or dependencies.
@@ -117,7 +117,8 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
             for(const sign of [-1,1]){
               draw([sign*.30,-1.12+sign*pose.step*.09,.05],[.25,.29,.34],dark,sign*pose.step*.18);
             }
-            draw([0,-.47+pose.breath,0],[.54,.69,.39],base);
+            draw([0,-.47+pose.breath,0],[.49,.69,.39],base);
+            draw([0,-.07+pose.breath,.015],[.36,.30,.33],base,0,.07,1);
             draw([0,-.55,.29],[.36,.49,.20],cream);
             const left=mascotLimb([-.43,-.12,.07],.72,-.26-pose.step*.25),right=mascotLimb([.43,-.12,.07],.72,1.87+pose.wave);
             draw(left.center,[.18,.45,.19],base,left.tilt);
@@ -129,22 +130,16 @@ export default function FlagshipFox3D({characterId='fox',color,emotion='happy',b
               draw([sign*.48,1.32,-.06],[.23,.52,.21],base,-sign*.35);
               draw([sign*.48,1.40,.08],[.13,.34,.12],pink,-sign*.35);
             }
-            draw([0,.56+pose.breath*.4,0],[.78,.67,.57],base);
-            draw([-.32,.26,.42],[.39,.26,.29],cream,-.17);
-            draw([.32,.26,.42],[.39,.26,.29],cream,.17);
-            draw([0,.22,.66],[.34,.22,.25],cream);
-            draw([0,.28,.88],[.15,.10,.10],black,0,.9,0);
+            draw([0,.56+pose.breath*.4,0],[.71,.62,.57],base);
+            draw([-.29,.27,.43],[.34,.23,.28],cream,-.17,.07,1);
+            draw([.29,.27,.43],[.34,.23,.28],cream,.17,.07,1);
+            draw([0,.24,.67],[.27,.18,.29],cream,0,.07,1);
+            draw([0,.28,.91],[.13,.078,.095],black,0,.46,0);
             draw([0,.06,.70],[.14,.055,.09],dark,0,.1,0);
             for(const sign of [-1,1]){
               const wink=emotion==='wink'&&sign===1;
               const blink=!motion.matches&&elapsed%3.1>2.92;
-              const ry=wink||blink?.025:emotion==='surprise'?.205:.17;
-              draw([sign*.30,.62,.49],[.19,ry,.11],white,sign*.08,.25,0);
-              if(!wink&&!blink){
-                draw([sign*.30,.62,.59],[.115,.125,.07],iris,0,.45,0);
-                draw([sign*.30,.62,.645],[.066,.086,.045],black,0,.8,0);
-                draw([sign*.30-.035,.68,.68],[.028,.035,.018],white,0,.8,0);
-              }
+              drawPremiumMascotEye(draw,{x:sign*.30,y:.62,z:.49,radius:.165,opening:emotion==='surprise'?1.32:1,tilt:-sign*.10,coat:base,iris,closed:wink||blink});
             }
             if(season==='winter')draw([0,-.02,.06],[.52,.13,.42],[.65,.05,.12],0,.1,0);
             }

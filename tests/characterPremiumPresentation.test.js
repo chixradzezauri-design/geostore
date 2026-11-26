@@ -27,3 +27,28 @@ test('premium depth uses non-interactive contact layers in the existing figure',
  assert.ok(smoke.includes('Contact plane exists in all render modes'));
  assert.ok(smoke.includes('Character is in front of the contact plane'));
 });
+
+test('sculpted eyes and species meshes retain finite bounded geometry, expressions and existing model roster',async()=>{
+ const {drawPremiumMascotEye,drawMascot3DModel,MASCOT_3D_IDS}=await import('../src/utils/mascot3DModels.js');
+ const {mascotPose}=await import('../src/utils/mascot3DGeometry.js');
+ const collect=()=>{const parts=[];return {parts,draw:(...args)=>parts.push(args)}};
+ const opened=collect(),closed=collect();
+ drawPremiumMascotEye(opened.draw,{x:.3,y:.62,z:.49,radius:.165});
+ drawPremiumMascotEye(closed.draw,{x:.3,y:.62,z:.49,radius:.165,closed:true});
+ assert.equal(opened.parts.length,6);assert.equal(closed.parts.length,1);
+ assert.ok(opened.parts[3][0][2]>opened.parts[2][0][2],'pupil projects ahead of iris');
+ assert.equal(MASCOT_3D_IDS.length,12);
+ for(const id of MASCOT_3D_IDS.filter(id=>id!=='fox'))for(const emotion of ['happy','wink','surprise']){
+   const {parts,draw}=collect();
+   drawMascot3DModel(id,draw,[.65,.4,.2],mascotPose(id,.7,'wave'),{emotion});
+   assert.ok(parts.length>=12&&parts.length<=100,id);
+   for(const [center,scale,tint,tilt=0,gloss=0,fur=0] of parts){
+     assert.ok([...center,...scale,...tint,tilt,gloss,fur].every(Number.isFinite),id);
+     assert.ok(scale.every(v=>v>0&&v<=1),id);
+     assert.ok(center.every(v=>Math.abs(v)<=2.2),id);
+   }
+ }
+ const renderer=read('src/components/FlagshipFox3D.jsx');
+ assert.ok(renderer.includes('drawPremiumMascotEye(draw'));
+ assert.ok(renderer.includes('gl.enable(gl.DEPTH_TEST)'));
+});
