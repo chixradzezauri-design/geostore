@@ -139,8 +139,8 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
             matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
-            if (sample.documentOverflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1) {
-              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,selected,moduleVisible,activeCount});
+            if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1) {
+              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,selected,moduleVisible,activeCount});
             }
           }
           await page.setViewportSize({ width, height: 850 });
@@ -522,5 +522,5 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
       console.log('PASS intercepted owner workspace: ' + width + 'px, ' + Object.keys(modules).length + ' actual modules, no writes');
     } finally { await context.close(); }
   }
-  assert.deepEqual(layoutFailures, [], engine + ': device matrix has page overflow or navigation regressions');
+  assert.deepEqual(layoutFailures, [], engine + ': device matrix has page/workspace overflow or navigation regressions');
 }
