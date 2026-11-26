@@ -6976,9 +6976,9 @@ export default function AdminDashboardPro({
           <div className="admin-products-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                <h3 className="font-black text-white text-base flex items-center gap-2.5">
+                <div className="min-w-0"><h3 className="font-black text-white text-base flex items-center gap-2.5">
                   <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება'}
-                </h3>
+                </h3><p className="admin-pro-product-helper">ძირითადი ინფორმაცია, მახასიათებლები და ფოტოები.</p></div>
                 <button 
                   onClick={handleExportProducts}
                   className="bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-emerald-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow"
@@ -6988,6 +6988,7 @@ export default function AdminDashboardPro({
               </div>
 
               <form id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
+                <h4 className="admin-pro-product-section-title">ძირითადი ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
                     <label htmlFor="admin-workspace-product-name" className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
@@ -7197,7 +7198,7 @@ export default function AdminDashboardPro({
                     <div className="admin-workspace-gallery-grid">
                       {selectedImages.map((img, idx) => (
                         <div key={idx} className="admin-workspace-gallery-card"><div className="admin-product-gallery-thumbnail relative w-20 h-20 bg-slate-900 border border-emerald-500/20 rounded-2xl p-1.5 shrink-0 shadow-lg">
-                          <img src={img} alt="" className="w-full h-full object-cover rounded-xl" />
+                          <img data-admin-pro-gallery-image="true" src={img} alt="" className="w-full h-full object-cover rounded-xl" />
                           <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} aria-label={`ფოტო ${idx + 1} — წაშლა`} className="admin-product-gallery-remove absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-5 h-5 text-[11px] font-black flex items-center justify-center shadow cursor-pointer">×</button>
                         </div>
                         {idx === 0 ? <span className="admin-workspace-gallery-primary">მთავარი ფოტო</span> : <button type="button" className="admin-workspace-gallery-select" onClick={() => setSelectedImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])}>მთავრად არჩევა</button>}
@@ -7217,7 +7218,7 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <div>
-                  <h3 className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
+                  <h3 id="admin-pro-catalogue-title" className="admin-product-inventory-title font-black text-white text-base">პროდუქტების კატალოგი ({products?.length || 0})</h3>
                   <p className="mt-1 text-[10px] text-slate-400">
                     გამოქვეყნებული: {(products || []).filter(product => (product.isPublished ?? product.is_published) !== false).length}
                     {' · '}დამალული: {(products || []).filter(product => (product.isPublished ?? product.is_published) === false).length}
@@ -7251,6 +7252,7 @@ export default function AdminDashboardPro({
                 </div>
               </div>
 
+              <div className="admin-pro-product-result-row"><p role="status" className="admin-pro-product-helper">ნაპოვნია {filteredProducts.length} / {(products || []).length} ჩატვირთული პროდუქტი</p>{filteredProducts.length > 0 && (productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" data-admin-pro-product-reset="true" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}</div>
               <div className="admin-products-list space-y-3.5">
                 {filteredProducts.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
@@ -7260,11 +7262,11 @@ export default function AdminDashboardPro({
                 ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="admin-product-identity flex min-w-0 items-center gap-3.5">
-                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
+                      {p.image ? <img data-admin-pro-product-image="true" src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div data-admin-pro-product-image="true" className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
-                        <span className={`inline-flex mt-1 rounded-full px-2 py-1 text-[10px] font-bold ${(p.isPublished ?? p.is_published) === false ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
+                        <span data-admin-pro-publication={(p.isPublished ?? p.is_published) === false ? "hidden" : "published"} className={`inline-flex mt-1 rounded-full px-2 py-1 text-[10px] font-bold ${(p.isPublished ?? p.is_published) === false ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
                           {(p.isPublished ?? p.is_published) === false ? 'დამალულია მაღაზიაში' : 'გამოქვეყნებულია'}
                         </span>
                       </div>
@@ -7356,7 +7358,7 @@ export default function AdminDashboardPro({
                           }}
                           className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        <span className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        <span data-admin-pro-stock={Number(p.stock ?? 0) <= 0 ? "out" : Number(p.stock ?? 0) <= 3 ? "low" : "available"} className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
                           {Number(p.stock ?? 0) <= 0 ? 'არ არის' : Number(p.stock ?? 0) <= 3 ? 'ცოტაა' : 'მარაგშია'}
                         </span>
                       </div>

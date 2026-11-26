@@ -257,6 +257,11 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         }
         if(tab==='admin_visual_editor')assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
         if(tab==='products'){
+          const productSearch=shell.getByRole('searchbox',{name:'პროდუქტის ძებნა'});
+          await productSearch.fill('fixture-no-match-9d776');
+          await shell.getByRole('button',{name:'ფილტრების გასუფთავება',exact:true}).first().click();
+          assert.equal(await productSearch.inputValue(),'','Catalogue reset restores search');
+          assert.ok(await shell.locator('.admin-pro-product-result-row').isVisible());
           const gallery=shell.locator('#admin-workspace-product-gallery');
           // Deterministic large JPEG, locally generated; no actual Storage writes.
           const bytes=await page.evaluate(async()=>{
@@ -308,6 +313,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           }
           await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:eligible});
           await thumbnail.waitFor({state:'visible',timeout:20000});
+          assert.equal(await thumbnail.evaluate(el=>getComputedStyle(el).objectFit),'contain','Photo preview preserves the full composition');
           const optimized=await thumbnail.getAttribute('src');
           assert.ok(optimized?.startsWith('data:image/webp;base64,'),'Eligible JPEG must convert to WebP');
           const encoded=Buffer.from(optimized.split(',')[1],'base64');
