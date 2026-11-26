@@ -1,3 +1,8 @@
+import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
+import CustomerPersonalOffers from './components/CustomerPersonalOffers.jsx';
+import CustomerPurchaseStatistics from './components/CustomerPurchaseStatistics.jsx';
+import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
+import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
 import {captureCheckoutCart,planConfirmedLocalCartCleanup,checkoutCartUnchanged} from './utils/checkoutCartCleanup.js';
 import PwaStatusNotice from './components/PwaStatusNotice.jsx';
@@ -807,8 +812,16 @@ export default function App() {
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const supportHistoryOpen = supportOpen || isNotificationsOpen;
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [supportSubmission, setSupportSubmission] = useState(null);
+  const [orderRequestDraft, setOrderRequestDraft] = useState(null);
+  const [supportRequestFilter, setSupportRequestFilter] = useState('all');
+  useEffect(() => { if (!supportOpen) setSupportRequestFilter('all'); }, [supportOpen]);
+  useEffect(() => { setSupportRequestFilter('all'); }, [currentUser?.id]);
+  const activeOrderRequestDraft = orderRequestDraft?.ownerId === currentUser?.id ? orderRequestDraft : null;
+  useEffect(() => { setOrderRequestDraft(null); }, [currentUser?.id]);
+  useEffect(() => { if (!supportOpen) setOrderRequestDraft(null); }, [supportOpen]);
   const [supportLookupTicketId, setSupportLookupTicketId] = useState('');
   const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
@@ -844,13 +857,36 @@ export default function App() {
     setSupportThreadLoading(false);
   }, [currentUser?.id]);
   const supportCreateRequestRef = useRef(null);
+  const supportCreateLockRef = useRef(null);
+  const customerPrivateEpochRef = useRef(0);
+  const markNotificationsLockRef = useRef(null);
+  const clearSupportPrivateState = () => {
+    customerPrivateEpochRef.current += 1;
+    supportCreateRequestRef.current = null;
+    supportCreateLockRef.current = null;
+    markNotificationsLockRef.current = null;
+    setIsSubmittingSupport(false);
+    setSupportSubmission(null);
+    setOrderRequestDraft(null);
+    setSupportOpen(false);
+    setSupportLookupTicketId('');
+    setSupportLookupAccessToken('');
+    setSupportThreadMessages([]);
+    setSupportTicketStatus(null);
+    setSupportThreadLoaded(false);
+    setSupportThreadError('');
+    beginSupportThreadSession();
+    supportHistorySessionRef.current += 1;
+    supportHistoryOwnerRef.current = null;
+    setMySupportTickets([]);
+  };
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
 
   useEffect(() => {
     const historySessionId = ++supportHistorySessionRef.current;
-    if (!supportOpen || !currentUser?.id) {
+    if (!supportHistoryOpen || !currentUser?.id) {
       supportHistoryLoadMoreSessionRef.current = null;
       supportHistoryOwnerRef.current = null;
       setMySupportTickets([]);
@@ -889,7 +925,7 @@ export default function App() {
           supabaseUrl: SUPABASE_URL,
           headers: await getSupabaseHeaders({ authenticated: true })
         });
-        if (active) {
+        if (active && historySessionId === supportHistorySessionRef.current && String(activeCartOwnerRef.current.userId ?? '') === ownerId) {
           if (page === null) {
             setMySupportTickets([]);
             setMySupportTicketsCursor(null);
@@ -938,7 +974,7 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [supportOpen, currentUser?.id, currentLang]);
+  }, [supportHistoryOpen, currentUser?.id, currentLang]);
 
   useEffect(() => {
     if (!supportOpen || !supportThreadLoaded) return undefined;
@@ -1234,6 +1270,7 @@ export default function App() {
       if (activeOwner.initialized && String(activeOwner.userId ?? '') === String(nextOwnerId ?? '')) return;
       if (String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
         clearPrivateCheckout();
+        clearSupportPrivateState();
       }
       try {
         const switched = switchCartStorageOwner({
@@ -1280,6 +1317,7 @@ export default function App() {
       } catch (error) {
         // Storage failures must not leave private checkout details visible.
         clearPrivateCheckout();
+        clearSupportPrivateState();
         // Fail closed: never persist the outgoing owner's cart under a new account.
         console.error('Cart owner switch failed:', error);
         cartRef.current = [];
@@ -1508,13 +1546,21 @@ export default function App() {
   const markAllNotificationsAsRead = async () => {
     const requestOwnerId = currentUser?.id;
     if (!requestOwnerId || String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId) ||
-        notificationsLoading || !notifications.some((n) => !n.read)) return;
+        notificationsLoading || notificationsError || markNotificationsLockRef.current || !notifications.some((n) => !n.read)) return;
+    const epoch = customerPrivateEpochRef.current;
+    const lock = {};
+    markNotificationsLockRef.current = lock;
+    const snapshotIds = new Set(notifications.filter(n=>!n.read).map(n=>n.id));
+    const stillCurrent = () => customerPrivateEpochRef.current === epoch && String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
     try {
+      const {data:{session},error:sessionError}=await supabase.auth.getSession();
+      if (!stillCurrent()) return;
+      if (sessionError || !session?.access_token || session.user?.id !== requestOwnerId) throw new Error('Notification session changed');
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/mark_my_order_notifications_read`,
         {
           method: 'POST',
-          headers: await getSupabaseHeaders({ authenticated: true }),
+          headers: {apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},
           body: JSON.stringify({})
         }
       );
@@ -1522,13 +1568,15 @@ export default function App() {
         const errorBody = await response.text().catch(() => '');
         throw new Error(errorBody || 'შეტყობინებების განახლება ვერ მოხერხდა.');
       }
-      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      if (!stillCurrent()) return;
+      setNotifications((prev) => prev.map((n) => snapshotIds.has(n.id) ? { ...n, read: true } : n));
       showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
     } catch (error) {
-      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
+      if (!stillCurrent()) return;
       console.error('Mark notifications read failed:', error);
       showToast(currentLang === 'en' ? 'Could not update notifications.' : currentLang === 'ru' ? 'Не удалось обновить уведомления.' : 'შეტყობინებების განახლება ვერ მოხერხდა.');
+    } finally {
+      if (markNotificationsLockRef.current === lock) markNotificationsLockRef.current = null;
     }
   };
 
@@ -1880,6 +1928,7 @@ export default function App() {
               ? validDate.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
               : '',
             totalGEL: normalizeOrderTotal(o.total_gel),
+            totalVerified: (typeof o.total_gel === 'number' || (typeof o.total_gel === 'string' && o.total_gel.trim() !== '')) && Number.isFinite(Number(o.total_gel)) && Number(o.total_gel) >= 0,
             status: typeof o.status === 'string' && o.status.trim() ? o.status : 'ახალი',
             items: normalizeOrderItems(o.items),
             status_changed_at: o.status_changed_at || null
@@ -4379,6 +4428,9 @@ export default function App() {
                 </p>
               </div>
 
+              <button type="button" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)} className="w-full min-h-11 rounded-xl border border-amber-500/40 bg-slate-950/60 px-3 py-2 font-bold text-amber-200 disabled:opacity-50">
+                {currentLang === 'en' ? 'Notification center' : currentLang === 'ru' ? 'Центр уведомлений' : 'შეტყობინებების ცენტრი'}{unreadNotificationsCount > 0 ? ' · '+unreadNotificationsCount : ''}
+              </button>
               <CustomerMarketingConsent key={currentUser.id+':'+currentUser.email} userId={currentUser.id} lang={currentLang} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>
               <button
                 type="button"
@@ -4389,12 +4441,17 @@ export default function App() {
               </button>
             </div>
 
+            {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && !adminLoggedIn && <CustomerPersonalOffers key={currentUser.id} products={products} wishlist={wishlist} ready={catalogueVerifiedEpoch===productsAccessEpoch.current} lang={currentLang} formatPrice={formatPrice} onOpenProduct={handleFindSavedProduct}/>}
+            {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && <CustomerPurchaseStatistics key={currentUser.id} orders={myOrders} loading={myOrdersLoading} error={myOrdersError} lang={currentLang} formatPrice={formatPrice}/>}
             <div className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
               </h3>
 
+              <button type="button" disabled={supportOpen || isSubmittingSupport} className="w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
+                {currentLang === 'en' ? 'My returns & exchanges' : currentLang === 'ru' ? 'Мои возвраты и обмены' : 'ჩემი დაბრუნება და გაცვლა'}
+              </button>
               <div className="gs-video-profile-order-list space-y-3" aria-busy={myOrdersLoading}>
                 {myOrdersError && myOrders.length > 0 && <p role="status" className="gs-video-profile-history-warning">{myOrdersError}</p>}
                 {myOrdersLoading && myOrders.length === 0 ? (
@@ -4413,7 +4470,7 @@ export default function App() {
                   myOrders.map((order) => (
                       <div
                         key={order.id}
-                        className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
+                        className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner flex-wrap"
                       >
                         <div className="gs-video-profile-order-info space-y-1">
                           <div className="flex items-center gap-2">
@@ -4443,6 +4500,16 @@ export default function App() {
                             {localizeOrderStatus(order.status || 'New', currentLang)}
                           </span>
                         </div>
+                        <CustomerOrderProgress order={order} lang={currentLang}/>
+                        <CustomerOrderRequest order={order} lang={currentLang} disabled={supportOpen || isSubmittingSupport || !!myOrdersError || myOrdersLoading} onRequest={(kind) => {
+                          if (supportOpen || isSubmittingSupport || myOrdersError || myOrdersLoading || !currentUser?.id || String(activeCartOwnerRef.current.userId ?? '') !== String(currentUser.id)) return;
+                          const request = buildCustomerOrderRequest(order, kind, currentLang);
+                          if (!request) return;
+                          setOrderRequestDraft({ ...request, ownerId: currentUser.id });
+                          setSupportRequestFilter('requests');
+                          setSupportSubmission(null);
+                          setSupportOpen(true);
+                        }}/>
                       </div>
                     ))
                 )}
@@ -4517,9 +4584,14 @@ export default function App() {
               </div>
             ) : (
             <form
+              key={JSON.stringify([currentUser?.id ?? null, activeOrderRequestDraft?.subject ?? null])}
               onSubmit={async (e) => {
                 e.preventDefault();
-                if (isSubmittingSupport) return;
+                if (isSubmittingSupport || supportCreateLockRef.current || authLoading) return;
+                const requestOwnerId = currentUser?.id ?? null;
+                const epoch = customerPrivateEpochRef.current;
+                const stillCurrent = () => customerPrivateEpochRef.current === epoch && (activeCartOwnerRef.current.userId ?? null) === requestOwnerId;
+                if (!stillCurrent()) return;
 
                 const name = e.target.cname.value.trim();
                 const email = e.target.cemail.value.trim();
@@ -4527,9 +4599,14 @@ export default function App() {
                 const message = e.target.cmessage.value.trim();
 
                 if (!name || !message || name.length > 100 || message.length > 4000 || subject.length > 150 || email.length > 254) return;
+                const lock = {};
+                supportCreateLockRef.current = lock;
                 setIsSubmittingSupport(true);
 
                 try {
+                  const {data:{session},error:sessionError} = await supabase.auth.getSession();
+                  if (!stillCurrent()) return;
+                  if (sessionError || (session?.user?.id ?? null) !== requestOwnerId || (requestOwnerId && !session?.access_token)) throw new Error(currentLang === 'en' ? 'Session changed. Please reopen support.' : currentLang === 'ru' ? 'Сессия изменилась. Откройте поддержку снова.' : 'სესია შეიცვალა. ხელახლა გახსენი მხარდაჭერა.');
                   if (!window.crypto?.getRandomValues) {
                     throw new Error(currentLang === 'en'
                       ? 'Secure ticket creation is unavailable in this browser.'
@@ -4567,7 +4644,7 @@ export default function App() {
                     `${SUPABASE_URL}/rest/v1/rpc/create_support_ticket_idempotent`,
                     {
                       method: 'POST',
-                      headers: await getSupabaseHeaders({ authenticated: true }),
+                      headers: {apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,'Content-Type':'application/json'},
                       body: JSON.stringify({
                         p_id: ticketId,
                         p_customer_name: name,
@@ -4604,10 +4681,13 @@ export default function App() {
                         : 'სერვერის პასუხის გადამოწმება ვერ მოხერხდა. ხელახლა სცადე.');
                   }
 
+                  if (!stillCurrent()) return;
                   supportCreateRequestRef.current = null;
                   setSupportSubmission({ ticketId, accessToken });
+                  setOrderRequestDraft(null);
                   e.target.reset();
                 } catch (error) {
+                  if (!stillCurrent()) return;
                   console.error('Support ticket error:', error);
                   alert(
                     error.message || (currentLang === 'en'
@@ -4617,7 +4697,10 @@ export default function App() {
                         : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.')
                   );
                 } finally {
-                  setIsSubmittingSupport(false);
+                  if (supportCreateLockRef.current === lock) {
+                    supportCreateLockRef.current = null;
+                    setIsSubmittingSupport(false);
+                  }
                 }
               }}
               className="gs-support-form"
@@ -4644,6 +4727,8 @@ export default function App() {
               <input
                 type="text"
                 name="csubject"
+                defaultValue={activeOrderRequestDraft?.subject || ''}
+                readOnly={!!activeOrderRequestDraft}
                 maxLength={150}
                 aria-label={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
@@ -4679,15 +4764,26 @@ export default function App() {
                   <p id="gs-my-support-tickets-title" className="text-sm font-bold text-white">
                     {currentLang === 'en' ? 'My support requests' : currentLang === 'ru' ? 'Мои обращения' : 'ჩემი მხარდაჭერის მიმართვები'}
                   </p>
-                  <span className="text-[10px] text-slate-400">{mySupportTickets.length}</span>
+                  <span className="text-[10px] text-slate-400">{mySupportTickets.filter(ticket => matchesCustomerOrderRequestFilter(ticket.subject, supportRequestFilter)).length}</span>
                 </div>
+                <label className="block text-xs text-slate-300">
+                  {currentLang === 'en' ? 'Request type' : currentLang === 'ru' ? 'Тип обращения' : 'მიმართვის ტიპი'}
+                  <select className="gs-support-field mt-1 w-full" value={supportRequestFilter} onChange={event=>setSupportRequestFilter(event.target.value)}>
+                    <option value="all">{currentLang === 'en' ? 'All requests' : currentLang === 'ru' ? 'Все обращения' : 'ყველა მიმართვა'}</option>
+                    <option value="requests">{currentLang === 'en' ? 'Returns & exchanges' : currentLang === 'ru' ? 'Возвраты и обмены' : 'დაბრუნება და გაცვლა'}</option>
+                    <option value="return">{currentLang === 'en' ? 'Returns' : currentLang === 'ru' ? 'Возвраты' : 'დაბრუნება'}</option>
+                    <option value="exchange">{currentLang === 'en' ? 'Exchanges' : currentLang === 'ru' ? 'Обмены' : 'გაცვლა'}</option>
+                  </select>
+                </label>
+                {supportRequestFilter !== 'all' && <p className="text-xs text-slate-400">{currentLang === 'en' ? 'These are support requests, not refund or exchange approvals. Results cover loaded requests only.' : currentLang === 'ru' ? 'Это обращения в поддержку, а не одобрение возврата или обмена. Показаны загруженные обращения.' : 'ეს მხარდაჭერის მიმართვებია და არა დაბრუნების ან გაცვლის დამტკიცება. ფილტრი მუშაობს ჩატვირთულ მიმართვებზე.'}</p>}
+                {!mySupportTicketsLoading && !mySupportTicketsError && supportRequestFilter !== 'all' && !mySupportTickets.some(ticket=>matchesCustomerOrderRequestFilter(ticket.subject,supportRequestFilter)) && <p role="status" className="text-xs text-slate-300">{currentLang === 'en' ? 'No matching loaded requests.' : currentLang === 'ru' ? 'Нет подходящих загруженных обращений.' : 'ჩატვირთულ მიმართვებში შესაბამისი მოთხოვნა არ მოიძებნა.'}</p>}
                 {mySupportTicketsLoading && !mySupportTickets.length && <p className="text-xs text-slate-400">{currentLang === 'en' ? 'Loading requests…' : currentLang === 'ru' ? 'Загрузка обращений…' : 'მიმართვები იტვირთება…'}</p>}
                 {mySupportTicketsError && <p role="alert" className="text-xs text-rose-300">{mySupportTicketsError}</p>}
-                {!mySupportTicketsLoading && !mySupportTicketsError && mySupportTickets.length === 0 && (
+                {!mySupportTicketsLoading && !mySupportTicketsError && supportRequestFilter === 'all' && mySupportTickets.length === 0 && (
                   <p className="text-xs text-slate-400">{currentLang === 'en' ? 'No account-linked requests yet. Guest requests can still be opened below with their ticket number and access code.' : currentLang === 'ru' ? 'Пока нет обращений, связанных с аккаунтом. Гостевые обращения можно открыть ниже по номеру и коду доступа.' : 'ანგარიშთან დაკავშირებული მიმართვები ჯერ არ გაქვს. სტუმრის მიმართვის გახსნა კვლავ შეგიძლია ქვემოთ ნომრითა და წვდომის კოდით.'}</p>
                 )}
                 <div className="space-y-2">
-                  {mySupportTickets.map((ticket) => (
+                  {mySupportTickets.filter(ticket => matchesCustomerOrderRequestFilter(ticket.subject, supportRequestFilter)).map((ticket) => (
                     <div key={ticket.ticket_id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -5102,6 +5198,12 @@ export default function App() {
         notificationsLoading={notificationsLoading}
         notificationsError={notificationsError}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
+        supportNotificationTickets={currentUser?.id && supportHistoryOwnerRef.current === String(currentUser.id) ? mySupportTickets : []}
+        supportNotificationsLoading={mySupportTicketsLoading}
+        supportNotificationsError={mySupportTicketsError}
+        supportNotificationsHasMore={mySupportTicketsHasMore}
+        onOpenSupportNotifications={()=>{setIsNotificationsOpen(false);setSupportSubmission(null);setSupportOpen(true);}}
+        onOpenOrderHistory={()=>{setIsNotificationsOpen(false);setActiveTab('profile');}}
         orders={orders}
         lookupOrderForTracking={lookupOrderForTracking}
         selectedRegion={selectedRegion}
