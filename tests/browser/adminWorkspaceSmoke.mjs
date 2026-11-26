@@ -128,7 +128,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (['command','expenses'].includes(tab)) {
           const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
           const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
-          assert.equal(ink, 'rgb(24, 34, 48)', 'Workspace headings use the active foreground on light cards');
+          assert.equal(ink, 'rgb(37, 34, 56)', 'Workspace headings use the active foreground on light cards');
         }
         if (tab === 'orders' && width < 480) {
           const statusPicker = shell.getByLabel('შეკვეთის სტატუსი', { exact: true });
@@ -186,6 +186,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.equal(positions.length, 4);
               assert.ok(positions.every(box => box.width >= 43.5 && box.height >= 43.5 && Math.abs(box.top - positions[0].top) < 2), 'Four category actions fit on one row when each has a 44px touch target');
             }
+            if (tab === 'support' && targetWidth < 640) {
+              const form= shell.locator('.admin-support-reply-form').first();
+              await form.waitFor();
+              const basis=await form.locator('textarea').evaluate(el=>getComputedStyle(el).flexBasis);
+              assert.equal(basis,'auto','Mobile reply composer does not inherit desktop vertical flex basis');
+            }
             if (tab === 'support' && targetWidth === 320) {
               const ticket = shell.locator('.admin-support-ticket').first();
               await ticket.waitFor();
@@ -197,6 +203,165 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (['settings','visual_editor','admin_visual_editor'].includes(tab)) {
+              const editorIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='settings'?'.admin-settings-panel':module==='visual_editor'?'.gs-storefront-visual-editor':'.admin-visual-editor-panel');
+                if(!scope)return ['editor or settings missing'];
+                const issues=[];
+                const selector=module==='settings'?'.admin-delivery-fee-fields > div,.admin-global-settings-form > div':module==='visual_editor'?'[data-admin-unified-editor-actions],.gs-visual-editor-preview-column > .admin-unified-preview-toolbar [data-admin-pro-editor-devices]':'.admin-unified-editor-header > div:last-child,.admin-unified-editor-jumps';
+                for(const group of scope.querySelectorAll(selector)){
+                  const outer=group.getBoundingClientRect();
+                  if(!outer.height)continue;
+                  for(const control of group.querySelectorAll('button,input,select,textarea')){
+                    const rect=control.getBoundingClientRect();
+                    if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('editor control outside its group');
+                  }
+                }
+                if(module==='visual_editor'){
+                  const bars=[...scope.querySelectorAll(':scope > [data-admin-unified-editor-actions]')].filter(el=>el.getClientRects().length);
+                  if(bars.length!==1)issues.push('duplicate or missing save/publish bar');
+                  if(bars.length===1&&bars[0].querySelectorAll('button').length!==2)issues.push('save/publish action missing');
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(editorIssues,[],engine+' '+targetWidth+'px: editor tools remain bounded and publication actions unique');
+            }
+            if (['discounts','coupons','banners','users'].includes(tab)) {
+              const promoIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='discounts'?'.admin-discounts-panel':module==='coupons'?'.admin-coupons-panel':module==='banners'?'.admin-banners':'.admin-marketing-segments');
+                if(!scope)return module==='users'?[]:['promotion module missing'];
+                const issues=[];
+                const groups=scope.querySelectorAll(module==='discounts'?'.admin-flash-sale-fields,.admin-unified-flash-price-row':module==='coupons'?'.admin-coupon-form,.admin-coupon-card':module==='banners'?'.admin-banner-fields,.admin-unified-banner-actions,.admin-banner-card > div:first-child':'[data-admin-segment-card]');
+                for(const group of groups){
+                  const outer=group.getBoundingClientRect();
+                  if(!outer.height)continue;
+                  for(const el of group.querySelectorAll('input,select,button,:scope > div,:scope > p,:scope > label,:scope > [data-admin-pro-banner-image]')){
+                    const rect=el.getBoundingClientRect();
+                    if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('promotion element outside group');
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(promoIssues,[],engine+' '+targetWidth+'px: promotion controls stay within their regions');
+            }
+            if (['support','messages','broadcasts'].includes(tab)) {
+              const communicationIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='broadcasts'?'.admin-broadcasts-panel':'.admin-support-panel');
+                const issues=[];
+                const groups=scope.querySelectorAll(module==='broadcasts'?'.admin-unified-broadcast-form':module==='messages'?'.admin-workspace-support-filters,.admin-legacy-message-card':'.admin-support-ticket-meta,.admin-support-ticket-controls,.admin-support-reply-form');
+                for(const group of groups){
+                  const outer=group.getBoundingClientRect();
+                  for(const el of group.querySelectorAll('button,input,select,textarea,:scope > span')){
+                    const rect=el.getBoundingClientRect();
+                    if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('communication element outside group');
+                  }
+                }
+                if(module==='support'&&!scope.querySelector('.admin-support-reply-form'))issues.push('support composer missing');
+                if(module==='broadcasts'&&!scope.querySelector('[data-admin-pro-delivery-disabled]'))issues.push('delivery limitation missing');
+                return issues;
+              },tab);
+              assert.deepEqual(communicationIssues,[],engine+' '+targetWidth+'px: communication regions stay bounded');
+            }
+            if (tab === 'staff' || tab === 'users') {
+              const identityIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='staff'?'.admin-staff':'.admin-crm-panel');
+                const issues=[];
+                const groups=scope.querySelectorAll(module==='staff'?'.admin-staff-permission-grid > label,.admin-staff-create-fields,.admin-unified-staff-actions':'.admin-workspace-crm-filters,.admin-crm-user-actions,.admin-crm-edit-panel');
+                for(const group of groups){
+                  const outer=group.getBoundingClientRect();
+                  for(const el of group.querySelectorAll('input,select,button')){
+                    const rect=el.getBoundingClientRect();
+                    if(!rect.height)continue;
+                    const checkbox=el.matches('input[type="checkbox"]');
+                    if(rect.left<outer.left-2||rect.right>outer.right+2||(!checkbox&&rect.height<43.5))issues.push('account control outside its group');
+                    if(checkbox&&(rect.width<16||outer.height<43.5))issues.push('permission touch area too small');
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(identityIssues,[],engine+' '+targetWidth+'px: staff and CRM controls remain bounded');
+            }
+            if (['analytics','calculator','expenses'].includes(tab)) {
+              const financeIssues=await shell.evaluate((root,module)=>{
+                const scope=root.querySelector(module==='analytics'?'.admin-analytics':module==='calculator'?'.admin-profit-calculator':'.admin-expenses');
+                const issues=[];
+                const fits=(inner,outer)=>inner.left>=outer.left-2&&inner.right<=outer.right+2;
+                if(module==='analytics'){
+                  const cards=[...scope.querySelectorAll('[data-admin-pro-finance-kpi]')];
+                  if(cards.length!==8)issues.push('financial KPI missing');
+                  for(const card of cards){
+                    const outer=card.getBoundingClientRect();
+                    for(const el of card.querySelectorAll(':scope > p,:scope > span'))if(!fits(el.getBoundingClientRect(),outer))issues.push('KPI content outside card');
+                  }
+                }else{
+                  const groups=scope.querySelectorAll(module==='calculator'?'.admin-calculator-field-grid > div,.admin-calculator-results > div':'.admin-expense-field');
+                  for(const group of groups){
+                    const outer=group.getBoundingClientRect();
+                    for(const el of group.querySelectorAll('input,select,:scope > span,:scope > b')){
+                      const inner=el.getBoundingClientRect();
+                      if(inner.height>0&&!fits(inner,outer))issues.push('financial field outside its group');
+                    }
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(financeIssues,[],engine+' '+targetWidth+'px: financial content stays within its own region');
+            }
+            if (['inventory','replenishment','vendors'].includes(tab)) {
+              const supplyIssues=await shell.evaluate((root, module) => {
+                const scope=root.querySelector(module==='vendors'?'.admin-vendors-panel':module==='inventory'?'[data-admin-inventory-view="history"]':'[data-admin-inventory-view="planning"]');
+                const issues=[];
+                if(module==='inventory'){
+                  const region=scope.querySelector('.admin-inventory-table-scroll');
+                  const box=region.getBoundingClientRect(), panel=scope.getBoundingClientRect();
+                  if(box.left<panel.left-2||box.right>panel.right+2||getComputedStyle(region).overflowX!=='auto')issues.push('inventory table escapes scroll region');
+                }else{
+                  const groups=scope.querySelectorAll(module==='vendors'?'.admin-unified-purchase-line,.admin-unified-supplier-form':'.admin-replenishment-row');
+                  if(module==='vendors'&&!scope.querySelector('.admin-unified-purchase-line'))issues.push('purchase line missing');
+                  for(const group of groups){
+                    const outer=group.getBoundingClientRect();
+                    const fields=[...group.querySelectorAll('input:not([type="hidden"]),select,button')].filter(n=>n.getBoundingClientRect().height>0);
+                    for(const el of fields){const rect=el.getBoundingClientRect();if(rect.left<outer.left-2||rect.right>outer.right+2||rect.height<43.5)issues.push('supply field geometry');}
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(supplyIssues,[],engine+' '+targetWidth+'px: inventory and supply controls stay inside their regions');
+            }
+            if (tab === 'orders') {
+              const filterIssues = await shell.locator('.admin-orders-toolbar').evaluate(toolbar => {
+                const bounds=toolbar.getBoundingClientRect();
+                const controls=[...toolbar.querySelectorAll('input,select,button')].filter(el=>el.getClientRects().length);
+                const issues=[];
+                for(const el of controls){const rect=el.getBoundingClientRect();if(rect.left<bounds.left-2||rect.right>bounds.right+2||rect.height<43.5)issues.push('order filter control geometry');}
+                const picker=toolbar.querySelector('.admin-order-status-picker');
+                const rail=toolbar.querySelector('.admin-order-status-filters');
+                if(Boolean(picker.getClientRects().length)===Boolean(rail.getClientRects().length))issues.push('duplicate or missing order status control');
+                return issues;
+              });
+              assert.deepEqual(filterIssues,[],engine+' '+targetWidth+'px: order filters fit without duplicate controls');
+            }
+            if (tab === 'products' || tab === 'categories') {
+              const catalogIssues = await shell.evaluate((root, currentTab) => {
+                const scope = root.querySelector(currentTab === 'products' ? '.admin-products-panel' : '.admin-category-manager');
+                const rows = [...scope.querySelectorAll(currentTab === 'products' ? '.admin-product-row' : '.admin-video-category-row')];
+                const issues=[];
+                const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+                for (const row of rows) {
+                  const group=row.querySelector(currentTab === 'products' ? '.admin-product-controls' : '.admin-video-category-actions');
+                  const identity=row.querySelector(currentTab === 'products' ? '.admin-product-identity' : '.admin-video-category-identity');
+                  if(!group || !identity) continue;
+                  const boundary=row.getBoundingClientRect();
+                  if(overlaps(identity.getBoundingClientRect(),group.getBoundingClientRect())) issues.push('identity/action overlap');
+                  for(const button of group.querySelectorAll(':scope > button')) {
+                    const box=button.getBoundingClientRect();
+                    if(box.height<43.5 || box.left<boundary.left-2 || box.right>boundary.right+2) issues.push('catalog action geometry');
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(catalogIssues,[],engine+' '+targetWidth+'px: catalogue identity and actions do not overlap');
+            }
             if (tab === 'products' && targetWidth === 390) {
               const pairedControls = await shell.locator('.admin-product-controls').first().evaluate(group => {
                 const fields = group.querySelectorAll('input[type="number"]');
@@ -206,6 +371,54 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return Math.abs(cost.top - price.top) < 2 && stock.width > cost.width && Math.abs(edit.top - remove.top) < 2;
               });
               assert.ok(pairedControls, 'Phone product controls keep both prices and both secondary actions together');
+            }
+            if (tab === 'command') {
+              const navigation = await shell.evaluate(root => {
+                const rail = root.querySelector('#geostore-admin-desktop-modules');
+                const picker = root.querySelector('#geostore-admin-mobile-section');
+                const visible = node => Boolean(node.getBoundingClientRect().width && node.getBoundingClientRect().height);
+                const buttons = [...rail.querySelectorAll('[data-admin-visual-nav-item="true"]')];
+                const groups = [...rail.querySelectorAll('.admin-workspace-nav-group')];
+                const issues = buttons.filter(visible).flatMap(button => {
+                  const rect = button.getBoundingClientRect();
+                  const label = button.querySelector(':scope > div > span');
+                  const icon = button.querySelector(':scope > div > svg');
+                  const count = button.querySelector(':scope > span');
+                  const l = label.getBoundingClientRect(), i = icon.getBoundingClientRect();
+                  const c = count?.getBoundingClientRect();
+                  return rect.height < 43.5 || l.left < i.right - 2 || l.right > rect.right + 2 || (c && l.right > c.left + 2) ? ['navigation track collision'] : [];
+                });
+                return {rail:visible(rail),picker:visible(picker),groups:groups.filter(visible).length,issues};
+              });
+              assert.equal(navigation.rail,targetWidth >= 768,'Only the appropriate navigation control is visible');
+              assert.equal(navigation.picker,targetWidth < 768,'Native phone module selector stays visible');
+              if(targetWidth >= 768) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
+              assert.deepEqual(navigation.issues,[],engine+' '+targetWidth+'px: menu tracks do not collide');
+              const overviewIssues = await shell.locator('.admin-command-center').evaluate(node => {
+                const cards = [...node.querySelectorAll('.admin-command-kpi')];
+                const panels = [...node.querySelectorAll('.admin-command-panel')];
+                const issues = [];
+                for (const card of cards) {
+                  const bounds = card.getBoundingClientRect();
+                  const label = card.querySelector(':scope > span:first-child > span').getBoundingClientRect();
+                  const icon = card.querySelector(':scope > span:first-child > svg').getBoundingClientRect();
+                  const value = card.querySelector(':scope > strong').getBoundingClientRect();
+                  if(label.right > icon.left + 2 || icon.right > bounds.right + 2 || value.top < Math.max(label.bottom,icon.bottom)-2 || bounds.height < 44) {
+                    issues.push({issue:'KPI label/icon/value collision',tone:card.dataset.adminKpiTone,card:bounds.toJSON(),label:label.toJSON(),icon:icon.toJSON(),value:value.toJSON(),tracks:getComputedStyle(card.querySelector(':scope > span:first-child')).gridTemplateColumns});
+                  }
+                }
+                const overlaps = (a,b) => Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+                for(const list of [cards,panels]) for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++) if(overlaps(list[i].getBoundingClientRect(),list[j].getBoundingClientRect())) issues.push('Dashboard card overlap');
+                return issues;
+              });
+              assert.deepEqual(overviewIssues,[],engine+' '+targetWidth+'px: dashboard tracks do not collide');
+              if(targetWidth===320){
+                const columns=await shell.locator('.admin-command-kpis').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+                assert.equal(columns,1,'320px dashboard has one readable KPI column');
+              }
+              const toneBorders=await shell.locator('.admin-command-kpi[data-admin-kpi-tone]').evaluateAll(cards=>cards.map(card=>{const s=getComputedStyle(card);return {tone:card.dataset.adminKpiTone,color:s.borderTopColor,width:parseFloat(s.borderTopWidth)};}));
+              assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
+              assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');
             }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
@@ -432,6 +645,28 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.ok(await palette.evaluate(node=>node.open),'Shortcut opens existing palette without modifying a setting');
           await palette.locator(':scope > summary').click();
           assert.deepEqual(writes,[],'Opening editor sections never writes settings');
+          // Exercise the actual preview's document-capture guard against a
+          // populated support ticket, without allowing any server mutation.
+          const previewModule=editor.locator('[data-admin-pro-editor-preview-tools] select');
+          const initialModule=await previewModule.inputValue();
+          await previewModule.selectOption('support');
+          const previewTicket=shell.locator('.admin-support-ticket').first();
+          await previewTicket.waitFor({state:'visible'});
+          const previewStatus=previewTicket.locator('[data-admin-pro-ticket-status]');
+          const beforeStatus=await previewStatus.getAttribute('data-admin-pro-ticket-status');
+          const statusAction=previewTicket.locator('.admin-support-status-actions > button[aria-pressed="false"]:not(:disabled)').first();
+          await statusAction.waitFor({state:'visible'});
+          const intercepted=await statusAction.evaluate(button=>{
+            const click=new MouseEvent('click',{bubbles:true,cancelable:true});
+            const keyboard=new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true});
+            const clickCancelled=!button.dispatchEvent(click)&&click.defaultPrevented;
+            const keyCancelled=!button.dispatchEvent(keyboard)&&keyboard.defaultPrevented;
+            return {clickCancelled,keyCancelled};
+          });
+          assert.deepEqual(intercepted,{clickCancelled:true,keyCancelled:true},'Real admin preview blocks pointer and keyboard status actions');
+          assert.equal(await previewStatus.getAttribute('data-admin-pro-ticket-status'),beforeStatus,'Preview cannot change ticket status');
+          assert.deepEqual(writes,[],'Preview actions cannot call a mutation endpoint');
+          await previewModule.selectOption(initialModule);
         }
         if(tab==='products'){
           const productSearch=shell.getByRole('searchbox',{name:'პროდუქტის ძებნა'});
@@ -556,7 +791,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await metric.waitFor({state:'visible'});
           assert.equal(await metric.count(),1,'VIP filter shows one segment');
           const metricInk=await metric.evaluate(el=>getComputedStyle(el).color);
-          assert.equal(metricInk,'rgb(24, 34, 48)','Segment number uses readable workspace foreground');
+          assert.equal(metricInk,'rgb(37, 34, 56)','Segment number uses readable workspace foreground');
           const warning=segments.locator('.admin-marketing-campaigns > p.text-amber-200').first();
           const warningPalette=await warning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
           assert.deepEqual(warningPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Sending restriction remains readable on a paired warning surface');

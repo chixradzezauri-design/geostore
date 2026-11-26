@@ -1,0 +1,54 @@
+# GEOSTORE Atelier — admin redesign
+
+Stage 1: use the existing visual-design schema as the single source of design tokens. A porcelain canvas, aubergine navigation and amethyst action color replace the default PRO palette. Use a 256px sidebar and an 18px section gap through the existing responsive token path. Do not introduce another blanket override stylesheet.
+
+The existing professional preset now selects Atelier. Untouched legacy owner settings and staff default views project to Atelier without a storage write; explicitly saved custom desktop and responsive appearances remain unchanged until the owner chooses the preset. Existing per-element custom values, content, saved templates and responsive overrides remain supported. Status colors, authorization, action handlers, API calls and database schemas are out of scope for this stage.
+
+## Release gates (not yet verified)
+- Build and all existing unit and integration tests.
+- Chromium and WebKit browser matrix, including 320, 360, 390, 430, 768, 1024 and 1440 px.
+- Verify actual computed colors, contrast, text flow, overlapping controls, keyboard focus, dialogs, native controls, and no storefront style leakage.
+- Consolidate chrome and module layouts in later commits: inventory, orders, catalog, customer support, marketing, finance, users, staff, design editors, settings.
+- Review selectors and remove obsolete competing declarations only when equivalent behavior is covered by tests. Do not conceal layout bugs with global overflow clipping.
+- Review permission boundaries and security checks separately; never modify live data or deploy without explicit approval.
+
+Stage 1 is not a completed visual redesign or a production release.
+
+## Stage 2 — navigation
+The existing unified chrome now uses bounded icon, label and count tracks, a non-color active indicator, and visible group headings on tablets as well as desktop. Phone retains the native permission-filtered picker. No new stylesheet or authorization changes. Rendered geometry checks verify target height, label/icon/count separation, group visibility, and mutually exclusive desktop/mobile navigation across the existing device matrix. Browser verification is required for the new commit.
+
+## Stage 3 — page header and dashboard
+Rework header hierarchy and publication action styling through the active editor tokens; preserve existing permission gates and disabled states. Give the four operational KPI cards real 30px icon tracks (24px on phones) and semantic border accents, size panels by the actual command container and keep each card in normal document flow. Add rendered collision assertions for icon, label, value and neighboring cards. No changes to calculations, data queries, navigation or security permissions. Verification for the new commit remains mandatory.
+
+## Stage 4 — products and categories
+Use fixed image and flexible identity tracks, editor-compatible catalog card and action colors, clear separation of metadata and quick-edit fields, and distinct category/form accent borders. Retain the existing gallery actions, price/stock mutation handlers, category hierarchy, order controls and publication logic. Extend the isolated browser device matrix with identity/action overlap and action bounds checks for both modules. No changes to product records, database, or operational code. New commit verification is required.
+
+## Stage 5 — orders
+Separate order identity, totals, customer data and status transitions using bounded grid tracks; highlight active status filters and adapt status actions from two to three to five columns by available module width. Keep order editor colors and existing status warnings; improve detail header/footer layout and financial total emphasis. Existing order handlers, owner reactivation checks, invoice generation, export, permissions and database remain untouched. Browser assertions cover visible order filters; the existing workspace fixture has an empty order ledger, so populated order card and detail interaction QA remains outstanding. No claims of completed rendered verification.
+
+## Stage 6 — inventory, suppliers and purchases
+Keep inventory history horizontally scrollable within its own region, distinguish measured stock and editable thresholds, and highlight verified totals and primary actions using existing theme tokens. Reflow the purchase draft into independent product, quantity and cost tracks according to its container width; supplier cards keep readable identity and separate actions. Add device-matrix geometry assertions for inventory and supply controls. No modifications to business logic, supplier commission, stock receipt, payments, permissions or database. Browser fixtures do not cover every populated purchase state; actual interaction QA and the exact-HEAD checks remain outstanding.
+
+## Stage 7 — finance, analytics, calculator and expenses
+Separate KPI icon/label, amount and evidence-note tracks, distinguish primary financial measures without altering profit/loss/pending states, and improve calculator field and result alignment, expense form sizing and primary action styling. Add device-matrix containment assertions for all three modules. No financial formulas, report filters, server queries, permissions, expense mutations or database changes. Exact-HEAD browser testing and populated financial-state visual QA remain required.
+
+## Stage 8 — staff, accounts and CRM
+Give permission selectors dedicated native-checkbox and caption tracks with a full-label touch area; improve account identity, status and action layout, disabled controls, and CRM contact/action separation. Retain existing server authorization, Auth invitation and reactivation handlers, permissions and CRM semantics. Add device-matrix control containment tests. Populated staff and CRM records and the exact-HEAD browser suite remain to be verified; no database or account writes.
+
+## Stage 9 — support, correspondence and test notifications
+Reorganize ticket metadata, status controls, conversation bubbles and reply composer; improve legacy message headers and local-only notification preview and delivery warning. Add containment assertions across device widths. Existing ticket transitions, reply submission, history loading and local-only broadcast behavior remain unchanged. No real messages sent or data modified. Populated thread and legacy message QA and exact-HEAD browser checks remain required.
+
+## Stage 10 — marketing, flash promotions, coupons and banners
+Separate editable flash pricing, time window, price comparison and draft actions, while retaining risk indicators and the storefront preview boundary. Improve banner image/identity tracks, coupon amounts and marketing segment cards. Add responsive containment assertions for all promotion modules. Existing discount limits, price restoration, schedule, coupon validation, publication, consent and sending gates remain untouched. Exact-HEAD CI and populated campaign/banner/coupon state QA are outstanding. No production changes or prices modified.
+
+## Stage 11 — visual editors and settings
+Refine the explicitly scoped admin/storefront editor header, undo/redo/reset controls, synchronization status, device preview selector and draft/publish actions. Keep storefront preview artwork and administrator-selected values unchanged. Reflow delivery tariff fields based on their actual container width; improve global settings inputs and draft warning. Add responsive geometry and unique save/publish toolbar assertions. Existing sync conflict recovery, preview read-only gates, owner-only publication, saved designs and database unchanged. Exact-HEAD browser checks remain outstanding.
+
+## Stage 12 — cascade and regression audit
+Reviewed new scoped rules, original layer ordering, active theme variables and the accumulated layout assertions. Fixed a real shorthand collision that masked dashboard status-border colors, connected the primary/warning/danger KPI attributes to existing semantic color tokens, removed a redundant product edit rule and a conflicting mobile replenishment background, and made the reply composer use an automatic vertical flex basis at phone widths. Added exact semantic border checks and a mobile composer regression check. Retain all existing saved/customized appearance values; the new default is not a forced reset of explicitly saved custom themes. No broad stylesheet deletion or additional CSS layer. Full computed-style and interaction verification still depends on passing Chromium/WebKit at the final commit.
+
+## Stage 13 — authorization and data isolation audit
+Compared the entire accumulated branch with main at 465854f3f36659b9e127f0031aa958250fd9720d. Before this stage only seven files differ: two CSS files, the existing professional appearance projection, three tests and this document. No auth, RLS, RPC, Supabase migration, order, accounting, payment, publication or other business handler changed. Added regression checks for owner-only editor access, persistence isolation and explicitly saved older desktop/tablet/mobile appearances. Added an intercepted-browser test that attempts click and Enter on a populated preview support ticket and verifies capture cancellation, unchanged status and zero mutation requests. Stage 12 build and dependency audit succeeded; browser/security checks at the exact new HEAD and real Supabase authorization tests are not yet confirmed. No changes to production or live data.
+
+## Stage 14 — first measured WebKit correction
+Exact previous HEAD e24e3d77ec03e13cc672e0bba08adf815bc17de9: 1540/1540 Node tests passed, production build, dependency audit and CodeQL passed; responsiveLayout.mjs passed eight widths. The actual SPA browser test failed at WebKit 320px, KPI label/icon/value collision (job 139951614267). Removed the conflicting two-column breakpoint starting at 290px, require a single KPI column under 360px, reserve explicit grid cells for the label/icon and allow long Georgian words to wrap. Added precise geometry diagnostics and a one-column regression assertion. This correction must pass the full suite before release. No production change.

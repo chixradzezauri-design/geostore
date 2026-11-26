@@ -28,3 +28,18 @@ test('the owner editor and shell use the same projected appearance, not automati
  assert.ok(app.includes('saveAdminPanelVisualDesignToCloud(adminVisualDesign, adminVisualUpdatedAtRef.current)'));
  assert.ok(!app.includes('saveAdminPanelVisualDesignToCloud(effectiveAdminVisualDesign'));
 });
+
+
+test('Atelier presentation projection preserves persisted desktop palettes, tablet overrides and custom text',()=>{
+ const inputs=[
+  {theme:{accent:'#126b59',navInactiveBackground:'#182230'},layout:{sidebarWidth:248},content:{ordersTitle:'შენახული სათაური'}},
+  {responsive:{tablet:{theme:{accent:'#123456'},layout:{cardPadding:22}}}},
+  {responsive:{mobile:{theme:{accent:'#654321'},layout:{titleFontSize:17}}}}
+ ];
+ for(const input of inputs){
+  const raw=normalizeAdminPanelVisualDesign(input);
+  const snapshot=structuredClone(raw);
+  assert.deepEqual(resolveAdminWorkspaceAppearance(raw),snapshot);
+  assert.deepEqual(raw,snapshot,'Projection must not mutate persisted values');
+ }
+});

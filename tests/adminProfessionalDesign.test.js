@@ -12,8 +12,11 @@ test('PRO preset provides a complete compatible light palette and compact design
  assert.equal(after.theme.primaryButtonText,'#ffffff');
  assert.equal(after.layout.titleFontSize,22);
  assert.equal(after.layout.inputHeight,44);
+ assert.equal(after.layout.sidebarWidth,256);
+ assert.equal(after.layout.sectionGap,18);
+ assert.equal(after.theme.accent,'#694183');
  assert.equal(after.components.orders.backgroundColor,'#ffffff');
- assert.equal(after.elementStyles.orderCard.textColor,'#182230');
+ assert.equal(after.elementStyles.orderCard.textColor,ADMIN_PRO_PALETTE.text);
  assert.equal(buildAdminPanelVisualStyle(after)['--admin-vd-orders-backgroundColor'],'#ffffff');
  assert.deepEqual(applyAdminProfessionalDesign(after),after);
 });
@@ -31,11 +34,23 @@ test('PRO opt-in preserves custom element fields, device overrides, content and 
 const luminance=color=>{const channels=color.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4);return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;};
 test('PRO preset semantic text and control pairs meet AA contrast on token colors',()=>{
  const t=applyAdminProfessionalDesign({}).theme;
- for(const [a,b] of [['text','panel'],['muted','canvas'],['navInactiveText','navInactiveBackground'],['navActiveText','navActiveBackground'],['primaryButtonText','primaryButtonBackground'],['inputPlaceholder','inputBackground']]){
+ for(const [a,b] of [['text','panel'],['muted','canvas'],['navInactiveText','navInactiveBackground'],['navActiveText','navActiveBackground'],['primaryButtonText','primaryButtonBackground'],['inputPlaceholder','inputBackground'],['filterText','filterBackground'],['tableHeaderText','tableHeaderBackground'],['text','tableRowHover'],['modalText','modalBackground'],['cardTitleText','contentCardBackground'],['cardMutedText','contentCardBackground']]){
   const l=[luminance(t[a]),luminance(t[b])].sort((x,y)=>y-x);
   assert.ok((l[0]+0.05)/(l[1]+0.05)>=4.5,a+' / '+b);
  }
  const editor=readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx',import.meta.url),'utf8');
  assert.ok(editor.includes('commitChange(applyAdminProfessionalDesign(normalized))'));
  assert.ok(editor.includes("disabled={viewport!=='desktop'}"));
+});
+
+// Layout guard: keep readable controls and the contrast-bearing palette in the
+// existing design schema instead of adding competing global CSS overrides.
+test('Atelier design retains minimum control size, input border contrast and visible focus',()=>{
+ const {theme,layout}=applyAdminProfessionalDesign({});
+ assert.ok(layout.inputHeight>=44 && layout.filterControlHeight>=44 && layout.tableRowMinHeight>=44);
+ assert.ok(layout.inputFocusRingWidth>=2);
+ for(const [a,b] of [['inputBorder','inputBackground'],['filterBorder','filterBackground'],['inputFocus','inputBackground']]){
+  const l=[luminance(theme[a]),luminance(theme[b])].sort((x,y)=>y-x);
+  assert.ok((l[0]+0.05)/(l[1]+0.05)>=3,a+' / '+b);
+ }
 });
