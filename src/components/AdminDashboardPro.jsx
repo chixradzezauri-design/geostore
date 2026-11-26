@@ -6891,7 +6891,7 @@ export default function AdminDashboardPro({
                 <button type="button" onClick={() => void fetchTickets()} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
               </div>
             )}
-            <div className="admin-workspace-support-filters grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end">
+            <div role="group" aria-label="მხარდაჭერის ფილტრები" className="admin-workspace-support-filters grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end">
               <div className="min-w-0"><label htmlFor="admin-workspace-support-search" className="block text-xs text-slate-300 mb-1">მოთხოვნის ძიება</label><input id="admin-workspace-support-search" type="search" value={supportSearch} onChange={e => { setSupportSearch(e.target.value); setSelectedSupportTicketId(null); }} placeholder="სახელი, ელფოსტა, თემა ან ID" className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>
               <div className="min-w-0"><label htmlFor="admin-workspace-support-status" className="block text-xs text-slate-300 mb-1">სტატუსი</label><select id="admin-workspace-support-status" value={supportStatusFilter} onChange={e => { setSupportStatusFilter(e.target.value); setSelectedSupportTicketId(null); }} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs"><option value="all">ყველა</option><option value="ღია">ღია</option><option value="მუშავდება">მუშავდება</option><option value="მოგვარებული">მოგვარებული</option></select></div>
               <button type="button" disabled={supportTicketsLoading} onClick={() => void fetchTickets()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
@@ -6931,9 +6931,9 @@ export default function AdminDashboardPro({
                     </div>
 
                     <div className="admin-support-ticket-content space-y-1.5">
-                      <p className="text-slate-300">მომხმარებელი: <b className="text-white">{t.customerName}</b> ({t.email})</p>
+                      <div className="admin-unified-support-customer"><span>მომხმარებელი</span><b>{t.customerName}</b><span>{t.email}</span></div>
                       <p className="admin-support-ticket-message text-slate-200 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 mt-2">
-                        <b className="text-emerald-400 block mb-1">კითხვა:</b> "{t.message}"
+                        <b className="text-emerald-400 block mb-1">მომხმარებლის შეტყობინება</b> {t.message}
                       </p>
                     </div>
 
@@ -6945,7 +6945,7 @@ export default function AdminDashboardPro({
                     )}
 
                     {String(selectedSupportTicketId) === String(t.id) && (
-                      <div id={`admin-support-thread-${t.id}`} role="region" aria-label={`ტიკეტი #${t.id} — მიმოწერის ისტორია`} className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
+                      <div id={`admin-support-thread-${t.id}`} role="region" aria-label={`ტიკეტი #${t.id} — მიმოწერის ისტორია`} className="admin-unified-support-thread rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <b className="text-cyan-200 text-xs">მიმოწერის სრული ისტორია</b>
                           <button type="button" onClick={() => fetchSupportTicketThread(t.id)} className="text-cyan-300 underline underline-offset-2">განახლება</button>
@@ -6958,7 +6958,7 @@ export default function AdminDashboardPro({
                             </div>
                           ) : (supportTicketThreads[String(t.id)] || []).length === 0 ? <p className="text-slate-400 py-3">მიმოწერის ჩანაწერები ჯერ არ არის.</p>
                           : (
-                            <div className="space-y-2.5 max-h-96 overflow-y-auto">
+                            <div className="admin-unified-support-thread-list space-y-2.5 max-h-96 overflow-y-auto" role="log" aria-label="მიმოწერის ჩანაწერები" aria-live="polite">
                               {(supportTicketThreads[String(t.id)] || []).map(entry => (
                                 <div key={entry.id} data-admin-pro-thread-role={entry.sender_role === "admin" ? "admin" : "customer"} className={`rounded-xl border p-3 ${entry.sender_role === 'admin' ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-700 bg-slate-950/70'}`}>
                                   <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
@@ -6973,6 +6973,7 @@ export default function AdminDashboardPro({
                       </div>
                     )}
 
+                    <h4 className="admin-unified-support-reply-title">პასუხის დაწერა</h4>
                     <div className="admin-support-reply-form flex flex-col sm:flex-row gap-3 pt-2">
                       <textarea
                         rows={3} 
@@ -7667,7 +7668,7 @@ export default function AdminDashboardPro({
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
             <p data-admin-pro-delivery-disabled className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
-            <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
+            <form onSubmit={handleSendBroadcast} className="admin-unified-broadcast-form space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label htmlFor="admin-broadcast-title" className="text-slate-400 font-bold">შეტყობინების სათაური</label>
                 <input id="admin-broadcast-title" type="text" maxLength={120} placeholder="მაგ: ახალი კოლექცია უკვე საიტზეა!" required value={broadcastForm.title} onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -8104,14 +8105,14 @@ export default function AdminDashboardPro({
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
-            <p className="text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
+            <p className="admin-unified-crm-context text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
               რეგისტრირებული მომხმარებლები და CRM პროფილები იტვირთება Supabase-იდან. ძველი ლოკალური ჩანაწერები შენარჩუნებულია და გაერთიანებულია სიაში; CRM შეზღუდვის ნიშანი არ ცვლის Auth ანგარიშის უფლებებს.
             </p>
             {crmLoading && <p role="status" aria-live="polite" className="text-emerald-300 text-xs">CRM მონაცემები იტვირთება...</p>}
             {crmError && <p role="alert" className="text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">Supabase CRM: {crmError} ძველი ლოკალური ჩანაწერები არ შეცვლილა.</p>}
 
             {crmDirectoryCapped && <p role="status" className="text-xs text-amber-200">სერვერული სია შეზღუდულია 500 ანგარიშით; ლოკალური ცვლილებები დროებით დაბლოკილია.</p>}
-            <div className="admin-workspace-crm-filters flex flex-wrap items-end gap-2">
+            <div role="group" aria-label="CRM ფილტრები" className="admin-workspace-crm-filters flex flex-wrap items-end gap-2">
               <div className="min-w-0 flex-1"><label htmlFor="admin-workspace-crm-filter" className="block text-xs text-slate-300 mb-1">მომხმარებლის სტატუსი</label><select id="admin-workspace-crm-filter" value={crmStatusFilter} onChange={e => { setCrmStatusFilter(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 text-white border border-slate-700 rounded-xl px-3 text-xs"><option value="all">ყველა</option><option value="vip">VIP</option><option value="restricted">CRM შეზღუდვა</option><option value="server">სერვერული პროფილი</option><option value="local">არასერვერული ჩანაწერი</option></select></div>
               {(userSearchQuery || crmStatusFilter !== 'all') && <button type="button" onClick={() => { setUserSearchQuery(''); setCrmStatusFilter('all'); setCrmPage(1); }} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}
               <button type="button" disabled={crmLoading || crmSaving} onClick={() => void fetchAdminCustomers()} className="rounded-xl border border-slate-700 px-3 text-xs text-slate-200">განახლება</button>
@@ -8128,25 +8129,25 @@ export default function AdminDashboardPro({
 
                   return (
                     <div key={uId} className={`admin-crm-user-card bg-slate-950/60 p-3 sm:p-4 rounded-2xl border transition space-y-3 shadow-inner ${u.isBlocked ? 'border-rose-500/40 bg-rose-950/10' : 'border-emerald-500/20'}`}>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
+                      <div className="admin-unified-crm-card-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div className="admin-unified-crm-identity">
                           <div className="flex items-center gap-2.5 flex-wrap">
                             <h4 className="font-black text-white text-sm break-words">{u.name || "მომხმარებელი"}</h4>
                             {u.isVip && <span data-admin-pro-crm-badge="vip" className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
                             {u.isBlocked && <span data-admin-pro-crm-badge="restricted" className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
                             {u.discountPercent > 0 && <span data-admin-pro-crm-badge="discount" className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
-                          <p className="admin-crm-contact-line text-slate-400 text-[11px] mt-1">{u.email || "ელფოსტა არ არის მითითებული"} · {u.phone || "ტელეფონი არ არის მითითებული"}</p>
+                          <div className="admin-unified-crm-contact"><p className="admin-crm-contact-line"><span>ელფოსტა</span><b>{u.email || "—"}</b></p><p className="admin-crm-contact-line"><span>ტელეფონი</span><b>{u.phone || "—"}</b></p></div>
                           <p className="text-xs text-slate-300 mt-1"><span data-admin-pro-crm-badge={u.isServerCustomer ? "server" : u.isLocalCrmRecord ? "local" : "order"}>{u.isServerCustomer ? "სერვერული პროფილი" : u.isLocalCrmRecord ? "ლოკალური ჩანაწერი" : "შეკვეთიდან მიღებული ჩანაწერი"}</span></p>
                           {u.isServerCustomer && <p className="text-xs text-slate-300">შეკვეთები (სერვერული რაოდენობა): {crmReady ? u.orderCount : "—"}</p>}
-                          {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
+                          {u.adminNotes && <p className="admin-unified-crm-note text-xs"><b>შენიშვნა:</b> {u.adminNotes}</p>}
                         </div>
 
-                        <div className="admin-crm-user-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                        <div role="group" aria-label={`CRM მართვა: ${u.name || u.email || "მომხმარებელი"}`} className="admin-crm-user-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                           <button 
                             type="button"
                             aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isVip ? "VIP მოხსნა" : "VIP მინიჭება"}`}
-                            disabled={!canEdit} onClick={() => handleToggleVipUser(u.id || u.email)} 
+                            data-admin-crm-action="vip" aria-pressed={Boolean(u.isVip)} disabled={!canEdit} onClick={() => handleToggleVipUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isVip ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-emerald-500/20 hover:text-white'}`}
                             title="VIP სტატუსი"
                           >
@@ -8156,7 +8157,7 @@ export default function AdminDashboardPro({
                           <button 
                             type="button"
                             aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isBlocked ? "CRM შეზღუდვის ნიშნის მოხსნა" : "CRM-ში შეზღუდულად მონიშვნა"}`}
-                            disabled={!canEdit} onClick={() => handleToggleBlockUser(u.id || u.email)} 
+                            data-admin-crm-action="restrict" aria-pressed={Boolean(u.isBlocked)} disabled={!canEdit} onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
                             title="CRM შეზღუდვის ნიშანი; Auth ანგარიშს არ ბლოკავს"
                           >
@@ -8183,7 +8184,7 @@ export default function AdminDashboardPro({
                             <Edit3 className="w-4 h-4" /> <span>რედაქტირება</span>
                           </button>
 
-                          {!u.isServerCustomer && u.isLocalCrmRecord && (<button disabled={!canEdit} type="button" aria-label={`${u.name || u.email || "მომხმარებელი"} — ლოკალური CRM ჩანაწერის წაშლა`} onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
+                          {!u.isServerCustomer && u.isLocalCrmRecord && (<button data-admin-crm-action="delete-local" disabled={!canEdit} type="button" aria-label={`${u.name || u.email || "მომხმარებელი"} — ლოკალური CRM ჩანაწერის წაშლა`} onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
@@ -8221,7 +8222,7 @@ export default function AdminDashboardPro({
                           </div>
                           <div className="flex justify-end gap-2 pt-1">
                             <button onClick={() => setEditingUserId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
-                            <button type="button" disabled={!canEdit} onClick={() => handleSaveUserCrm(u.id || u.email)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">{crmSaving ? "ინახება…" : u.isServerCustomer ? "სერვერზე შენახვა" : "ლოკალურად შენახვა"}</button>
+                            <button type="button" data-admin-crm-action="save" disabled={!canEdit} onClick={() => handleSaveUserCrm(u.id || u.email)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">{crmSaving ? "ინახება…" : u.isServerCustomer ? "სერვერზე შენახვა" : "ლოკალურად შენახვა"}</button>
                           </div>
                         </div>
                       )}

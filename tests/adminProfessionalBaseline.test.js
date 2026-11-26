@@ -17,6 +17,9 @@ test('Admin PRO audit branch disables preview and retains original admin CSS cas
  const imports=['adminCssSlotStart.css','adminDashboard.css','adminDashboardSections.css','adminDashboardModals.css','adminDashboardPolish.css','adminCssSlotEnd.css','designSystemV2.css','videoAuditMobileAdmin.css'];
  for(let i=1;i<imports.length;i++)assert.ok(main.indexOf(imports[i-1])<main.indexOf(imports[i]),imports[i]);
  assert.ok(dashboard.indexOf("import '../adminPanelVisualDesign.css'")<dashboard.indexOf("import '../adminVideoRedesign.css'"));
- assert.ok(dashboard.includes('style={isOwner ? adminVisualStyle : undefined}'));
+ assert.ok(dashboard.includes('style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle}'));
+ assert.ok(dashboard.includes('buildAdminPanelVisualStyle(resolveAdminWorkspaceAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))'));
+ assert.ok(dashboard.includes('if (!adminLoggedIn || !isOwner)'));
+ assert.ok(!dashboard.includes('saveAdminPanelVisualDesignToCloud(staffWorkspaceVisualStyle'));
  assert.equal(JSON.parse(read('vercel.json')).git.deploymentEnabled['internal-admin-professional-ui-2026-11-26'],false);
 });
