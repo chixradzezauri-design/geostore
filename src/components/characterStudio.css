@@ -248,3 +248,237 @@
 .gs-character-help-options{margin-top:7px;padding-top:6px;border-top:1px solid currentColor;pointer-events:auto}.gs-character-help-options>small{font-weight:750;font-size:11px}.gs-character-help-options>div{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.gs-character-help-options button{flex:1 1 68px;min-width:0;min-height:44px;overflow-wrap:anywhere;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;padding:5px;font:650 11px/1.3 system-ui,sans-serif;cursor:pointer}.gs-character-help-options button:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
 
 .gs-character-complete-setup{display:grid;gap:5px;padding:10px;border:1px solid #3b7664;border-radius:10px;background:#132f2c;min-width:0}.gs-character-complete-setup>strong{color:#d1fae5;font-size:13px}.gs-character-complete-setup>button,.gs-character-extra-controls>button{min-height:44px;border:1px solid #528579;border-radius:8px;padding:7px 9px;font:700 12px/1.4 system-ui,sans-serif;overflow-wrap:anywhere;cursor:pointer;color:#d1fae5;background:#1d4138}.gs-character-extra-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:6px}.gs-character-extra-controls>button[aria-pressed='false']{background:#0f172a;border-color:#475569;color:#cbd5e1}.gs-character-extra-controls>button:disabled,.gs-character-complete-setup>button:disabled{opacity:.45;cursor:default}
+
+/* Premium concierge phase 1: stable text, compact initial disclosure, no page reflow.
+   All existing actions remain available through the accessible disclosure. */
+.gs-character-scene .gs-character-details[hidden]{display:none!important}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-bubble{animation:none!important;transform:none!important;box-sizing:border-box}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="compact"] .gs-character-bubble{max-height:min(126px,32vh);max-width:208px;padding:9px 32px 8px 10px;box-shadow:0 4px 14px #17233b24}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="compact"] .gs-character-role-label,.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="compact"] .gs-character-advice-label{display:none}
+.gs-character-scene .gs-character-details-toggle{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;width:100%;margin-top:5px;padding:3px 7px;border:1px solid #80808055;border-radius:8px;background:transparent;color:inherit;font:650 11px/1.35 system-ui,sans-serif;text-align:start;cursor:pointer}
+.gs-character-scene .gs-character-details-toggle span{font-size:15px;line-height:1}
+.gs-character-scene .gs-character-details-toggle:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-bubble{max-height:min(280px,44vh);overscroll-behavior:contain}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-action-spark{animation:none;opacity:0}
+@media(pointer:coarse){.gs-character-scene .gs-character-details-toggle{min-height:44px}}
+@media(max-width:420px){.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="compact"] .gs-character-bubble{max-width:min(178px,calc(100vw - 112px));font-size:min(12px,var(--gs-mascot-font,13px))}}
+
+/* Premium phase 2: bound the public footprint, while preserving the saved size,
+   side and lift settings within safe viewport limits. Editor previews stay intact. */
+.gs-character-scene:not(.gs-character-preview-scene){
+  --gs-premium-edge: max(10px,env(safe-area-inset-left,0px));
+  --gs-premium-bottom:calc(180px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+  --gs-premium-room:calc(100vh - var(--gs-premium-bottom) - 16px);
+  --gs-premium-figure:min(var(--gs-mascot-mobile,76px),clamp(56px,20vw,88px));
+  bottom:var(--gs-premium-bottom);left:var(--gs-premium-edge);
+  gap:6px;max-width:min(284px,calc(100vw - 2 * var(--gs-premium-edge)));align-items:flex-end;
+}
+.gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){
+  --gs-premium-edge:max(10px,env(safe-area-inset-right,0px));
+  left:auto;right:var(--gs-premium-edge);
+}
+@media(max-width:767px){
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(92px + env(safe-area-inset-bottom,0px) + var(--gs-mascot-lift,0px));
+    bottom:var(--gs-premium-bottom);
+  }
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-figure{
+  width:var(--gs-premium-figure);flex:0 0 var(--gs-premium-figure);min-width:0;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-bubble{
+  display:flex;flex-direction:column;align-items:stretch;
+  width:min(208px,100%);min-width:0;overflow:hidden;
+  padding:9px 10px 8px;max-height:min(126px,32vh,var(--gs-premium-room));
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-name-row{
+  flex:0 0 auto;padding-inline-end:29px;min-height:24px;align-content:center;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-name-row>strong{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-message{
+  flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;pointer-events:auto;
+}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-details-toggle{flex:0 0 auto}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-details{
+  min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;pointer-events:auto;
+}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-bubble{
+  max-height:min(280px,44vh,var(--gs-premium-room));
+}
+.gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-message{max-height:4.4em;flex-shrink:0}
+.gs-character-scene:not(.gs-character-preview-scene) .gs-character-dismiss{top:3px;inset-inline-end:3px;right:3px;width:28px;height:28px}
+@media(min-width:768px){
+  .gs-character-scene:not(.gs-character-preview-scene){
+    --gs-premium-edge:max(24px,env(safe-area-inset-left,0px));
+    --gs-premium-bottom:calc(24px + var(--gs-mascot-lift,0px) + env(safe-area-inset-bottom,0px));
+    --gs-premium-figure:min(var(--gs-mascot-desktop,116px),128px);
+    bottom:var(--gs-premium-bottom);left:var(--gs-premium-edge);max-width:350px;
+  }
+  .gs-character-scene[data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:calc(258px + env(safe-area-inset-right,0px));right:var(--gs-premium-edge);
+    max-width:min(350px,calc(100vw - var(--gs-premium-edge) - 24px));
+  }
+}
+@media(min-width:1024px) and (min-height:650px){
+  .gs-character-scene[data-placement="middle"]:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(36vh + var(--gs-mascot-lift,0px));
+    bottom:var(--gs-premium-bottom);
+  }
+  .gs-character-scene[data-placement="middle"][data-side="right"]:not(.gs-character-preview-scene){--gs-premium-edge:24px;right:var(--gs-premium-edge)}
+}
+@media(max-height:480px){
+  .gs-character-scene:not(.gs-character-preview-scene){
+    --gs-premium-figure:56px;
+    --gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px));
+    bottom:var(--gs-premium-bottom);
+    max-width:260px;
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene:not(.gs-character-preview-scene){--gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px));bottom:var(--gs-premium-bottom)}
+  .gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-bubble{max-height:min(220px,var(--gs-premium-room))}
+  .gs-character-scene:not(.gs-character-preview-scene)[data-character-details="expanded"] .gs-character-message{max-height:2.8em;flex-shrink:1}
+}
+@supports(height:100dvh){
+  .gs-character-scene:not(.gs-character-preview-scene){--gs-premium-room:calc(100dvh - var(--gs-premium-bottom) - 16px)}
+}
+
+/* Premium phase 3: a small perspective contact plane behind the transparent
+   character, not a new card or a full-page overlay. All decorative layers
+   remain inside the existing figure footprint and cannot receive input. */
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure{
+  isolation:isolate;pointer-events:none;
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before,
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{
+  content:"";position:absolute;pointer-events:none;z-index:0;
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before{
+  left:8%;right:8%;bottom:2%;height:18%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 55%,rgba(25,41,55,.25) 0%,rgba(25,41,55,.10) 42%,transparent 72%);
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{
+  left:16%;right:16%;bottom:5%;height:8%;border-radius:50%;
+  background:linear-gradient(90deg,transparent,rgba(244,239,224,.35) 26%,rgba(255,255,255,.48) 50%,rgba(244,239,224,.22) 74%,transparent);
+  box-shadow:0 2px 5px rgba(22,35,47,.11);
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig{position:relative;z-index:1}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-3d[data-character-3d="ready"]::before{content:none}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-3d[data-character-3d="ready"] canvas{
+  filter:drop-shadow(0 2px 1px rgba(18,27,41,.18)) drop-shadow(0 5px 5px rgba(18,27,41,.12));
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-ground{opacity:.55}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-bubble{position:relative;z-index:1}
+.gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){gap:3px}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-bubble::after{
+  content:"";position:absolute;left:-4px;bottom:15px;width:7px;height:7px;
+  background:inherit;border-left:1px solid #e4d7bb;border-bottom:1px solid #e4d7bb;
+  transform:rotate(45deg);pointer-events:none;z-index:-1;
+}
+.gs-character-scene[data-character-depth="grounded"][data-side="right"] .gs-character-bubble::after{
+  left:auto;right:-4px;transform:rotate(225deg);
+}
+/* The compact public bubble clips internal scrolling content. Its pointer
+   stays within the border so no interactive content is covered. */
+.gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene) .gs-character-bubble::after{
+  left:0;width:5px;height:5px;border:0;box-shadow:none;
+  background:currentColor;opacity:.14;bottom:17px;
+}
+.gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene) .gs-character-bubble::after{left:auto;right:0}
+@media(prefers-reduced-motion:reduce){
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{animation:none!important;transition:none!important}
+}
+
+/* Premium phase 5: short, calm figure-only arrival. The greeting never travels
+   with the character. WebGL owns its articulated motion; vector fallback keeps
+   a restrained, finite version of the original gestures. */
+.gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){
+  animation:none!important;--gs-premium-enter:-14px;
+}
+.gs-character-scene[data-character-depth="grounded"][data-side="right"]{--gs-premium-enter:14px}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-figure{
+  animation:gs-premium-figure-arrive .65s cubic-bezier(.22,.72,.24,1) both;
+}
+@keyframes gs-premium-figure-arrive{
+  from{opacity:0;transform:translateX(var(--gs-premium-enter,-14px)) scale(.97)}
+  to{opacity:1;transform:none}
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig:has(.gs-character-3d[data-character-3d="ready"]){animation:none!important;transform:none!important}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-body-rig:not(:has(.gs-character-3d[data-character-3d="ready"])){
+  animation:gs-premium-breath 2.8s ease-in-out 2;
+}
+@keyframes gs-premium-breath{0%,100%{transform:none}50%{transform:scale(1.012,1.018)}}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-hand{
+  animation:gs-premium-wave .85s ease-in-out 2;
+}
+@keyframes gs-premium-wave{0%,100%{transform:rotate(0)}50%{transform:rotate(12deg)}}
+.gs-character-scene[data-character-depth="grounded"]:is([data-motion="run-wave"],[data-motion="walk-wave"],[data-motion="patrol"]) :is(.gs-character-leg-left,.gs-character-leg-right,.gs-character-arm-free,.gs-character-ground){animation:none}
+.gs-character-scene[data-character-depth="grounded"]:not([data-motion="still"]) .gs-character-tail{animation:gs-premium-tail 1.6s ease-in-out 2}
+@keyframes gs-premium-tail{0%,100%{transform:none}50%{transform:rotate(4deg)}}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-effects>span{font-size:10px;text-shadow:none;animation-duration:.8s}
+@media(prefers-reduced-motion:reduce){
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-figure,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-hand,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-tail{animation:none!important;transform:none!important}
+}
+
+/* Premium phase 6: visitor-mode editor preview mirrors the compact presentation
+   without inheriting fixed viewport coordinates. Preserve the raw sizing preview. */
+.gs-character-preview-scene[data-character-visitor-preview="true"]{
+  animation:none!important;gap:3px;max-width:calc(100% - 24px);
+}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-bubble{
+  animation:none!important;transform:none!important;display:flex;flex-direction:column;
+  box-sizing:border-box;width:min(208px,100%);min-width:0;max-height:126px;overflow:hidden;
+  padding:9px 10px 8px;box-shadow:0 4px 14px #17233b24;
+}
+.gs-character-preview-scene[data-character-visitor-preview="true"][data-character-details="compact"] :is(.gs-character-role-label,.gs-character-advice-label){display:none}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-message{min-height:0;overflow:auto;pointer-events:auto}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-details-toggle{flex:0 0 auto}
+.gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-details{min-height:0;overflow:auto;pointer-events:auto}
+.gs-character-preview[data-device="mobile"] .gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-figure{
+  width:min(var(--gs-mascot-mobile,76px),64px);flex-basis:min(var(--gs-mascot-mobile,76px),64px)
+}
+.gs-character-preview[data-device="desktop"] .gs-character-preview-scene[data-character-visitor-preview="true"] .gs-character-figure{
+  width:min(var(--gs-mascot-desktop,116px),128px);flex-basis:min(var(--gs-mascot-desktop,116px),128px)
+}
+/* Match or exceed the earlier enhanced/interactive rules' specificity. */
+.gs-character-scene[data-character-depth="grounded"][data-prominence]:not(.gs-character-preview-scene){
+  max-width:min(284px,calc(100vw - 2 * var(--gs-premium-edge)));
+}
+.gs-character-scene[data-character-depth="grounded"][data-character-details="compact"]:not(.gs-character-preview-scene) .gs-character-bubble{
+  max-height:min(126px,32vh,var(--gs-premium-room));padding:9px 10px 8px;
+}
+@media(min-width:768px){
+  .gs-character-scene[data-character-depth="grounded"][data-prominence]:not(.gs-character-preview-scene){max-width:350px}
+  .gs-character-scene[data-character-depth="grounded"][data-prominence][data-side="right"]:not(.gs-character-preview-scene){max-width:min(350px,calc(100vw - var(--gs-premium-edge) - 24px))}
+}
+/* Short mobile viewports use separate horizontal lanes instead of lifting
+   the concierge into the sticky header. Keep the existing overlay z-index. */
+@media(max-width:767px) and (max-height:480px){
+  .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    bottom:var(--gs-premium-bottom);
+    max-width:min(260px,calc(100vw - var(--gs-premium-edge) - 12px));
+  }
+  .gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:calc(258px + env(safe-area-inset-right,0px));
+    right:var(--gs-premium-edge);
+    max-width:min(260px,calc(100vw - var(--gs-premium-edge) - 12px));
+  }
+}
+@media(max-width:640px) and (max-height:480px){
+  .gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:calc(76px + env(safe-area-inset-right,0px));
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){
+    --gs-premium-bottom:calc(74px + env(safe-area-inset-bottom,0px));
+    bottom:var(--gs-premium-bottom);
+  }
+  .geostore-shell:has(.gs-signature-mobile-nav) .gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene){
+    --gs-premium-edge:max(10px,env(safe-area-inset-right,0px));
+  }
+}

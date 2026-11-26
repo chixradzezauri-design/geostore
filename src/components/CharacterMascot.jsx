@@ -132,10 +132,12 @@ function CharacterEffects({effect}){
   const seasonal=effect==='snow'||effect==='festive';
   return <span className="gs-character-effects" data-effect={effect} aria-hidden="true">{Array.from({length:seasonal?8:5},(_,i)=><span key={i} style={{'--gs-effect-i':i,'--gs-effect-x':(i*37)%93+'%','--gs-effect-delay':(i%4)*.22+'s'}}>{symbols[effect][i%symbols[effect].length]}</span>)}</span>;
 }
-export function CharacterScene({character,settings,lang='ka',preview=false,interactivePreview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,onHelp,interactionNotice='',actionCount=0}){
+export function CharacterScene({character,settings,lang='ka',preview=false,interactivePreview=false,visitorPreview=false,onClose,onMute,guideTarget=null,onGuide,recommendation=null,onRecommend,advice=null,onNextTip,onNextProduct,onThanks,onActivity,onHelp,interactionNotice='',actionCount=0}){
   const [variant]=useState(()=>Math.random());
   const [greetingDate]=useState(()=>new Date());
   const [waved,setWaved]=useState(false);
+  const [detailsOpen,setDetailsOpen]=useState(false);
+  const detailsId=React.useId();
   const copy=CONCIERGE_INTERACTIVE_COPY[lang]||CONCIERGE_INTERACTIVE_COPY.ka;
   const helpCopy=CONCIERGE_HELP_COPY[lang]||CONCIERGE_HELP_COPY.ka;
   const helpOptions=onHelp?conciergeHelpChoices(settings):[];
@@ -148,14 +150,19 @@ export function CharacterScene({character,settings,lang='ka',preview=false,inter
   const saleCopy=CONCIERGE_SALE_COPY[lang]||CONCIERGE_SALE_COPY.ka;
   const money=value=>new Intl.NumberFormat(lang==='ka'?'ka-GE':lang==='ru'?'ru-RU':'en-US',{maximumFractionDigits:2}).format(value)+' ₾';
   const interactive=settings.waveBack&&settings.behavior!=='still';
+  const hasDetails=Boolean(interactive||showActions&&(recommendation&&onRecommend||target&&onGuide||hasGuideActions)||onMute);
+  const expanded=(preview&&!visitorPreview)||detailsOpen;
+  const detailsCopy=lang==='en'?['Show options','Hide options']:lang==='ru'?['Показать действия','Скрыть действия']:['მოქმედებები','დაკეცვა'];
   const artCharacter=styledCharacter(character,settings);
   const artEmotion=waved?'happy':settings.emotion;
   const fallback=<CharacterArt character={artCharacter} emotion={artEmotion} season={settings.season}/>;
   const use3D=MASCOT_3D_IDS.includes(character.id)&&settings.behavior!=='still'&&settings.appearance?.renderMode!=='vector'&&['none','winter'].includes(resolveCharacterSeason(settings.season));
-  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-prominence={settings.appearance?.prominence||'enhanced'} data-side={location.side} data-placement={location.placement} data-concierge-active={showActions&&(recommendation||hasGuideActions||target)?'true':undefined} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
+  return <div className={'gs-character-scene'+(preview?' gs-character-preview-scene':'')} data-character-depth="grounded" data-character-visitor-preview={preview&&visitorPreview?'true':undefined} data-character-details={expanded?'expanded':'compact'} data-prominence={settings.appearance?.prominence||'enhanced'} data-side={location.side} data-placement={location.placement} data-concierge-active={showActions&&(recommendation||hasGuideActions||target)?'true':undefined} data-motion={waved?wave.motion:settings.behavior} style={characterAppearanceStyle(settings.appearance)}>
     <div className="gs-character-figure" key={waved?'reply':'greeting'}><div className="gs-character-body-rig">{use3D?<Mascot3DBoundary fallback={fallback}><React.Suspense fallback={fallback}><FlagshipFox3D characterId={character.id} color={artCharacter.color} emotion={artEmotion} behavior={waved?wave.motion:settings.behavior} season={resolveCharacterSeason(settings.season)} lighting={settings.appearance?.lighting} fallback={fallback}/></React.Suspense></Mascot3DBoundary>:fallback}</div>{settings.behavior!=='still'&&<CharacterEffects effect={waved?wave.effect:settings.effect}/>} {actionCount>0&&settings.interactiveGuide&&<span key={'reaction-'+actionCount} className="gs-character-action-spark" aria-hidden="true">{interactionNotice===copy.reply?'♥':'✦'}</span>}</div>
     <div className="gs-character-bubble">
-      <div className="gs-character-name-row"><strong>{character.name}</strong>{showActions&&(recommendation||hasGuideActions||target)&&<small className="gs-character-role-label">{recommendation?.sale?(lang==='en'?'Offers':lang==='ru'?'Акции':'აქციები'):(lang==='en'?'Guide':lang==='ru'?'Помощник':'დამხმარე')}</small>}</div>{!waved&&advice&&<small className="gs-character-advice-label">{CONCIERGE_ADVICE_LABEL[lang]||CONCIERGE_ADVICE_LABEL.ka}</small>}<span aria-live={interactive?'polite':undefined} data-character-advice={waved?undefined:advice?.topic}>{waved?wave.reply:advice?.text||characterMessage(settings,character,lang,variant,greetingDate)}</span>
+      <div className="gs-character-name-row"><strong>{character.name}</strong>{showActions&&(recommendation||hasGuideActions||target)&&<small className="gs-character-role-label">{recommendation?.sale?(lang==='en'?'Offers':lang==='ru'?'Акции':'აქციები'):(lang==='en'?'Guide':lang==='ru'?'Помощник':'დამხმარე')}</small>}</div>{!waved&&advice&&<small className="gs-character-advice-label">{CONCIERGE_ADVICE_LABEL[lang]||CONCIERGE_ADVICE_LABEL.ka}</small>}<span className="gs-character-message" aria-live={interactive?'polite':undefined} data-character-advice={waved?undefined:advice?.topic}>{waved?wave.reply:advice?.text||characterMessage(settings,character,lang,variant,greetingDate)}</span>
+      {(!preview||visitorPreview)&&hasDetails&&<button type="button" className="gs-character-details-toggle" aria-expanded={expanded} aria-controls={detailsId} onClick={()=>setDetailsOpen(open=>!open)}>{detailsCopy[expanded?1:0]} <span aria-hidden="true">{expanded?'−':'+'}</span></button>}
+      <div id={detailsId} className="gs-character-details" hidden={!expanded}>
       {interactive&&!waved&&<button type="button" className="gs-character-wave-back" onClick={()=>{setWaved(true);onActivity?.();}}>{wave.button} {wave.emoji}</button>}
       {showActions&&recommendation&&onRecommend&&<div className="gs-character-recommendation" data-character-sale={recommendation.sale?'true':undefined}><span>{recommendation.sale?saleCopy.intro:productCopy.intro}</span><strong>{recommendation.name}</strong>{recommendation.sale&&<div className="gs-character-sale-prices"><b>{money(recommendation.price)}</b><del>{money(recommendation.oldPrice)}</del><small>{saleCopy.saving}: {money(recommendation.savings)}</small></div>}<button type="button" className="gs-character-guide-action" data-character-product={recommendation.id} onClick={onRecommend}>{recommendation.sale?saleCopy.action:productCopy.action} <span aria-hidden="true">↗</span></button></div>}
       {showActions&&!recommendation&&target&&onGuide&&<button type="button" className="gs-character-guide-action" data-character-guide={guideTarget} onClick={onGuide}><span aria-hidden="true">↗</span>{target.copy[lang]||target.copy.ka}</button>}
@@ -167,6 +174,7 @@ export function CharacterScene({character,settings,lang='ka',preview=false,inter
       {hasGuideActions&&helpOptions.length>0&&<div className="gs-character-help-options"><small>{helpCopy.title}</small><div>{helpOptions.map(type=><button key={type} type="button" data-character-help={type} onClick={()=>{setWaved(false);onHelp(type);}}>{helpCopy[type]}</button>)}</div></div>}
       {interactionNotice&&<small className="gs-character-interaction-notice" role="status">{interactionNotice}</small>}
       {!preview&&onMute&&<button type="button" className="gs-character-mute" onClick={onMute}>{lang==='en'?'Hide for this visit':lang==='ru'?'Скрыть на этот визит':'ამ ვიზიტზე დამალვა'}</button>}
+      </div>
       {!preview&&<button type="button" className="gs-character-dismiss" aria-label={lang==='ka'?'მისალმების დახურვა':lang==='ru'?'Закрыть приветствие':'Close greeting'} onClick={onClose}>×</button>}
     </div>
   </div>;

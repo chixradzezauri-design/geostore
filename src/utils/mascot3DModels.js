@@ -2,12 +2,28 @@ import {mascotLimb} from './mascot3DGeometry.js';
 // Eight additional original procedural models, sharing the bounded sphere mesh.
 // Each part has a real position, scale, orientation and material in three dimensions.
 export const MASCOT_3D_IDS=Object.freeze(['fox','panda','rabbit','robot','cat','monkey','bear','owl','cheetah','santa','snowman','deal']);
+// Sculpted eye layers: subtle socket, organic lids, iris and a restrained catchlight.
+// All pieces are opaque depth-tested geometry; no texture downloads or new meshes.
+export function drawPremiumMascotEye(draw,{x,y,z,radius=.17,opening=1,tilt=0,coat=[.56,.34,.20],iris=[.29,.15,.065],closed=false}){
+  const shadow=coat.map(v=>Math.max(.035,v*.60));
+  const height=radius*.76*opening;
+  if(closed){
+    draw([x,y,z],[radius,.026,.064],shadow,tilt,.08,0);
+    return;
+  }
+  draw([x,y,z-.023],[radius*1.12,height*1.22,.078],shadow,tilt,.07,.5);
+  draw([x,y,z+.018],[radius,height,.090],[.96,.95,.90],tilt,.17,0);
+  draw([x,y,z+.091],[radius*.65,height*.84,.050],iris,0,.28,0);
+  draw([x,y,z+.129],[radius*.35,height*.58,.030],[.035,.028,.025],0,.42,0);
+  draw([x-radius*.19,y+height*.34,z+.153],[radius*.135,radius*.135,.013],[1,.99,.96],0,.5,0);
+  draw([x,y+height*.88,z+.048],[radius*.94,.034,.053],coat,tilt,.07,.7);
+}
 export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false,season='none'}={}){
   const ivory=[.96,.91,.81],black=[.09,.08,.09],pink=[.83,.48,.44],gold=[.94,.66,.19],white=[.99,.98,.95],iris=[.29,.15,.065],metal=[.29,.35,.43],cyan=[.19,.87,.98];
   const santa=id==='santa',snow=id==='snowman',deal=id==='deal';
   const robot=id==='robot'||deal,owl=id==='owl',panda=id==='panda',rabbit=id==='rabbit',cat=id==='cat',monkey=id==='monkey',bear=id==='bear'||santa||snow,cheetah=id==='cheetah';
   const body=panda?ivory:base,limb=panda?black:robot?metal:base;
-  const broad=bear||panda?.65:cheetah||monkey?.43:.52;
+  const broad=bear||panda?.60:cheetah||monkey?.40:.49;
   const material=robot?.75:.12,fur=robot?0:1;
   const part=(c,s,color=body,tilt=0,gloss=material,texture=fur)=>draw(c,s,color,tilt,gloss,texture);
   const {step=0,wave=0,tail=0,breath=0,ear=0,wing=0,head=0}=pose;
@@ -21,6 +37,7 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     if(!robot&&!owl)for(const toe of [-1,0,1])part([sign*.31+toe*.12,-1.22+sign*step*.10,.34],[.065,.055,.07],panda?metal:ivory,0,.08,0);
   }
   part([0,-.45+breath,0],[broad,.69,.40],body);
+  if(!robot&&!snow)part([0,-.04+breath,.015],[broad*.76,.29,.34],body,0,.08,fur);
   if(robot){
     part([0,-.45,.35],[.34,.38,.10],metal,0,.75,0);
     part([0,-.41,.45],[.19,.11,.04],cyan,0,.9,0);
@@ -63,8 +80,8 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
     part([0,1.46,0],[.13,.13,.13],gold,0,.9,0);
     for(const sign of [-1,1])part([sign*.77,.57,0],[.19,.30,.24],metal,0,.85,0);
   }
-  const hy=.56+breath*.4-head*.12,headX=bear?.80:monkey?.70:.75;
-  part([0,hy,0],[headX,.65,.57],body);
+  const hy=.56+breath*.4-head*.12,headX=bear?.74:monkey?.66:owl?.75:robot?.75:.69;
+  part([0,hy,0],[headX,owl||robot?.65:.62,.57],body);
   if(robot){
     part([0,hy,.35],[.65,.47,.30],black,0,.9,0);
     for(const sign of [-1,1]){
@@ -76,20 +93,17 @@ export function drawMascot3DModel(id,draw,base,pose,{emotion='happy',blink=false
   }else{
     if(panda||owl||monkey)for(const sign of [-1,1])part([sign*.30,hy+.04,.39],[owl?.31:.26,owl?.35:.30,.20],panda?black:ivory,-sign*.12);
     if(!owl){
-      part([-.20,hy-.29,.45],[.27,.20,.23],ivory,-.10);
-      part([.20,hy-.29,.45],[.27,.20,.23],ivory,.10);
-      part([0,hy-.27,.66],[cat? .10:.14,.09,.10],cat?pink:black,0,.85,0);
+      const muzzleWidth=cat?.22:cheetah?.23:bear?.28:.25;
+      const muzzleDepth=cheetah?.28:bear?.25:.23;
+      part([-.19,hy-.28,.45],[muzzleWidth,.19,muzzleDepth],ivory,-.10,.07,1);
+      part([.19,hy-.28,.45],[muzzleWidth,.19,muzzleDepth],ivory,.10,.07,1);
+      part([0,hy-.27,cheetah?.72:.67],[cat?.10:.13,.078,.095],cat?pink:black,0,.46,0);
       part([0,hy-.44,.57],[.13,.04,.08],black,0,.1,0);
       if(rabbit)for(const sign of [-1,1])part([sign*.045,hy-.44,.65],[.045,.09,.04],white,0,.3,0);
     }else part([0,hy-.19,.66],[.11,.16,.14],gold,.12,.55,0);
     for(const sign of [-1,1]){
-      const closed=blink||(emotion==='wink'&&sign===1),radius=owl?.22:.17;
-      part([sign*.29,hy+.08,.56],[radius,closed?.025:emotion==='surprise'?.21:radius,.10],white,0,.3,0);
-      if(!closed){
-        part([sign*.29,hy+.08,.65],[radius*.68,radius*.72,.06],owl?gold:iris,0,.6,0);
-        part([sign*.29,hy+.08,.70],[radius*.38,radius*.49,.045],black,0,.85,0);
-        part([sign*.29-.035,hy+.13,.74],[.028,.032,.02],white,0,.9,0);
-      }
+      const closed=blink||(emotion==='wink'&&sign===1),radius=owl?.22:cat||cheetah?.145:.155;
+      drawPremiumMascotEye(draw,{x:sign*.29,y:hy+.08,z:.55,radius,opening:emotion==='surprise'?1.35:owl?1.16:1,tilt:cat||cheetah?-sign*.10:0,coat:panda?black:owl?ivory:body,iris:owl?gold:iris,closed});
     }
     if(cheetah){
       for(const sign of [-1,1]){

@@ -168,6 +168,16 @@ export async function runFlagship3DSmoke(browser,host){
       await page.goto(host,{waitUntil:'domcontentloaded'});
       const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
       await scene.waitFor({state:'visible',timeout:15000});
+      assert.equal(await scene.getAttribute('data-character-depth'),'grounded');
+      const depth=await scene.locator('.gs-character-figure').evaluate(node=>{
+        const plane=getComputedStyle(node,'::before'),edge=getComputedStyle(node,'::after'),rig=getComputedStyle(node.querySelector('.gs-character-body-rig'));
+        return {plane:plane.content,edge:edge.content,planePointer:plane.pointerEvents,edgePointer:edge.pointerEvents,rigZ:rig.zIndex,planeAnimation:plane.animationName};
+      });
+      assert.notEqual(depth.plane,'none','Contact plane exists in all render modes');
+      assert.notEqual(depth.edge,'none','Ground highlight exists in all render modes');
+      assert.equal(depth.planePointer,'none');assert.equal(depth.edgePointer,'none');
+      assert.equal(depth.rigZ,'1','Character is in front of the contact plane');
+      assert.equal(depth.planeAnimation,'none','Ground does not bounce in reduced motion');
       if(mode==='webgl'){
         await scene.locator('[data-character-3d="ready"][data-character-3d-model="'+character+'"]').waitFor({state:'visible',timeout:10000});
         const probe=await page.evaluate(()=>window.__mascot3DProbe);
@@ -211,6 +221,41 @@ export async function runConciergeV3Smoke(browser,host){
     await page.goto(host,{waitUntil:'domcontentloaded'});
     const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
     const product=scene.locator('[data-character-product]');
+    const toggle=scene.locator('.gs-character-details-toggle');
+    await toggle.waitFor({state:'visible',timeout:15000});
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+    assert.equal(await product.isVisible(),false,'Recommendations do not occupy catalogue space before opening');
+    const compactBox=await scene.locator('.gs-character-bubble').boundingBox();
+    assert.ok(compactBox.height<=127,'Compact assistant has a bounded height');
+    assert.equal(await scene.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).animationName),'none');
+    for(const [width,height] of [[320,850],[360,850],[390,850],[430,850],[768,850],[1024,850],[1440,850],[640,360]]){
+      await page.setViewportSize({width,height});
+      const box=await scene.boundingBox();
+      const bubble=await scene.locator('.gs-character-bubble').boundingBox();
+      assert.ok(box.x>=-1&&box.y>=-1&&box.x+box.width<=width+1&&box.y+box.height<=height+1,'Compact concierge stays in viewport '+width+'x'+height);
+      assert.ok(bubble.height<=127,'Compact text stays bounded '+width+'x'+height);
+      const dismiss=scene.locator('.gs-character-dismiss');
+      const hit=await dismiss.evaluate(n=>{
+        const r=n.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+        return {reachable:n.contains(top),cover:top?.tagName+' '+(typeof top?.className==='string'?top.className:''),rect:{x:r.x,y:r.y,width:r.width,height:r.height}};
+      });
+      assert.ok(hit.reachable,'Dismiss remains reachable '+width+'x'+height+' '+JSON.stringify(hit));
+      for(const button of await page.locator('.gs-floating-support .gs-floating-action, .gs-floating-ai .gs-floating-action').all()){
+        if(await button.isVisible())assert.equal(await button.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Assistance dock remains reachable '+width+'x'+height);
+      }
+    }
+    await page.setViewportSize({width:390,height:850});
+    // Verify ordinary motion too, rather than only relying on reduced-motion CSS.
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    assert.equal(await scene.evaluate(n=>getComputedStyle(n).animationName),'none','Public root remains stationary in ordinary motion');
+    assert.equal(await scene.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).animationName),'none','Public text remains stationary in ordinary motion');
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+    assert.equal(await product.isVisible(),false,'Disclosure closes without discarding the recommendation');
+    await toggle.click();
     await product.waitFor({state:'visible',timeout:15000});
     assert.equal(await scene.getAttribute('data-side'),'left');
     const initial=await product.getAttribute('data-character-product');
@@ -226,6 +271,16 @@ export async function runConciergeV3Smoke(browser,host){
     await scene.waitFor({state:'visible',timeout:10000});
     assert.equal(await scene.getAttribute('data-side'),'right');
     assert.match(await scene.innerText(),/Tech Panda/);
+    for(const [width,height] of [[640,360],[720,400]]){
+      await page.setViewportSize({width,height});
+      const close=scene.locator('.gs-character-dismiss');
+      assert.ok(await close.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Right-side landscape dismissal '+width+'x'+height);
+      for(const button of await page.locator('.gs-floating-support .gs-floating-action, .gs-floating-ai .gs-floating-action').all()){
+        if(await button.isVisible())assert.ok(await button.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Right-side landscape dock remains reachable');
+      }
+    }
+    await page.setViewportSize({width:390,height:850});
+    await scene.locator('.gs-character-details-toggle').click();
     await scene.locator('.gs-character-mute').click();
     await scene.waitFor({state:'detached'});
     await page.reload({waitUntil:'domcontentloaded'});
@@ -243,6 +298,7 @@ export async function runConciergeV3Smoke(browser,host){
     await page.goto(host,{waitUntil:'domcontentloaded'});
     const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
     const offer=scene.locator('[data-character-sale="true"]');
+    await scene.locator('.gs-character-details-toggle').click({timeout:15000});
     await offer.waitFor({state:'visible',timeout:15000});
     assert.match(await offer.innerText(),/Stage46 Everyday Wallet/);
     assert.match(await offer.innerText(),/35.*45.*10/s);
