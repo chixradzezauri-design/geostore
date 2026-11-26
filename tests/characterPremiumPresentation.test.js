@@ -85,3 +85,14 @@ test('visitor preview mirrors compact public text without replacing the function
  assert.ok(css.includes('.gs-character-preview-scene[data-character-visitor-preview="true"]'));
  assert.ok(smoke.includes("getAttribute('data-character-details'),'compact'"));
 });
+
+test('visitor greeting playback explicitly opens the compact disclosure before testing the reply gesture',()=>{
+ const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ const start=smoke.indexOf('const greetingDisclosure=');
+ const end=smoke.indexOf("assert.match(await greetingPlayback.innerText(),/ვაშა!/)",start);
+ assert.ok(start>=0&&end>start);
+ const scenario=smoke.slice(start,end);
+ assert.ok(scenario.includes("assert.equal(await waveButton.isVisible(),false"));
+ assert.ok(scenario.indexOf('await greetingDisclosure.click()')<scenario.indexOf('await waveButton.click()'));
+ assert.ok(scenario.includes("getAttribute('aria-expanded'),'true'"));
+});

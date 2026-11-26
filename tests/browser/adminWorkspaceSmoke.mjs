@@ -275,7 +275,14 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           const greetingPlayback=studio.locator('[data-character-playback][data-playing="true"] .gs-character-preview-scene');
           await greetingPlayback.waitFor({state:'visible',timeout:10000});
           assert.match(await greetingPlayback.innerText(),/Fixture greeting library/);
-          await greetingPlayback.getByRole('button',{name:/ხელის დაქნევა/}).click();
+          const greetingDisclosure=greetingPlayback.locator('.gs-character-details-toggle');
+          const waveButton=greetingPlayback.getByRole('button',{name:/ხელის დაქნევა/});
+          assert.equal(await greetingDisclosure.getAttribute('aria-expanded'),'false','Visitor playback starts compact');
+          assert.equal(await waveButton.isVisible(),false,'Reply gesture is hidden until disclosure opens');
+          await greetingDisclosure.click();
+          assert.equal(await greetingDisclosure.getAttribute('aria-expanded'),'true');
+          await waveButton.waitFor({state:'visible',timeout:3000});
+          await waveButton.click();
           assert.match(await greetingPlayback.innerText(),/ვაშა!/);
           assert.equal(await greetingPlayback.getAttribute('data-motion'),'celebrate');
           await greetingPlayback.waitFor({state:'detached',timeout:15000});
