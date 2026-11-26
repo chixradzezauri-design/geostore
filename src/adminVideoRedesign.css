@@ -1654,3 +1654,18 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-supplier-workspace,.admin-purchase-workspace) :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {min-width:0!important;max-width:100%!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-supplier-workspace,.admin-purchase-workspace) .flex > * {min-width:0;max-width:100%}
 }
+
+/* Admin PRO — narrow forms: constrain native controls and anonymous text sizing. */
+@media (max-width:639px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) {width:100%;min-width:0!important;max-width:100%!important;overflow-wrap:anywhere}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) :is(form,.grid) > * {min-width:0!important;max-width:100%!important;box-sizing:border-box}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) :is(form,.grid) > label {display:block;width:100%;white-space:normal!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label {display:flex;width:100%;align-items:center}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-existing-form,.admin-staff-create-fields,.admin-workspace-staff-filters,.admin-vendor-form) {grid-template-columns:minmax(0,1fr)!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) :is(select,input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),textarea) {display:block;width:100%!important;min-width:0!important;max-width:100%!important;min-inline-size:0!important;max-inline-size:100%!important;box-sizing:border-box}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) select {-webkit-appearance:none;appearance:none;text-overflow:ellipsis;padding-inline-end:32px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23818e9b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px 16px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) .admin-pro-control-caption {display:block;min-width:0;max-width:100%;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;line-height:1.5!important;font-size:inherit!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff,.admin-vendors-panel) :is(.admin-staff-create-submit,.admin-staff-existing-form > button,.admin-vendor-form > button) {display:flex!important;align-items:center;justify-content:center;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-list-panel > div:first-child {display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-supplier-workspace,.admin-purchase-workspace) .flex > input[type="search"] {flex:1 1 100%}
+}

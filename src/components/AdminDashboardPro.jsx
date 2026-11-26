@@ -834,7 +834,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
-        <form onSubmit={handleAddExistingUser} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+        <form onSubmit={handleAddExistingUser} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3">
           <select aria-label="არსებული მომხმარებლის არჩევა" value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
             <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
             {(usersList || []).filter((user) => user.email).map((user) => (
@@ -842,7 +842,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
             ))}
           </select>
           <button type="submit" disabled={staffActionBusy || !staffListReady || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
-            {staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}
+            <span className="admin-pro-control-caption">{staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}</span>
           </button>
         </form>
       </section>
@@ -867,13 +867,13 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                     ...current,
                     permissions: { ...current.permissions, [permission.key]: event.target.checked }
                   }))} className="accent-emerald-400" />
-                  {permission.label}
+                  <span className="admin-pro-control-caption">{permission.label}</span>
                 </label>
               ))}
             </div>
           </div>
           <button type="submit" disabled={staffActionBusy || !staffListReady} className="admin-staff-create-submit rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
-            {staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}
+            <span className="admin-pro-control-caption">{staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}</span>
           </button>
         </form>
       </section>
@@ -8037,7 +8037,7 @@ export default function AdminDashboardPro({
                 <input type="text" aria-label="მომწოდებლის სახელი" readOnly={editingVendorId !== null} placeholder="მომწოდებლის სახელი *" required maxLength={100} value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <input type="number" min="0" max="100" step="0.01" inputMode="decimal" aria-label="საკომისიო პროცენტებში" placeholder="საკომისიო %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center gap-1.5">
-                  <Percent className="w-4 h-4" /> {editingVendorId !== null ? "საკომისიოს შენახვა" : "მომწოდებლის დამატება"}
+                  <Percent className="w-4 h-4 shrink-0" /> <span className="admin-pro-control-caption">{editingVendorId !== null ? "საკომისიოს შენახვა" : "მომწოდებლის დამატება"}</span>
                 </button>
               </form>
               {editingVendorId !== null && <button type="button" onClick={() => { setEditingVendorId(null); setVendorForm({ name: '', commission: '' }); }} className="rounded-xl bg-slate-800 px-4 text-xs text-slate-200">რედაქტირების გაუქმება</button>}

@@ -9,3 +9,12 @@ test('Admin PRO device matrix covers all planned widths and both engines without
  assert.ok(runner.includes('await runAdminWorkspaceSmoke(browser, host);'));
  assert.ok(runner.indexOf('await runAdminWorkspaceSmoke(browser,host,{widths:[390],layoutOnly:true});')>runner.indexOf('browser = await webkit.launch'));
 });
+
+test('narrow staff and vendor forms constrain native controls without clipping workspace',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx');
+ const css=read('src/adminVideoRedesign.css').split('/* Admin PRO — narrow forms:')[1];
+ assert.ok(css);
+ for(const term of ['admin-staff-existing-form grid','sm:grid-cols-[minmax(0,1fr)_auto]','admin-pro-control-caption','onSubmit={handleAddExistingUser}','onSubmit={handleInviteStaff}','onSubmit={handleAddVendor}'])assert.ok(app.includes(term),term);
+ for(const term of ['max-width:639px','grid-template-columns:minmax(0,1fr)!important','-webkit-appearance:none','text-overflow:ellipsis','overflow-wrap:anywhere!important','width:100%!important'])assert.ok(css.includes(term),term);
+ assert.ok(!css.includes('overflow:hidden'));assert.ok(!css.includes('overflow:clip'));
+});
