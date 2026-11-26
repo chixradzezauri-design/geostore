@@ -15,6 +15,7 @@ export default function Modals({
   isCheckoutOpen,
   setIsCheckoutOpen,
   checkoutForm,
+  checkoutDisplayTotal = '',
   setCheckoutForm,
   handlePlaceOrder,
   isSubmittingOrder = false,
@@ -510,7 +511,7 @@ export default function Modals({
           >
             <header className="gs-checkout-header flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4 sm:px-7 sm:py-5">
               <div className="gs-checkout-heading min-w-0">
-                <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-neutral-500">GEOSTORE · CHECKOUT</p>
+                <p className="gs-checkout-brand mb-1 text-[9px] font-semibold text-neutral-500">GEOSTORE</p>
                 <h3 id="geostore-checkout-title" className="text-lg font-semibold tracking-tight sm:text-xl">{copy.checkoutTitle}</h3>
                 <p id="geostore-checkout-intro" className="mt-1 text-[11px] text-neutral-500">{copy.checkoutIntro}</p>
               </div>
@@ -561,7 +562,7 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.region} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <Truck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <select value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
+                  <select name="region" value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
                     className="w-full appearance-none rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:bg-white">
                     <option value="tbilisi">{copy.tbilisi} ({deliveryFees.tbilisi} ₾)</option>
                     <option value="bigCities">{copy.bigCities} ({deliveryFees.bigCities} ₾)</option>
@@ -587,6 +588,7 @@ export default function Modals({
               )}
 
               <div className="gs-checkout-submit-area border-t border-neutral-200 pt-4">
+                {checkoutDisplayTotal && <div className="gs-checkout-total-preview"><span>{currentLang === 'en' ? 'Order total' : currentLang === 'ru' ? 'Итого заказа' : 'შეკვეთის ჯამი'}</span><strong>{checkoutDisplayTotal}</strong></div>}
                 <button type="submit" disabled={isSubmittingOrder}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-55">
                   {isSubmittingOrder ? copy.sending : copy.confirmOrder}
