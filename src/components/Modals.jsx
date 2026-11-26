@@ -851,7 +851,8 @@ export default function Modals({
             </div>
 
             {authMode==='login'&&passkeyAvailable&&<div className="gs-passkey-login">
-              <button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={onPasskeySignIn}>{currentLang==='en'?'Sign in with Face ID / device passkey':currentLang==='ru'?'Войти с Face ID / ключом устройства':'Face ID / სწრაფი შესვლა'}</button>
+              <button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={onPasskeySignIn}>{currentLang==='en'?'Sign in with Face ID / device PIN':currentLang==='ru'?'Войти с Face ID / PIN устройства':'Face ID / მოწყობილობის PIN-ით შესვლა'}</button>
+              <p className="gs-passkey-description">{currentLang==='en'?'Your device chooses biometrics, device PIN or a security key. If unavailable, use your password or email recovery.':currentLang==='ru'?'Устройство выбирает биометрию, PIN или ключ безопасности. Если они недоступны, используйте пароль или восстановление по почте.':'მოწყობილობა თავად გთავაზობს ბიომეტრიას, PIN-ს ან უსაფრთხოების გასაღებს. საჭიროებისას გამოიყენე პაროლი ან ელ-ფოსტით აღდგენა.'}</p>
               {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
             </div>}
             <form onSubmit={handleAuthSubmit} autoComplete="on" className="space-y-4 text-xs animate-in fade-in">

@@ -2,7 +2,8 @@ import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
 import CustomerPersonalOffers from './components/CustomerPersonalOffers.jsx';
 import CustomerPurchaseStatistics from './components/CustomerPurchaseStatistics.jsx';
 import {readLoginFields,offerBrowserPasswordSave} from './utils/customerPasswordManager.js';
-import {customerPasskeyAvailable,registerCustomerPasskey,signInCustomerPasskey} from './utils/customerPasskeys.js';
+import {customerPasskeyAvailable,registerCustomerPasskey,signInCustomerPasskey,manageCustomerPasskeys} from './utils/customerPasskeys.js';
+import CustomerPasskeyManager from './components/CustomerPasskeyManager.jsx';
 import './components/customerPasskeys.css';
 import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
 import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
@@ -794,6 +795,7 @@ export default function App() {
   const authSubmitLock = useRef(false);
   const [passkeyBusy,setPasskeyBusy]=useState(false);
   const [passkeyFeedback,setPasskeyFeedback]=useState('');
+  const [passkeyRevision,setPasskeyRevision]=useState(0);
   const passkeyAvailable=customerPasskeyAvailable(typeof window==='undefined'?null:window,supabase.auth);
   useEffect(()=>{setPasskeyFeedback('');},[currentUser?.id]);
   const pendingCheckoutRef = useRef(null);
@@ -2943,9 +2945,20 @@ export default function App() {
         if(!stillCurrent())throw new Error('passkey_session_changed');
         return coordinatedAuth('registerPasskey');
       });
-      if(stillCurrent())setPasskeyFeedback(passkeyMessage(true));
+      if(stillCurrent()){setPasskeyFeedback(passkeyMessage(true));setPasskeyRevision(value=>value+1);}
     }catch{if(stillCurrent())setPasskeyFeedback(passkeyMessage(false));}
     finally{authSubmitLock.current=false;setPasskeyBusy(false);}
+  };
+  const handleManageCustomerPasskeys = async (action,options) => {
+    const owner=currentUser?.id;
+    const epoch=customerPrivateEpochRef.current;
+    const stillCurrent=()=>customerPrivateEpochRef.current===epoch&&activeCartOwnerRef.current.userId===owner;
+    if(!passkeyAvailable||!owner||authLoading||adminLoggedIn||authSubmitLock.current||!stillCurrent())throw new Error('passkey_unavailable');
+    authSubmitLock.current=true;setPasskeyBusy(true);
+    try{
+      const task=()=>manageCustomerPasskeys(supabase.auth,owner,action,options,stillCurrent);
+      return await (ADMIN_MFA_ROLLOUT_ENABLED?runAdminAuthExclusive(task):task());
+    }finally{authSubmitLock.current=false;setPasskeyBusy(false);}
   };
   const handlePasskeySignIn = async () => {
     if(!passkeyAvailable||currentUser?.id||authLoading||authMode!=='login'||authSubmitLock.current)return;
@@ -3230,6 +3243,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if(passkeyBusy||authSubmitLock.current)return;
     try {
       const { error } = await coordinatedAuth('signOut');
 
@@ -4467,6 +4481,7 @@ export default function App() {
                 <p className="gs-passkey-description">{currentLang==='en'?'Account protection is managed by Supabase Auth. Quick sign-in uses your device passkey; GEOSTORE never collects a face scan or device PIN.':currentLang==='ru'?'Защита аккаунта обеспечивается Supabase Auth. Быстрый вход использует ключ устройства; GEOSTORE не получает биометрию или PIN.':'ანგარიშს იცავს Supabase Auth. სწრაფი შესვლა იყენებს მოწყობილობის გასაღებს; GEOSTORE არ იღებს სახის სკანს ან მოწყობილობის PIN-ს.'}</p>
                 {passkeyAvailable&&!adminLoggedIn&&!authLoading&&<button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={handleRegisterPasskey}>{currentLang==='en'?'Add Face ID / device passkey':currentLang==='ru'?'Добавить Face ID / ключ устройства':'Face ID / სწრაფი შესვლის გააქტიურება'}</button>}
                 {!passkeyAvailable&&<p className="gs-passkey-description">{currentLang==='en'?'Quick sign-in is not available on this device or version yet. Password login remains available.':currentLang==='ru'?'Быстрый вход пока недоступен на этом устройстве или в этой версии. Вход по паролю доступен.':'სწრაფი შესვლა ამ მოწყობილობაზე ან ვერსიაში ჯერ მიუწვდომელია. პაროლით შესვლა კვლავ შესაძლებელია.'}</p>}
+                {passkeyAvailable&&!adminLoggedIn&&!authLoading&&currentUser.id===activeCartOwnerRef.current.userId&&<CustomerPasskeyManager key={currentUser.id+':'+customerPrivateEpochRef.current+':'+passkeyRevision} lang={currentLang} busy={passkeyBusy} onManage={handleManageCustomerPasskeys}/>}
                 {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
               </div>
 
@@ -4477,6 +4492,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleLogout}
+                disabled={passkeyBusy}
                 className="gs-video-profile-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
               >
                 {t.logout}
