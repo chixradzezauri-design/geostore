@@ -1,4 +1,5 @@
 import AdminDesignTemplates from './AdminDesignTemplates.jsx';
+import {ADMIN_PRO_PALETTE,applyAdminProfessionalDesign} from '../utils/adminProfessionalDesign.js';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ADMIN_PANEL_CONTENT_FIELDS,
@@ -1424,6 +1425,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   };
 
 
+  const applyProfessionalPreset = () => {
+    if (viewport !== 'desktop') return;
+    if (!window.confirm('GEOSTORE PRO შეცვლის საერთო ფერებსა და ზომებს. ინდივიდუალური ელემენტების შეცვლილი პარამეტრები და მოწყობილობის გადაფარვები შენარჩუნდება. შესაძლებელია ცვლილების გაუქმება. გავაგრძელოთ?')) return;
+    commitChange(applyAdminProfessionalDesign(normalized));
+  };
+
   const applyPreset = preset => {
     if (!PRESETS[preset]) return;
     if (viewport === 'desktop') {
@@ -1613,6 +1620,17 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <button type="button" onClick={() => applyPreset('light')} className="rounded-lg border border-slate-400/40 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">Light</button>
           </div>
         </div>
+        <section data-admin-pro-preset="true" className="rounded-xl border border-slate-600 p-3" style={{backgroundColor:'#f4f6f9',color:'#182230'}}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <strong className="text-sm" style={{color:'#182230'}}>GEOSTORE PRO</strong>
+            <span className="text-xs" style={{color:'#526174'}}>პროფესიონალური ღია სტილი</span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2" aria-label="GEOSTORE PRO ფერთა პალიტრა">
+            {['canvas','panel','nav','accent','muted','border'].map(key=><span key={key} aria-label={ADMIN_PRO_PALETTE[key]} className="h-8 w-8 rounded-md border border-slate-400" style={{backgroundColor:ADMIN_PRO_PALETTE[key]}}/>)}
+          </div>
+          <p className="mt-2 text-xs leading-relaxed" style={{color:'#526174'}}>ერთიანი ფერები, კომპაქტური ზომები და მკაფიო ტექსტები. ინდივიდუალური ცვლილებები შენარჩუნდება. საერთო ფერებისა და ზომების გამოყენება Desktop ხედიდან.</p>
+          <button type="button" data-admin-pro-apply="true" disabled={viewport!=='desktop'} onClick={applyProfessionalPreset} className="mt-2 min-h-11 w-full rounded-lg px-3 py-2 text-xs font-bold disabled:opacity-50" style={{backgroundColor:'#126b59',color:'#ffffff'}}>PRO დიზაინის გამოყენება</button>
+        </section>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {COLOR_FIELDS.map(field => (
             <label key={field.key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3 text-xs text-slate-200">
