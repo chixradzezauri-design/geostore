@@ -1805,3 +1805,145 @@
     grid-template-columns: minmax(0,1fr);
   }
 }
+
+/* Order detail refinement: customer information, item identity and amounts
+   form readable groups. Existing status transitions and note saves are untouched. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer {
+  background: var(--av-inset);
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 10px;
+  gap: 10px 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p > :is(b,.admin-unified-order-field-value) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p.text-amber-300 {
+  background: #fff0cc;
+  border-radius: 6px;
+  padding: 8px;
+  font-style: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p.text-amber-300 > :is(span,b) {
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list [data-admin-pro-order-number] {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list [data-admin-pro-order-date] {
+  margin-inline-start: 0 !important;
+  color: var(--av-muted) !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list [data-admin-pro-order-total] {
+  font-variant-numeric: tabular-nums;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal :is(.admin-order-customer,.admin-order-item,.admin-order-financials,.admin-order-items-section > div > div:not(.admin-order-item)) {
+  background: var(--admin-vd-modalBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-modalBorder-active,var(--av-border)) !important;
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  padding: 12px !important;
+  border-radius: 10px !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-customer > .grid > p > :is(b,a),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info h5 {
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info {
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info > div > span {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info > div > span.bg-slate-900 {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info :is(span,p).text-amber-200 {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-color: #e3c78b !important;
+  border-radius: 5px;
+  padding: 4px 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal [data-admin-pro-order-image] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-muted) !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials > div {
+  border-color: var(--av-border) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price > span:last-child,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials > div:last-child > span:last-child {
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials :is(.flex) > * {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials > div:last-child {
+  background: var(--av-inset);
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-note-controls > input { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-note-controls > button,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-detail-footer > button:last-child {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-detail-footer > button:first-child {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+@media (min-width: 360px) and (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p:nth-child(n+3) { grid-column: 1 / -1; }
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item {
+    display: grid !important;
+    grid-template-columns: 56px minmax(0,1fr);
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal [data-admin-pro-order-image] {
+    width: 56px !important;
+    height: 56px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price {
+    grid-column: 1 / -1;
+    text-align: start;
+    flex-wrap: wrap;
+  }
+}
