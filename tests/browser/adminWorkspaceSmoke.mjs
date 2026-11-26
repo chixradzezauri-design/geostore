@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { stage49FixtureProductRows } from './stage46PurchaseScenarios.mjs';
+import { collectAdminVisualBaseline } from './adminVisualBaseline.mjs';
 
 const backend = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 // The application uses an exact owner-ID check. This is an intercepted
@@ -98,6 +99,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       assert.ok(await page.locator('link[data-gs-admin-core]').evaluate(node=>Boolean(node.sheet)&&node.nextElementSibling?.getAttribute('name')==='gs-admin-css-slot'),'Loaded stylesheet stays in original cascade slot');
       assert.equal(moduleRequests.size,0,'Dedicated admin modules must not load on the initial command center');
       const picker = page.locator('#geostore-admin-mobile-section');
+      const visualBaseline=[];
       for (const [tab, selector] of Object.entries(modules)) {
         // Desktop and phone use the real exposed navigation controls.
         if (await picker.isVisible()) await picker.selectOption(tab);
@@ -115,6 +117,8 @@ export async function runAdminWorkspaceSmoke(browser, host) {
           throw new Error(width + 'px: expected module ' + tab + ', active ' + selected + ', errors: ' + errors.join('; ') + '; ' + error.message);
         }
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
+        // Capture the untouched module before any fixture edits or interactions.
+        visualBaseline.push(await collectAdminVisualBaseline(shell,tab));
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});
@@ -414,6 +418,9 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         }
         if (tab === 'support') await page.locator('#admin-workspace-support-status').selectOption('ღია');
       }
+      assert.equal(visualBaseline.length,Object.keys(modules).length,'Every permitted module has a visual baseline');
+      assert.equal(new Set(visualBaseline.map(row=>row.module)).size,Object.keys(modules).length);
+      console.log('ADMIN_VISUAL_BASELINE '+JSON.stringify({engine:browser.browserType().name(),width,modules:visualBaseline}));
       assert.deepEqual(writes, [], 'Opening and filtering modules must not mutate live or fixture data');
       assert.deepEqual(errors, [], 'No uncaught owner workspace errors');
       console.log('PASS intercepted owner workspace: ' + width + 'px, ' + Object.keys(modules).length + ' actual modules, no writes');
