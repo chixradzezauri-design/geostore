@@ -7779,16 +7779,16 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <FolderTree className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.categoriesCreateTitle}
               </h3>
-              <form onSubmit={handleAddCategory} className="admin-category-form space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <input aria-label="კატეგორიის სახელწოდება" type="text" placeholder="სახელწოდება *" required maxLength={60} value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <select aria-label="მთავარი კატეგორიის არჩევა" value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
+              <form onSubmit={handleAddCategory} aria-label="კატეგორიის დამატება" className="admin-category-form space-y-4 text-xs">
+                <div className="admin-unified-category-fields grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <label className="admin-unified-category-field"><span>სახელწოდება *</span><input aria-label="კატეგორიის სახელწოდება" type="text" placeholder="სახელწოდება *" required maxLength={60} value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" /></label>
+                  <label className="admin-unified-category-field"><span>მდებარეობა</span><select aria-label="მთავარი კატეგორიის არჩევა" value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
                     <option value="">მთავარი კატეგორია</option>
                     {mainCategories.map(cat => (
                       <option key={cat.id} value={cat.id}>↳ ქვეშ: {cat.name}</option>
                     ))}
-                  </select>
-                  <select aria-label="კატეგორიის ხატულა" value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                  </select></label>
+                  <label className="admin-unified-category-field"><span>ხატულა</span><select aria-label="კატეგორიის ხატულა" value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
                     <option value="Shirt">👕 ტანსაცმელი</option>
                     <option value="Footprints">👟 ფეხსაცმელი</option>
                     <option value="Gem">💎 აქსესუარები</option>
@@ -7796,10 +7796,11 @@ export default function AdminDashboardPro({
                     <option value="Laptop">💻 ლეპტოპი</option>
                     <option value="Watch">⌚ საათი</option>
                     <option value="Sparkles">✨ სხვა</option>
-                  </select>
+                  </select></label>
                 </div>
+                <p className="admin-unified-category-help">{selectedParentId ? "ახალი ჩანაწერი დაემატება არჩეული მთავარი კატეგორიის ქვეშ." : "ახალი ჩანაწერი დაემატება მთავარ კატეგორიად."}</p>
 
-                <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
+                <div className="admin-unified-category-photo-field space-y-2 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
                   <label htmlFor="admin-category-create-photo" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> კატეგორიის ფოტო ან ბანერი
                   </label>
@@ -7829,7 +7830,7 @@ export default function AdminDashboardPro({
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.categoriesTreeTitle}</h3>
-              <p className="text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
+              <p className="admin-unified-category-publication text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
               <div className="admin-workspace-category-toolbar grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] items-end">
                 <div className="min-w-0">
                   <label htmlFor="admin-workspace-category-search" className="block mb-1 text-xs text-slate-300 font-bold">კატეგორიის ძიება</label>
@@ -7848,13 +7849,13 @@ export default function AdminDashboardPro({
                     const displayImage = parentCat.image || parentCat.img;
 
                     return (
-                      <div key={parentCat.id} className="admin-category-card bg-slate-950/60 border border-slate-700 rounded-2xl p-3 sm:p-4 space-y-3 shadow-inner">
+                      <div key={parentCat.id} data-admin-category-level="parent" className="admin-category-card bg-slate-950/60 border border-slate-700 rounded-2xl p-3 sm:p-4 space-y-3 shadow-inner">
                         <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
                           <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
                               <AdminThumbnail data-admin-pro-category-photo="true" src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
-                              <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">ფოტო არ არის</div>
+                              <div className="admin-unified-category-placeholder w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center" aria-label="ფოტო არ არის"><ImageIcon aria-hidden="true" className="w-5 h-5" /></div>
                             )}
                             <div>
                               <div className="min-w-0">
@@ -7864,7 +7865,7 @@ export default function AdminDashboardPro({
                             </div>
                           </div>
 
-                          <div className="admin-video-category-actions flex items-center gap-2">
+                          <div role="group" aria-label={`კატეგორიის მართვა: ${parentCat.name}`} className="admin-video-category-actions flex items-center gap-2">
                             <button type="button" onClick={() => moveCategory(parentCat.id, -1)} disabled={mainCategories[0]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ზემოთ აწევა" aria-label={`კატეგორიის ${parentCat.name} ზემოთ აწევა`}><ChevronUp className="w-4 h-4" /></button>
                             <button type="button" onClick={() => moveCategory(parentCat.id, 1)} disabled={mainCategories[mainCategories.length - 1]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ქვემოთ ჩამოწევა" aria-label={`კატეგორიის ${parentCat.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-4 h-4" /></button>
                             {!isEditingParent && (
@@ -7881,7 +7882,7 @@ export default function AdminDashboardPro({
                         </div>
 
                         {isEditingParent && (
-                          <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
+                          <div className="admin-unified-category-edit bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
                             <h5 className="font-black text-amber-400 text-xs">კატეგორიის რედაქტირება: {parentCat.name}</h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div>
@@ -7920,7 +7921,7 @@ export default function AdminDashboardPro({
                             </div>
                             <div className="flex justify-end gap-2 pt-1">
                               <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditingCatId(null); }} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
-                              <button onClick={() => handleSaveEditedCategory(parentCat.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
+                              <button type="button" data-admin-category-action="save" onClick={() => handleSaveEditedCategory(parentCat.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
                             </div>
                           </div>
                         )}
@@ -7931,7 +7932,7 @@ export default function AdminDashboardPro({
                               const isEditingSub = editingCatId === sub.id;
                               const subImg = sub.image || sub.img;
                               return (
-                                <div key={sub.id} className="admin-subcategory-card bg-slate-950 p-3 rounded-xl border border-slate-700 space-y-2">
+                                <div key={sub.id} data-admin-category-level="child" className="admin-subcategory-card bg-slate-950 p-3 rounded-xl border border-slate-700 space-y-2">
                                   <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
                                     <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -7939,7 +7940,7 @@ export default function AdminDashboardPro({
                                       <span className="font-bold text-slate-200 min-w-0 break-words">{sub.name}</span>
                                     </div>
 
-                                    <div className="admin-video-category-actions flex items-center gap-1.5">
+                                    <div role="group" aria-label={`ქვეკატეგორიის მართვა: ${sub.name}`} className="admin-video-category-actions flex items-center gap-1.5">
                                       <button type="button" onClick={() => moveCategory(sub.id, -1)} disabled={subCats[0]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ზემოთ აწევა" aria-label={`სუბკატეგორიის ${sub.name} ზემოთ აწევა`}><ChevronUp className="w-3.5 h-3.5" /></button>
                                       <button type="button" onClick={() => moveCategory(sub.id, 1)} disabled={subCats[subCats.length - 1]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ქვემოთ ჩამოწევა" aria-label={`სუბკატეგორიის ${sub.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-3.5 h-3.5" /></button>
                                       {!isEditingSub && (
@@ -7956,7 +7957,8 @@ export default function AdminDashboardPro({
                                   </div>
 
                                   {isEditingSub && (
-                                    <div className="bg-slate-900 p-3 rounded-xl border border-amber-500/30 space-y-2.5 animate-in fade-in">
+                                    <div className="admin-unified-category-edit bg-slate-900 p-3 rounded-xl border border-amber-500/30 space-y-2.5 animate-in fade-in">
+                                      <h5 className="text-sm font-bold text-white">ქვეკატეგორიის რედაქტირება: {sub.name}</h5>
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <input 
                                           aria-label="რედაქტირებული სახელწოდება" type="text" maxLength={60}
@@ -7989,7 +7991,7 @@ export default function AdminDashboardPro({
                             </div>
                                       <div className="flex justify-end gap-2">
                                         <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditingCatId(null); }} className="px-2.5 py-1 bg-slate-950 text-slate-400 rounded-lg text-[10px]">გაუქმება</button>
-                                        <button onClick={() => handleSaveEditedCategory(sub.id)} className="px-3 py-1 bg-amber-400 text-slate-950 rounded-lg font-black text-[10px]">შენახვა</button>
+                                        <button type="button" data-admin-category-action="save" onClick={() => handleSaveEditedCategory(sub.id)} className="px-3 py-1 bg-amber-400 text-slate-950 rounded-lg font-black text-[10px]">შენახვა</button>
                                       </div>
                                     </div>
                                   )}

@@ -486,3 +486,83 @@
 @media (max-width: 359px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row { grid-template-columns: minmax(0,1fr) !important; }
 }
+
+/* Stage 08 — category hierarchy. Preserve sibling order, draft and publish contracts. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager { container-type: inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager > div { background-image: none !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-fields {
+  display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-field {
+  display: grid; gap: 6px; min-width: 0; color: var(--av-text) !important; font-size: 13px; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-field :is(input,select) { width: 100% !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-help { font-size: 12px; color: var(--av-muted) !important; line-height: 1.6; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-photo-field,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-edit {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important; box-shadow: none !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important; min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-category-form button[type="submit"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager [data-admin-category-action="save"] {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#ffffff) !important;
+  border-color: var(--admin-vd-primaryButtonBorder-active,#126b59) !important;
+  min-height: 44px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-publication {
+  background: var(--av-inset) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important; line-height: 1.65;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-category-card, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-card {
+  background-image: none !important; box-shadow: none !important; min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-card { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-row {
+  display: grid !important; grid-template-columns: minmax(0,1fr) !important; align-items: center !important; gap: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity {
+  display: flex !important; flex-wrap: nowrap !important; width: 100% !important; min-width: 0 !important; gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity > div:not(:first-child),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity > div > div {
+  flex: 1 1 auto; min-width: 0 !important; max-width: 100% !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity :is(h4,span) {
+  white-space: normal !important; word-break: normal !important; overflow-wrap: break-word !important;
+  line-height: 1.5 !important; letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > span { flex: 1 1 auto; font-size: 13px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-placeholder {
+  flex: 0 0 48px !important; width: 48px !important; height: 48px !important;
+  background: var(--av-inset) !important; border-color: var(--av-border) !important; color: var(--av-muted) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > [data-admin-pro-category-photo] {
+  width: 36px !important; height: 36px !important; flex: 0 0 36px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions {
+  display: grid !important; grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+  min-width: 0 !important; width: 100% !important; gap: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions > button {
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  min-width: 0 !important; width: 100% !important; min-height: 44px !important;
+  padding: 8px !important; background-image: none !important; box-shadow: none !important;
+  background-color: var(--av-surface) !important; border: 1px solid var(--av-border) !important;
+  color: var(--av-text) !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions > button[aria-label$="წაშლა"] {
+  background-color: #fce5e8 !important; border-color: #e4b4bf !important; color: #9c2538 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions > button svg { color: currentColor !important; flex-shrink: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-edit h5 { color: var(--av-text) !important; font-size: 14px !important; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-edit > div:last-child { flex-wrap: wrap; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-edit > div:last-child > button { min-height: 44px !important; flex: 1 1 100px; }
+@container (min-width: 560px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-fields { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-row { grid-template-columns: minmax(0,1fr) auto !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(4,44px) !important; width: auto !important; }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
