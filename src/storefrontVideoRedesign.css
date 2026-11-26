@@ -2328,3 +2328,42 @@
   .geostore-shell.geostore-fashion-store .gs-character-scene:not(.gs-character-preview-scene)[data-character-details="compact"] .gs-character-bubble {max-width:min(210px,calc(100vw - 130px));}
 }
 @media(prefers-reduced-motion:reduce){.geostore-shell.geostore-fashion-store .gs-digital-wardrobe .gs-wardrobe-hero svg,.geostore-shell.geostore-fashion-store .gs-character-context .gs-character-hand {animation:none!important;}}
+
+
+/* Customer experience audit 13 — notifications, tracking and support conversation. */
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications {max-height:min(90dvh,760px)!important;gap:12px!important;min-height:0;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications > * {margin-top:0!important;min-width:0;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications > div:first-child {gap:12px;flex-shrink:0;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications > div:first-child button {min-width:44px;min-height:44px;flex-shrink:0;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-notification-center-controls input {min-height:44px;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-notification-clear-search {min-height:44px;color:var(--gs-ink,#302820);text-decoration:underline;justify-self:start;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-notification-results {min-height:0;overscroll-behavior:contain;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-video-notification-card {box-shadow:none!important;overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-video-notification-card > div:first-child {flex-wrap:wrap;gap:6px;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-video-notification-card > div:first-child svg {flex-shrink:0;}
+.geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-notification-order-link {display:block;margin-top:8px;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog {max-height:calc(100dvh - 24px)!important;gap:12px!important;overscroll-behavior:contain;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog > * {margin-top:0!important;min-width:0;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-order-tracker-form > * {min-width:0;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-order-tracker-summary > div:first-child {flex-wrap:wrap;gap:8px;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-order-tracker-summary b {overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-customer-order-progress {background:var(--gs-surface-soft,#f0ebe4)!important;color:var(--gs-ink,#302820)!important;border-color:var(--gs-line,#e2d9ce)!important;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-customer-order-progress :is(small,b) {color:var(--gs-muted,#62574d)!important;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-customer-progress-steps li span {background:var(--gs-surface,#fffdfa);color:var(--gs-ink,#302820);border-color:var(--gs-line,#e2d9ce);}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-customer-progress-steps li[data-current] span {background:#24634e;color:#fff;outline-color:#24634e;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-customer-progress-steps li[data-past] span {background:#e4f1e9;color:#24563a;border-color:#8db69b;}
+.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-customer-order-progress[data-order-progress="cancelled"] .gs-customer-progress-state {color:#9f1239!important;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-panel-heading {position:sticky;top:0;z-index:2;background:var(--gs-surface,#fffdfa)!important;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-conversation {overscroll-behavior:contain;padding:5px;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message {max-width:94%;overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message > div:first-child {flex-wrap:wrap;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message[data-support-sender="support"] {margin-inline-end:auto;background:#edf5ef!important;border-color:#c5dfcd!important;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message[data-support-sender="customer"] {margin-inline-start:auto;background:var(--gs-surface-soft,#f0ebe4)!important;border-color:var(--gs-line,#e2d9ce)!important;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message :is(strong,p) {color:var(--gs-ink,#302820)!important;}
+.geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message time {color:var(--gs-muted,#62574d)!important;}
+@media(max-width:640px){
+  .geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications,.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog {padding:14px!important;}
+  .geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications .gs-notification-center-controls input,.geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-order-tracker-form input {font-size:16px!important;}
+  .geostore-shell.geostore-fashion-store .gs-order-tracker-dialog .gs-order-tracker-form {grid-template-columns:minmax(0,1fr)!important;}
+  .geostore-shell.geostore-fashion-store .gs-support-panel .gs-support-message {max-width:100%;}
+}
