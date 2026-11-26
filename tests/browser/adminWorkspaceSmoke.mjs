@@ -140,7 +140,28 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             const activeCount = await activeNav.count();
             matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
             if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1) {
-              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,selected,moduleVisible,activeCount});
+              // Diagnostic geometry only, from the isolated synthetic fixture.
+              // Do not log text, input values, URLs or customer identifiers.
+              const offenders = await shell.evaluate(root => {
+                const main = root.querySelector('.admin-workspace-main');
+                if (!main) return [];
+                const boundary = main.getBoundingClientRect();
+                const right = boundary.left + main.clientLeft + main.clientWidth;
+                const result = [];
+                for (const node of main.querySelectorAll('*')) {
+                  const rect = node.getBoundingClientRect();
+                  if (!rect.width || !rect.height || node.closest('[hidden],[aria-hidden="true"]')) continue;
+                  const style = getComputedStyle(node);
+                  if (style.display === 'none' || style.visibility !== 'visible') continue;
+                  const excess = Math.max(0,rect.right-right);
+                  const internal = Math.max(0,node.scrollWidth-node.clientWidth);
+                  if (excess <= 2 && internal <= 2) continue;
+                  const parent = node.parentElement;
+                  result.push({tag:node.tagName.toLowerCase(),className:typeof node.className==='string'?node.className.slice(0,180):'',parentClass:typeof parent?.className==='string'?parent.className.slice(0,140):'',width:Math.round(rect.width),excess:Math.round(excess),internal,display:style.display,minWidth:style.minWidth,whiteSpace:style.whiteSpace,overflowX:style.overflowX});
+                }
+                return result.sort((a,b)=>Math.max(b.excess,b.internal)-Math.max(a.excess,a.internal)).slice(0,16);
+              });
+              layoutFailures.push({engine,module:tab,width:targetWidth,overflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,selected,moduleVisible,activeCount,offenders});
             }
           }
           await page.setViewportSize({ width, height: 850 });
