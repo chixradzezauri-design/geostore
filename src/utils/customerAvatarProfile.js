@@ -28,11 +28,13 @@ export async function loadAvatarProfile(config,fetchImpl=fetch){
 }
 export async function saveAvatarProfile(config,choice,fetchImpl=fetch){
  const {token,user}=await verifiedSession(config);
- if(!validAvatarChoice(choice,isOwnerAdmin(user)))throw Error('avatar_choice_invalid');
+ if(!validAvatarChoice(choice,isOwnerAdmin(user))||!config.isCurrentOwner())throw Error('avatar_choice_invalid');
  const value=normalizeAvatarChoice(choice,isOwnerAdmin(user));
  const response=await fetchImpl(config.supabaseUrl+'/auth/v1/user',{method:'PUT',headers:{apikey:config.apiKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({data:{[AVATAR_METADATA_KEY]:value}}),cache:'no-store',redirect:'error'});
  if(!response.ok)throw Error('avatar_save_failed');
  const updated=await response.json();
  if(updated.id!==config.ownerId||!config.isCurrentOwner()||updated.user_metadata?.[AVATAR_METADATA_KEY]?.id!==value.id||updated.user_metadata?.[AVATAR_METADATA_KEY]?.background!==value.background)throw Error('avatar_save_unverified');
+ const confirmed=await auth.getUser(token);
+ if(confirmed.error||confirmed.data?.user?.id!==config.ownerId||!config.isCurrentOwner()||!validAvatarChoice(value,isOwnerAdmin(confirmed.data.user))||confirmed.data.user.user_metadata?.[AVATAR_METADATA_KEY]?.id!==value.id||confirmed.data.user.user_metadata?.[AVATAR_METADATA_KEY]?.background!==value.background)throw Error('avatar_save_unverified');
  return value;
 }

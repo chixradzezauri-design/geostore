@@ -32,8 +32,19 @@ test('save binds preference to verified owner and sends only avatar metadata',as
  const auth={getSession:async()=>({data:{session:{user,access_token:'token'}}}),getUser:async()=>({data:{user}})};
  const config={auth,ownerId:user.id,isCurrentOwner:()=>true,supabaseUrl:'https://example.com',apiKey:'public'};
  const choice={id:'classic-girl-2',background:'mint'};let calls=0;
- const fetcher=async(url,options)=>{calls++;assert.deepEqual(JSON.parse(options.body),{data:{[AVATAR_METADATA_KEY]:choice}});return {ok:true,json:async()=>({...user,user_metadata:{...user.user_metadata,[AVATAR_METADATA_KEY]:choice}})}};
+ const fetcher=async(url,options)=>{calls++;assert.deepEqual(JSON.parse(options.body),{data:{[AVATAR_METADATA_KEY]:choice}});user.user_metadata[AVATAR_METADATA_KEY]=choice;return {ok:true,json:async()=>user}};
  assert.deepEqual(await saveAvatarProfile(config,choice,fetcher),choice);
  await assert.rejects(saveAvatarProfile(config,{id:OWNER_AVATAR_IDS[0],background:'sand'},fetcher));
  assert.equal(calls,1);
+});
+
+test('save rejects an echoed but unpersisted avatar and invalidates stale account scope',async()=>{
+ const user={id:'customer',user_metadata:{}};
+ let current=true;
+ const auth={getSession:async()=>({data:{session:{user,access_token:'token'}}}),getUser:async()=>({data:{user}})};
+ const config={auth,ownerId:user.id,isCurrentOwner:()=>current,supabaseUrl:'https://example.com',apiKey:'public'};
+ const choice={id:'classic-girl-2',background:'mint'};
+ const echo=async()=>({ok:true,json:async()=>({...user,user_metadata:{[AVATAR_METADATA_KEY]:choice}})});
+ await assert.rejects(saveAvatarProfile(config,choice,echo),/avatar_save_unverified/);
+ await assert.rejects(saveAvatarProfile(config,choice,async()=>{current=false;return echo();}),/avatar_save_unverified/);
 });

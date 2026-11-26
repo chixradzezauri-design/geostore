@@ -845,7 +845,7 @@ export default function Modals({
                 <Lock className="w-5 h-5 text-amber-400" />
                 {authMode === 'login' ? copy.auth : authMode === 'register' ? copy.register : authMode === 'reset-request' ? copy.forgotPassword : copy.resetPassword}
               </h3>
-              <button type="button" onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" disabled={passkeyBusy} onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -909,19 +909,19 @@ export default function Modals({
 
             <div className="text-center pt-2 border-t border-amber-500/20 space-y-3">
               {authMode === 'login' && (
-                <button type="button" onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
+                <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
                   {copy.forgotPassword}
                 </button>
               )}
               {authMode !== 'login' && authMode !== 'reset-password' && (
-                <button type="button" onClick={() => setAuthMode('login')} className="block w-full text-slate-400 hover:text-amber-400 text-xs font-bold">
+                <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode('login')} className="block w-full text-slate-400 hover:text-amber-400 text-xs font-bold">
                   {copy.auth}
                 </button>
               )}
               {authMode === 'reset-password' && (
                 <p className="text-[11px] text-slate-400">{currentLang === 'en' ? 'Choose a new, unique password for your account.' : currentLang === 'ru' ? 'Выберите новый уникальный пароль для аккаунта.' : 'აირჩიეთ ახალი, უნიკალური პაროლი თქვენი ანგარიშისთვის.'}</p>
               )}
-              {authMode !== 'reset-password' && <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+              {authMode !== 'reset-password' && <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
                 className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer">
                 {authMode === 'login' ? copy.noAccount : copy.hasAccount}
               </button>}

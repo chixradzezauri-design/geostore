@@ -4441,7 +4441,7 @@ export default function App() {
                 {t.profile}
               </h2>
 
-              {!authLoading&&currentUser.id===activeCartOwnerRef.current.userId&&<CustomerAvatarStudio key={currentUser.id+':'+customerPrivateEpochRef.current} ownerId={currentUser.id} ownerAccess={adminAccess.is_admin===true} lang={currentLang} auth={supabase.auth} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} isCurrentOwner={()=>activeCartOwnerRef.current.userId===currentUser.id}/>}
+              {!authLoading&&currentUser.id===activeCartOwnerRef.current.userId&&<CustomerAvatarStudio key={currentUser.id+':'+customerPrivateEpochRef.current+':'+(adminAccess.is_admin===true?'owner':'public')} ownerId={currentUser.id} ownerAccess={adminAccess.is_admin===true} lang={currentLang} auth={supabase.auth} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} isCurrentOwner={()=>activeCartOwnerRef.current.userId===currentUser.id}/>}
               <div className="gs-video-profile-identity grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
