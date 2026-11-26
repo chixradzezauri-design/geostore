@@ -880,3 +880,43 @@
 @media (max-width: 359px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-dialog-actions > button { flex-basis: 100%; }
 }
+
+/* Stage 15 — responsive reflow, using available workspace width rather than viewport alone.
+   Keep both native picker and desktop navigation; do not hide overflow at page level. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main { min-inline-size: 0; max-inline-size: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand > div:last-child { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout { min-height: 44px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > button { min-height: 44px !important; min-inline-size: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > .admin-pro-access-state { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > .admin-pro-access-state > span:last-child { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-orders-toolbar,.admin-workspace-crm-filters,.admin-workspace-support-filters,.admin-workspace-staff-filters,.admin-expense-history-filters) > div { min-inline-size: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-banner-actions,.admin-unified-staff-actions,.admin-crm-user-actions,.admin-support-ticket-controls,.admin-unified-dialog-actions) > button { max-inline-size: 100%; white-space: normal !important; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-promo-field,.admin-unified-category-field,.admin-expense-field) > span { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-editor-jumps,.admin-unified-product-jumps) > button { min-height: 44px !important; }
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] { min-width: 0; width: 100% !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > #geostore-admin-desktop-modules {
+    display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+    gap: 6px !important; align-items: stretch; min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > button { margin: 0 !important; min-width: 0; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > button > div { min-width: 0; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout { width: auto !important; justify-self: end; }
+}
+@media (min-width: 768px) and (max-width: 849px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > #geostore-admin-desktop-modules { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker { min-inline-size: 0; max-inline-size: 100%; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker select { width: 100%; min-width: 0; min-height: 44px !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > span { overflow-wrap: anywhere; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-support-customer > span:last-child { min-width: 0; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-header > div:last-child { min-width: 0; flex-wrap: wrap; }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand { gap: 6px !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-brand-mark { flex-basis: 30px; width: 30px; height: 30px; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair { grid-template-columns: minmax(0,1fr); }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics { grid-template-columns: minmax(0,1fr) !important; }
+}
