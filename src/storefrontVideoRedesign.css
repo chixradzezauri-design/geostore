@@ -2070,3 +2070,41 @@
 @media(prefers-reduced-motion:reduce) {
   :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-flash-sale-section .gs-video-flash-image {transition:none!important;transform:none!important;}
 }
+
+
+/* Customer experience audit 05 — collections, names and subcategory navigation. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-category-view-products {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;
+  padding:8px 12px;border:1px solid var(--gs-button-bg,#302820);border-radius:var(--gs-button-radius,8px);
+  background:var(--gs-button-bg,#302820);color:var(--gs-button-text,#fff);font-weight:600;white-space:normal;
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-category-view-products svg {flex-shrink:0;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-category-view-products:focus-visible {outline:2px solid var(--gs-accent,#92785f);outline-offset:2px;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-category-card h4 {min-width:0;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;-webkit-line-clamp:unset!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card {transform:none!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card-counts {min-width:0;flex-wrap:wrap;justify-content:flex-end;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card-counts > span {max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.35;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-subcategory-heading {min-width:0;flex-wrap:wrap;line-height:1.5;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-subcategory-heading b {min-width:0;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-subcategory-panel .gs-subcategory-chip {min-height:44px!important;display:inline-flex;align-items:center;gap:6px;text-align:start;white-space:normal!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-subcategory-name {min-width:0;overflow-wrap:anywhere;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-subcategory-count {flex-shrink:0;font-variant-numeric:tabular-nums;}
+@media(max-width:640px) {
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-columns:repeat(min(2,var(--gs-category-columns,4)),minmax(0,1fr))!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid .gs-category-card {height:auto!important;min-height:clamp(116px,calc(var(--gs-category-card-height,150px) * .8),210px)!important;padding:10px!important;gap:10px!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card .gs-signature-category-copy {padding-right:0!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card .gs-signature-category-arrow {position:static!important;margin-top:6px;margin-inline-start:auto;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card-counts > span {padding-inline:4px!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-category-view-products {flex:1 1 100%;}
+}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-columns:repeat(min(2,var(--gs-category-columns,4)),minmax(0,1fr))!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid .gs-category-card {height:auto!important;min-height:clamp(116px,calc(var(--gs-category-card-height,150px) * .8),210px)!important;padding:10px!important;gap:10px!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card .gs-signature-category-copy {padding-right:0!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card .gs-signature-category-arrow {position:static!important;margin-top:6px;margin-inline-start:auto;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-card-counts > span {padding-inline:4px!important;}
+@media(max-width:359px) {
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid {grid-template-columns:minmax(0,1fr)!important;}
+}
+@media(prefers-reduced-motion:reduce) {
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-editorial-collections .gs-category-card {transition:none!important;}
+}
