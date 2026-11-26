@@ -2380,3 +2380,32 @@
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) :is(.gs-cart-page,.gs-wishlist-page,.gs-profile-pro,.gs-digital-wardrobe,.gs-ai-dialog,.gs-support-panel,.gs-product-compare-dialog,.gs-image-search-dialog,.gs-commerce-dialog) :is(button,input,select,textarea,summary):focus-visible {outline:2px solid var(--gs-accent,#92785f)!important;outline-offset:2px!important;}
 .gs-commerce-overlay--checkout .gs-checkout-dialog {font-family:var(--gs-font-family,inherit)!important;}
 .gs-commerce-overlay--checkout .gs-checkout-submit-area button {border-radius:var(--gs-button-radius,8px)!important;}
+
+
+/* Customer experience audit 15 — responsive bounds and editor viewport parity.
+   Never exceed the configured number of columns; cap density on narrow screens. */
+@media(min-width:641px) and (max-width:1023px){
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid {grid-template-columns:repeat(min(3,var(--gs-category-columns,4)),minmax(0,1fr))!important;}
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {grid-template-columns:repeat(min(3,var(--gs-product-columns,4)),minmax(0,1fr))!important;}
+}
+.gs-visual-preview-frame--tablet.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid {grid-template-columns:repeat(min(3,var(--gs-category-columns,4)),minmax(0,1fr))!important;}
+.gs-visual-preview-frame--tablet.geostore-fashion-store .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {grid-template-columns:repeat(min(3,var(--gs-product-columns,4)),minmax(0,1fr))!important;}
+@media(min-width:1024px) and (max-width:1279px){
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-editorial-collections:where([data-signature-categories="true"]) .gs-category-grid {grid-template-columns:repeat(min(4,var(--gs-category-columns,4)),minmax(0,1fr))!important;}
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]) {grid-template-columns:repeat(min(4,var(--gs-product-columns,4)),minmax(0,1fr))!important;}
+}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .geostore-storefront .gs-catalog-product-grid:where([data-signature-products="true"]).gs-catalog-product-grid--single {grid-template-columns:minmax(0,min(100%,320px))!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter > input {width:100%!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter {gap:8px!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-select {font-size:max(16px,var(--gs-video-filters-sortSelect-fontSize,16px))!important;}
+.gs-visual-preview-frame--mobile.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-input {font-size:max(16px,var(--gs-video-filters-input-fontSize,16px))!important;}
+@media(max-width:359px){
+  .geostore-shell.geostore-fashion-store .geostore-storefront .gs-digital-wardrobe .gs-wardrobe-item-grid {grid-template-columns:minmax(0,1fr)!important;}
+  .geostore-shell.geostore-fashion-store .gs-digital-wardrobe .gs-wardrobe-item-grid {grid-template-columns:minmax(0,1fr)!important;}
+}
+@media(max-height:480px) and (orientation:landscape){
+  .geostore-shell.geostore-fashion-store :is(.gs-image-search-dialog,.gs-product-compare-dialog,.gs-order-tracker-dialog,.gs-commerce-dialog--notifications) {max-height:calc(100dvh - 16px)!important;min-height:0;}
+  .geostore-shell.geostore-fashion-store .gs-commerce-dialog--notifications {overflow-y:auto!important;}
+  .gs-commerce-overlay--checkout .gs-checkout-dialog {max-height:calc(100dvh - 16px)!important;}
+  .gs-commerce-overlay--checkout .gs-checkout-submit-area {position:static!important;box-shadow:none!important;}
+}
