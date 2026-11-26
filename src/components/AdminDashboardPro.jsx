@@ -835,12 +835,14 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
         <form onSubmit={handleAddExistingUser} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3">
+          <span className="admin-pro-native-control-boundary">
           <select aria-label="არსებული მომხმარებლის არჩევა" value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
             <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
             {(usersList || []).filter((user) => user.email).map((user) => (
               <option key={user.id || user.email} value={user.email}>{user.name || user.email} — {user.email}</option>
             ))}
           </select>
+          </span>
           <button type="submit" disabled={staffActionBusy || !staffListReady || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
             <span className="admin-pro-control-caption">{staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}</span>
           </button>

@@ -1669,3 +1669,12 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-list-panel > div:first-child {display:grid!important;grid-template-columns:minmax(0,1fr)!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-supplier-workspace,.admin-purchase-workspace) .flex > input[type="search"] {flex:1 1 100%}
 }
+
+/* Measured WebKit native-control overflow: isolate only field rendering, not form or workspace. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-native-control-boundary {display:block;width:100%;min-width:0;max-width:100%}
+@media (max-width:639px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-existing-form {display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-existing-form,.admin-purchase-workspace) .admin-pro-native-control-boundary {box-sizing:border-box;contain:inline-size;overflow: hidden;border-radius:12px;min-width:0!important;max-width:100%!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-existing-form,.admin-purchase-workspace) .admin-pro-native-control-boundary > :is(select,input) {display:block;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;box-sizing:border-box}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-existing-form,.admin-purchase-workspace) .admin-pro-native-control-boundary:focus-within {outline:2px solid var(--av-accent);outline-offset:2px}
+}

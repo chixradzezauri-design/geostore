@@ -134,6 +134,18 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             await page.setViewportSize({ width: targetWidth, height: 850 });
             await page.waitForFunction(expected => window.innerWidth === expected, targetWidth);
             await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+            if (targetWidth < 640 && ['staff','vendors'].includes(tab)) {
+              const fields = shell.locator(tab === 'staff' ? '.admin-staff-existing-form .admin-pro-native-control-boundary' : '.admin-purchase-workspace .admin-pro-native-control-boundary');
+              assert.equal(await fields.count(),tab === 'staff' ? 1 : 3,'Native field boundaries preserve every existing field');
+              for (const field of await fields.all()) {
+                const bounds = await field.evaluate(node => {
+                  const control = node.querySelector('select,input');
+                  const a = node.getBoundingClientRect(), b = control.getBoundingClientRect();
+                  return {visible:a.width > 0 && a.height > 0 && b.width > 0 && b.height > 0,fits:b.left >= a.left-2 && b.right <= a.right+2,tag:control.tagName};
+                });
+                assert.ok(bounds.visible && bounds.fits, engine+' '+tab+' '+targetWidth+': native '+bounds.tag+' stays in its visible field');
+              }
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
