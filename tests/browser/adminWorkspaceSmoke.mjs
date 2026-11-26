@@ -123,6 +123,12 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
+        if(tab==='command'){
+          const cards=shell.locator('.admin-command-kpi[data-admin-kpi-tone]');
+          assert.equal(await cards.count(),4,'All four operational KPI cards retained');
+          assert.deepEqual(await cards.evaluateAll(nodes=>nodes.map(n=>n.dataset.adminKpiTone)),['primary','warning','danger','info']);
+          assert.equal(await shell.locator('.admin-command-panel').count(),4,'All operational detail panels retained');
+        }
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});

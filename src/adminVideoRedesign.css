@@ -1245,3 +1245,80 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-section-context {font-size:10px!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-state {padding-block:5px!important}
 }
+
+/* Admin PRO 04: operational overview — theme-aware type, explicit status pairs. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center {
+ container-type:inline-size;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-overview-intro {
+ background:var(--admin-vd-contentCardBackground-active,var(--av-surface))!important;
+ border-color:var(--admin-vd-contentCardBorder-active,var(--av-border))!important;
+ box-shadow:none!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-overview-eyebrow {
+ color:var(--av-muted)!important;letter-spacing:normal!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi {
+ border-color:var(--admin-vd-contentCardBorder-active,var(--av-border))!important;
+ background:var(--admin-vd-contentCardBackground-active,var(--av-surface))!important;
+ box-shadow:none!important;gap:4px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi:hover {
+ border-color:var(--admin-vd-cardHoverBorder-active,var(--av-accent))!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {
+ color:var(--admin-vd-cardTitleText-active,var(--av-text))!important;
+ font-size:var(--admin-vd-bodyFontSize-active,13px)!important;
+ font-weight:600!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong {
+ color:var(--admin-vd-cardTitleText-active,var(--av-text))!important;
+ font-size:clamp(20px,calc(var(--admin-vd-titleFontSize-active,18px) * 1.35),34px)!important;
+ font-weight:700!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:last-child {
+ color:var(--admin-vd-cardMutedText-active,var(--av-muted))!important;
+ font-size:12px!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="primary"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="primary"] {--admin-command-tone-bg:#dff3eb;--admin-command-tone-fg:#14594a;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="warning"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="warning"] {--admin-command-tone-bg:#fff0cc;--admin-command-tone-fg:#754300;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="danger"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="danger"] {--admin-command-tone-bg:#fce5e8;--admin-command-tone-fg:#9c2538;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone="info"] {--admin-command-tone-bg:#e4eefc;--admin-command-tone-fg:#254b8a;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status="neutral"] {--admin-command-tone-bg:#e7edf3;--admin-command-tone-fg:#39495a;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-kpi-tone] > span:first-child > svg {
+ background:var(--admin-command-tone-bg)!important;color:var(--admin-command-tone-fg)!important;
+ width:30px!important;height:30px!important;padding:6px!important;border-radius:8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center [data-admin-command-status] {
+ background:var(--admin-command-tone-bg)!important;color:var(--admin-command-tone-fg)!important;
+ -webkit-text-fill-color:currentColor!important;border-radius:6px!important;font-size:11px!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child h4 {
+ color:var(--admin-vd-cardTitleText-active,var(--av-text))!important;font-size:16px!important;line-height:1.4;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child p {
+ color:var(--admin-vd-cardMutedText-active,var(--av-muted))!important;font-size:12px!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > button,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-pro-overview-intro button {
+ color:var(--av-text)!important;background:var(--av-inset)!important;border-color:var(--av-border)!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) {
+ background:var(--av-inset)!important;border-color:var(--av-border)!important;
+ box-shadow:none!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel .space-y-2 > :is(button,div) > span:first-child > span,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel time {
+ color:var(--av-muted)!important;font-size:12px!important;
+}
+@container (min-width:850px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panels {grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@container (max-width:300px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {grid-template-columns:minmax(0,1fr)!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {min-height:0}
+}
