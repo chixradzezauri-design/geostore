@@ -1678,3 +1678,44 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-existing-form,.admin-purchase-workspace) .admin-pro-native-control-boundary > :is(select,input) {display:block;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;box-sizing:border-box}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-staff-existing-form,.admin-purchase-workspace) .admin-pro-native-control-boundary:focus-within {outline:2px solid var(--av-accent);outline-offset:2px}
 }
+
+/* Unified workspace foundation: remove decorative gradients from operational
+   surfaces, without changing user-selected backgrounds, status colors or
+   individual element geometry. Never select storefront/editor preview content. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] {
+  background-image: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-sidebar="true"],[data-admin-visual-header="true"],.admin-command-hero,.admin-command-kpi,.admin-command-panel,.admin-orders-panel,.admin-inventory-panel,.admin-staff-panel,.admin-staff-list-panel,.admin-support-panel,.admin-crm-panel,.admin-finance-sources-panel,.admin-finance-expenses-panel,.admin-finance-products-panel,.admin-finance-vendors-panel,.admin-discounts-panel,.admin-audit-logs-panel,.admin-broadcasts-panel) {
+  background-image: none !important;
+  backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > .admin-video-edit {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-page-identity {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions > button {
+  text-wrap: balance;
+}
+@media (min-width: 1024px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+    align-items: start !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions {
+    width: 100% !important;
+    justify-content: flex-start;
+  }
+}
+@media (min-width: 1440px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
+    grid-template-columns: minmax(0,1fr) minmax(0,auto);
+    align-items: center !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions { justify-content: flex-end; }
+}

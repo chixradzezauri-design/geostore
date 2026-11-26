@@ -30,3 +30,17 @@ export function applyAdminProfessionalDesign(raw){
   elementStyles:changeDefaults(current.elementStyles,defaults.elementStyles,element)
  });
 }
+
+// Resolve the original, uncustomized workspace to the professional appearance.
+// This is a display projection, not a migration or a cloud/local-storage write.
+// An explicitly customized theme or density remains exactly as saved.
+export function resolveAdminWorkspaceAppearance(raw){
+ const current=normalizeAdminPanelVisualDesign(raw);
+ const legacy=normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN);
+ const sameFields=(a,b)=>Object.keys(b).every(k=>a[k]===b[k]);
+ const hasResponsiveAppearance=['tablet','mobile'].some(v=>
+  Object.keys(current.responsive[v].theme).length || Object.keys(current.responsive[v].layout).length
+ );
+ if(hasResponsiveAppearance || !sameFields(current.theme,legacy.theme) || !sameFields(current.layout,legacy.layout))return current;
+ return applyAdminProfessionalDesign(current);
+}

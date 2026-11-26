@@ -42,6 +42,7 @@ import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADM
 import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
 import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
+import {resolveAdminWorkspaceAppearance} from '../utils/adminProfessionalDesign.js';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 import AdminFlashSchedule from './AdminFlashSchedule.jsx';
 import AdminFlashPricePreview from './AdminFlashPricePreview.jsx';
@@ -1097,7 +1098,8 @@ export default function AdminDashboardPro({
   const retryAdminVisualSave = () => {
     handleAdminVisualDesignChange({ ...adminVisualDesign });
   };
-  const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(adminVisualDesign), [adminVisualDesign]);
+  const effectiveAdminVisualDesign = useMemo(() => resolveAdminWorkspaceAppearance(adminVisualDesign), [adminVisualDesign]);
+  const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(effectiveAdminVisualDesign), [effectiveAdminVisualDesign]);
 
   useEffect(() => {
     let active = true;
@@ -7692,7 +7694,7 @@ export default function AdminDashboardPro({
             <AdminPanelVisualEditor
               previewTab={adminVisualPreviewTab}
               onPreviewTabChange={setAdminVisualPreviewTab}
-              design={adminVisualDesign}
+              design={effectiveAdminVisualDesign}
               syncStatus={adminVisualSyncStatus}
               onChange={handleAdminVisualDesignChange}
               onRetrySave={retryAdminVisualSave}

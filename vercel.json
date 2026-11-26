@@ -103,7 +103,8 @@
       "internal-secure-quick-login-avatar-2026-11-26": false,
       "internal-registration-password-csp-hotfix-2026-11-26": false,
       "internal-admin-professional-ui-2026-11-26": false,
-      "internal-character-premium-2026-11-26": false
+      "internal-character-premium-2026-11-26": false,
+      "admin-unified-workspace-redesign-2026-11-26": false
     }
   },
   "functions": {
