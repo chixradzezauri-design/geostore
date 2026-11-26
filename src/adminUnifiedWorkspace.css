@@ -2290,3 +2290,89 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Staff and settings refinement: clear permission selection, independent
+   access and authentication states, and readable draft notices. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(.admin-staff-panel,.admin-staff-list-panel,[data-admin-pro-staff-card]) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label:has(input:checked) {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  border-color: #82b7a1 !important;
+  box-shadow: inset 0 0 0 1px #82b7a1;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label:has(input:checked) > span {
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label:has(input:not(:checked)) {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card] > div:first-child > div:first-child {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card] > div:first-child > div:first-child > div > strong {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card]:has([data-admin-pro-staff-state="inactive"]) {
+  border-inline-start: 3px solid #9c2538 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-permission-summary > span {
+  min-inline-size: 0;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > [role="alert"] {
+  background: #fce5e8 !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > [role="status"] {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-list-panel > p[role="status"].text-amber-200 {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel [data-admin-pro-settings-draft] {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 10px;
+  line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-unified-security-summary > strong {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+@container (min-width: 300px) and (max-width: 459px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-summary {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-summary > div:last-child {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-create-submit,
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-existing-form > button {
+    width: 100%;
+    min-height: 44px !important;
+    white-space: normal;
+  }
+}
