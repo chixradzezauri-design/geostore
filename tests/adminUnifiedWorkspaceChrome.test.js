@@ -39,3 +39,16 @@ test('Atelier dashboard geometry reserves actual icon size and reflows operation
  for(const term of ['grid-template-columns: minmax(0,1fr)','border-inline-start: 3px solid','--admin-vd-primaryButtonBackground-active','button:disabled']) assert.ok(header.includes(term),term);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('dashboard tracks do not collide'));
 });
+
+
+test('Atelier catalogue separates image, labels and action regions without replacing handlers',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const catalogue=css.split('/* Atelier catalogue:')[1].split('/* Stage 07')[0];
+ for(const token of ['grid-template-columns: 56px minmax(0,1fr)','object-fit: contain','border-inline-start: 1px solid','font-variant-numeric: tabular-nums','--admin-vd-primaryButtonBackground-active']) assert.ok(catalogue.includes(token),token);
+ const categories=css.split('/* Atelier categories:')[1].split('/* Stage 09')[0];
+ assert.ok(categories.includes('button:disabled'));
+ assert.ok(categories.includes('max-inline-size: 100%'));
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const token of ['handleQuickUpdateProduct','handleSaveProduct','handleEditProduct(p)','handleDeleteProduct(p.id)','moveCategory(parentCat.id, -1)','moveCategory(sub.id, 1)']) assert.ok(app.includes(token),token);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('catalogue identity and actions do not overlap'));
+});

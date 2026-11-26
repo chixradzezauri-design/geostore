@@ -408,6 +408,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form > :is(.admin-product-attributes,.admin-size-color-stock-editor,.admin-product-variants-editor,.admin-product-gallery,.admin-workspace-product-content) {
   background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  border-inline-start: 3px solid var(--av-accent) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px) !important; box-shadow: none !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form > :is(.admin-product-attributes,.admin-size-color-stock-editor,.admin-product-variants-editor,.admin-product-gallery) > :is(h4,label:first-child) {
@@ -426,8 +427,43 @@
   align-items: start !important; gap: 12px !important;
   background-image: none !important; box-shadow: none !important; min-width: 0;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-identity { min-width: 0; align-items: center !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-identity > div:last-child { min-width: 0; }
+/* Atelier catalogue: stable image and identity tracks, distinct editing surface. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-identity {
+  display: grid !important; grid-template-columns: 56px minmax(0,1fr);
+  min-width: 0; align-items: center !important; gap: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-identity > [data-admin-pro-product-image] {
+  width: 56px !important; height: 56px !important; max-width: 100%;
+  object-fit: contain !important; box-sizing: border-box;
+  border-radius: 10px !important; background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-identity > div:last-child { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-identity h4 {
+  font-size: clamp(13px,var(--admin-vd-bodyFontSize-active,14px),18px) !important;
+  font-weight: 700 !important; line-height: 1.5 !important;
+  color: var(--av-text) !important; white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-products-list .admin-product-row {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,16px),22px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls {
+  border-top: 1px solid var(--av-border);
+  padding-block-start: 12px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > div {
+  background: var(--av-inset) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls input[type="number"] {
+  font-variant-numeric: tabular-nums;
+  font-size: max(16px,var(--admin-vd-inputFontSize-active,16px)) !important;
+  box-sizing: border-box;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-meta {
   display: flex; flex-wrap: wrap; gap: 2px 8px; margin-block: 3px;
   font-size: 12px !important; line-height: 1.5; color: var(--av-muted) !important;
@@ -453,7 +489,10 @@
   width: 100% !important; min-width: 0 !important; box-shadow: none !important; background-image: none !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > .admin-video-edit {
-  background: var(--av-surface) !important; border-color: var(--av-border) !important; color: var(--av-text) !important;
+  background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
+  border-color: var(--admin-vd-primaryButtonBorder-active,var(--av-accent)) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > .admin-video-delete {
   background: #fce5e8 !important; border-color: #e4b4bf !important; color: #9c2538 !important;
@@ -482,6 +521,7 @@
 }
 @container (min-width: 900px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-list .admin-product-row { grid-template-columns: minmax(180px,1fr) minmax(0,2fr); align-items: center !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls { border-top: 0; padding-block-start: 0; border-inline-start: 1px solid var(--av-border); padding-inline-start: 12px; }
 }
 /* The stock status belongs next to its field. Keep the two pricing fields
    together on phones, with the stock and publication controls on their own rows. */
@@ -624,6 +664,24 @@
   background-image: none !important; box-shadow: none !important; min-width: 0;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-card { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
+/* Atelier categories: preserve the editor-owned colors and existing sibling order. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-category-card {
+  border-inline-start: 3px solid var(--av-accent) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity {
+  align-items: center !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions > button:disabled {
+  opacity: .5 !important; cursor: not-allowed;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions > button:not(:disabled):hover {
+  border-color: var(--av-accent) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-photo-field input[type="file"] {
+  width: 100%; min-inline-size: 0; max-inline-size: 100%; box-sizing: border-box;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-row {
   display: grid !important; grid-template-columns: minmax(0,1fr) !important; align-items: center !important; gap: 10px !important;
 }

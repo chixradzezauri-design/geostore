@@ -197,6 +197,27 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               });
               assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
             }
+            if (tab === 'products' || tab === 'categories') {
+              const catalogIssues = await shell.evaluate((root, currentTab) => {
+                const scope = root.querySelector(currentTab === 'products' ? '.admin-products-panel' : '.admin-category-manager');
+                const rows = [...scope.querySelectorAll(currentTab === 'products' ? '.admin-product-row' : '.admin-video-category-row')];
+                const issues=[];
+                const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+                for (const row of rows) {
+                  const group=row.querySelector(currentTab === 'products' ? '.admin-product-controls' : '.admin-video-category-actions');
+                  const identity=row.querySelector(currentTab === 'products' ? '.admin-product-identity' : '.admin-video-category-identity');
+                  if(!group || !identity) continue;
+                  const boundary=row.getBoundingClientRect();
+                  if(overlaps(identity.getBoundingClientRect(),group.getBoundingClientRect())) issues.push('identity/action overlap');
+                  for(const button of group.querySelectorAll(':scope > button')) {
+                    const box=button.getBoundingClientRect();
+                    if(box.height<43.5 || box.left<boundary.left-2 || box.right>boundary.right+2) issues.push('catalog action geometry');
+                  }
+                }
+                return issues;
+              },tab);
+              assert.deepEqual(catalogIssues,[],engine+' '+targetWidth+'px: catalogue identity and actions do not overlap');
+            }
             if (tab === 'products' && targetWidth === 390) {
               const pairedControls = await shell.locator('.admin-product-controls').first().evaluate(group => {
                 const fields = group.querySelectorAll('input[type="number"]');

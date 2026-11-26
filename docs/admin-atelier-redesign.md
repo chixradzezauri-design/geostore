@@ -19,3 +19,6 @@ The existing unified chrome now uses bounded icon, label and count tracks, a non
 
 ## Stage 3 — page header and dashboard
 Rework header hierarchy and publication action styling through the active editor tokens; preserve existing permission gates and disabled states. Give the four operational KPI cards real 30px icon tracks (24px on phones) and semantic border accents, size panels by the actual command container and keep each card in normal document flow. Add rendered collision assertions for icon, label, value and neighboring cards. No changes to calculations, data queries, navigation or security permissions. Verification for the new commit remains mandatory.
+
+## Stage 4 — products and categories
+Use fixed image and flexible identity tracks, editor-compatible catalog card and action colors, clear separation of metadata and quick-edit fields, and distinct category/form accent borders. Retain the existing gallery actions, price/stock mutation handlers, category hierarchy, order controls and publication logic. Extend the isolated browser device matrix with identity/action overlap and action bounds checks for both modules. No changes to product records, database, or operational code. New commit verification is required.
