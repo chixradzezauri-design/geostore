@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('PRO navigation uses authorized groups and existing actions',()=>{
  const app=read('src/components/AdminDashboardPro.jsx');
- for(const s of ['currentAdminNavigationGroup = adminNavigationGroups.find','canAccessAdminTab(tab.id)','aria-current={isActive ? "page" : undefined}','onClick={() => setAdminTab(tab.id)}','onSaveStorefrontDraft()','onPublishStorefront()','handleLogout()','admin-pro-access-dot'])assert.ok(app.includes(s),s);
+ for(const s of ['currentAdminNavigationGroup = adminNavigationGroups.find','canAccessAdminTab(tab.id)','aria-current={isActive ? "page" : undefined}','onClick={() => setAdminTab(tab.id)}','onSaveStorefrontDraft()','onPublishStorefront()','handleLogout()','admin-pro-access-caption'])assert.ok(app.includes(s),s);
  assert.ok(app.includes('GEOSTORE Admin PRO'));
 });
 test('PRO sidebar uses paired navigation theme tokens and header remains independently themed',()=>{

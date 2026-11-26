@@ -496,7 +496,7 @@ function StaffAnalyticsSummary() {
               <div className="mt-3 space-y-2">
                 {(summary.top_products || []).map((product) => (
                   <div key={product.product_id} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <span className="min-w-0 truncate text-slate-300">{product.product_name}</span>
+                    <span className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-slate-300">{product.product_name}</span>
                     <span className="shrink-0 text-right text-white">{count(product.units)} ც. · {money(product.revenue)}</span>
                   </div>
                 ))}
@@ -1291,6 +1291,7 @@ export default function AdminDashboardPro({
   const [quickProductDrafts, setQuickProductDrafts] = useState({});
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const orderStatusOptions = ['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'];
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
@@ -5439,6 +5440,7 @@ export default function AdminDashboardPro({
   const orderedAdminNavigationItems = adminNavigationGroups.flatMap(group => group.items.map((tab, index) => ({ ...tab, groupHeading: index === 0 ? group.label : null })));
   const currentAdminNavigationLabel = adminWorkspaceNavigationLabel(visibleAdminNavigationItems.find(tab => tab.id === visibleAdminTab)?.label || 'მართვის პანელი');
   const currentAdminNavigationGroup = adminNavigationGroups.find(group => group.items.some(tab => tab.id === visibleAdminTab));
+  const showStorefrontActions = hasSettingsPermission && ['banners', 'settings', 'visual_editor', 'discounts'].includes(visibleAdminTab);
 
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle} data-admin-visual-design="enabled" data-admin-video-layout="v1">
@@ -5523,11 +5525,11 @@ export default function AdminDashboardPro({
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
               {currentAdminNavigationLabel}
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {isOwner ? 'მთავარი ადმინისტრატორი' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
+            <p className="admin-pro-access-caption text-xs mt-1">
+              {isOwner ? 'მთავარი ადმინისტრატორი · სრული სისტემური წვდომა' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
             </p>
           </div>
-          <div aria-label="მაღაზიის დიზაინის მოქმედებები და წვდომა" role="group" className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
+          {showStorefrontActions && <div aria-label="მაღაზიის დიზაინის მოქმედებები" role="group" className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
             {hasModulePermission('settings') && (
               <button
                 type="button"
@@ -5548,11 +5550,7 @@ export default function AdminDashboardPro({
                 {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
               </button>
             )}
-            <div className="admin-pro-access-state col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
-              <span aria-hidden="true" className="admin-pro-access-dot w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
-            </div>
-          </div>
+          </div>}
         </div>
 
         {!isOwner && (
@@ -5788,7 +5786,7 @@ export default function AdminDashboardPro({
               <>
               <p className="admin-unified-inventory-scroll-hint">ცხრილის დამატებითი სვეტების სანახავად გადაახვიეთ გვერდზე.</p>
               <div className="admin-inventory-table-scroll overflow-x-auto rounded-2xl border border-emerald-500/15" role="region" aria-label="მარაგის მოძრაობების ცხრილი — ჰორიზონტალური გადახვევა" tabIndex={0}>
-                <table data-admin-pro-inventory-table="true" className="w-full min-w-[900px] text-left text-xs">
+                <table data-admin-pro-inventory-table="true" className="w-full text-left text-xs">
                   <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
                     <tr>
                       <th className="px-4 py-3">თარიღი</th>
@@ -6162,10 +6160,10 @@ export default function AdminDashboardPro({
                         const zeroCount = group.positions.filter(position => position._stockValue === 0).length;
                         return (
                           <details key={group.key} className="group rounded-xl border border-slate-800 bg-slate-950/50">
-                            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-2 px-3 py-2.5">
+                            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex flex-col items-stretch gap-2 px-3 py-2.5 sm:flex-row sm:items-center">
                               <div className="min-w-0 flex-1">
-                                <b className="block truncate text-xs text-slate-100">{group.name}</b>
-                                <span className="block truncate text-[10px] text-slate-500">{group.sku} · {group.positions.length} ვარიანტი</span>
+                                <b className="block whitespace-normal [overflow-wrap:anywhere] text-xs text-slate-100">{group.name}</b>
+                                <span className="block whitespace-normal [overflow-wrap:anywhere] text-[10px] text-slate-500">{group.sku} · {group.positions.length} ვარიანტი</span>
                               </div>
                               <div className="flex shrink-0 items-center gap-1.5">
                                 {zeroCount > 0 && <span className="rounded-full bg-rose-500/10 px-2 py-1 text-[9px] font-bold text-rose-300">{zeroCount} ნული</span>}
@@ -6176,7 +6174,7 @@ export default function AdminDashboardPro({
                             <div className="border-t border-slate-800 px-3 py-2 space-y-1.5">
                               {group.positions.map(position => (
                                 <div key={position._inventoryKey} className="flex items-center justify-between gap-3 text-[11px]">
-                                  <span className="min-w-0 truncate text-slate-400">{position.variantName || 'საერთო მარაგი'}</span>
+                                  <span className="min-w-0 whitespace-normal [overflow-wrap:anywhere] text-slate-400">{position.variantName || 'საერთო მარაგი'}</span>
                                   <span className={position._stockValue === 0 ? 'shrink-0 font-bold text-rose-300' : 'shrink-0 font-bold text-amber-300'}>
                                     {position._stockValue === 0 ? 'ნულოვანი მარაგი' : `${position._stockValue} ცალი`}
                                   </span>
@@ -6199,7 +6197,7 @@ export default function AdminDashboardPro({
                 </div>
                 {!ordersVerifiedForReports ? <p className="text-amber-200 text-xs py-4">შეკვეთების სრული ისტორია ჯერ არ არის დადასტურებული.</p> : financialOverview.bestSellingProducts.length === 0 ? <p className="text-slate-500 text-xs py-4">გაყიდვები ჯერ არ არის.</p> : financialOverview.bestSellingProducts.map((item, index) => (
                   <div key={item.key} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <div className="min-w-0"><b className="text-white block truncate">{index + 1}. {item.name}</b><span className="text-slate-500">{item.vendor} · {item.revenue.toFixed(2)} ₾</span></div>
+                    <div className="min-w-0"><b className="text-white block whitespace-normal [overflow-wrap:anywhere]">{index + 1}. {item.name}</b><span className="text-slate-500">{item.vendor} · {item.revenue.toFixed(2)} ₾</span></div>
                     <b className="text-indigo-300 whitespace-nowrap">{item.quantity} ც.</b>
                   </div>
                 ))}
@@ -6584,8 +6582,15 @@ export default function AdminDashboardPro({
                 {orderSearchQuery && <button type="button" className="admin-workspace-order-clear" aria-label="ძიების გასუფთავება" onClick={() => { setOrderSearchQuery(''); setOrderPageByStatus({}); }}><X className="w-4 h-4" aria-hidden="true" /></button>}
               </div>
 
+              <div className="admin-order-status-picker">
+                <label htmlFor="admin-order-status-filter">შეკვეთის სტატუსი</label>
+                <select id="admin-order-status-filter" value={orderStatusFilter} onChange={event => setOrderStatusFilter(event.target.value)}>
+                  {orderStatusOptions.map(status => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </div>
+
               <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto" role="group" aria-label="შეკვეთების სტატუსის ფილტრები">
-                {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
+                {orderStatusOptions.map(st => (
                   <button 
                     key={st}
                     type="button"

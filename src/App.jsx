@@ -3897,11 +3897,12 @@ export default function App() {
   const toastCharacter=toastTone==='success'&&getCharacterScenario(publishedCharacterSettings,toastCharacterKey,{mobile:characterMobile,eligible:['store','cart','wishlist'].includes(activeTab)});
   const emptyCartCharacter=getCharacterScenario(publishedCharacterSettings,'cart',{mobile:characterMobile,eligible:activeTab==='cart'&&cart.length===0&&!authLoading});
   const emptyWishlistCharacter=getCharacterScenario(publishedCharacterSettings,'wishlist',{mobile:characterMobile,eligible:activeTab==='wishlist'&&wishlist.length===0&&!authLoading});
+  const showAdminWorkspace = activeTab === 'admin' && adminLoggedIn && !authLoading;
   const formatPrice = (p) =>
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
   return (
-    <div data-signature-commerce={activeTab !== 'admin' && siteSettings?.visualDesign?.signature2026 === true ? "true" : undefined} className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
+    <div data-signature-commerce={activeTab !== 'admin' && siteSettings?.visualDesign?.signature2026 === true ? "true" : undefined} className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased ${showAdminWorkspace ? 'pb-6' : 'pb-20'} flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
       {!authLoading && activeTab === 'store' && !searchQuery && canDisplayCharacter(publishedCharacterSettings, { route: catalogueRoute?.kind, mobile: characterMobile, blocked: Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal) }) && (
         <Suspense fallback={null}><CharacterMascot settings={publishedCharacterSettings} lang={currentLang} forceReplay={activeCharacterTest} products={filteredProducts} catalogueReady={catalogueVerifiedEpoch===productsAccessEpoch.current} category={selectedCategory} onOpenProduct={navigateCatalogue}/></Suspense>
       )}
@@ -3921,7 +3922,16 @@ export default function App() {
         </div>
       )}
 
-      <div className="w-full max-w-full overflow-visible">
+      {showAdminWorkspace ? (
+        <header className="border-b border-slate-700 bg-slate-900">
+          <div className="mx-auto flex min-h-14 w-full max-w-[1440px] flex-wrap items-center justify-between gap-x-3 px-4 sm:px-6">
+            <span className="font-semibold tracking-wide">GEOSTORE</span>
+            <button type="button" onClick={() => { navigateCatalogue('/'); setActiveTab('store'); }} className="min-h-11 rounded-lg px-2 text-sm font-medium text-slate-100 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">
+              მაღაზიაში გადასვლა
+            </button>
+          </div>
+        </header>
+      ) : <div className="w-full max-w-full overflow-visible">
         <Header
           mobileNavBlocked={Boolean(supportOpen || isCheckoutOpen || orderConfirmation || isAuthOpen || isAiAssistantOpen || isComparisonOpen || isTrackerOpen || isNotificationsOpen || isTermsOpen || isWarrantyOpen || isImageSearchOpen || showInstallModal)}
           siteSettings={siteSettings}
@@ -3956,11 +3966,11 @@ export default function App() {
           currentLang={currentLang}
           setCurrLang={setCurrLang}
         />
-      </div>
+      </div>}
 
       <PwaStatusNotice lang={currentLang}/>
 
-      {adminLoggedIn && !authLoading && (
+      {adminLoggedIn && !authLoading && !showAdminWorkspace && (
         <div className="geostore-admin-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 flex justify-end box-border">
           <button
             onClick={() => setActiveTab('admin')}
@@ -3973,7 +3983,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
+      <main className={`w-full max-w-[1440px] min-w-0 mx-auto flex-1 space-y-8 box-border ${showAdminWorkspace ? "px-2 py-3 sm:px-6 sm:py-5" : "px-4 py-6 sm:px-6"}`}>
         {ADMIN_MFA_ROLLOUT_ENABLED && mfaEntry && !authLoading && !adminLoggedIn && !isAuthOpen && currentUser?.id===mfaEntry.ownerId && (
           <Suspense fallback={<p role="status">იტვირთება...</p>}>
             <AdminMfaPanel enabled transport={mfaTransport} ownerId={mfaEntry.ownerId} epoch={mfaEntry.epoch}
@@ -5340,7 +5350,7 @@ export default function App() {
 
       {showInstallModal && <InstallAppDialog platform={installPlatform} installed={appInstalled} lang={currentLang} onClose={()=>setShowInstallModal(false)}/>}
 
-      <StorefrontFooter
+      {!showAdminWorkspace && <StorefrontFooter
         siteSettings={siteSettings}
         visualDesign={activeTab !== 'admin' ? siteSettings?.visualDesign : null}
         activeTab={activeTab}
@@ -5349,7 +5359,7 @@ export default function App() {
         setIsWarrantyOpen={setIsWarrantyOpen}
         onOpenSupport={() => { setSupportSubmission(null); setSupportOpen(true); }}
         currentLang={currentLang}
-      />
+      />}
     </div>
   );
 }

@@ -50,7 +50,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (path === '/auth/v1/logout' && method === 'POST') return route.fulfill({ status: 204 });
         if (path === '/rest/v1/admin_suppliers' && method === 'GET') return respond([{id:'00000000-0000-4000-8000-000000000001',name:'Fixture supplier',commission:5,is_active:true,revision:1,updated_at:'2026-11-24T12:00:00Z'}]);
         if (path === '/rest/v1/products' && method === 'GET') return respond(stage49FixtureProductRows);
+        if (path === '/rest/v1/rpc/admin_list_inventory_movements' && method === 'POST') return respond({
+          items: [{id:1, product_name:'ტესტური პროდუქტი', variant_name:'სტანდარტული ვარიანტი', before_quantity:2, after_quantity:1, quantity_delta:-1, reason:'manual_adjustment', occurred_at:'2026-11-24T12:00:00Z'}],
+          has_more: false
+        });
         if (path === '/rest/v1/rpc/admin_list_products' && method === 'POST') return respond(stage49FixtureProductRows);
+        if (path === '/rest/v1/support_tickets' && method === 'GET') return respond([{id:'42', subject:'ტესტური მოთხოვნა', message:'ტესტური შეტყობინება', status:'ღია', customer_name:'Fixture', email:'support@workspace.test'}]);
         if (path === '/rest/v1/store_delivery_fees' && method === 'GET') return respond([{region:'tbilisi',fee_gel:0},{region:'bigCities',fee_gel:10},{region:'other',fee_gel:15}]);
         if (path === '/rest/v1/rpc/get_admin_panel_visual_design_state' && method === 'POST') return respond({ design: null, updated_at: null });
         if (path === '/rest/v1/rpc/has_staff_permission' && method === 'POST') return respond(true);
@@ -91,11 +96,6 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
       await auth.locator('#geostore-auth-email').fill(owner.email);
       await auth.locator('#geostore-auth-password').fill('fixture-only-password');
       await auth.locator('form button[type="submit"]').click();
-      const shortcut = page.locator('.geostore-admin-shortcut button');
-      await shortcut.waitFor({ state: 'visible', timeout: 20000 });
-      // Owner authentication intentionally opens the admin tab automatically.
-      // The stylesheet can already be loading by the time the shortcut appears.
-      await shortcut.click();
       const shell = page.locator('.admin-dashboard-shell');
       await shell.waitFor({ state: 'visible', timeout: 20000 });
       assert.equal(await page.locator('link[data-gs-admin-core]').count(),1,'Admin CSS loads once on entry');
@@ -124,6 +124,31 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         // Capture the untouched module before any fixture edits or interactions.
         visualBaseline.push(await collectAdminVisualBaseline(shell,tab));
+        assert.equal(await shell.locator('.admin-pro-header-actions').count(), ['banners','settings','visual_editor','discounts'].includes(tab) ? 1 : 0);
+        if (['command','expenses'].includes(tab)) {
+          const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
+          const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
+          assert.equal(ink, 'rgb(24, 34, 48)', 'Workspace headings use the active foreground on light cards');
+        }
+        if (tab === 'orders' && width < 480) {
+          const statusPicker = shell.getByLabel('შეკვეთის სტატუსი', { exact: true });
+          await statusPicker.selectOption('დასრულებული');
+          const activeFilter = shell.locator('.admin-order-status-filters button[aria-pressed="true"]');
+          assert.equal(await activeFilter.textContent().then(text => text.trim()), 'დასრულებული');
+          assert.equal(await activeFilter.isVisible(), false, 'Phone shows a single status control');
+          await statusPicker.selectOption('ყველა');
+        }
+        if (tab === 'inventory') {
+          const region = shell.locator('.admin-inventory-table-scroll');
+          await region.locator('tbody tr').first().waitFor();
+          const geometry = await region.evaluate(node => ({
+            scrollWidth: node.scrollWidth,
+            clientWidth: node.clientWidth,
+            reasonWidth: node.querySelector('tbody td:nth-child(5)').getBoundingClientRect().width
+          }));
+          assert.ok(geometry.reasonWidth >= 120, 'Inventory reason stays readable');
+          if (width < 768) assert.ok(geometry.scrollWidth > geometry.clientWidth, 'Inventory scrolls inside the table region');
+        }
         const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
         assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
         assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
@@ -132,8 +157,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (width === widths[0]) {
           for (const targetWidth of auditWidths) {
             await page.setViewportSize({ width: targetWidth, height: 850 });
-            await page.waitForFunction(expected => window.innerWidth === expected, targetWidth);
-            await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+            await page.waitForFunction(expected => window.innerWidth === expected, targetWidth, { polling: 50, timeout: 5000 });
             if (targetWidth < 640 && ['staff','vendors'].includes(tab)) {
               const fields = shell.locator(tab === 'staff' ? '.admin-staff-existing-form .admin-pro-native-control-boundary' : '.admin-purchase-workspace .admin-pro-native-control-boundary');
               assert.equal(await fields.count(),tab === 'staff' ? 1 : 3,'Native field boundaries preserve every existing field');
@@ -156,6 +180,33 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return rect.left < bounds.left - 2 || rect.right > bounds.right + 2 || rect.height < 43.5 ? [{tag:node.tagName, className:typeof node.className==='string'?node.className.slice(0,120):'',width:Math.round(rect.width),height:Math.round(rect.height)}] : [];
               });
             });
+            if (tab === 'categories' && targetWidth === 320) {
+              const buttons = shell.locator('.admin-category-card .admin-video-category-actions').first().locator('button');
+              const positions = await buttons.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().toJSON()));
+              assert.equal(positions.length, 4);
+              assert.ok(positions.every(box => box.width >= 43.5 && box.height >= 43.5 && Math.abs(box.top - positions[0].top) < 2), 'Four category actions fit on one row when each has a 44px touch target');
+            }
+            if (tab === 'support' && targetWidth === 320) {
+              const ticket = shell.locator('.admin-support-ticket').first();
+              await ticket.waitFor();
+              const layout = await ticket.evaluate(node => {
+                const [open, working, resolved] = [...node.querySelectorAll('.admin-support-status-actions > button')].map(button => button.getBoundingClientRect());
+                const form = node.querySelector('.admin-support-reply-form');
+                const send = form.querySelector('button').getBoundingClientRect();
+                return open.top === working.top && resolved.top > open.top && send.height >= 44 && Math.abs(send.width - form.querySelector('textarea').getBoundingClientRect().width) <= 2;
+              });
+              assert.ok(layout, 'Narrow support ticket keeps status actions aligned and reply easy to tap');
+            }
+            if (tab === 'products' && targetWidth === 390) {
+              const pairedControls = await shell.locator('.admin-product-controls').first().evaluate(group => {
+                const fields = group.querySelectorAll('input[type="number"]');
+                const [cost, price, stock] = Array.from(fields, field => field.getBoundingClientRect());
+                const edit = group.querySelector('.admin-video-edit').getBoundingClientRect();
+                const remove = group.querySelector('.admin-video-delete').getBoundingClientRect();
+                return Math.abs(cost.top - price.top) < 2 && stock.width > cost.width && Math.abs(edit.top - remove.top) < 2;
+              });
+              assert.ok(pairedControls, 'Phone product controls keep both prices and both secondary actions together');
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
@@ -187,7 +238,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             }
           }
           await page.setViewportSize({ width, height: 850 });
-          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          await page.waitForFunction(expected => window.innerWidth === expected, width, { polling: 50, timeout: 5000 });
         }
         if (layoutOnly) continue;
         if(tab==='analytics'){
@@ -238,6 +289,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           for(const label of ['კომპიუტერი','ტელეფონი'])assert.equal(await studio.getByRole('button',{name:label,exact:true}).count(),1,'one viewport control per device');
           assert.equal(await studio.locator('.gs-character-extra-controls button[aria-pressed]').count(),2,'two independent feature toggles');
           await studio.getByRole('button',{name:/Mini Robot/}).click();
+          const selectedCharacter=studio.locator('.gs-character-roster > button[aria-pressed="true"]');
+          assert.equal(await selectedCharacter.count(),1,'Exactly one roster selection');
+          const selectedPalette=await selectedCharacter.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+          assert.deepEqual(selectedPalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Selected character retains a readable paired palette');
+          const securityWarning=shell.locator('[data-admin-pro-security-warning]');
+          const securityPalette=await securityWarning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+          assert.deepEqual(securityPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Account security notice remains readable');
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
           await studio.locator('[data-character-playback][data-playing="true"] .gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
@@ -433,6 +491,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await gallery.setInputFiles({name:'fixture.jpg',mimeType:'image/jpeg',buffer:eligible});
           await thumbnail.waitFor({state:'visible',timeout:20000});
           assert.equal(await thumbnail.evaluate(el=>getComputedStyle(el).objectFit),'contain','Photo preview preserves the full composition');
+          const galleryLayout=await thumbnail.evaluate(img=>{
+            const card=img.closest('.admin-workspace-gallery-card');
+            const action=card.querySelector('.admin-product-gallery-remove');
+            const photo=img.getBoundingClientRect(),button=action.getBoundingClientRect();
+            return {height:button.height,below:button.top>=photo.bottom-2,position:getComputedStyle(action).position};
+          });
+          assert.ok(galleryLayout.height>=43.5&&galleryLayout.below&&galleryLayout.position==='static','Gallery removal stays below the photo and retains a touch target');
           const optimized=await thumbnail.getAttribute('src');
           assert.ok(optimized?.startsWith('data:image/webp;base64,'),'Eligible JPEG must convert to WebP');
           const encoded=Buffer.from(optimized.split(',')[1],'base64');
@@ -487,6 +552,14 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.equal(await shell.locator('#admin-workspace-crm-filter').inputValue(),'all');
           const segments=shell.locator('.admin-marketing-segments');
           await segments.getByRole('combobox',{name:'სეგმენტის ფილტრი'}).selectOption('vip');
+          const metric=segments.locator('[data-admin-segment-card] > p.text-white');
+          await metric.waitFor({state:'visible'});
+          assert.equal(await metric.count(),1,'VIP filter shows one segment');
+          const metricInk=await metric.evaluate(el=>getComputedStyle(el).color);
+          assert.equal(metricInk,'rgb(24, 34, 48)','Segment number uses readable workspace foreground');
+          const warning=segments.locator('.admin-marketing-campaigns > p.text-amber-200').first();
+          const warningPalette=await warning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+          assert.deepEqual(warningPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Sending restriction remains readable on a paired warning surface');
           await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).waitFor({state:'visible'});
           assert.ok(moduleRequests.has('AdminMarketingSegments'),'Marketing module loads on entering users');
           assert.equal(await segments.locator('.admin-marketing-campaigns').getByRole('button',{name:'მონახაზის შენახვა'}).isDisabled(),true);
@@ -499,6 +572,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           const editor=design.locator('[data-gs-flash-editor="true"]');
           await editor.waitFor({state:'visible',timeout:20000});
           assert.equal(await pricing.isVisible(),false);
+          const modePalette=await workspace.locator('button[aria-pressed="true"]').evaluate(el=>{
+            const style=getComputedStyle(el);return [style.color,style.backgroundColor];
+          });
+          assert.deepEqual(modePalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Active promotion mode uses a readable paired palette');
           const controls=editor.locator('[data-gs-campaign-controls="true"]');
           const name=controls.getByPlaceholder('მაგ. შავი პარასკევი');
           await name.waitFor({state:'visible'});
@@ -574,6 +651,16 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.ok(await shell.locator('[data-admin-pro-support-summary]').isVisible());
           await shell.getByRole('button',{name:'ფილტრების გასუფთავება',exact:true}).click();
           assert.equal(await shell.locator('#admin-workspace-support-status').inputValue(),'all');
+          const message= shell.locator('.admin-support-ticket-message').first();
+          await message.waitFor({state:'visible'});
+          const messageContrast=await message.evaluate(el=>{
+            const style=getComputedStyle(el);
+            const rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
+            const luminance=value=>rgb(value).map(v=>v/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[0.2126,0.7152,0.0722][i],0);
+            const a=luminance(style.webkitTextFillColor||style.color),b=luminance(style.backgroundColor);
+            return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+          });
+          assert.ok(messageContrast>=4.5,'Support message text meets WCAG AA normal-text contrast on its own surface');
         }
       }
       assert.equal(visualBaseline.length,Object.keys(modules).length,'Every permitted module has a visual baseline');

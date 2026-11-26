@@ -26,7 +26,7 @@ test('compact mobile admin header preserves draft save publish and access status
   assert.match(dashboard, /grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex/);
   assert.match(dashboard, /onSaveStorefrontDraft\(\)/);
   assert.match(dashboard, /onPublishStorefront\(\)/);
-  assert.match(dashboard, /col-span-2 flex min-w-0 items-center justify-center/);
+  assert.match(dashboard, /admin-pro-access-caption/);
   assert.match(dashboard, /სრული სისტემური წვდომა/);
 });
 

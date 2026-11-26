@@ -104,7 +104,8 @@
       "internal-registration-password-csp-hotfix-2026-11-26": false,
       "internal-admin-professional-ui-2026-11-26": false,
       "internal-character-premium-2026-11-26": false,
-      "admin-unified-workspace-redesign-2026-11-26": false
+      "admin-unified-workspace-redesign-2026-11-26": false,
+      "admin/video-quality-audit-20261126": false
     }
   },
   "functions": {

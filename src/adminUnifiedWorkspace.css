@@ -1,3 +1,50 @@
+/* Retain theme colors where older dark-mode rules outrank utility classes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(h1,h2,h3,h4,h5,h6):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(.text-slate-200,.text-slate-300,.text-slate-400,.text-slate-500):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+  color: var(--av-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-page-identity {
+  display: flex !important;
+  flex-direction: column;
+  align-items: start;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-caption {
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-form,.admin-global-settings-form,.admin-vendor-form,.admin-crm-user-card,.gs-character-admin) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-marketing-segments [data-admin-segment-card] {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #admin-command-title {
+  font-size: clamp(18px, 3vw, 23px) !important;
+}
+
+/* Match native controls and readable text to the workspace palette. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-caption {
+  color: var(--av-muted);
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(select,textarea,input:not([type="checkbox"],[type="radio"],[type="color"],[type="range"])):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+  color: var(--admin-vd-inputText-active,var(--av-text)) !important;
+  background-color: var(--admin-vd-inputBackground-active,var(--av-inset)) !important;
+  border-color: var(--admin-vd-inputBorder-active,var(--av-border)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(input,textarea):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))::placeholder {
+  color: var(--admin-vd-inputPlaceholder-active,var(--av-muted)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1;
+}
+
 /* Unified workspace foundation: remove decorative gradients from operational
    surfaces, without changing user-selected backgrounds, status colors or
    individual element geometry. Never select storefront/editor preview content. */
@@ -397,8 +444,28 @@
 @container (min-width: 900px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-list .admin-product-row { grid-template-columns: minmax(180px,1fr) minmax(0,2fr); align-items: center !important; }
 }
-@media (max-width: 359px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls { grid-template-columns: minmax(0,1fr) !important; }
+/* The stock status belongs next to its field. Keep the two pricing fields
+   together on phones, with the stock and publication controls on their own rows. */
+@container (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > :is(div:has([data-admin-pro-stock]),.admin-video-publish) {
+    grid-column: 1 / -1 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > div:has([data-admin-pro-stock]) {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) max-content;
+    align-items: center !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls > div:has([data-admin-pro-stock]) > .admin-unified-product-field-label {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls > :is(.admin-video-edit,.admin-video-delete) {
+    grid-column: auto !important;
+  }
+}
+@container (max-width: 240px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
 }
 
 /* Stage 07 — inventory, suppliers and purchases. Presentation only. */
@@ -563,8 +630,21 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-row { grid-template-columns: minmax(0,1fr) auto !important; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(4,44px) !important; width: auto !important; }
 }
-@media (max-width: 359px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-actions {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%,44px),1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity > [data-admin-pro-category-photo],
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity > .admin-unified-category-placeholder {
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > [data-admin-pro-category-photo] {
+    flex-basis: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
 }
 
 /* Stage 09 — finance and analytics. Presentation, not accounting. */
@@ -788,7 +868,25 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-form, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-list { grid-template-columns: minmax(0,1fr) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions { display: grid !important; grid-template-columns: 44px 44px minmax(0,1fr) 44px; gap: 6px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions > button, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card > button { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card { border-color: var(--av-border) !important; background-image: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 44px;
+  align-items: start !important;
+  gap: 10px;
+  border-color: var(--av-border) !important;
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card [data-admin-pro-coupon-code] {
+  background: transparent !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card > button {
+  width: 44px !important;
+  height: 44px !important;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-card > div { min-width: 0; }
 @container (min-width: 480px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-flash-sale-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-fields, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-list, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupon-form { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
@@ -933,4 +1031,1454 @@
   font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important;
   line-height: 1.4 !important;
   box-sizing: border-box;
+}
+
+/* Keep each column readable within the keyboard-scrollable table region. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] {
+  min-inline-size: 900px !important;
+  table-layout: auto !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td) {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td):nth-child(2) {
+  min-inline-size: 160px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] :is(th,td):nth-child(5) {
+  min-inline-size: 130px;
+}
+
+/* Keep the stock snapshot above the editable planning fields on phones. */
+@media (min-width: 360px) and (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > .admin-replenishment-product {
+    grid-row: 1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > [data-admin-replenishment-metric="recommended"] {
+    grid-row: 2;
+    grid-column: 2;
+  }
+}
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > [data-admin-replenishment-metric="recommended"] {
+    background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row > .admin-replenishment-metric {
+    padding: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric > :is(label,span) {
+    font-size: 12px !important;
+    line-height: 1.45;
+    overflow-wrap: break-word;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-metric > input {
+    min-height: 44px !important;
+  }
+}
+
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-picker {
+  display: none;
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-toolbar .admin-order-status-filters {
+    display: none !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-picker {
+    display: grid;
+    gap: 4px;
+    min-inline-size: 0;
+    color: var(--av-muted) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-picker > select {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active,16px)) !important;
+  }
+}
+
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket .admin-support-status-actions {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-controls > button {
+  min-height: 44px !important;
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-controls > button {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-reply-form > textarea {
+    min-height: 96px;
+    font-size: max(16px, var(--admin-vd-inputFontSize-active,16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-reply-form > button {
+    width: 100% !important;
+  }
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket .admin-support-status-actions {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-status-actions > button:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card {
+  container: banner-card / inline-size;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card > div:first-child > div {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+@container banner-card (max-width: 290px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card .admin-unified-banner-actions {
+    grid-template-columns: repeat(2,minmax(0,1fr)) 44px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banner-card .admin-unified-banner-actions > button:nth-child(3) {
+    grid-column: 1 / span 2;
+    overflow-wrap: normal;
+  }
+}
+
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(button, select, textarea, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])):not(.sr-only, [hidden]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+    min-height: 44px !important;
+  }
+}
+
+/* Video 1:26–1:34: pair the marketing surfaces with their own readable ink.
+   Keep consent warnings visible and leave the sending/permission gates untouched. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments {
+  color: var(--av-text) !important;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments :is([data-admin-segment-card], .admin-marketing-campaigns, [class~="bg-slate-950/60"], [class~="bg-slate-950/50"]) {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments :is(p,summary).text-white {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p {
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments [data-admin-segment-card] > p.text-emerald-300 {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments :is(p,ul).text-amber-200 {
+  color: #754300 !important;
+  background: #fff0cc !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments ul.text-amber-200 { padding-inline-start: 24px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments button.text-white:not(.bg-emerald-900) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments button.bg-emerald-900 {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments button:focus-visible, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-marketing-segments summary:focus-visible {
+  outline: 2px solid var(--av-focus);
+  outline-offset: 2px;
+}
+
+/* Settings workspace: pair foreground and background without recoloring
+   storefront character artwork, playback scenes or customizable bubbles. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-security-notice,.admin-delivery-settings,.admin-global-settings) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-delivery-fee-fields > div,.admin-global-settings > div:last-child > div.space-y-2 > div) {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel [data-admin-pro-security-warning] {
+  color: #754300 !important;
+  background: #fff0cc !important;
+  border-color: #e3c78b !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-global-settings > div:last-child > div.space-y-2 > div p:first-child {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-global-settings-form > button,.admin-delivery-settings > div:last-child > button:last-child) {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  box-shadow: none !important;
+  min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-global-settings > div:last-child button,.admin-delivery-settings > div:last-child > button:not(:last-child)) {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-fee-fields label {
+  min-height: 0;
+  display: block;
+  font-size: 13px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is([data-character-publish-status],.gs-character-admin-status > div,.gs-concierge-presets,.gs-concierge-demo-panel,.gs-character-admin-section,.gs-character-complete-setup,.gs-character-profile-heading) {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  box-shadow: none !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(label.text-slate-100,details.gs-character-admin-section > summary) {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin details.gs-character-admin-section > summary {
+  min-height: 44px;
+  align-content: center;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(p.text-amber-300,p.text-amber-200):not(:where(.gs-character-preview *)) {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 6px;
+  padding: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed="false"] {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed="true"] {
+  background: #dff3eb !important;
+  border-color: #82b7a1 !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+  outline: 2px solid #14594a;
+  outline-offset: -2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed] > span {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(button,summary):not(:where(.gs-character-preview *)):focus-visible {
+  outline: 2px solid var(--av-focus) !important;
+  outline-offset: 2px;
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-fee-fields > div {
+    padding: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-settings > div:last-child > button {
+    flex: 1 1 140px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-delivery-fee-fields,.admin-global-settings-form) :is(input,textarea) {
+    font-size: max(16px,var(--admin-vd-inputFontSize-active,16px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button { min-width: 0; }
+}
+
+/* Native mobile fields must not trigger automatic page zoom on iPhone.
+   Preserve larger values from the visual editor and leave preview controls alone. */
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(textarea,select,input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="range"],[type="color"],[type="file"],[type="button"],[type="submit"],[type="reset"])):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+    font-size: max(16px,var(--admin-vd-inputFontSize-active,16px)) !important;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Second video review: operational density, readable supply summaries, and
+   an independent assistant/log workspace. No data or action changes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-ai-analyst,.admin-audit-logs-panel,.admin-purchase-workspace,.admin-supplier-workspace,.admin-unified-supply-context) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  color: var(--av-text) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-chat {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  padding: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [data-admin-pro-assistant-role] {
+  max-inline-size: 92% !important;
+  min-inline-size: 0;
+  padding: 10px 12px !important;
+  line-height: 1.65;
+  font-size: 13px !important;
+  overflow-wrap: anywhere;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [data-admin-pro-assistant-role="assistant"] {
+  background: var(--av-surface) !important;
+  border: 1px solid var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [data-admin-pro-assistant-role="user"] {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [aria-label="სწრაფი კითხვები"] > button,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > button {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border) !important;
+  min-height: 44px;
+  white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer > input { min-inline-size: 0; width: 100%; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer > button {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  min-height: 44px;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel [data-admin-pro-supply-metric] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel [data-admin-pro-supply-metric] > p {
+  word-break: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel [data-admin-pro-supply-metric] > p:last-child,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-pro-purchase-total > strong {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel :is(.admin-purchase-workspace,.admin-supplier-workspace) p.text-amber-200 {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel :is(.admin-purchase-workspace,.admin-supplier-workspace) p.text-emerald-300 {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-audit-log-row {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  box-shadow: none !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel [data-admin-pro-log-action] {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 13px !important;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel [data-admin-pro-log-time] {
+  color: var(--av-muted) !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > div { flex: 1 1 180px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel nav[aria-label="აქტივობების ისტორიის გვერდები"] > button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  font-size: 12px !important;
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer { grid-template-columns: minmax(0,1fr); }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [aria-label="სწრაფი კითხვები"] > button { flex: 1 1 120px; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > div { flex-basis: 100%; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-audit-logs-panel .admin-workspace-log-tools > button { flex: 1 1 120px; }
+}
+@container (min-width: 260px) and (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-purchase-workspace .grid:has(> [data-admin-pro-supply-metric]) {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-purchase-workspace .grid:has(> [data-admin-pro-supply-metric]) > [data-admin-pro-supply-metric]:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Command center refinement: a compact operational hierarchy rather than
+   promotional cards; retain theme tokens, navigation permissions and values. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center {
+  container-type: inline-size;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div:first-child > button {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi {
+  display: grid !important;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) 16px;
+  align-items: start !important;
+  font-size: 12px !important;
+  line-height: 1.45;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong {
+  font-size: clamp(22px,5vw,30px) !important;
+  line-height: 1.2;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:last-child {
+  font-size: 12px !important;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi:focus-visible {
+  outline: 2px solid var(--av-focus,var(--av-accent)) !important;
+  outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi[data-admin-kpi-tone="primary"] > span:first-child svg { color: #146653 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi[data-admin-kpi-tone="warning"] > span:first-child svg { color: #8b5500 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi[data-admin-kpi-tone="danger"] > span:first-child svg { color: #a3283e !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi[data-admin-kpi-tone="info"] > span:first-child svg { color: #235c96 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > button {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+  min-height: 44px !important;
+  max-inline-size: 46%;
+  white-space: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] {
+  box-shadow: none !important;
+  transform: none !important;
+  text-align: start;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > div > span {
+  line-height: 1.45;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
+  grid-column: 1 / -1;
+  color: var(--av-nav-text) !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  opacity: 1;
+}
+@container (min-width: 290px) and (max-width: 799px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi {
+    padding: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div:first-child > button {
+    width: 100%;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
+    border-top: 1px solid var(--av-border);
+    padding-block-start: 8px;
+    margin-block: 6px 0 !important;
+  }
+}
+
+/* Product editor: keep form groups compact and make gallery actions separate
+   from the image itself. No product data, validation or mutation changes. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form {
+  container: product-editor / inline-size;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-product-attributes,.admin-size-color-stock-editor,.admin-product-variants-editor,.admin-product-gallery,.admin-workspace-product-content) {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-product-field {
+  min-inline-size: 0;
+  display: grid;
+  gap: 6px;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-product-field > small {
+  color: var(--av-muted) !important;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-product-featured {
+  min-height: 44px;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-row,.admin-custom-variant-row) {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  padding: 10px !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-identity,.admin-custom-variant-identity) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-identity,.admin-custom-variant-identity) > b {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-identity > span {
+  display: block;
+  margin-inline-start: 0;
+  color: var(--av-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row > button {
+  background: #fce5e8 !important;
+  border: 1px solid #e4b4bf !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-editor > button,.admin-product-variants-editor > .grid > button) {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card {
+  border: 1px solid var(--av-border);
+  border-radius: 10px;
+  padding: 6px;
+  background: var(--av-surface);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card .admin-product-gallery-thumbnail {
+  display: grid;
+  grid-template-rows: minmax(0,1fr) auto;
+  gap: 6px;
+  aspect-ratio: auto !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-product-gallery-thumbnail > img {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+  object-fit: contain;
+  min-width: 0;
+  border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card:first-child {
+  border: 2px solid var(--av-accent);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card .admin-product-gallery-remove {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 44px !important;
+  border-radius: 6px !important;
+  background: #fce5e8 !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 20px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-workspace-gallery-card .admin-workspace-gallery-select {
+  min-height: 44px !important;
+  white-space: normal;
+}
+@container product-editor (min-width: 250px) and (max-width: 699px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form > .grid:has(#admin-workspace-product-name) {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form > .grid > div:has(#admin-workspace-product-name) {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-product-variants-editor > .grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-product-variants-editor > .grid > :is(input[aria-label="ვარიანტის სახელი"],button) {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row > .admin-custom-variant-identity {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-stock {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr);
+    gap: 4px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-stock input {
+    width: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form .admin-custom-variant-row > button { align-self: end; }
+}
+
+/* Analytics refinement: compact summary cards, paired report surfaces,
+   readable chart labels and preserved accounting/verification semantics. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics {
+  container: finance-workspace / inline-size;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi] {
+  min-inline-size: 0;
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-pro-finance-kpi] > p:first-child {
+  min-height: 0;
+  color: var(--av-text) !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-pro-finance-kpi] .admin-analytics-value {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(18px,calc(var(--admin-vd-titleFontSize-active,18px) * 1.2),30px) !important;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-unified-net="loss"] .admin-analytics-value {
+  color: #9c2538 !important;
+  background: #fce5e8 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-unified-net="nonnegative"] .admin-analytics-value {
+  color: #14594a !important;
+  background: #dff3eb !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-unified-net="pending"] .admin-analytics-value {
+  color: #754300 !important;
+  background: #fff0cc !important;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-business-comparison,.admin-finance-sources-panel,.admin-finance-expenses-panel,.admin-finance-products-panel,.admin-finance-vendors-panel),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics > .grid > div:not([data-admin-pro-finance-kpi]) {
+  min-inline-size: 0;
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  color: var(--av-text) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison :is(p,div)[role="status"].text-amber-200,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison p.text-amber-200 {
+  color: #754300 !important;
+  background: #fff0cc !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 6px;
+  padding: 8px;
+  line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison > .grid > div > p.text-emerald-300,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-sources-panel .admin-finance-breakdown-row > b {
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison > .grid > div > p.text-rose-300,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-expenses-panel :is(.admin-finance-breakdown-row,.admin-finance-recent-row) > b {
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-trend-scroll {
+  background: var(--av-inset);
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-trend-scroll:focus-visible {
+  outline: 2px solid var(--av-focus,var(--av-accent));
+  outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-trend-bars [role="listitem"] > span {
+  font-size: 11px !important;
+  line-height: 1.4;
+  max-inline-size: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-profitability-row {
+  border-color: var(--av-border) !important;
+  padding: 10px 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-profitability-metrics,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-profitability-results {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 6px !important;
+  line-height: 1.55;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-profitability-metrics,.admin-profitability-results) > * {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-profitability-results > b.text-emerald-400 { color: #14594a !important; -webkit-text-fill-color: currentColor !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-profitability-results > b.text-rose-400 { color: #9c2538 !important; -webkit-text-fill-color: currentColor !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-profitability-results > b.text-amber-300 { color: #754300 !important; -webkit-text-fill-color: currentColor !important; }
+@container finance-workspace (min-width: 300px) and (max-width: 849px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi="revenue"],
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi="net"] {
+    grid-column: 1 / -1;
+  }
+}
+@container finance-workspace (min-width: 300px) and (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison > .grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison > .grid > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@container finance-workspace (max-width: 299px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-profitability-metrics,.admin-profitability-results) {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+
+/* Order detail refinement: customer information, item identity and amounts
+   form readable groups. Existing status transitions and note saves are untouched. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer {
+  background: var(--av-inset);
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 10px;
+  gap: 10px 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p > :is(b,.admin-unified-order-field-value) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p.text-amber-300 {
+  background: #fff0cc;
+  border-radius: 6px;
+  padding: 8px;
+  font-style: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p.text-amber-300 > :is(span,b) {
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list [data-admin-pro-order-number] {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list [data-admin-pro-order-date] {
+  margin-inline-start: 0 !important;
+  color: var(--av-muted) !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list [data-admin-pro-order-total] {
+  font-variant-numeric: tabular-nums;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal :is(.admin-order-customer,.admin-order-item,.admin-order-financials,.admin-order-items-section > div > div:not(.admin-order-item)) {
+  background: var(--admin-vd-modalBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-modalBorder-active,var(--av-border)) !important;
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  padding: 12px !important;
+  border-radius: 10px !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-customer > .grid > p > :is(b,a),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info h5 {
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info {
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info > div > span {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info > div > span.bg-slate-900 {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-info :is(span,p).text-amber-200 {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-color: #e3c78b !important;
+  border-radius: 5px;
+  padding: 4px 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal [data-admin-pro-order-image] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-muted) !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials > div {
+  border-color: var(--av-border) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price > span:last-child,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials > div:last-child > span:last-child {
+  color: var(--admin-vd-modalText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials :is(.flex) > * {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-financials > div:last-child {
+  background: var(--av-inset);
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-note-controls > input { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-note-controls > button,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-detail-footer > button:last-child {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#fff) !important;
+  -webkit-text-fill-color: currentColor !important;
+  min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-detail-footer > button:first-child {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+@media (min-width: 360px) and (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-list .admin-order-card-customer > p:nth-child(n+3) { grid-column: 1 / -1; }
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item {
+    display: grid !important;
+    grid-template-columns: 56px minmax(0,1fr);
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal [data-admin-pro-order-image] {
+    width: 56px !important;
+    height: 56px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-detail-modal .admin-order-item-price {
+    grid-column: 1 / -1;
+    text-align: start;
+    flex-wrap: wrap;
+  }
+}
+
+/* Promotion operations refinement: distinguish editing modes, review prices
+   and schedule actions, without touching storefront previews or mutations. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel { container: promo-workspace / inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-gs-flash-workspace] {
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-gs-flash-workspace] > [role="group"] {
+  padding: 4px;
+  border: 1px solid var(--av-border);
+  border-radius: 10px;
+  background: var(--av-inset);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-gs-flash-workspace] > [role="group"] > button {
+  min-inline-size: 0;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.45;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-gs-flash-workspace] > [role="group"] > button[aria-pressed="true"] {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  border-color: #82b7a1 !important;
+  outline: 1px solid #14594a;
+  outline-offset: -2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-flash-window] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-flash-window] [role="alert"] {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 6px;
+  padding: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-time > strong {
+  color: var(--av-text) !important;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset > label {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 8px;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset > label:has(input:checked) {
+  border-color: var(--av-accent);
+  box-shadow: inset 0 0 0 1px var(--av-accent);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-row > label {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-price-pair > span {
+  border-radius: 6px;
+  background: var(--av-inset);
+  padding: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="normal"] .admin-unified-flash-price-pair > span:nth-child(2) {
+  background: #dff3eb;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="normal"] .admin-unified-flash-price-pair > span:nth-child(2) > strong {
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="increase"] .admin-unified-flash-price-pair > span:nth-child(2) {
+  background: #fff0cc;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="increase"] .admin-unified-flash-price-pair > span:nth-child(2) > strong {
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-schedule [role="alert"] {
+  background: #fce5e8 !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-schedule-list > li > div {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-schedule-list > li > div > strong {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-edit-actions > button {
+  min-width: 0;
+  flex: 1 1 100px;
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-card {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-banner-card > div:first-child > div {
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-banners .admin-unified-banner-actions {
+  border-top: 1px solid var(--av-border);
+  padding-block-start: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card [data-admin-pro-coupon-code] {
+  letter-spacing: normal !important;
+  font-size: 15px !important;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card [data-admin-pro-coupon-value] {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  color: #14594a !important;
+  background: #dff3eb;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 15px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card > button {
+  color: #9c2538 !important;
+  background: #fce5e8 !important;
+  border: 1px solid #e4b4bf !important;
+}
+@container promo-workspace (min-width: 290px) and (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-metrics {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-metrics > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@container promo-workspace (max-width: 479px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-submit { width: 100%; justify-content: center; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-edit-actions { width: 100%; }
+}
+
+/* CRM and correspondence refinement. Presentation only. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-card, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-ticket, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-legacy-message-card {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  color: var(--av-text) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-card:has([data-admin-pro-crm-badge="restricted"]) { border-inline-start: 3px solid #9c2538 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact {
+  background: var(--av-inset); border: 1px solid var(--av-border);
+  border-radius: 8px; padding: 8px; gap: 8px 12px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > span { color: var(--av-muted) !important; font-size: 12px; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > b {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity > div:first-child > h4 { min-inline-size: 0; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions > button > svg { flex-shrink: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(.admin-support-ticket-message,.admin-support-ticket-reply) {
+  padding: 12px !important; border-radius: 9px !important;
+  border: 1px solid var(--av-border) !important; box-shadow: none !important;
+  line-height: 1.65; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-ticket-message { background: var(--av-inset) !important; color: var(--av-text) !important; white-space: pre-wrap; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-ticket-reply, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="admin"] {
+  background: #e4f3ec !important; border-color: #a7cbbb !important; color: #174b38 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="customer"] {
+  background: var(--av-surface) !important; border-color: var(--av-border) !important; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel :is(.admin-support-ticket-message,.admin-support-ticket-reply,[data-admin-pro-thread-role]) :is(b,p) {
+  color: inherit !important; -webkit-text-fill-color: currentColor !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="admin"] > div > span { color: #365c4b !important; -webkit-text-fill-color: currentColor !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="customer"] > div > span { color: var(--av-muted) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role] > div > :is(b,span) { min-inline-size: 0; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread > div:first-child > b { color: var(--av-text) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread > div:first-child > button { color: var(--av-text) !important; min-height: 44px; padding-inline: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread [role="alert"] { background: #fce5e8 !important; color: #9c2538 !important; border-radius: 8px; padding: 10px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread [role="alert"] :is(p,button) { color: #9c2538 !important; -webkit-text-fill-color: currentColor !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-ticket-meta > span:nth-child(2) { color: var(--av-text) !important; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-ticket-meta > span:last-child { font-size: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-legacy-message-card > p:not([data-admin-pro-legacy-sender]) { color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-legacy-message-card > p:last-child { color: var(--av-muted) !important; font-size: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form [data-admin-pro-message-preview] { padding: 12px; border-radius: 9px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form [data-admin-pro-message-preview] > p {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; overflow-wrap: anywhere; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form [data-admin-pro-message-preview] > p:first-child { color: var(--av-muted) !important; }
+@container (min-width: 300px) and (max-width: 519px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-support-reply-form > button, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form > button { width: 100%; justify-content: center; }
+}
+
+/* Inventory and taxonomy refinement: distinguish measured stock, editable
+   targets and nested categories, while keeping all existing operations. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div > p {
+  font-size: 12px !important;
+  line-height: 1.5;
+  color: var(--av-text) !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div > strong {
+  font-size: 24px !important;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-inventory-table-scroll:focus-visible {
+  outline: 2px solid var(--av-accent);
+  outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-table] tbody td {
+  line-height: 1.5;
+  vertical-align: top;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-workspace-inventory-name {
+  color: var(--av-text) !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-row {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric > :is(label,span) {
+  font-size: 12px !important;
+  line-height: 1.5;
+  color: var(--av-muted) !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric:has(input) {
+  background: var(--av-surface) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric[data-admin-replenishment-metric="recommended"] {
+  background: #dff3eb !important;
+  border-color: #82b7a1 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric[data-admin-replenishment-metric="recommended"] > :is(span,strong) {
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-save [role="alert"] {
+  background: #fce5e8 !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-save [role="status"] {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-save > div > button {
+  min-height: 44px !important;
+  color: var(--av-text) !important;
+  white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager [data-admin-category-level="parent"] {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager [data-admin-category-level="child"] {
+  border-inline-start: 3px solid var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity h4 {
+  font-size: 15px !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > span {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity [data-admin-pro-category-photo] {
+  border-color: var(--av-border) !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card > div:first-child > h4 {
+  overflow-wrap: anywhere;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card > div:first-child > p {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card > div:last-child {
+  border-top: 1px solid var(--av-border);
+  padding-block-start: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card > div:last-child > span {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+  overflow-wrap: anywhere;
+}
+@container (min-width: 290px) and (max-width: 459px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary="history"] > div:first-child,
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary="planning"] > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Staff and settings refinement: clear permission selection, independent
+   access and authentication states, and readable draft notices. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(.admin-staff-panel,.admin-staff-list-panel,[data-admin-pro-staff-card]) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label:has(input:checked) {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  border-color: #82b7a1 !important;
+  box-shadow: inset 0 0 0 1px #82b7a1;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label:has(input:checked) > span {
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid > label:has(input:not(:checked)) {
+  background: var(--av-surface) !important;
+  color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card] > div:first-child > div:first-child {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card] > div:first-child > div:first-child > div > strong {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff [data-admin-pro-staff-card]:has([data-admin-pro-staff-state="inactive"]) {
+  border-inline-start: 3px solid #9c2538 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-permission-summary > span {
+  min-inline-size: 0;
+  line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > [role="alert"] {
+  background: #fce5e8 !important;
+  color: #9c2538 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > [role="status"] {
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-list-panel > p[role="status"].text-amber-200 {
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
+  padding: 8px;
+  border-radius: 6px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel [data-admin-pro-settings-draft] {
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  border: 1px solid var(--av-border);
+  border-radius: 8px;
+  padding: 10px;
+  line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-unified-security-summary > strong {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+@container (min-width: 300px) and (max-width: 459px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-summary {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-unified-staff-summary > div:last-child {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-create-submit,
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-existing-form > button {
+    width: 100%;
+    min-height: 44px !important;
+    white-space: normal;
+  }
+}
+
+/* Editor operation refinement: explicit tool selectors only. Preview content
+   and the values selected by the administrator remain unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [data-admin-pro-editor-sync] {
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px !important;
+  line-height: 1.6;
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [data-admin-pro-editor-sync="saved"] {
+  background: #dff3eb !important; color: #14594a !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header :is([data-admin-pro-editor-sync="loading"],[data-admin-pro-editor-sync="saving"]) {
+  background: #fff0cc !important; color: #754300 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header :is([data-admin-pro-editor-sync="error"],[data-admin-pro-editor-sync="conflict"]) {
+  background: #fce5e8 !important; color: #9c2538 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button {
+  min-height: 44px !important;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button:last-child {
+  background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [role="alert"] {
+  background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [role="alert"] :is(p,button) {
+  color: #754300 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [role="alert"] > button {
+  min-height: 44px !important; white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] > div > button[aria-pressed="true"] {
+  background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] > div > button[aria-pressed="false"] {
+  background: var(--av-surface) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label:has(> input[type="color"]) {
+  min-inline-size: 0;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-height: 54px;
+  padding: 8px 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label > span {
+  min-inline-size: 0; overflow-wrap: anywhere; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label > input[type="color"] {
+  flex: 0 0 48px; width: 48px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header [data-admin-pro-editor-save][role="alert"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > [role="alert"] {
+  color: #9c2538 !important; background: #fce5e8 !important; border-color: #e4b4bf !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header [data-admin-pro-editor-save][role="status"] {
+  color: #14594a !important; background: #dff3eb !important; border-color: #82b7a1 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] {
+  background: var(--av-surface) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > .grid > div {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > .grid > div > button {
+  min-height: 44px !important; background: var(--av-surface) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > label {
+  min-inline-size: 0; background: var(--av-surface); border: 1px solid var(--av-border);
+  border-radius: 8px; padding: 10px; line-height: 1.5; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > label > input[type="range"] {
+  accent-color: var(--av-accent); min-height: 32px; margin-block: 4px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > label > input[type="color"] {
+  min-height: 44px !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > button {
+  min-height: 44px !important; background: var(--av-surface) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > div > [data-character-visitor-preview-toggle] {
+  min-height: 44px !important; background: var(--av-surface) !important;
+  color: var(--av-text) !important; border-color: var(--av-border) !important;
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button:last-child { grid-column: 1 / -1; }
 }
