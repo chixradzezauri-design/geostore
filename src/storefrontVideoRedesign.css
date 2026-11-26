@@ -2218,3 +2218,36 @@
   .gs-commerce-overlay--checkout .gs-checkout-dialog .gs-checkout-submit-area {padding-bottom:max(8px,env(safe-area-inset-bottom));}
 }
 @media(max-width:359px){:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-cart-layout .gs-cart-summary .gs-cart-coupon-form {grid-template-columns:minmax(0,1fr)!important;}}
+
+
+/* Customer experience audit 10 — coherent profile and order history. */
+.geostore-shell.geostore-fashion-store .gs-profile-pro {width:100%;max-width:min(100%,1100px)!important;min-width:0;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-count {font-size:12px;font-variant-numeric:tabular-nums;color:var(--gs-muted,#62574d);border:1px solid var(--gs-line,#e2d9ce);border-radius:999px;padding:3px 8px;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro #gs-profile-pro-orders {scroll-margin-top:140px;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-row {min-width:0;gap:12px!important;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-video-profile-order-info {flex:1 1 220px;min-width:0;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-code {overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-date {line-height:1.4;font-variant-numeric:tabular-nums;color:var(--gs-muted,#62574d)!important;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-video-profile-order-summary {font-variant-numeric:tabular-nums;flex-shrink:0;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-more {margin-top:8px;font-size:12px;color:var(--gs-ink,#302820);}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-more summary {cursor:pointer;min-height:44px;align-content:center;font-weight:600;overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-more ul {list-style:none;margin:0;padding:0;display:grid;gap:4px;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-more li {display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--gs-line,#e2d9ce);}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-more li span {min-width:0;overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-profile-order-more li b {flex-shrink:0;font-variant-numeric:tabular-nums;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro :is(.gs-profile-pro-shortcuts button,.gs-profile-order-more summary):focus-visible {outline:2px solid var(--gs-accent,#92785f);outline-offset:2px;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-purchase-statistics-chart li {grid-template-columns:minmax(0,1fr) minmax(24px,1.4fr) minmax(0,1fr);}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-purchase-statistics-chart li > span {overflow-wrap:anywhere;}
+.geostore-shell.geostore-fashion-store .gs-profile-pro .gs-customer-progress-steps li b {font-size:11px;line-height:1.4;}
+@media(min-width:900px){
+  .geostore-shell.geostore-fashion-store .gs-profile-pro {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:16px!important;}
+  .geostore-shell.geostore-fashion-store .gs-profile-pro > * {margin-block:0!important;min-width:0;}
+  .geostore-shell.geostore-fashion-store .gs-profile-pro > :is(.gs-profile-card,.gs-profile-orders) {grid-column:1/-1;}
+  .geostore-shell.geostore-fashion-store .gs-profile-pro > .gs-purchase-statistics:only-of-type {grid-column:1/-1;}
+  .geostore-shell.geostore-fashion-store .gs-profile-pro .gs-purchase-statistics-totals {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:640px){
+  .geostore-shell.geostore-fashion-store .gs-profile-pro .gs-video-profile-order-info {flex-basis:auto;width:100%;}
+  .geostore-shell.geostore-fashion-store .gs-profile-pro .gs-video-profile-order-summary {flex-wrap:wrap;}
+  .geostore-shell.geostore-fashion-store .gs-profile-pro .gs-customer-progress-steps li b {font-size:10px;}
+}
