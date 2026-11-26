@@ -29,3 +29,18 @@ test('measured native field overflow uses only field-level boundaries and retain
  assert.ok(!css.includes('.admin-workspace-main'));
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('bounds.visible && bounds.fits'));
 });
+
+test('WebKit release gate runs before long storefront suite and PRs have separate concurrency groups',()=>{
+ const runner=read('tests/browser/realStorefrontSmoke.mjs');
+ const workflow=read('.github/workflows/responsive-browser-smoke.yml');
+ const call='await runAdminWorkspaceSmoke(browser,host,{widths:[390],layoutOnly:true});';
+ assert.equal(runner.split(call).length,2);
+ assert.ok(runner.indexOf(call)<runner.indexOf('browser = await chromium.launch'));
+ assert.ok(runner.includes('await runStage46ProductPurchaseScenarios(browser, host, [390]);'));
+ assert.ok(runner.includes('await runAdminWorkspaceSmoke(browser, host);'));
+ assert.ok(runner.includes('assert.ok(allCategoryReset'));
+ assert.ok(runner.includes("await page.keyboard.press('Space')"));
+ assert.ok(workflow.includes('github.event.pull_request.number || github.ref'));
+ assert.ok(workflow.includes('cancel-in-progress: true'));
+ assert.ok(workflow.includes('node tests/browser/adminMfaEnabledSmoke.mjs'));
+});
