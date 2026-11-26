@@ -14,5 +14,16 @@ test('editor shortcuts only open existing groups and preserve save/publication c
 test('editor chrome uses explicit scoped selectors without touching live storefront or character preview styles',()=>{
  const css=read('src/adminUnifiedWorkspace.css').split('/* Stage 13 — editor navigation and chrome only;')[1];
  for(const term of ['admin-unified-editor-jumps','@container (min-width: 850px)','min-height: 44px','prefers-reduced-motion'])assert.ok(css.includes(term),term);
- assert.doesNotMatch(css,/\.gs-visual-preview-frame|\.gs-character-preview(?:\s|[.:>])|overflow:\s*(hidden|clip)/);
+ // These exact negations exclude preview descendants; they do not style them.
+ const withoutExclusions=css.replaceAll(':not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))','').replaceAll(':not(:where(.gs-character-preview *))','');
+ assert.doesNotMatch(withoutExclusions,/\.gs-visual-preview-frame|\.gs-character-preview(?:\s|[.:>])|overflow:\s*(hidden|clip)/);
+});
+
+test('workspace-wide controls exclude storefront and character previews',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const exclusion=':not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))';
+ const broadRules=css.split('\n').filter(line=>line.includes('.admin-workspace-main :is('));
+ assert.ok(broadRules.length>=6);
+ for(const rule of broadRules)assert.ok(rule.includes(exclusion),rule);
+ assert.ok(css.includes('font-size: max(16px,var(--admin-vd-inputFontSize-active,16px))'));
 });
