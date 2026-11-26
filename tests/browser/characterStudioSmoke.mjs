@@ -211,6 +211,15 @@ export async function runConciergeV3Smoke(browser,host){
     await page.goto(host,{waitUntil:'domcontentloaded'});
     const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
     const product=scene.locator('[data-character-product]');
+    const toggle=scene.locator('.gs-character-details-toggle');
+    await toggle.waitFor({state:'visible',timeout:15000});
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+    assert.equal(await product.isVisible(),false,'Recommendations do not occupy catalogue space before opening');
+    const compactBox=await scene.locator('.gs-character-bubble').boundingBox();
+    assert.ok(compactBox.height<=127,'Compact assistant has a bounded height');
+    assert.equal(await scene.locator('.gs-character-bubble').evaluate(n=>getComputedStyle(n).animationName),'none');
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
     await product.waitFor({state:'visible',timeout:15000});
     assert.equal(await scene.getAttribute('data-side'),'left');
     const initial=await product.getAttribute('data-character-product');
@@ -226,6 +235,7 @@ export async function runConciergeV3Smoke(browser,host){
     await scene.waitFor({state:'visible',timeout:10000});
     assert.equal(await scene.getAttribute('data-side'),'right');
     assert.match(await scene.innerText(),/Tech Panda/);
+    await scene.locator('.gs-character-details-toggle').click();
     await scene.locator('.gs-character-mute').click();
     await scene.waitFor({state:'detached'});
     await page.reload({waitUntil:'domcontentloaded'});
@@ -243,6 +253,7 @@ export async function runConciergeV3Smoke(browser,host){
     await page.goto(host,{waitUntil:'domcontentloaded'});
     const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
     const offer=scene.locator('[data-character-sale="true"]');
+    await scene.locator('.gs-character-details-toggle').click({timeout:15000});
     await offer.waitFor({state:'visible',timeout:15000});
     assert.match(await offer.innerText(),/Stage46 Everyday Wallet/);
     assert.match(await offer.innerText(),/35.*45.*10/s);
