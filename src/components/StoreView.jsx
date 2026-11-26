@@ -1048,7 +1048,7 @@ export default function StoreView({
       {processedProducts.length === 0 ? (
         <div id="gs-catalog-products" {...sectionGeometryProps('products')} className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="gs-empty-products-title text-slate-400 text-sm font-bold">{hasInvalidPriceRange ? (currentLang === 'en' ? 'Check the price range' : currentLang === 'ru' ? 'Проверьте диапазон цен' : 'შეამოწმეთ ფასის დიაპაზონი') : storeText.noFilterResults}</p>
-          {!hasInvalidPriceRange && hasActiveCatalogFilters && <p className="gs-empty-products-help">{currentLang === 'en' ? 'Try another search or remove filters.' : currentLang === 'ru' ? 'Измените запрос или сбросьте фильтры.' : 'სცადეთ სხვა საძიებო სიტყვა ან გაასუფთავეთ ფილტრები.'}</p>
+          {!hasInvalidPriceRange && hasActiveCatalogFilters && <p className="gs-empty-products-help">{currentLang === 'en' ? 'Try another search or remove filters.' : currentLang === 'ru' ? 'Измените запрос или сбросьте фильтры.' : 'სცადეთ სხვა საძიებო სიტყვა ან გაასუფთავეთ ფილტრები.'}</p>}
           {searchEmptyCharacter&&<div className="gs-character-search-context"><React.Suspense fallback={null}><CharacterContextCard scenario={searchEmptyCharacter} lang={currentLang}/></React.Suspense></div>}
           {hasActiveCatalogFilters && (
             <button type="button" className="gs-empty-products-reset mt-4 rounded-xl px-4 py-2 text-xs font-bold" onClick={resetCatalogFilters}>
