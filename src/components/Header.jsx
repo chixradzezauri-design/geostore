@@ -212,6 +212,15 @@ export default function Header({
               style={visualStyle('header.search.input')}
               value={searchQuery || ''}
               onChange={(event) => setSearchQuery?.(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+                const root = headerRef.current?.closest('.gs-visual-preview-frame, .geostore-shell');
+                const target = root?.querySelector('#gs-catalog-products');
+                if (!target?.getClientRects().length) return;
+                event.preventDefault();
+                event.currentTarget.blur();
+                target.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+              }}
               onFocus={() => setSearchOpen(true)}
               placeholder={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
               aria-label={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
