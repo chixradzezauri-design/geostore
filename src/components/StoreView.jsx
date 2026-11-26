@@ -1055,6 +1055,8 @@ export default function StoreView({
           {paginatedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
+            const catalogSoldOut = getProductAvailableStock(prod) <= 0;
+            const catalogAction = visualCopy.productButtonText || (catalogSoldOut ? storeText.viewDetails : isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd);
             const prodReviews = allReviews[prod.id] || [];
             const avgRating = prodReviews.length > 0 
               ? (prodReviews.reduce((acc, r) => acc + r.rating, 0) / prodReviews.length).toFixed(1) 
@@ -1070,7 +1072,7 @@ export default function StoreView({
                 onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(prod.id)); }}
                 onDragOver={event => { if (typeof onProductOrderChange === 'function' && sortBy === 'default') { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }}
                 onDrop={event => { event.preventDefault(); handleProductReorder(event.dataTransfer.getData('text/plain'), String(prod.id)); }}
-                className="gs-catalog-product-card group flex flex-col"
+                className="gs-catalog-product-card group flex flex-col" data-stock-state={catalogSoldOut ? "sold-out" : "available"}
               >
                 
                 <div 
@@ -1110,7 +1112,7 @@ export default function StoreView({
                     ))}
                   </div>
 
-                  <div className="gs-catalog-image-overlay absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
+                  <div aria-hidden="true" className="gs-catalog-image-overlay absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
                     <Eye className="w-4 h-4 text-amber-400" /> {storeText.viewDetails}
                   </div>
                 </div>
@@ -1118,17 +1120,18 @@ export default function StoreView({
                 <div className="gs-catalog-product-info py-3 sm:py-4 space-y-2.5">
                   <div className="gs-catalog-product-meta flex items-center justify-between">
                     <span className="gs-catalog-vendor text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
-                    <div className="gs-catalog-rating flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
-                    </div>
+                    {prodReviews.length > 0 && <div className="gs-catalog-rating flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
+                      <Star aria-hidden="true" className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
+                    </div>}
                   </div>
-                  <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                  <h3 data-visual-editor-target="product.title" style={videoElementStyle('product.title')} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug group-hover:text-amber-300 transition-colors">
                     {catalogueNavigation&&productPath(prod.id)?<a href={productPath(prod.id)} className="gs-catalog-product-title-action" onClick={event=>{if(!shouldHandleCatalogueClick(event))return;event.preventDefault();handleOpenProduct(prod,event.currentTarget);}} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</a>:<button type="button" className="gs-catalog-product-title-action" onClick={event => handleOpenProduct(prod, event.currentTarget)} aria-label={`${storeText.viewDetails}: ${prod.name}`}>{prod.name}</button>}
                   </h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
+                  {catalogSoldOut && <span className="gs-catalog-stock-status">{flashLabels.soldOut}</span>}
                 </div>
 
                 <button
@@ -1136,10 +1139,10 @@ export default function StoreView({
                   data-visual-editor-target="product.button"
                   style={videoElementStyle('product.button')}
                   onClick={(event) => handleOpenProduct(prod, event.currentTarget)}
-                  aria-label={`${visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}: ${prod.name}`}
+                  aria-label={`${catalogAction}: ${prod.name}`}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {catalogAction}
                 </button>
               </article>
             );
