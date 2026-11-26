@@ -2490,7 +2490,11 @@
 
 
 /* Video audit 24–32s: readable menu, compact authentication, calm empty state. */
-:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu .gs-menu-heading {display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start;gap:10px!important;min-height:0!important;}
+/* The menu is a scrollable flex column. Shrinking its header to fit the
+   scrollport allows the following section to intercept the login buttons. */
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu > :is(.gs-menu-heading,.gs-menu-section,.gs-menu-languages) {flex:0 0 auto!important;min-height:min-content!important;box-sizing:border-box;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu .gs-menu-heading {display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:max-content;align-content:start;align-items:stretch!important;gap:10px!important;height:auto!important;min-height:min-content!important;}
+:is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu .gs-menu-heading .gs-menu-auth {align-self:start;min-height:min-content!important;}
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu .gs-menu-brand {min-width:0;line-height:1.4;}
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu .gs-menu-auth {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;min-width:0;}
 :is(.geostore-shell.geostore-fashion-store,.gs-visual-preview-frame.geostore-fashion-store) .gs-site-header .gs-main-menu .gs-menu-auth button {min-width:0!important;width:100%!important;padding:8px 6px!important;font-size:var(--gs-video-header-menu-link-fontSize,13px)!important;line-height:1.4!important;text-align:center;}
