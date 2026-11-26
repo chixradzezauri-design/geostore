@@ -1,9 +1,9 @@
 /* Retain theme colors where older dark-mode rules outrank utility classes. */
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(h1,h2,h3,h4,h5,h6):not(:where(.gs-visual-preview-frame *, .gs-character-preview-scene *)) {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(h1,h2,h3,h4,h5,h6):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   color: var(--av-text) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(.text-slate-200,.text-slate-300,.text-slate-400,.text-slate-500):not(:where(.gs-visual-preview-frame *, .gs-character-preview-scene *)) {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(.text-slate-200,.text-slate-300,.text-slate-400,.text-slate-500):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   color: var(--av-muted) !important;
   -webkit-text-fill-color: currentColor !important;
 }
@@ -33,13 +33,13 @@
   color: var(--av-muted);
   overflow-wrap: anywhere;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(select,textarea,input:not([type="checkbox"],[type="radio"],[type="color"],[type="range"])):not(.gs-visual-preview-frame *) {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(select,textarea,input:not([type="checkbox"],[type="radio"],[type="color"],[type="range"])):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   color: var(--admin-vd-inputText-active,var(--av-text)) !important;
-  background-color: var(--av-inset) !important;
+  background-color: var(--admin-vd-inputBackground-active,var(--av-inset)) !important;
   border-color: var(--admin-vd-inputBorder-active,var(--av-border)) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(input,textarea):not(.gs-visual-preview-frame *)::placeholder {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(input,textarea):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))::placeholder {
   color: var(--admin-vd-inputPlaceholder-active,var(--av-muted)) !important;
   -webkit-text-fill-color: currentColor !important;
   opacity: 1;
@@ -1143,7 +1143,7 @@
 }
 
 @media (max-width: 639px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(button, select, textarea, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])):not(.sr-only, [hidden], .geostore-fashion-store *) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(button, select, textarea, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])):not(.sr-only, [hidden]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
     min-height: 44px !important;
   }
 }
@@ -1307,4 +1307,14 @@
     gap: 8px;
   }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button { min-width: 0; }
+}
+
+/* Native mobile fields must not trigger automatic page zoom on iPhone.
+   Preserve larger values from the visual editor and leave preview controls alone. */
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(textarea,select,input:not([type="hidden"],[type="checkbox"],[type="radio"],[type="range"],[type="color"],[type="file"],[type="button"],[type="submit"],[type="reset"])):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+    font-size: max(16px,var(--admin-vd-inputFontSize-active,16px)) !important;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+  }
 }
