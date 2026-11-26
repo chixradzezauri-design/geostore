@@ -1083,7 +1083,7 @@ export default function StorefrontVisualEditor({
         <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
       </div>
 
-      <details data-admin-pro-editor-history className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" hidden={campaignOnly} aria-label="გამოქვეყნებული ვერსიების ისტორია">
+      <details className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4" hidden={campaignOnly} aria-label="გამოქვეყნებული ვერსიების ისტორია" data-admin-pro-editor-history>
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-black text-white">გამოქვეყნებული ვერსიების ისტორია</h3>
