@@ -1,6 +1,11 @@
 import CustomerOrderProgress from './components/CustomerOrderProgress.jsx';
 import CustomerPersonalOffers from './components/CustomerPersonalOffers.jsx';
 import CustomerPurchaseStatistics from './components/CustomerPurchaseStatistics.jsx';
+import {readLoginFields,offerBrowserPasswordSave} from './utils/customerPasswordManager.js';
+import {customerPasskeyAvailable,registerCustomerPasskey,signInCustomerPasskey,manageCustomerPasskeys} from './utils/customerPasskeys.js';
+import CustomerPasskeyManager from './components/CustomerPasskeyManager.jsx';
+import CustomerAvatarStudio from './components/CustomerAvatarStudio.jsx';
+import './components/customerPasskeys.css';
 import CustomerOrderRequest from './components/CustomerOrderRequest.jsx';
 import { buildCustomerOrderRequest, matchesCustomerOrderRequestFilter } from './utils/customerOrderRequest.js';
 import InstallAppDialog from './components/InstallAppDialog.jsx';
@@ -789,6 +794,11 @@ export default function App() {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
   const authSubmitLock = useRef(false);
+  const [passkeyBusy,setPasskeyBusy]=useState(false);
+  const [passkeyFeedback,setPasskeyFeedback]=useState('');
+  const [passkeyRevision,setPasskeyRevision]=useState(0);
+  const passkeyAvailable=customerPasskeyAvailable(typeof window==='undefined'?null:window,supabase.auth);
+  useEffect(()=>{setPasskeyFeedback('');},[currentUser?.id]);
   const pendingCheckoutRef = useRef(null);
   const [checkoutError, setCheckoutError] = useState('');
   const [checkoutErrorField, setCheckoutErrorField] = useState(null);
@@ -2922,12 +2932,58 @@ export default function App() {
     }
   };
 
+  const passkeyMessage = (success) => success
+    ? (currentLang==='en'?'Passkey registered.':currentLang==='ru'?'Ключ доступа зарегистрирован.':'სწრაფი შესვლის გასაღები დაემატა.')
+    : (currentLang==='en'?'Passkey could not be verified. Try again or use your password.':currentLang==='ru'?'Не удалось проверить ключ доступа. Повторите попытку или используйте пароль.':'სწრაფი შესვლის დადასტურება ვერ მოხერხდა. სცადე ხელახლა ან გამოიყენე პაროლი.');
+  const handleRegisterPasskey = async () => {
+    const owner=currentUser?.id;
+    const epoch=customerPrivateEpochRef.current;
+    const stillCurrent=()=>customerPrivateEpochRef.current===epoch&&activeCartOwnerRef.current.userId===owner;
+    if(!passkeyAvailable||!owner||authLoading||adminLoggedIn||authSubmitLock.current||!stillCurrent())return;
+    authSubmitLock.current=true;setPasskeyBusy(true);setPasskeyFeedback('');
+    try{
+      await registerCustomerPasskey(supabase.auth,owner,()=>{
+        if(!stillCurrent())throw new Error('passkey_session_changed');
+        return coordinatedAuth('registerPasskey');
+      });
+      if(stillCurrent()){setPasskeyFeedback(passkeyMessage(true));setPasskeyRevision(value=>value+1);}
+    }catch{if(stillCurrent())setPasskeyFeedback(passkeyMessage(false));}
+    finally{authSubmitLock.current=false;setPasskeyBusy(false);}
+  };
+  const handleManageCustomerPasskeys = async (action,options) => {
+    const owner=currentUser?.id;
+    const epoch=customerPrivateEpochRef.current;
+    const stillCurrent=()=>customerPrivateEpochRef.current===epoch&&activeCartOwnerRef.current.userId===owner;
+    if(!passkeyAvailable||!owner||authLoading||adminLoggedIn||authSubmitLock.current||!stillCurrent())throw new Error('passkey_unavailable');
+    authSubmitLock.current=true;setPasskeyBusy(true);
+    try{
+      const task=()=>manageCustomerPasskeys(supabase.auth,owner,action,options,stillCurrent);
+      return await (ADMIN_MFA_ROLLOUT_ENABLED?runAdminAuthExclusive(task):task());
+    }finally{authSubmitLock.current=false;setPasskeyBusy(false);}
+  };
+  const handlePasskeySignIn = async () => {
+    if(!passkeyAvailable||currentUser?.id||authLoading||authMode!=='login'||authSubmitLock.current)return;
+    authSubmitLock.current=true;setPasskeyBusy(true);setPasskeyFeedback('');
+    try{
+      const {data,error}=await supabase.auth.getSession();
+      if(error||data?.session)throw new Error('passkey_session_changed');
+      await signInCustomerPasskey(()=>coordinatedAuth('signInWithPasskey'));
+      // SIGNED_IN from the Auth SDK is the only authority for account state.
+      // Existing permission resolution and admin MFA remain unchanged.
+      setIsAuthOpen(false);
+      setAuthForm({name:'',phone:'',email:'',password:''});
+    }catch{setPasskeyFeedback(passkeyMessage(false));}
+    finally{authSubmitLock.current=false;setPasskeyBusy(false);}
+  };
+
   // Supabase Auth რეგისტრაცია და შესვლა.
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
 
-    const email = authForm.email.trim().toLowerCase();
-    const password = authForm.password;
+    // Safari and password managers may autofill DOM fields without a React change event.
+    const loginFields = authMode === 'login' ? readLoginFields(e.currentTarget, authForm) : null;
+    const email = loginFields ? loginFields.email : authForm.email.trim().toLowerCase();
+    const password = loginFields ? loginFields.password : authForm.password;
 
     if ((authMode !== 'reset-password' && !email) || (authMode !== 'reset-request' && !password)) {
       alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
@@ -3141,6 +3197,9 @@ export default function App() {
         });
 
         showToast(currentLang === 'en' ? '🔑 Signed in successfully!' : currentLang === 'ru' ? '🔑 Вход выполнен успешно!' : '🔑 ავტორიზაცია წარმატებულია!');
+        // Only an explicitly selected, successful password login may offer native storage.
+        // Do not block authentication or write passwords to app storage.
+        if (loginFields?.offerSave) void offerBrowserPasswordSave(window,{email,password});
       }
     } catch (error) {
       console.error('Supabase authentication error:', error);
@@ -3185,6 +3244,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if(passkeyBusy||authSubmitLock.current)return;
     try {
       const { error } = await coordinatedAuth('signOut');
 
@@ -4374,13 +4434,14 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="gs-profile-page max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
-            <div className="gs-profile-card bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+          <div className="gs-profile-page gs-profile-pro max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+            <div className="gs-profile-card gs-profile-pro-account bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" />
                 {t.profile}
               </h2>
 
+              {!authLoading&&currentUser.id===activeCartOwnerRef.current.userId&&<CustomerAvatarStudio key={currentUser.id+':'+customerPrivateEpochRef.current+':'+(adminAccess.is_admin===true?'owner':'public')} ownerId={currentUser.id} ownerAccess={adminAccess.is_admin===true} lang={currentLang} auth={supabase.auth} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY} isCurrentOwner={()=>activeCartOwnerRef.current.userId===currentUser.id}/>}
               <div className="gs-video-profile-identity grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
@@ -4413,28 +4474,31 @@ export default function App() {
                 </div>
               </div>
 
+              <nav className="gs-profile-pro-shortcuts" aria-label={currentLang==='en'?'Account shortcuts':currentLang==='ru'?'Быстрые действия':'სწრაფი მოქმედებები'}>
+                <button type="button" className="gs-profile-pro-primary" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)}>
+                  <span>{currentLang==='en'?'Notifications':currentLang==='ru'?'Уведомления':'შეტყობინებები'}</span>{unreadNotificationsCount>0&&<span className="gs-profile-pro-count" aria-label={String(unreadNotificationsCount)}>{unreadNotificationsCount}</span>}
+                </button>
+                <button type="button" className="gs-profile-pro-secondary" onClick={()=>document.getElementById('gs-profile-pro-orders')?.scrollIntoView({block:'start',behavior:'instant'})}>{t.orderHistory}</button>
+              </nav>
               <div className="gs-video-profile-security pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" />
                   {t.security}
                 </h3>
 
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  {currentLang === 'en'
-                    ? 'Account security and password management are handled by Supabase Auth. PIN and Face ID sign-in are disabled in this version because the previous implementation did not provide reliable authentication.'
-                    : currentLang === 'ru'
-                      ? 'Защита аккаунта и управление паролем обеспечиваются Supabase Auth. Вход по PIN и Face ID отключён в этой версии, поскольку прежняя реализация не обеспечивала надёжную аутентификацию.'
-                      : 'ანგარიშის დაცვა და პაროლის მართვა ხორციელდება Supabase Auth-ის მეშვეობით. PIN და Face ID ფუნქციები ამ ვერსიაში გამორთულია, რადგან ძველი იმპლემენტაცია რეალურ უსაფრთხო ავტორიზაციას არ უზრუნველყოფდა.'}
-                </p>
+                <p className="gs-passkey-description">{currentLang==='en'?'Your device verifies Face ID or PIN. GEOSTORE never collects them.':currentLang==='ru'?'Face ID или PIN проверяет ваше устройство. GEOSTORE их не получает.':'Face ID-სა და PIN-ს შენი მოწყობილობა ამოწმებს. GEOSTORE მათ არ ინახავს.'}</p>
+                {passkeyAvailable&&!adminLoggedIn&&!authLoading&&<button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={handleRegisterPasskey}>{currentLang==='en'?'Add Face ID / device passkey':currentLang==='ru'?'Добавить Face ID / ключ устройства':'Face ID / სწრაფი შესვლის გააქტიურება'}</button>}
+                {!passkeyAvailable&&<p className="gs-passkey-description">{currentLang==='en'?'Quick sign-in is not available on this device or version yet. Password login remains available.':currentLang==='ru'?'Быстрый вход пока недоступен на этом устройстве или в этой версии. Вход по паролю доступен.':'სწრაფი შესვლა ამ მოწყობილობაზე ან ვერსიაში ჯერ მიუწვდომელია. პაროლით შესვლა კვლავ შესაძლებელია.'}</p>}
+                {passkeyAvailable&&!adminLoggedIn&&!authLoading&&currentUser.id===activeCartOwnerRef.current.userId&&<CustomerPasskeyManager key={currentUser.id+':'+customerPrivateEpochRef.current+':'+passkeyRevision} lang={currentLang} busy={passkeyBusy} onManage={handleManageCustomerPasskeys}/>}
+                {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
               </div>
 
-              <button type="button" disabled={authLoading || supportOpen || isNotificationsOpen} onClick={()=>setIsNotificationsOpen(true)} className="w-full min-h-11 rounded-xl border border-amber-500/40 bg-slate-950/60 px-3 py-2 font-bold text-amber-200 disabled:opacity-50">
-                {currentLang === 'en' ? 'Notification center' : currentLang === 'ru' ? 'Центр уведомлений' : 'შეტყობინებების ცენტრი'}{unreadNotificationsCount > 0 ? ' · '+unreadNotificationsCount : ''}
-              </button>
+
               <CustomerMarketingConsent key={currentUser.id+':'+currentUser.email} userId={currentUser.id} lang={currentLang} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/>
               <button
                 type="button"
                 onClick={handleLogout}
+                disabled={passkeyBusy}
                 className="gs-video-profile-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
               >
                 {t.logout}
@@ -4443,13 +4507,13 @@ export default function App() {
 
             {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && !adminLoggedIn && <CustomerPersonalOffers key={currentUser.id} products={products} wishlist={wishlist} ready={catalogueVerifiedEpoch===productsAccessEpoch.current} lang={currentLang} formatPrice={formatPrice} onOpenProduct={handleFindSavedProduct}/>}
             {!authLoading && currentUser.id && activeCartOwnerRef.current.userId === currentUser.id && <CustomerPurchaseStatistics key={currentUser.id} orders={myOrders} loading={myOrdersLoading} error={myOrdersError} lang={currentLang} formatPrice={formatPrice}/>}
-            <div className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+            <div id="gs-profile-pro-orders" className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
               </h3>
 
-              <button type="button" disabled={supportOpen || isSubmittingSupport} className="w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
+              <button type="button" disabled={supportOpen || isSubmittingSupport} className="gs-profile-pro-secondary w-full min-h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50" onClick={() => { setOrderRequestDraft(null); setSupportSubmission(null); setSupportRequestFilter('requests'); setSupportOpen(true); }}>
                 {currentLang === 'en' ? 'My returns & exchanges' : currentLang === 'ru' ? 'Мои возвраты и обмены' : 'ჩემი დაბრუნება და გაცვლა'}
               </button>
               <div className="gs-video-profile-order-list space-y-3" aria-busy={myOrdersLoading}>
@@ -5186,6 +5250,10 @@ export default function App() {
         authForm={authForm}
         setAuthForm={setAuthForm}
         handleAuthSubmit={handleAuthSubmit}
+        passkeyAvailable={passkeyAvailable&&!currentUser?.id&&!authLoading}
+        passkeyBusy={passkeyBusy}
+        passkeyFeedback={passkeyFeedback}
+        onPasskeySignIn={handlePasskeySignIn}
         isTermsOpen={isTermsOpen}
         setIsTermsOpen={setIsTermsOpen}
         isWarrantyOpen={isWarrantyOpen}

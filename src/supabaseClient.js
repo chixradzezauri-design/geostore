@@ -1,5 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { CUSTOMER_PASSKEY_ROLLOUT_ENABLED } from './utils/customerPasskeys.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
@@ -9,5 +10,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(
   SUPABASE_URL,
-  SUPABASE_ANON_KEY
+  SUPABASE_ANON_KEY,
+  CUSTOMER_PASSKEY_ROLLOUT_ENABLED ? {auth:{experimental:{passkey:true}}} : undefined
 );

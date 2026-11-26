@@ -1,0 +1,58 @@
+name: Customer passkey isolated Auth browser
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/utils/customerPasskeys.js'
+      - 'src/supabaseClient.js'
+      - 'src/App.jsx'
+      - 'src/components/CustomerPasskeyManager.jsx'
+      - 'src/components/Modals.jsx'
+      - 'tests/passkey-supabase/**'
+      - 'tests/browser/customerPasskeyReal*'
+      - '.github/workflows/customer-passkey-auth.yml'
+      - 'package-lock.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: customer-passkey-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  passkey-auth:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.106.0
+      - name: Start isolated passkey-enabled Auth
+        working-directory: tests/passkey-supabase
+        run: supabase start --exclude studio,storage-api,imgproxy,realtime,postgres-meta,edge-runtime,logflare,vector,supavisor
+      - name: Install pinned Chromium test browser
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Exercise signed WebAuthn ceremony and revocation
+        working-directory: tests/passkey-supabase
+        run: |
+          set -euo pipefail
+          supabase status -o env > "$RUNNER_TEMP/passkey-ci.env"
+          chmod 600 "$RUNNER_TEMP/passkey-ci.env"
+          set -a
+          source "$RUNNER_TEMP/passkey-ci.env"
+          set +a
+          cd "$GITHUB_WORKSPACE"
+          node tests/browser/customerPasskeyRealSmoke.mjs
+      - name: Tear down local Auth
+        if: always()
+        working-directory: tests/passkey-supabase
+        run: supabase stop --no-backup || true

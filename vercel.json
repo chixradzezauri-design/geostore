@@ -99,7 +99,8 @@
       "internal-flash-campaign-studio-2026-11-25": false,
       "internal-flash-admin-workspace-2026-11-25": false,
       "internal-character-studio-2026-11-25": false,
-      "internal-character-studio-v2-2026-11-25": false
+      "internal-character-studio-v2-2026-11-25": false,
+      "internal-secure-quick-login-avatar-2026-11-26": false
     }
   },
   "functions": {
@@ -108,6 +109,9 @@
     },
     "api/catalogue-page.js": {
       "includeFiles": "{dist/index.html,src/supabaseClient.js}"
+    },
+    "api/owner-profile-avatars.js": {
+      "includeFiles": "src/supabaseClient.js"
     }
   }
 }

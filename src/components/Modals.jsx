@@ -8,6 +8,8 @@ import {
 import { normalizeTrackingLookup } from '../utils/orderSafety';
 import { filterCustomerNotifications, summarizeSupportReplies } from '../utils/customerNotificationCenter.js';
 import './customerNotificationCenter.css';
+import {supportsBrowserPasswordSave} from '../utils/customerPasswordManager.js';
+import './customerPasswordManager.css';
 
 export default function Modals({
   isCheckoutOpen,
@@ -28,6 +30,10 @@ export default function Modals({
   authForm,
   setAuthForm,
   handleAuthSubmit,
+  passkeyAvailable=false,
+  passkeyBusy=false,
+  passkeyFeedback='',
+  onPasskeySignIn,
   isTermsOpen,
   setIsTermsOpen,
   isWarrantyOpen,
@@ -54,6 +60,14 @@ export default function Modals({
   storefrontThemeStyle = {},
   currentLang = 'ka'
 }) {
+  const [offerPasswordSave,setOfferPasswordSave]=useState(false);
+  const [passwordHelpOpen,setPasswordHelpOpen]=useState(false);
+  useEffect(()=>{setOfferPasswordSave(false);setPasswordHelpOpen(false);},[isAuthOpen,authMode,currentUser?.id]);
+  const passwordWords=({
+    ka:{save:'პაროლის დამახსოვრება',offer:'შენახვის შეთავაზება ბრაუზერის პაროლების მენეჯერში',hint:'შესვლის შემდეგ, თუ მოწყობილობა შემოგთავაზებს, აირჩიე პაროლის შენახვა. შემდეგ ჯერზე გამოიყენე შენახული პაროლი. iPhone-ზე ეს იმართება Passwords / AutoFill პარამეტრებით. GEOSTORE პაროლს თავად არ ინახავს.'},
+    en:{save:'Remember password',offer:'Offer to save in the browser password manager',hint:'After signing in, accept the browser’s save-password prompt if offered. Next time, use autofill. On iPhone, manage this in Passwords / AutoFill settings. GEOSTORE does not store your password itself.'},
+    ru:{save:'Запомнить пароль',offer:'Предложить сохранение в менеджере паролей браузера',hint:'После входа подтвердите сохранение пароля, если браузер предложит. В следующий раз используйте автозаполнение. На iPhone настройте Passwords / AutoFill. GEOSTORE сам не хранит ваш пароль.'}
+  })[currentLang] || {save:'პაროლის დამახსოვრება',offer:'შენახვის შეთავაზება ბრაუზერში',hint:'პაროლის შენახვას და ავტომატურ შევსებას მართავს ბრაუზერი.'};
   const [notificationFilter,setNotificationFilter]=useState('all');
   const [notificationSearch,setNotificationSearch]=useState('');
   useEffect(()=>{setNotificationFilter('all');setNotificationSearch('');},[currentUser?.id,isNotificationsOpen]);
@@ -831,12 +845,17 @@ export default function Modals({
                 <Lock className="w-5 h-5 text-amber-400" />
                 {authMode === 'login' ? copy.auth : authMode === 'register' ? copy.register : authMode === 'reset-request' ? copy.forgotPassword : copy.resetPassword}
               </h3>
-              <button type="button" onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" disabled={passkeyBusy} onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
+            {authMode==='login'&&passkeyAvailable&&<div className="gs-passkey-login">
+              <button type="button" className="gs-passkey-action" disabled={passkeyBusy} onClick={onPasskeySignIn}>{currentLang==='en'?'Sign in with Face ID / device PIN':currentLang==='ru'?'Войти с Face ID / PIN устройства':'Face ID / მოწყობილობის PIN-ით შესვლა'}</button>
+              <p className="gs-passkey-description">{currentLang==='en'?'Your device chooses biometrics, device PIN or a security key. If unavailable, use your password or email recovery.':currentLang==='ru'?'Устройство выбирает биометрию, PIN или ключ безопасности. Если они недоступны, используйте пароль или восстановление по почте.':'მოწყობილობა თავად გთავაზობს ბიომეტრიას, PIN-ს ან უსაფრთხოების გასაღებს. საჭიროებისას გამოიყენე პაროლი ან ელ-ფოსტით აღდგენა.'}</p>
+              {passkeyFeedback&&<p role="status" className="gs-passkey-description">{passkeyFeedback}</p>}
+            </div>}
+            <form onSubmit={handleAuthSubmit} autoComplete="on" className="space-y-4 text-xs animate-in fade-in">
               {authMode === 'register' && (
                 <>
                   <div className="space-y-1">
@@ -856,14 +875,14 @@ export default function Modals({
 
               {authMode !== 'reset-password' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
-                <input id="geostore-auth-email" type="email" maxLength={254} required autoComplete="email" placeholder="name@example.com" value={authForm.email}
+                <input id="geostore-auth-email" name="username" type="email" maxLength={254} required autoComplete={authMode === 'login' ? 'username' : 'email'} autoCapitalize="none" spellCheck={false} placeholder="name@example.com" value={authForm.email}
                   onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>}
 
               {authMode !== 'reset-request' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' || authMode === 'reset-password' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" name="password" type="password" required minLength={authMode === 'register' || authMode === 'reset-password' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                 {authMode === 'register' && (
@@ -877,27 +896,32 @@ export default function Modals({
                 )}
               </div>}
 
+              {authMode === 'login' && <div className="gs-password-manager">
+                <button type="button" aria-expanded={passwordHelpOpen} aria-controls="gs-password-manager-help" onClick={()=>setPasswordHelpOpen(v=>!v)}>{passwordWords.save}</button>
+                {supportsBrowserPasswordSave(typeof window==='undefined'?null:window) && <label><input type="checkbox" name="offerPasswordSave" checked={offerPasswordSave} onChange={e=>setOfferPasswordSave(e.target.checked)}/><span>{passwordWords.offer}</span></label>}
+                {passwordHelpOpen&&<p id="gs-password-manager-help">{passwordWords.hint}</p>}
+              </div>}
               {authMode === 'reset-request' && <p className="text-[11px] text-slate-400">{copy.resetEmailHint}</p>}
-              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
+              <button type="submit" disabled={passkeyBusy} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2 disabled:opacity-50">
                 {authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
               </button>
             </form>
 
             <div className="text-center pt-2 border-t border-amber-500/20 space-y-3">
               {authMode === 'login' && (
-                <button type="button" onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
+                <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
                   {copy.forgotPassword}
                 </button>
               )}
               {authMode !== 'login' && authMode !== 'reset-password' && (
-                <button type="button" onClick={() => setAuthMode('login')} className="block w-full text-slate-400 hover:text-amber-400 text-xs font-bold">
+                <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode('login')} className="block w-full text-slate-400 hover:text-amber-400 text-xs font-bold">
                   {copy.auth}
                 </button>
               )}
               {authMode === 'reset-password' && (
                 <p className="text-[11px] text-slate-400">{currentLang === 'en' ? 'Choose a new, unique password for your account.' : currentLang === 'ru' ? 'Выберите новый уникальный пароль для аккаунта.' : 'აირჩიეთ ახალი, უნიკალური პაროლი თქვენი ანგარიშისთვის.'}</p>
               )}
-              {authMode !== 'reset-password' && <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+              {authMode !== 'reset-password' && <button type="button" disabled={passkeyBusy} onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
                 className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer">
                 {authMode === 'login' ? copy.noAccount : copy.hasAccount}
               </button>}

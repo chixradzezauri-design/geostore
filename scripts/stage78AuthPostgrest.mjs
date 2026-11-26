@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {createClient} from '@supabase/supabase-js';
+import {loadAvatarProfile,saveAvatarProfile} from '../src/utils/customerAvatarProfile.js';
+import {AVATAR_METADATA_KEY} from '../src/utils/customerAvatarCatalog.js';
 
 const {API_URL, ANON_KEY, SERVICE_ROLE_KEY} = process.env;
 assert.ok(API_URL && ANON_KEY && SERVICE_ROLE_KEY, 'Missing local Supabase status environment');
@@ -64,6 +66,28 @@ noError(await spoofClient.auth.updateUser({data:{role:'admin', is_admin:true}}),
 const spoofToken = noError(await spoofClient.auth.getSession(), 'Read spoof caller session').session?.access_token;
 pass(Boolean(spoofToken), 'Spoof user retains real signed token');
 blocked(await page(authed(spoofToken)), 'User-editable metadata cannot grant order permission');
+
+// Actual Auth-issued sessions on two independent clients: no live users,
+// no Production credentials. Avatar metadata is cosmetic, never authority.
+const avatarClient1=createClient(API_URL,ANON_KEY,options);
+const avatarClient2=createClient(API_URL,ANON_KEY,options);
+noError(await avatarClient1.auth.signInWithPassword({email:noStaff.email,password:noStaff.password}),'Avatar device one sign-in');
+noError(await avatarClient2.auth.signInWithPassword({email:noStaff.email,password:noStaff.password}),'Avatar device two sign-in');
+const avatarConfig=auth=>({auth,ownerId:noStaff.id,isCurrentOwner:()=>true,supabaseUrl:API_URL,apiKey:ANON_KEY});
+const avatarChoice={id:'classic-girl-2',background:'mint'};
+pass((await saveAvatarProfile(avatarConfig(avatarClient1.auth),avatarChoice)).id===avatarChoice.id,'Real Auth persists avatar via device one');
+const avatarSecond=await loadAvatarProfile(avatarConfig(avatarClient2.auth));
+assert.deepEqual(avatarSecond.choice,avatarChoice);
+pass(avatarSecond.exclusive.length===0,'Device two reads saved choice and no owner art');
+const otherAvatarClient=createClient(API_URL,ANON_KEY,options);
+noError(await otherAvatarClient.auth.signInWithPassword({email:products.email,password:products.password}),'Separate avatar account sign-in');
+const otherChoice=await loadAvatarProfile({...avatarConfig(otherAvatarClient.auth),ownerId:products.id});
+pass(otherChoice.choice.id!==avatarChoice.id,'Separate account does not inherit avatar');
+await assert.rejects(saveAvatarProfile(avatarConfig(avatarClient1.auth),{id:'owner-winter',background:'gold'}));
+noError(await avatarClient1.auth.updateUser({data:{[AVATAR_METADATA_KEY]:{id:'owner-winter',background:'gold'},role:'admin'}}),'Cosmetic metadata spoof attempt');
+const spoofAvatar=await loadAvatarProfile(avatarConfig(avatarClient1.auth));
+pass(spoofAvatar.choice.id!=='owner-winter'&&spoofAvatar.exclusive.length===0,'Forged exclusive ID and role do not unlock owner art');
+blocked(await page(authed(noStaff.token)), 'Avatar metadata does not grant admin ledger access');
 
 const productApi=authed(products.token);
 pass(noError(await orders(productApi), 'Products-only RLS').length === 0,
