@@ -2376,3 +2376,109 @@
     white-space: normal;
   }
 }
+
+/* Editor operation refinement: explicit tool selectors only. Preview content
+   and the values selected by the administrator remain unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [data-admin-pro-editor-sync] {
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px !important;
+  line-height: 1.6;
+  background: var(--av-inset) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [data-admin-pro-editor-sync="saved"] {
+  background: #dff3eb !important; color: #14594a !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header :is([data-admin-pro-editor-sync="loading"],[data-admin-pro-editor-sync="saving"]) {
+  background: #fff0cc !important; color: #754300 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header :is([data-admin-pro-editor-sync="error"],[data-admin-pro-editor-sync="conflict"]) {
+  background: #fce5e8 !important; color: #9c2538 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button {
+  min-height: 44px !important;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button:last-child {
+  background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [role="alert"] {
+  background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [role="alert"] :is(p,button) {
+  color: #754300 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header [role="alert"] > button {
+  min-height: 44px !important; white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] {
+  background: var(--av-inset) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] > div > button[aria-pressed="true"] {
+  background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] > div > button[aria-pressed="false"] {
+  background: var(--av-surface) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label:has(> input[type="color"]) {
+  min-inline-size: 0;
+  background: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-text) !important;
+  min-height: 54px;
+  padding: 8px 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label > span {
+  min-inline-size: 0; overflow-wrap: anywhere; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label > input[type="color"] {
+  flex: 0 0 48px; width: 48px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header [data-admin-pro-editor-save][role="alert"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > [role="alert"] {
+  color: #9c2538 !important; background: #fce5e8 !important; border-color: #e4b4bf !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header [data-admin-pro-editor-save][role="status"] {
+  color: #14594a !important; background: #dff3eb !important; border-color: #82b7a1 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] {
+  background: var(--av-surface) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > .grid > div {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > .grid > div > button {
+  min-height: 44px !important; background: var(--av-surface) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > label {
+  min-inline-size: 0; background: var(--av-surface); border: 1px solid var(--av-border);
+  border-radius: 8px; padding: 10px; line-height: 1.5; color: var(--av-text) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > label > input[type="range"] {
+  accent-color: var(--av-accent); min-height: 32px; margin-block: 4px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > label > input[type="color"] {
+  min-height: 44px !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > [data-character-appearance] > .grid > button {
+  min-height: 44px !important; background: var(--av-surface) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > div > [data-character-visitor-preview-toggle] {
+  min-height: 44px !important; background: var(--av-surface) !important;
+  color: var(--av-text) !important; border-color: var(--av-border) !important;
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button:last-child { grid-column: 1 / -1; }
+}
