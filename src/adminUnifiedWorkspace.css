@@ -920,3 +920,17 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-banner-actions { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics { grid-template-columns: minmax(0,1fr) !important; }
 }
+
+/* Stage 16 — measured WebKit regression: the legacy compact-header selector
+   in adminDashboardPolish.css has greater specificity than the generic 44px rule.
+   Target the actual header path, not unrelated buttons or persisted design. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions > button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  height: auto !important;
+  max-height: none !important;
+  padding-block: 9px !important;
+  font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important;
+  line-height: 1.4 !important;
+  box-sizing: border-box;
+}

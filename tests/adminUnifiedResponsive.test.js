@@ -13,3 +13,15 @@ test('device audit checks visible new controls and harmless editor navigation wi
  const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
  for(const term of ['newControlIssues.length','rect.height < 43.5','bounds.right + 2','newControlIssues,offenders','Shortcut opens existing palette','Opening editor sections never writes settings','Object.freeze([320, 360, 390, 430, 768, 1024, 1440])'])assert.ok(smoke.includes(term),term);
 });
+
+test('measured header touch targets override the legacy compact selector without changing publication logic',()=>{
+ const css=read('src/adminUnifiedWorkspace.css').split('/* Stage 16 — measured WebKit regression:')[1];
+ assert.ok(css.includes('.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions > button'));
+ for(const term of ['min-height: 44px !important','min-block-size: 44px !important','height: auto !important','max-height: none !important'])assert.ok(css.includes(term),term);
+ const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(smoke.includes('rect.height < 43.5'));
+ assert.ok(smoke.includes('newControlIssues.length'));
+ const app=read('src/components/AdminDashboardPro.jsx');
+ assert.ok(app.includes("typeof onSaveStorefrontDraft === 'function'"));
+ assert.ok(app.includes("typeof onPublishStorefront === 'function'"));
+});
