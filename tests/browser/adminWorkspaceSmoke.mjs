@@ -100,6 +100,7 @@ export async function runAdminWorkspaceSmoke(browser, host) {
       assert.equal(moduleRequests.size,0,'Dedicated admin modules must not load on the initial command center');
       const picker = page.locator('#geostore-admin-mobile-section');
       const visualBaseline=[];
+      assert.equal(await shell.locator('.admin-pro-brand h3').textContent(),'GEOSTORE Admin PRO');
       for (const [tab, selector] of Object.entries(modules)) {
         // Desktop and phone use the real exposed navigation controls.
         if (await picker.isVisible()) await picker.selectOption(tab);
@@ -119,6 +120,9 @@ export async function runAdminWorkspaceSmoke(browser, host) {
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         // Capture the untouched module before any fixture edits or interactions.
         visualBaseline.push(await collectAdminVisualBaseline(shell,tab));
+        const activeNav=shell.locator('[data-admin-visual-nav-item="true"][aria-current="page"]');
+        assert.equal(await activeNav.count(),1,'Exactly one active authorized navigation item');
+        assert.ok((await shell.locator('.admin-pro-section-context').textContent())?.trim(),'Active group context is visible');
         if(tab==='settings'){
           const studio=shell.locator('[data-character-studio]');
           await studio.waitFor({state:'visible'});

@@ -5417,18 +5417,19 @@ export default function AdminDashboardPro({
   const adminNavigationGroups = groupAdminWorkspaceNavigation(visibleAdminNavigationItems);
   const orderedAdminNavigationItems = adminNavigationGroups.flatMap(group => group.items.map((tab, index) => ({ ...tab, groupHeading: index === 0 ? group.label : null })));
   const currentAdminNavigationLabel = adminWorkspaceNavigationLabel(visibleAdminNavigationItems.find(tab => tab.id === visibleAdminTab)?.label || 'მართვის პანელი');
+  const currentAdminNavigationGroup = adminNavigationGroups.find(group => group.items.some(tab => tab.id === visibleAdminTab));
 
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined} data-admin-video-layout="v1">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div data-admin-sidebar="true" className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
-        <div className="flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
+        <div className="admin-pro-brand flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
+          <div className="admin-pro-brand-mark bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
             <Shield className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h3 className="font-black text-white text-sm">GEOSTORE Admin</h3>
+            <h3 className="font-black text-white text-sm">GEOSTORE Admin PRO</h3>
             <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">მართვის პანელი</p>
           </div>
         </div>
@@ -5495,7 +5496,8 @@ export default function AdminDashboardPro({
       <div className="admin-workspace-main flex-1 w-full space-y-6">
 
         <div data-admin-visual-header="true" className="flex w-full min-w-0 flex-col justify-start lg:flex-row lg:justify-between items-start lg:items-center bg-slate-900/80 border border-emerald-500/30 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 lg:p-5 gap-3 shadow-2xl backdrop-blur-3xl">
-          <div>
+          <div className="admin-pro-page-identity">
+            {currentAdminNavigationGroup && <span className="admin-pro-section-context">{currentAdminNavigationGroup.label}</span>}
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
               {currentAdminNavigationLabel}
             </h2>
@@ -5503,7 +5505,7 @@ export default function AdminDashboardPro({
               {isOwner ? 'მთავარი ადმინისტრატორი' : `თანამშრომელი · ${adminAccess?.display_name || STAFF_ROLE_LABELS[adminAccess?.role] || 'მომხმარებელი'}`}
             </p>
           </div>
-          <div className="grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
+          <div className="admin-pro-header-actions grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
             {hasModulePermission('settings') && (
               <button
                 type="button"
@@ -5524,8 +5526,8 @@ export default function AdminDashboardPro({
                 {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
               </button>
             )}
-            <div className="col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div className="admin-pro-access-state col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
+              <span aria-hidden="true" className="admin-pro-access-dot w-2 h-2 rounded-full bg-emerald-400"></span>
               <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
             </div>
           </div>

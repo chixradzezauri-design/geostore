@@ -267,11 +267,17 @@
   min-inline-size: 0;
   max-inline-size: 100%;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"],
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div.flex-1 > [data-admin-visual-header="true"] {
   background: var(--av-header) !important;
   border-color: var(--av-header-border) !important;
   color: var(--av-text) !important;
+  box-shadow: none !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+  background: var(--av-nav-bg) !important;
+  border-color: var(--av-border) !important;
+  color: var(--av-nav-text) !important;
   box-shadow: none !important;
   min-inline-size: 0;
 }
@@ -280,7 +286,6 @@
   padding-block-end: 10px;
   gap: 10px;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > div:first-child h3,
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:first-child h2 {
   color: var(--av-text) !important;
   -webkit-text-fill-color: currentColor !important;
@@ -288,7 +293,6 @@
   letter-spacing: normal !important;
   overflow-wrap: break-word;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > div:first-child p,
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:first-child p {
   color: var(--av-muted) !important;
   -webkit-text-fill-color: currentColor !important;
@@ -350,8 +354,7 @@
   background: var(--av-inset) !important;
   border-color: var(--av-border) !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:last-child > div > span:last-child,
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-mobile-section-picker > label {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-visual-header="true"] > div:last-child > div > span:last-child {
   color: var(--av-muted) !important;
   -webkit-text-fill-color: currentColor !important;
   line-height: 1.4;
@@ -915,7 +918,7 @@
 /* Workspace audit 01 — grouped navigation and context-aware header.
    Existing layout tokens and permission-filtered module list stay authoritative. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
-  display:none; color:var(--av-muted)!important; font-size:11px!important;
+  display:none; color:var(--av-nav-text)!important; font-size:11px!important;
   font-weight:600!important; line-height:1.5!important; letter-spacing:normal!important;
   white-space:normal; overflow-wrap:break-word; padding:10px 6px 3px; margin:0!important;
 }
@@ -1187,3 +1190,58 @@
 [data-gs-flash-workspace] button {white-space:normal;overflow-wrap:anywhere;}
 [data-gs-flash-editor] .gs-visual-preview-content .geostore-storefront {padding-bottom:12px!important;}
 [data-gs-flash-editor] .gs-visual-editor-controls,[data-gs-flash-editor] .gs-visual-editor-preview-column {min-width:0;max-width:100%;}
+
+/* Admin PRO 03: shared chrome, with responsive owner tokens as source of truth. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand :is(h3,p),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker > label {
+  color:var(--av-nav-text)!important;
+  -webkit-text-fill-color:currentColor!important;
+  letter-spacing:normal!important;line-height:1.4!important;
+  overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand h3 {
+  font-size:14px!important;font-weight:700!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand p {
+  font-size:11px!important;font-weight:500!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-brand-mark {
+  flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;
+  padding:0!important;background:var(--av-nav-active-bg)!important;
+  color:var(--av-nav-active-text)!important;border-radius:10px!important;box-shadow:none!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-brand-mark svg {color:currentColor!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="false"] {
+  border-color:transparent!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="false"]:hover {
+  border-color:var(--av-nav-text)!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] > span {
+  color:inherit!important;background:transparent!important;
+  border:1px solid currentColor!important;min-width:20px;text-align:center;line-height:1.3;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-section-context {
+  display:block;color:var(--av-muted)!important;font-size:11px!important;
+  font-weight:600;line-height:1.4;margin-bottom:3px;overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-page-identity h2 {
+  font-weight:var(--admin-vd-headingFontWeight-active,700)!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions {
+  flex-wrap:wrap;align-content:start;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-state {
+  box-shadow:none!important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-dot {
+  background:var(--av-accent)!important;animation:none!important;
+}
+@media(min-width:1024px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {padding-block:12px 4px}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions {justify-content:flex-end}
+}
+@media(max-width:767px){
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-section-context {font-size:10px!important}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-state {padding-block:5px!important}
+}
