@@ -826,7 +826,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
   return (
     <div className="admin-staff space-y-4" data-admin-pro-staff>
-      <div role="note" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
+      <div role="note" className="admin-unified-staff-context rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
         <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
         მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
       </div>
@@ -853,7 +853,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> {visualContent.staffInviteTitle || 'ახალი თანამშრომლის მოწვევა'}</h3>
-        <form onSubmit={handleInviteStaff} className="admin-staff-create-form space-y-4 text-xs">
+        <form onSubmit={handleInviteStaff} aria-label="ახალი თანამშრომლის მოწვევა" className="admin-staff-create-form space-y-4 text-xs">
           <div className="admin-staff-create-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input aria-label="თანამშრომლის სახელი" type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
             <input aria-label="თანამშრომლის ელფოსტა" type="email" required maxLength={254} value={staffForm.email} onChange={(event) => setStaffForm((current) => ({ ...current, email: event.target.value }))} placeholder="ელფოსტა" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
@@ -861,7 +861,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
               {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
             </select>
           </div>
-          <div className="rounded-2xl border border-emerald-500/15 bg-slate-950 p-4 space-y-3">
+          <div className="admin-unified-staff-permissions rounded-2xl border border-emerald-500/15 bg-slate-950 p-4 space-y-3">
             <p className="font-bold text-slate-300">მიანიჭეთ მხოლოდ საჭირო მოდულები: {Object.values(staffForm.permissions).filter(Boolean).length} / {STAFF_PERMISSION_OPTIONS.length}</p>
             <p className="text-xs text-slate-400">როლის არჩევა მოდულების უფლებებს ავტომატურად არ ცვლის.</p>
             <div className="admin-staff-permission-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -914,7 +914,9 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
         </div>
         {staffListLoading && <p role="status" className="text-xs text-slate-400">სერვერული სია იტვირთება…</p>}
         {!staffListLoading && !staffListReady && <p role="status" className="text-xs text-amber-200">სია დაუდასტურებელია. წვდომის შეცვლამდე ხელახლა განაახლეთ.</p>}
-        {staffListReady && <p className="text-xs text-slate-300">აქტიური: {staffList.filter(staff => staff.is_active).length} · გაუქმებული: {staffList.filter(staff => !staff.is_active).length}</p>}
+        <div className="admin-unified-staff-summary" role="group" aria-label="თანამშრომლების წვდომის მიმოხილვა">
+          {[['აქტიური წვდომა', staffList.filter(staff => staff.is_active).length], ['გაუქმებული წვდომა', staffList.filter(staff => !staff.is_active).length], ['Auth დასადასტურებელია', staffList.filter(staff => staff.auth_account_missing || !staff.auth_confirmed).length]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{staffListReady ? value : '—'}</strong></div>)}
+        </div>
         <div className="admin-workspace-staff-filters grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end">
           <div className="min-w-0"><label htmlFor="admin-workspace-staff-search" className="block text-xs text-slate-300 mb-1">თანამშრომლის ძიება</label><input id="admin-workspace-staff-search" type="search" value={staffSearch} onChange={e => setStaffSearch(e.target.value)} placeholder="სახელი, ელფოსტა ან როლი" className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" /></div>
           <div className="min-w-0"><label htmlFor="admin-workspace-staff-status" className="block text-xs text-slate-300 mb-1">წვდომის სტატუსი</label><select id="admin-workspace-staff-status" value={staffStatusFilter} onChange={e => setStaffStatusFilter(e.target.value)} className="w-full min-w-0 rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs"><option value="all">ყველა</option><option value="active">აქტიური</option><option value="inactive">წვდომა გაუქმებულია</option><option value="auth">Auth დასადასტურებელია</option></select></div>
@@ -934,23 +936,24 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                       <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
                       <span data-admin-pro-staff-state={staff.is_active ? "active" : "inactive"} className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ დადასტურდა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
+                    <p className="admin-unified-staff-email mt-1 text-xs text-slate-400">{staff.email}</p>
+                    <span className="admin-unified-staff-auth" data-admin-staff-auth={staff.auth_account_missing ? "missing" : staff.auth_confirmed ? "confirmed" : "pending"}>Auth: {staff.auth_account_missing ? 'ანგარიში ვერ დადასტურდა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</span>
                     {staff.last_sign_in_at && <p className="mt-1 text-[10px] text-slate-500">ბოლო შესვლა: {new Date(staff.last_sign_in_at).toLocaleString('ka-GE')}</p>}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
+                  <div className="admin-unified-staff-actions flex flex-wrap gap-2">
+                    <button type="button" aria-expanded={editing} disabled={staffActionBusy || !staffListReady} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
                       {editing ? 'დახურვა' : 'როლის/უფლებების შეცვლა'}
                     </button>
                     {staff.is_active ? (
-                      <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => revokeStaff(staff)} className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-200 disabled:opacity-50">წვდომის გაუქმება</button>
+                      <button type="button" disabled={staffActionBusy || !staffListReady} data-admin-staff-action="revoke" onClick={() => revokeStaff(staff)} className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-200 disabled:opacity-50">წვდომის გაუქმება</button>
                     ) : (
-                      <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => reactivateStaff(staff)} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">წვდომის აღდგენა</button>
+                      <button type="button" disabled={staffActionBusy || !staffListReady} data-admin-staff-action="reactivate" onClick={() => reactivateStaff(staff)} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">წვდომის აღდგენა</button>
                     )}
                   </div>
                 </div>
 
                 {!editing && (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="admin-unified-staff-permission-summary flex flex-wrap gap-1.5" aria-label="მოდულების უფლებები" role="group">
                     {STAFF_PERMISSION_OPTIONS.map((permission) => (
                       <span key={permission.key} data-admin-pro-permission={staff.permissions?.[permission.key] ? "granted" : "not-granted"} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
                         {permission.label}: {staff.permissions?.[permission.key] ? '✓' : '—'}
@@ -960,7 +963,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                 )}
 
                 {editing && (
-                  <div className="rounded-xl border border-amber-500/20 bg-slate-900 p-4 space-y-3">
+                  <div className="admin-unified-staff-permissions rounded-xl border border-amber-500/20 bg-slate-900 p-4 space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input value={editForm.display_name} onChange={(event) => setEditForm((current) => ({ ...current, display_name: event.target.value }))} minLength={2} maxLength={100} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white" aria-label="თანამშრომლის სახელი" />
                       <select aria-label="თანამშრომლის როლის შეცვლა" value={editForm.role} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value }))} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white">
@@ -981,7 +984,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
                     </div>
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => setEditingStaffId(null)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-300">გაუქმება</button>
-                      <button type="button" disabled={staffActionBusy || !staffListReady} onClick={() => saveStaff(staff)} className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">სერვერზე შენახვა</button>
+                      <button type="button" disabled={staffActionBusy || !staffListReady} data-admin-staff-action="save" onClick={() => saveStaff(staff)} className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">სერვერზე შენახვა</button>
                     </div>
                   </div>
                 )}
@@ -1101,6 +1104,8 @@ export default function AdminDashboardPro({
   };
   const effectiveAdminVisualDesign = useMemo(() => resolveAdminWorkspaceAppearance(adminVisualDesign), [adminVisualDesign]);
   const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(effectiveAdminVisualDesign), [effectiveAdminVisualDesign]);
+  // Staff receive a presentation-only default; never load or save owner design on their behalf.
+  const staffWorkspaceVisualStyle = useMemo(() => buildAdminPanelVisualStyle(resolveAdminWorkspaceAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN)), []);
 
   useEffect(() => {
     let active = true;
@@ -5436,7 +5441,7 @@ export default function AdminDashboardPro({
   const currentAdminNavigationGroup = adminNavigationGroups.find(group => group.items.some(tab => tab.id === visibleAdminTab));
 
   return (
-    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined} data-admin-video-layout="v1">
+    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle} data-admin-visual-design="enabled" data-admin-video-layout="v1">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div data-admin-sidebar="true" className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
@@ -8255,6 +8260,7 @@ export default function AdminDashboardPro({
             )}
             <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-4 sm:p-5 rounded-2xl space-y-3 shadow-lg">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
+              <div className="admin-unified-security-summary"><span>სერვერული ავტორიზაცია</span><strong>Supabase Auth</strong></div>
               <p className="text-xs text-slate-300 leading-6">
                 ადმინისტრატორის წვდომა მოწმდება Supabase Auth-ის სერვერული სესიით და დაცული app_metadata.role მნიშვნელობით.
                 ბრაუზერში შენახული PIN/პაროლი და სატესტო Face ID/Passkey ავტორიზაცია გამორთულია.

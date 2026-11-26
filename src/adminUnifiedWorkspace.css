@@ -641,3 +641,63 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-kpis { grid-template-columns: repeat(4,minmax(0,1fr)) !important; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-calculator-layout { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
 }
+
+/* Stage 10 — staff and security. All owner/API authorization gates remain intact. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff { container-type: inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-context {
+  background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;
+  line-height: 1.65; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff :is(.admin-staff-panel,.admin-staff-list-panel,[data-admin-pro-staff-card]) { background-image: none !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-summary { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-summary > div {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-width: 0;
+  background: var(--av-inset); color: var(--av-text); border: 1px solid var(--av-border); border-radius: 8px; padding: 12px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-summary > div > span { color: var(--av-muted) !important; font-size: 12px; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-summary > div > strong { color: var(--av-text) !important; font-size: 22px; font-variant-numeric: tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-permissions {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important; min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-create-fields { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid { grid-template-columns: minmax(0,1fr) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid > label:has(input:checked) { border-color: var(--av-accent) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid > label:focus-within { outline: 2px solid var(--av-focus); outline-offset: 2px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-list-panel > div:first-child { flex-wrap: wrap; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-email { overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-auth { display: inline-flex; font-size: 12px; line-height: 1.5; border-radius: 6px; padding: 4px 7px; margin-block-start: 6px; max-width: 100%; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="confirmed"] { background: #dff3eb !important; color: #14594a !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="pending"] { background: #fff0cc !important; color: #754300 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="missing"] { background: #fce5e8 !important; color: #9c2538 !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-actions { min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-actions > button {
+  flex: 1 1 120px; min-height: 44px !important; box-shadow: none !important; white-space: normal !important;
+  background: var(--av-surface) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-actions > [data-admin-staff-action="revoke"] {
+  background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-actions > [data-admin-staff-action="reactivate"] {
+  background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-action="save"],.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-create-submit {
+  background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important;
+  color: var(--admin-vd-primaryButtonText-active,#ffffff) !important; min-height: 44px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-permission-summary { border-top: 1px solid var(--av-border); padding-block-start: 10px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-permissions > div:last-child { flex-wrap: wrap; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-permissions > div:last-child > button { flex: 1 1 120px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-security-notice { box-shadow: none !important; background-image: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-security-summary {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+  color: var(--av-text); background: var(--av-inset); border: 1px solid var(--av-border); padding: 10px; border-radius: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-security-summary > span { color: var(--av-muted); }
+@container (min-width: 460px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-summary { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@container (min-width: 700px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-create-fields { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff .admin-staff-permission-grid { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+}
