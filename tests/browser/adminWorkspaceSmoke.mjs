@@ -289,6 +289,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           for(const label of ['კომპიუტერი','ტელეფონი'])assert.equal(await studio.getByRole('button',{name:label,exact:true}).count(),1,'one viewport control per device');
           assert.equal(await studio.locator('.gs-character-extra-controls button[aria-pressed]').count(),2,'two independent feature toggles');
           await studio.getByRole('button',{name:/Mini Robot/}).click();
+          const selectedCharacter=studio.locator('.gs-character-roster > button[aria-pressed="true"]');
+          assert.equal(await selectedCharacter.count(),1,'Exactly one roster selection');
+          const selectedPalette=await selectedCharacter.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+          assert.deepEqual(selectedPalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Selected character retains a readable paired palette');
+          const securityWarning=shell.locator('[data-admin-pro-security-warning]');
+          const securityPalette=await securityWarning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
+          assert.deepEqual(securityPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Account security notice remains readable');
           await studio.getByRole('button',{name:'ტელეფონი',exact:true}).click();
           await studio.getByRole('button',{name:'ანიმაციის გაშვება'}).click();
           await studio.locator('[data-character-playback][data-playing="true"] .gs-character-preview-scene').waitFor({state:'visible',timeout:10000});
