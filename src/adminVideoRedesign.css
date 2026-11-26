@@ -1615,3 +1615,18 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-concierge-preset-controls {grid-template-columns:minmax(0,1fr)!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-concierge-preset-controls select {font-size:16px}
 }
+
+/* Admin PRO 14 — explicitly marked shared feedback and local thumbnail fallbacks. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-feedback] {min-width:0;max-width:100%;overflow-wrap:anywhere;border-radius:10px;padding:12px!important;line-height:1.65!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-feedback="loading"],[data-admin-pro-feedback="empty"]) {background:var(--av-inset)!important;color:var(--av-text)!important;border:1px solid var(--av-border)!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-feedback="empty"] {border-style:dashed!important;text-align:center}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-feedback="pending"] {--feedback-bg:#fff0cc;--feedback-fg:#754300}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-feedback="error"] {--feedback-bg:#fce5e8;--feedback-fg:#9c2538}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-feedback="pending"],[data-admin-pro-feedback="error"]) {background:var(--feedback-bg)!important;color:var(--feedback-fg)!important;-webkit-text-fill-color:currentColor!important;border:1px solid currentColor!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-feedback="error"] > p {color:inherit!important;-webkit-text-fill-color:currentColor!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-loading-indicator {display:inline-block;vertical-align:middle;width:10px;height:10px;margin-inline-end:8px;border-radius:50%;background:var(--av-accent)}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-image-fallback="true"] {background:#e7edf3!important;object-fit:contain!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-feedback] button,.admin-inventory-table-scroll,.admin-workspace-orders-empty button):focus-visible {outline:2px solid var(--av-focus,var(--av-accent))!important;outline-offset:2px!important}
+@media (prefers-reduced-motion: reduce) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-feedback],.admin-pro-loading-indicator,[data-admin-pro-image-fallback]) {animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

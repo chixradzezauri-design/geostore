@@ -55,8 +55,18 @@ const AdminPurchaseWorkspace = React.lazy(() => import('./AdminPurchaseWorkspace
 const AdminMarketingSegments = React.lazy(() => import('./AdminMarketingSegments.jsx'));
 
 // Local Suspense keeps the surrounding workspace and navigation available.
-function AdminSectionLoading(){
-  return <div role="status" aria-live="polite" className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">განყოფილება იტვირთება…</div>;
+function AdminSectionLoading({ label = 'განყოფილება იტვირთება…' } = {}){
+  return <div data-admin-pro-feedback="loading" role="status" aria-live="polite" className="rounded-2xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300"><span aria-hidden="true" className="admin-pro-loading-indicator" />{label}</div>;
+}
+
+// Display-only local fallback: never alters saved image data.
+const ADMIN_THUMBNAIL_FALLBACK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="8" fill="#e7edf3"/><g fill="none" stroke="#526174" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="20" width="40" height="40" rx="5"/><circle cx="33" cy="33" r="4"/><path d="M21 53l12-12 9 9 8-8 10 10"/></g></svg>');
+function AdminThumbnailImage({ src, alt = '', ...props }) {
+  const [failed, setFailed] = useState(false);
+  return <img {...props} src={failed ? ADMIN_THUMBNAIL_FALLBACK : src} alt={alt} data-admin-pro-image-fallback={failed ? 'true' : undefined} onError={failed ? undefined : () => setFailed(true)} />;
+}
+function AdminThumbnail({ src, ...props }) {
+  return <AdminThumbnailImage key={src} src={src} {...props} />;
 }
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -5756,7 +5766,7 @@ export default function AdminDashboardPro({
             )}
 
             {inventoryMovementLoading && inventoryMovementRows.length === 0 ? (
-              <div role="status" className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400">მარაგის ისტორია იტვირთება…</div>
+              <AdminSectionLoading label="მარაგის ისტორია იტვირთება…"/>
             ) : inventoryMovementRows.length === 0 && !inventoryMovementError ? (
               <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center">
                 <Layers className="mx-auto h-8 w-8 text-emerald-400" />
@@ -6578,7 +6588,7 @@ export default function AdminDashboardPro({
             {/* შეკვეთების სია */}
             <div className="admin-orders-list space-y-4">
               {filteredOrders.length === 0 ? (
-                <div className="admin-workspace-orders-empty text-center py-8"><p className="text-slate-400 text-xs">{!ordersReady || ordersError ? "დადასტურებული ჩანაწერები ჯერ არ არის ხელმისაწვდომი." : orderSearchQuery || orderStatusFilter !== "ყველა" ? "შერჩეული ფილტრებით შეკვეთები ვერ მოიძებნა." : "შეკვეთები ჯერ არ არის."}</p>{(orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>
+                <div data-admin-pro-feedback="empty" className="admin-workspace-orders-empty text-center py-8"><p className="text-slate-400 text-xs">{!ordersReady || ordersError ? "დადასტურებული ჩანაწერები ჯერ არ არის ხელმისაწვდომი." : orderSearchQuery || orderStatusFilter !== "ყველა" ? "შერჩეული ფილტრებით შეკვეთები ვერ მოიძებნა." : "შეკვეთები ჯერ არ არის."}</p>{(orderSearchQuery || orderStatusFilter !== "ყველა") && <button type="button" className="admin-workspace-orders-reset" onClick={() => { setOrderSearchQuery(""); setOrderStatusFilter("ყველა"); setOrderPageByStatus({}); }}>ფილტრების გასუფთავება</button>}</div>
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
@@ -6746,7 +6756,7 @@ export default function AdminDashboardPro({
                     normalizeOrderItems(selectedOrderForModal.items).map((item, idx) => (
                       <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         {resolveOrderItemImage(item, products) ? (
-                          <img data-admin-pro-order-image="true" src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
+                          <AdminThumbnail data-admin-pro-order-image="true" src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
                           <div data-admin-pro-order-image="true" className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">ფოტო არ არის</div>
                         )}
@@ -6873,7 +6883,7 @@ export default function AdminDashboardPro({
             <p data-admin-pro-support-summary="true" role="status" className="text-xs text-slate-300">{supportTicketsReady && !supportTicketsError ? `ღია: ${supportTickets.filter(ticket => ticket.status === 'ღია').length} · მუშავდება: ${supportTickets.filter(ticket => ticket.status === 'მუშავდება').length} · მოგვარებული: ${supportTickets.filter(ticket => ticket.status === 'მოგვარებული').length} · ნაჩვენებია: ${visibleSupportTickets.length}` : supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : 'მოთხოვნების სია ჯერ არ არის დადასტურებული.'}</p>
             <div className="admin-support-list space-y-3">
               {visibleSupportTickets.length === 0 ? (
-                <p className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
+                <p data-admin-pro-feedback={supportTicketsLoading ? "loading" : supportTicketsError ? "error" : !supportTicketsReady ? "pending" : "empty"} className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : supportTicketsError ? 'მოთხოვნების სია ვერ განახლდა. სცადეთ ხელახლა.' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
               ) : (
                 visibleSupportTickets.map(t => (
                   <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-3 sm:p-4 rounded-2xl border border-slate-700 space-y-3 text-xs shadow-inner">
@@ -7199,7 +7209,7 @@ export default function AdminDashboardPro({
                     <div className="admin-workspace-gallery-grid">
                       {selectedImages.map((img, idx) => (
                         <div key={idx} className="admin-workspace-gallery-card"><div className="admin-product-gallery-thumbnail relative w-20 h-20 bg-slate-900 border border-emerald-500/20 rounded-2xl p-1.5 shrink-0 shadow-lg">
-                          <img data-admin-pro-gallery-image="true" src={img} alt="" className="w-full h-full object-cover rounded-xl" />
+                          <AdminThumbnail data-admin-pro-gallery-image="true" src={img} alt="" className="w-full h-full object-cover rounded-xl" />
                           <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} aria-label={`ფოტო ${idx + 1} — წაშლა`} className="admin-product-gallery-remove absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-5 h-5 text-[11px] font-black flex items-center justify-center shadow cursor-pointer">×</button>
                         </div>
                         {idx === 0 ? <span className="admin-workspace-gallery-primary">მთავარი ფოტო</span> : <button type="button" className="admin-workspace-gallery-select" onClick={() => setSelectedImages(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)])}>მთავრად არჩევა</button>}
@@ -7256,14 +7266,14 @@ export default function AdminDashboardPro({
               <div className="admin-pro-product-result-row"><p role="status" className="admin-pro-product-helper">ნაპოვნია {filteredProducts.length} / {(products || []).length} ჩატვირთული პროდუქტი</p>{filteredProducts.length > 0 && (productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" data-admin-pro-product-reset="true" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}</div>
               <div className="admin-products-list space-y-3.5">
                 {filteredProducts.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
+                  <div data-admin-pro-feedback="empty" className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
                     <p>{productSearchQuery || productCategoryFilter !== "ყველა" ? "შერჩეული ფილტრებით პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის."}</p>
                     {(productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}
                   </div>
                 ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="admin-product-identity flex min-w-0 items-center gap-3.5">
-                      {p.image ? <img data-admin-pro-product-image="true" src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div data-admin-pro-product-image="true" className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
+                      {p.image ? <AdminThumbnail data-admin-pro-product-image="true" src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div data-admin-pro-product-image="true" className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
@@ -7656,7 +7666,7 @@ export default function AdminDashboardPro({
         )}
 
         {visibleAdminTab === 'visual_editor' && (
-          <React.Suspense fallback={<div role="status" className="rounded-2xl border border-slate-700 bg-slate-900 p-6 text-sm text-slate-300">ვიზუალური რედაქტორი იტვირთება…</div>}>
+          <React.Suspense fallback={<AdminSectionLoading label="ვიზუალური რედაქტორი იტვირთება…"/>}>
             <StorefrontVisualEditor
               siteSettings={siteSettings}
               setSiteSettings={setSiteSettings}
@@ -7688,7 +7698,7 @@ export default function AdminDashboardPro({
             />
             </React.Suspense>
           ) : (
-            <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
+            <section data-admin-pro-feedback={adminVisualSyncStatus === 'error' ? "error" : "loading"} role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
               <p>{adminVisualSyncStatus === 'error' ? 'საერთო დიზაინის ჩატვირთვა ვერ მოხერხდა. ცვლილებების დაკარგვის თავიდან ასაცილებლად რედაქტორი დროებით დაბლოკილია.' : 'ადმინპანელის საერთო დიზაინი იტვირთება…'}</p>
               {adminVisualSyncStatus === 'error' && (
                 <button type="button" onClick={() => setAdminVisualReloadKey(value => value + 1)} className="mt-3 rounded-xl border border-emerald-400/40 px-4 py-2 text-xs font-bold text-emerald-200">
@@ -7726,7 +7736,7 @@ export default function AdminDashboardPro({
                 {(bannersList || []).map((b, index) => (
                   <div key={b.id} className="admin-banner-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col items-stretch text-xs gap-3">
                     <div className="flex items-center gap-3.5">
-                      <img data-admin-pro-banner-image src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
+                      <AdminThumbnail data-admin-pro-banner-image src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-black text-white text-sm break-words">{index + 1}. {b.title}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
@@ -7783,7 +7793,7 @@ export default function AdminDashboardPro({
                   />
                   {newCatImage && (
                     <div className="relative w-24 h-24 bg-slate-900 border border-emerald-500/30 rounded-2xl p-1.5 mt-3 shadow-lg">
-                      <img data-admin-pro-category-photo="true" src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
+                      <AdminThumbnail data-admin-pro-category-photo="true" src={newCatImage} alt="ახალი კატეგორიის ფოტო" className="w-full h-full object-cover rounded-xl" />
                       <button 
                         type="button" 
                         aria-label="ახალი ფოტოს წაშლა" onClick={() => { categoryPhotoRequestRef.current.create++; setNewCatImage(''); }} 
@@ -7824,7 +7834,7 @@ export default function AdminDashboardPro({
                         <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
                           <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
-                              <img data-admin-pro-category-photo="true" src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
+                              <AdminThumbnail data-admin-pro-category-photo="true" src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
                               <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">ფოტო არ არის</div>
                             )}
@@ -7886,7 +7896,7 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                               </select>
                               {editCatImage && <div className="flex items-center gap-2 flex-wrap">
-                                <img data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <AdminThumbnail data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
                                 <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
                               </div>}
                             </div>
@@ -7907,7 +7917,7 @@ export default function AdminDashboardPro({
                                   <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
                                     <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {subImg && <img data-admin-pro-category-photo="true" src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
+                                      {subImg && <AdminThumbnail data-admin-pro-category-photo="true" src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200 min-w-0 break-words">{sub.name}</span>
                                     </div>
 
@@ -7955,7 +7965,7 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                               </select>
                               {editCatImage && <div className="flex items-center gap-2 flex-wrap">
-                                <img data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
+                                <AdminThumbnail data-admin-pro-category-photo="true" src={editCatImage} alt="არჩეული კატეგორიის ფოტო" className="w-16 h-16 object-cover rounded-xl border border-slate-700" />
                                 <button type="button" onClick={() => { categoryPhotoRequestRef.current.edit++; setEditCatImage(''); }} className="min-h-11 px-3 text-xs font-bold text-rose-300 bg-rose-500/10 rounded-xl">ფოტოს წაშლა</button>
                               </div>}
                             </div>
@@ -8082,7 +8092,7 @@ export default function AdminDashboardPro({
             <p data-admin-pro-crm-summary="true" role="status" className="text-xs text-slate-300">ნაპოვნია {filteredUsers.length} / {crmUsers.length} · სერვერული პროფილები: {crmReady ? serverCustomers.length : "—"}</p>
             <div className="admin-crm-list space-y-3">
               {(!filteredUsers || filteredUsers.length === 0) ? (
-                <p className="text-slate-500 text-xs py-8 text-center">{crmLoading ? "მომხმარებლები იტვირთება…" : !crmReady ? "სერვერული სია ჯერ არ არის დადასტურებული." : "მომხმარებლები ვერ მოიძებნა."}</p>
+                <p data-admin-pro-feedback={crmLoading ? "loading" : crmError ? "error" : !crmReady ? "pending" : "empty"} className="text-slate-500 text-xs py-8 text-center">{crmLoading ? "მომხმარებლები იტვირთება…" : crmError ? "სერვერული სია ვერ განახლდა. სცადეთ ხელახლა." : !crmReady ? "სერვერული სია ჯერ არ არის დადასტურებული." : "მომხმარებლები ვერ მოიძებნა."}</p>
               ) : (
                 paginatedCrmUsers.map((u, i) => {
                   const uId = u.id || u.email || (safeCrmPage - 1) * CRM_PER_PAGE + i;
