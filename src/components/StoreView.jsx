@@ -823,6 +823,10 @@ export default function StoreView({
             >
               {storeText.clear} ✕
             </button>
+            <button type="button" className="gs-category-view-products" onClick={() => {
+              const target = ['gs-catalog-products','gs-video-catalog-anchor'].map(id => document.getElementById(id)).find(node => node && node.getClientRects().length > 0);
+              target?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+            }}>{currentLang === 'en' ? 'View products' : currentLang === 'ru' ? 'Смотреть товары' : 'პროდუქტების ნახვა'} <ArrowUpRight size={16} aria-hidden="true"/></button>
           </div>
         )}
 
@@ -894,13 +898,13 @@ export default function StoreView({
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
                   <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>
-                  <div className="flex items-center gap-1 z-10">
+                  <div className="gs-category-card-counts flex items-center gap-1 z-10">
                     {subCats.length > 0 && <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700">{subCats.length} {storeText.subCount}</span>}
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
                   </div>
                 </div>
                 <div className="z-10 gs-signature-category-copy">
-                  <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
+                  <h4 data-visual-editor-target="category.title" style={videoElementStyle('category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{catName}</h4>
                   <p data-visual-editor-target="category.description" style={videoElementStyle('category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                   {signatureHero && <span className="gs-signature-category-arrow" aria-hidden="true"><ArrowUpRight size={17}/></span>}
                 </div>
@@ -912,7 +916,7 @@ export default function StoreView({
         {openParentCatId && mainCategories.some(cat => String(cat.id || cat.name) === String(openParentCatId) && cat.name === selectedCategory) && getSubCategories(openParentCatId).length > 0 && (
           <div id="gs-subcategory-panel" className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
+              <span className="gs-subcategory-heading text-xs text-amber-400 font-bold flex items-center gap-2">
                 <CornerDownRight className="w-4 h-4" /> {storeText.subcategories} <b className="text-white underline">{selectedCategory}</b>
               </span>
               <button type="button" onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
@@ -942,8 +946,8 @@ export default function StoreView({
                     onClick={event=>{if(SubcategoryControl==='a'){if(!shouldHandleCatalogueClick(event))return;event.preventDefault();}selectCatalogueCategory(selectedCategory,sub.name,openParentCatId);}}
                     className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
-                    <span>{sub.name}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
+                    <span className="gs-subcategory-name">{sub.name}</span>
+                    <span className={`gs-subcategory-count text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
                   </SubcategoryControl>
                 );
               })}
