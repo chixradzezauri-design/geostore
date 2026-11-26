@@ -18,3 +18,12 @@ test('premium responsive footprint preserves size variables and keeps dismissal 
  assert.ok(smoke.includes('Compact concierge stays in viewport'));
  assert.ok(smoke.includes('Dismiss remains reachable'));
 });
+
+test('premium depth uses non-interactive contact layers in the existing figure',()=>{
+ const jsx=read('src/components/CharacterMascot.jsx'),css=read('src/components/characterStudio.css').split('/* Premium phase 3:')[1],smoke=read('tests/browser/characterStudioSmoke.mjs');
+ assert.ok(jsx.includes('data-character-depth="grounded"'));
+ for(const term of ['isolation:isolate;pointer-events:none','gs-character-figure::before','gs-character-figure::after','radial-gradient(ellipse','gs-character-body-rig{position:relative;z-index:1}','drop-shadow','prefers-reduced-motion:reduce'])assert.ok(css.includes(term),term);
+ assert.ok(!css.includes('position:fixed'));
+ assert.ok(smoke.includes('Contact plane exists in all render modes'));
+ assert.ok(smoke.includes('Character is in front of the contact plane'));
+});

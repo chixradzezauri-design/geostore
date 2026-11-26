@@ -341,3 +341,50 @@
 @supports(height:100dvh){
   .gs-character-scene:not(.gs-character-preview-scene){--gs-premium-room:calc(100dvh - var(--gs-premium-bottom) - 16px)}
 }
+
+/* Premium phase 3: a small perspective contact plane behind the transparent
+   character, not a new card or a full-page overlay. All decorative layers
+   remain inside the existing figure footprint and cannot receive input. */
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure{
+  isolation:isolate;pointer-events:none;
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before,
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{
+  content:"";position:absolute;pointer-events:none;z-index:0;
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before{
+  left:8%;right:8%;bottom:2%;height:18%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 55%,rgba(25,41,55,.25) 0%,rgba(25,41,55,.10) 42%,transparent 72%);
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{
+  left:16%;right:16%;bottom:5%;height:8%;border-radius:50%;
+  background:linear-gradient(90deg,transparent,rgba(244,239,224,.35) 26%,rgba(255,255,255,.48) 50%,rgba(244,239,224,.22) 74%,transparent);
+  box-shadow:0 2px 5px rgba(22,35,47,.11);
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-body-rig{position:relative;z-index:1}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-3d[data-character-3d="ready"]::before{content:none}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-3d[data-character-3d="ready"] canvas{
+  filter:drop-shadow(0 2px 1px rgba(18,27,41,.18)) drop-shadow(0 5px 5px rgba(18,27,41,.12));
+}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-ground{opacity:.55}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-bubble{position:relative;z-index:1}
+.gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene){gap:3px}
+.gs-character-scene[data-character-depth="grounded"] .gs-character-bubble::after{
+  content:"";position:absolute;left:-4px;bottom:15px;width:7px;height:7px;
+  background:inherit;border-left:1px solid #e4d7bb;border-bottom:1px solid #e4d7bb;
+  transform:rotate(45deg);pointer-events:none;z-index:-1;
+}
+.gs-character-scene[data-character-depth="grounded"][data-side="right"] .gs-character-bubble::after{
+  left:auto;right:-4px;transform:rotate(225deg);
+}
+/* The compact public bubble clips internal scrolling content. Its pointer
+   stays within the border so no interactive content is covered. */
+.gs-character-scene[data-character-depth="grounded"]:not(.gs-character-preview-scene) .gs-character-bubble::after{
+  left:0;width:5px;height:5px;border:0;box-shadow:none;
+  background:currentColor;opacity:.14;bottom:17px;
+}
+.gs-character-scene[data-character-depth="grounded"][data-side="right"]:not(.gs-character-preview-scene) .gs-character-bubble::after{left:auto;right:0}
+@media(prefers-reduced-motion:reduce){
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-figure::before,
+  .gs-character-scene[data-character-depth="grounded"] .gs-character-figure::after{animation:none!important;transition:none!important}
+}

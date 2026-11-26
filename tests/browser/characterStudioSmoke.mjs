@@ -168,6 +168,16 @@ export async function runFlagship3DSmoke(browser,host){
       await page.goto(host,{waitUntil:'domcontentloaded'});
       const scene=page.locator('.gs-character-scene:not(.gs-character-preview-scene)');
       await scene.waitFor({state:'visible',timeout:15000});
+      assert.equal(await scene.getAttribute('data-character-depth'),'grounded');
+      const depth=await scene.locator('.gs-character-figure').evaluate(node=>{
+        const plane=getComputedStyle(node,'::before'),edge=getComputedStyle(node,'::after'),rig=getComputedStyle(node.querySelector('.gs-character-body-rig'));
+        return {plane:plane.content,edge:edge.content,planePointer:plane.pointerEvents,edgePointer:edge.pointerEvents,rigZ:rig.zIndex,planeAnimation:plane.animationName};
+      });
+      assert.notEqual(depth.plane,'none','Contact plane exists in all render modes');
+      assert.notEqual(depth.edge,'none','Ground highlight exists in all render modes');
+      assert.equal(depth.planePointer,'none');assert.equal(depth.edgePointer,'none');
+      assert.equal(depth.rigZ,'1','Character is in front of the contact plane');
+      assert.equal(depth.planeAnimation,'none','Ground does not bounce in reduced motion');
       if(mode==='webgl'){
         await scene.locator('[data-character-3d="ready"][data-character-3d-model="'+character+'"]').waitFor({state:'visible',timeout:10000});
         const probe=await page.evaluate(()=>window.__mascot3DProbe);
