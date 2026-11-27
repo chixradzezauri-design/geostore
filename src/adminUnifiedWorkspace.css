@@ -174,6 +174,47 @@
   background-image: none !important;
   border-color: transparent !important;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand > div:last-child {
+  flex: 1 1 auto; min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand :is(h3,p) {
+  margin: 0 !important;
+  text-align: start !important;
+  word-break: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand p {
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-button {
+  transform: none !important;
+  box-shadow: none !important;
+  text-align: start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-button[data-admin-visual-nav-active="true"] {
+  box-shadow: inset 3px 0 currentColor !important;
+}
+@media(max-width:767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-content: start !important;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand {
+    grid-column:1; grid-row:1; min-inline-size:0; margin:0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout {
+    grid-column:2; grid-row:1; margin:0 !important; width:auto !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker {
+    grid-column:1 / -1; grid-row:2; margin:0 !important;
+  }
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] {
   background-image: none !important;
   min-height: 44px !important;

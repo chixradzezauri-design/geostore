@@ -128,7 +128,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if (['command','expenses'].includes(tab)) {
           const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
           const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
-          assert.equal(ink, 'rgb(37, 34, 56)', 'Workspace headings use the active foreground on light cards');
+          assert.equal(ink, 'rgb(24, 35, 56)', 'Workspace headings use the active foreground on light cards');
         }
         if (tab === 'orders' && width < 480) {
           const statusPicker = shell.getByLabel('შეკვეთის სტატუსი', { exact: true });
@@ -489,6 +489,17 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               const toneBorders=await shell.locator('.admin-command-kpi[data-admin-kpi-tone]').evaluateAll(cards=>cards.map(card=>{const s=getComputedStyle(card);return {tone:card.dataset.adminKpiTone,color:s.borderTopColor,width:parseFloat(s.borderTopWidth)};}));
               assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
               assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');
+            }
+            if(targetWidth<768){
+              const chrome=await shell.evaluate(root=>{
+                const sidebar=root.querySelector(':scope > [data-admin-sidebar="true"]');
+                const brand=sidebar.querySelector('.admin-pro-brand').getBoundingClientRect();
+                const logout=sidebar.querySelector('.admin-video-logout').getBoundingClientRect();
+                const picker=sidebar.querySelector('.admin-mobile-section-picker').getBoundingClientRect();
+                const bounds=sidebar.getBoundingClientRect();
+                return {sameRow:Math.min(brand.bottom,logout.bottom)>Math.max(brand.top,logout.top),pickerBelow:picker.top>=Math.max(brand.bottom,logout.bottom)-2,compact:bounds.height<=220};
+              });
+              assert.deepEqual(chrome,{sameRow:true,pickerBelow:true,compact:true},engine+' '+targetWidth+'px: compact mobile navigation');
             }
             const headerIssues = await shell.locator('.admin-workspace-main > [data-admin-visual-header="true"]').evaluate(header => {
               const boundary=header.getBoundingClientRect();
@@ -919,7 +930,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await metric.waitFor({state:'visible'});
           assert.equal(await metric.count(),1,'VIP filter shows one segment');
           const metricInk=await metric.evaluate(el=>getComputedStyle(el).color);
-          assert.equal(metricInk,'rgb(37, 34, 56)','Segment number uses readable workspace foreground');
+          assert.equal(metricInk,'rgb(24, 35, 56)','Segment number uses readable workspace foreground');
           const warning=segments.locator('.admin-marketing-campaigns > p.text-amber-200').first();
           const warningPalette=await warning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
           assert.deepEqual(warningPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Sending restriction remains readable on a paired warning surface');

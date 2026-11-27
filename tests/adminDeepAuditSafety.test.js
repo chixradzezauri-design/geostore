@@ -68,3 +68,15 @@ test('video redesign removes obsolete dark roots without changing operational ev
  assert.ok(app.includes('onSubmit={handleAddExpense}'));
  assert.ok(app.includes('onSubmit={handleApplyFlashSale}'));
 });
+
+
+test('mobile navigation uses compact token-owned surfaces rather than legacy decorative utilities',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(app.includes('className="admin-workspace-nav-button'));
+ assert.ok(app.includes('onClick={() => setAdminTab(tab.id)}'));
+ assert.ok(app.includes('onChange={(event) => setAdminTab(event.target.value)}'));
+ assert.ok(!app.includes('admin-pro-overview-eyebrow text-xs'));
+ assert.ok(css.includes('grid-template-rows: auto auto !important'));
+ assert.ok(smoke.includes('compact mobile navigation'));
+ assert.ok(smoke.includes("'rgb(24, 35, 56)'"));
+});

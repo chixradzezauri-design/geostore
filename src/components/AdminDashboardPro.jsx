@@ -5446,9 +5446,9 @@ export default function AdminDashboardPro({
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle} data-admin-visual-design="enabled" data-admin-video-layout="v1">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
-      <div data-admin-sidebar="true" className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
-        <div className="admin-pro-brand flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
-          <div className="admin-pro-brand-mark bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
+      <div data-admin-sidebar="true" className="w-full lg:w-72 min-w-0 border rounded-xl p-3 sm:p-4 space-y-3 shrink-0">
+        <div className="admin-pro-brand flex items-center gap-2.5 pb-3 border-b">
+          <div className="admin-pro-brand-mark shrink-0">
             <Shield className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
@@ -5470,11 +5470,7 @@ export default function AdminDashboardPro({
                 data-admin-visual-nav-item="true"
                 data-admin-visual-nav-active={isActive ? 'true' : 'false'}
                 onClick={() => setAdminTab(tab.id)}
-                className={`w-full min-w-0 px-3.5 sm:px-4 py-3 rounded-2xl font-black text-xs text-left transition-all duration-300 flex items-center justify-between gap-2 cursor-pointer shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 ${
-                  isActive 
-                    ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-102' 
-                    : 'bg-slate-950/60 text-slate-400 border border-emerald-500/10 hover:text-white hover:border-emerald-500/30'
-                }`}
+                className="admin-workspace-nav-button w-full min-w-0 px-3 py-2 rounded-lg border text-left flex items-center justify-between gap-2 cursor-pointer transition-colors"
               >
                 <div className="flex min-w-0 items-center gap-2.5">
                   <IconComp className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-emerald-400'}`} />
@@ -5517,9 +5513,9 @@ export default function AdminDashboardPro({
       </div>
 
       {/* 🖥️ MAIN CONTENT AREA */}
-      <div className="admin-workspace-main flex-1 w-full space-y-6">
+      <div className="admin-workspace-main flex-1 w-full min-w-0 space-y-4">
 
-        <div data-admin-visual-header="true" className="flex w-full min-w-0 flex-col justify-start lg:flex-row lg:justify-between items-start lg:items-center bg-slate-900/80 border border-emerald-500/30 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 lg:p-5 gap-3 shadow-2xl backdrop-blur-3xl">
+        <div data-admin-visual-header="true" className="w-full min-w-0 border rounded-xl p-3 sm:p-4 gap-3">
           <div className="admin-pro-page-identity">
             {currentAdminNavigationGroup && <span className="admin-pro-section-context">{currentAdminNavigationGroup.label}</span>}
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
@@ -5577,11 +5573,11 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
           <section className="admin-command-center space-y-3 sm:space-y-5" aria-labelledby="admin-command-title">
-            <div className="admin-command-hero admin-pro-overview-intro rounded-2xl border border-emerald-400/25 p-3 sm:p-5">
+            <div className="admin-command-hero admin-pro-overview-intro rounded-xl border p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="admin-pro-overview-eyebrow text-xs font-semibold text-slate-400">ოპერაციული მიმოხილვა</p>
-                  <h3 id="admin-command-title" className="mt-1 text-lg sm:text-2xl font-black tracking-tight text-white">დღის ამოცანები</h3>
+                  
+                  <h3 id="admin-command-title" className="text-lg font-bold tracking-normal">დღის ამოცანები</h3>
                   <p className="mt-1 max-w-2xl text-[11px] sm:text-xs leading-5 text-slate-300">ახალი შეკვეთები, საყურადღებო მოთხოვნები და მარაგის საჭიროებები.</p>
                 </div>
                 <button type="button" onClick={() => setAdminTab('analytics')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-slate-950/50 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/10">
