@@ -225,6 +225,21 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(editorIssues,[],engine+' '+targetWidth+'px: editor tools remain bounded and publication actions unique');
+              if(tab==='visual_editor'||tab==='admin_visual_editor'){
+                const colorIssues=await shell.evaluate((root,module)=>{
+                  const selector=module==='visual_editor'?'.gs-visual-editor-controls input[type="color"]':'.admin-visual-editor-panel > .admin-studio-group input[type="color"]';
+                  const issues=[];
+                  for(const el of root.querySelectorAll(selector)){
+                    const rect=el.getBoundingClientRect();
+                    if(!rect.width||!rect.height)continue;
+                    if(rect.width<43.5||rect.height<43.5)issues.push('editor color target too small');
+                    const label=el.closest('label');
+                    if(label){const outer=label.getBoundingClientRect();if(rect.left<outer.left-2||rect.right>outer.right+2)issues.push('editor color target outside label');}
+                  }
+                  return issues;
+                },tab);
+                assert.deepEqual(colorIssues,[],engine+' '+targetWidth+'px: editor color controls remain usable');
+              }
             }
             if (['discounts','coupons','banners','users'].includes(tab)) {
               const promoIssues=await shell.evaluate((root,module)=>{

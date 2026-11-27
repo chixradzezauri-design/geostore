@@ -27,3 +27,13 @@ test('workspace-wide controls exclude storefront and character previews',()=>{
  for(const rule of broadRules)assert.ok(rule.includes(exclusion),rule);
  assert.ok(css.includes('font-size: max(16px,var(--admin-vd-inputFontSize-active,16px))'));
 });
+
+
+test('editor controls have readable text and full size color pickers without touching preview content',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ const rules=css.split('/* Editor control surfaces only:')[1].split('.gs-storefront-visual-editor > .admin-unified-editor-header [data-admin-pro-editor-save]')[0];
+ assert.ok(rules.includes('.gs-visual-editor-controls .gs-visual-color-control'));
+ assert.ok(rules.includes('min-height:44px !important; min-inline-size:44px'));
+ assert.ok(rules.includes('font-size:12px !important'));
+ assert.ok(smoke.includes('editor color controls remain usable'));
+});
