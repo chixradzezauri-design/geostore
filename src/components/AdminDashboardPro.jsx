@@ -826,7 +826,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
 
   return (
     <div className="admin-staff space-y-4" data-admin-pro-staff>
-      <div role="note" className="admin-unified-staff-context rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
+      <div role="note" className="admin-unified-staff-context border p-3 text-xs leading-6">
         <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
         მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
       </div>
@@ -5742,7 +5742,7 @@ export default function AdminDashboardPro({
                   type="button"
                   onClick={() => void fetchInventoryMovements(null, false)}
                   disabled={inventoryMovementLoading}
-                  className="min-h-11 rounded-xl border border-emerald-500/30 bg-slate-950 px-4 py-3 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/10 disabled:opacity-50"
+                  className="admin-stock-refresh min-h-11 border px-4 py-3 text-xs font-semibold disabled:opacity-50"
                 >{inventoryMovementLoading ? 'იტვირთება…' : 'განახლება'}</button>
               </div>
             </div>
@@ -5845,7 +5845,7 @@ export default function AdminDashboardPro({
               </div>
               <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row xl:max-w-lg">
                 <input type="search" value={replenishmentQuery} onChange={event => { setReplenishmentQuery(event.target.value); setReplenishmentPage(1); }} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="min-w-0 flex-1 min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
-                <button type="button" onClick={() => void fetchInventoryReplenishmentSettings()} disabled={replenishmentLoading || Boolean(replenishmentSavingKey)} className="min-h-11 rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-200 transition hover:border-emerald-400 disabled:opacity-50">{replenishmentLoading ? 'იტვირთება…' : 'განახლება'}</button>
+                <button type="button" onClick={() => void fetchInventoryReplenishmentSettings()} disabled={replenishmentLoading || Boolean(replenishmentSavingKey)} className="admin-stock-refresh min-h-11 border px-4 py-2 text-xs font-semibold disabled:opacity-50">{replenishmentLoading ? 'იტვირთება…' : 'განახლება'}</button>
               </div>
             </div>
             <div role="group" aria-label="მარაგის შევსების ფილტრები" className="admin-workspace-replenishment-filters">
@@ -7786,7 +7786,7 @@ export default function AdminDashboardPro({
           <div className="admin-category-manager space-y-4">
             <div className="admin-category-entry-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <FolderTree className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.categoriesCreateTitle}
+                <FolderTree className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.categoriesCreateTitle === 'ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან)' ? 'ახალი კატეგორიის დამატება' : adminVisualDesign.content.categoriesCreateTitle}
               </h3>
               <form onSubmit={handleAddCategory} aria-label="კატეგორიის დამატება" className="admin-category-form space-y-4 text-xs">
                 <div className="admin-unified-category-fields grid grid-cols-1 sm:grid-cols-3 gap-3.5">

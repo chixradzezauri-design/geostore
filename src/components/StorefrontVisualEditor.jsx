@@ -1070,7 +1070,7 @@ export default function StorefrontVisualEditor({
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={undo} disabled={historyIndex <= 0} className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 disabled:opacity-35"><RotateCcw className="mr-1 inline h-3.5 w-3.5" /> გაუქმება</button>
             <button type="button" onClick={redo} disabled={historyIndex >= history.length - 1} className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 disabled:opacity-35"><RotateCw className="mr-1 inline h-3.5 w-3.5" /> გამეორება</button>
-            {!campaignOnly&&<button type="button" onClick={resetDesign} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">ვიზუალური Reset</button>}
+            {!campaignOnly&&<button type="button" onClick={resetDesign} className="admin-storefront-reset rounded-xl border px-3 py-2 text-xs font-bold">ვიზუალური Reset</button>}
           </div>
         </div>
         {heroImagePending && <p role="status" className="mt-2 text-xs text-amber-200">ფოტო იტვირთება — შენახვა დროებით შეჩერებულია.</p>}

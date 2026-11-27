@@ -3781,3 +3781,21 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {appearance: auto !important; -webkit-appearance: auto !important; background-image: none !important;}
 }
+
+/* Visual review stage 13: contrast pairs from the actual 390px WebKit captures. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-unified-staff-context {
+  color: #14594a !important; background: #dff3eb !important; border-color: #82b7a1 !important;
+  -webkit-text-fill-color: currentColor !important; border-radius: 10px !important; box-shadow: none !important;
+  font-size: 13px !important; line-height: 1.6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-unified-staff-context > strong {color: #14594a !important; -webkit-text-fill-color: currentColor !important; font-size: 14px !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] button.admin-stock-refresh {
+  color: var(--av-text) !important; background: var(--av-surface) !important; border-color: var(--av-border) !important;
+  -webkit-text-fill-color: currentColor !important; min-height: 44px !important; box-shadow: none !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] button.admin-stock-refresh:not(:disabled):hover {background: var(--av-inset) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header button.admin-storefront-reset {
+  color: #9c2538 !important; background: #fce5e8 !important; border-color: #e4b4bf !important;
+  -webkit-text-fill-color: currentColor !important; min-height: 44px !important;
+}
