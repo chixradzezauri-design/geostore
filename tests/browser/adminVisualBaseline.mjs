@@ -24,6 +24,12 @@ export async function collectAdminVisualBaseline(shell,module){
   const controls=[...main.querySelectorAll('button,input:not([type="hidden"]),select,textarea')].filter(visible);
   const buttons=controls.filter(el=>el.tagName==='BUTTON');
   const touch=controls.filter(el=>!el.matches('input[type="checkbox"],input[type="radio"],input[type="range"]'));
+  // Diagnostic counts only: native controls and intentional truncation can
+  // produce overflow, so investigate these signals before enforcing a gate.
+  const textNodes=[...main.querySelectorAll('h1,h2,h3,h4,label,button,th,td')].filter(visible);
+  const clippedText=textNodes.filter(el=>el.clientWidth>0 && el.scrollWidth-el.clientWidth>2);
+  const tinyText=textNodes.filter(el=>parseFloat(getComputedStyle(el).fontSize)<12);
+  const narrowControls=touch.filter(el=>el.getBoundingClientRect().width<43.5);
   const tables=[...main.querySelectorAll('table')].filter(visible);
   const images=[...main.querySelectorAll('img')].filter(visible);
   const metrics=element=>({width:rounded(element.getBoundingClientRect().width),scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,overflow:Math.max(0,element.scrollWidth-element.clientWidth)});
@@ -34,6 +40,8 @@ export async function collectAdminVisualBaseline(shell,module){
    labelSizes:countBy(labels,'fontSize'),buttonSizes:countBy(buttons,'fontSize'),
    controls:controls.length,shortControls:touch.filter(el=>el.getBoundingClientRect().height<43.5).length,
    buttonColors:countBy(buttons,'backgroundColor'),
+   textElements:textNodes.length, horizontallyOverflowingText:clippedText.length,
+   smallTextElements:tinyText.length, narrowControls:narrowControls.length,
    tables:tables.length,images:images.length,
    imageLoadFailures:images.filter(el=>el.complete&&el.naturalWidth===0).length
   };

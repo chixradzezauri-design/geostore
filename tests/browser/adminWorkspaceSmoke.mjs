@@ -24,7 +24,7 @@ const modules = {
   staff: '.admin-staff', logs: '.admin-audit-logs-panel', settings: '.admin-settings-panel'
 };
 
-export const ADMIN_AUDIT_WIDTHS = Object.freeze([320, 360, 390, 430, 768, 1024, 1440]);
+export const ADMIN_AUDIT_WIDTHS = Object.freeze([320, 360, 390, 430, 768, 1024, 1440, 1920]);
 export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 1440], auditWidths = ADMIN_AUDIT_WIDTHS, layoutOnly = false } = {}) {
   const engine = browser.browserType().name();
   const layoutFailures = [];
@@ -424,7 +424,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
-            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
+            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,narrowControls:sample.narrowControls,textElements:sample.textElements,horizontallyOverflowingText:sample.horizontallyOverflowingText,smallTextElements:sample.smallTextElements,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
             if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1 || newControlIssues.length) {
               // Diagnostic geometry only, from the isolated synthetic fixture.
               // Do not log text, input values, URLs or customer identifiers.
