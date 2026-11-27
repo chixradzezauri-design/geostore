@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { stage49FixtureProductRows } from './stage46PurchaseScenarios.mjs';
 import { collectAdminVisualBaseline } from './adminVisualBaseline.mjs';
 
@@ -28,6 +30,16 @@ export const ADMIN_AUDIT_WIDTHS = Object.freeze([320, 360, 390, 430, 768, 1024, 
 export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 1440], auditWidths = ADMIN_AUDIT_WIDTHS, layoutOnly = false } = {}) {
   const engine = browser.browserType().name();
   const layoutFailures = [];
+  // Only this fully intercepted synthetic workspace may produce visual evidence.
+  const captureDir=process.env.ADMIN_VISUAL_CAPTURE_DIR;
+  if(captureDir)await mkdir(captureDir,{recursive:true});
+  const capture=async(page,tab,width)=>{
+    if(!captureDir)return;
+    try{
+      await page.evaluate(()=>window.scrollTo(0,0));
+      await page.screenshot({path:join(captureDir,engine+'-'+width+'-'+tab+'.png'),fullPage:true,animations:'disabled',timeout:10000});
+    }catch(error){console.warn('ADMIN_VISUAL_CAPTURE_UNAVAILABLE '+engine+' '+width+' '+tab+' '+error.name);}
+  };
   for (const width of widths) {
     const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const errors = [];
@@ -124,6 +136,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         // Capture the untouched module before any fixture edits or interactions.
         visualBaseline.push(await collectAdminVisualBaseline(shell,tab));
+        if(width===390 || width===1440)await capture(page,tab,width);
         assert.equal(await shell.locator('.admin-pro-header-actions').count(), ['banners','settings','visual_editor','discounts'].includes(tab) ? 1 : 0);
         if (['command','expenses'].includes(tab)) {
           const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
@@ -562,6 +575,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.deepEqual(writes,[],'Expanded palette geometry check never writes settings');
             }
             const sample = await collectAdminVisualBaseline(shell, tab);
+            if(targetWidth===1440 && width!==1440)await capture(page,tab,targetWidth);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();

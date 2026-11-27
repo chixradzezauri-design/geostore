@@ -6005,7 +6005,7 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-comparison-title">
+            <section className="admin-business-comparison min-w-0 border space-y-3" aria-labelledby="admin-business-comparison-title">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
                   <h3 id="admin-business-comparison-title" className="text-white text-sm font-black">ბიზნესის დინამიკა</h3>
@@ -6035,7 +6035,7 @@ export default function AdminDashboardPro({
               </>}
               <p className="text-xs text-slate-400">ბრუნვა არ არის წმინდა მოგება. ეს შედარება დამოუკიდებელია ზემოთ არჩეული ფინანსური ანგარიშის პერიოდისგან.</p>
             </section>
-            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-forecast-title">
+            <section className="admin-business-comparison min-w-0 border space-y-3" aria-labelledby="admin-business-forecast-title">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
                   <h3 id="admin-business-forecast-title" className="text-white text-sm font-black">გაყიდვების საორიენტაციო პროგნოზი</h3>
@@ -6064,7 +6064,7 @@ export default function AdminDashboardPro({
               </div>}
               <p className="text-xs text-slate-400">ეს არის ისტორიული საშუალოს გაგრძელება და არა გარანტირებული გაყიდვა ან მოგება. დაბალი და მაღალი სცენარები ეფუძნება ისტორიულ კვირებს და არ წარმოადგენს სტატისტიკურ სანდოობის ინტერვალს. დღეს მიმდინარე გაყიდვები არ შედის სასწავლო მონაცემებში; აქციები, სეზონურობა და სამომავლო ცვლილებები არ არის მოდელირებული.</p>
             </section>
-            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-customer-title">
+            <section className="admin-business-comparison min-w-0 border space-y-3" aria-labelledby="admin-business-customer-title">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0"><h3 id="admin-business-customer-title" className="text-white text-sm font-black">მომხმარებლებისა და კატეგორიების ანალიტიკა</h3><p className="text-xs text-slate-400">ჩაბარებული შეკვეთები · სრული დღეები · თბილისის დრო</p></div>
                 <select aria-label="მომხმარებლების ანალიტიკის პერიოდი" value={businessCustomerDays} onChange={e=>setBusinessCustomerDays(Number(e.target.value))} className="min-h-11 rounded-xl bg-slate-950 border border-emerald-500/30 px-3 text-white text-sm"><option value={30}>30 დღე</option><option value={90}>90 დღე</option><option value={365}>365 დღე</option></select>
@@ -6085,7 +6085,7 @@ export default function AdminDashboardPro({
                 </div>
               </>}
             </section>
-            <section className="admin-business-comparison rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-3" aria-labelledby="admin-business-campaign-title">
+            <section className="admin-business-comparison min-w-0 border space-y-3" aria-labelledby="admin-business-campaign-title">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0"><h3 id="admin-business-campaign-title" className="text-white text-sm font-black">კუპონებისა და კამპანიების შედეგები</h3><p className="text-xs text-slate-400">დადასტურებული ჩაბარებული შეკვეთების ისტორია · თბილისის დრო</p></div>
                 <select aria-label="კამპანიის ანალიტიკის პერიოდი" value={businessCampaignDays} onChange={e=>setBusinessCampaignDays(Number(e.target.value))} className="min-h-11 rounded-xl bg-slate-950 border border-emerald-500/30 px-3 text-white text-sm"><option value={30}>30 დღე</option><option value={90}>90 დღე</option><option value={365}>365 დღე</option></select>
@@ -6756,7 +6756,7 @@ export default function AdminDashboardPro({
               </div>
 
               {/* 1. მომხმარებლის სრული ინფორმაცია */}
-              <div className="admin-order-customer bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
+              <div className="admin-order-customer min-w-0 border space-y-2">
                 <h4 className="font-black text-emerald-400 text-sm mb-3">მომხმარებლის ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
                   <p><span className="admin-unified-order-field-label">სახელი და გვარი</span><b className="text-white">{selectedOrderForModal.customerName}</b></p>
@@ -6808,7 +6808,7 @@ export default function AdminDashboardPro({
               </div>
 
               {/* 3. შეკვეთის ფინანსური დეტალები */}
-              <div className="admin-order-financials bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
+              <div className="admin-order-financials min-w-0 border space-y-2">
                 <h4 className="font-black text-emerald-400 text-sm mb-2">შეკვეთის თანხა</h4>
                 <p className="text-slate-400 text-[11px] leading-relaxed">გადახდის მეთოდი და გადახდის სტატუსი ამ შეკვეთის მონაცემებში ხელმისაწვდომი არ არის.</p>
                 {selectedOrderForModal.checkoutBreakdown && (
@@ -6946,7 +6946,7 @@ export default function AdminDashboardPro({
                     )}
 
                     {String(selectedSupportTicketId) === String(t.id) && (
-                      <div id={`admin-support-thread-${t.id}`} role="region" aria-label={`ტიკეტი #${t.id} — მიმოწერის ისტორია`} className="admin-unified-support-thread rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
+                      <div id={`admin-support-thread-${t.id}`} role="region" aria-label={`ტიკეტი #${t.id} — მიმოწერის ისტორია`} className="admin-unified-support-thread min-w-0 border space-y-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <b className="text-cyan-200 text-xs">მიმოწერის სრული ისტორია</b>
                           <button type="button" onClick={() => fetchSupportTicketThread(t.id)} className="text-cyan-300 underline underline-offset-2">განახლება</button>
@@ -7006,7 +7006,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'products' || adminContentTab === 'products') && (
           <div className="admin-products-panel space-y-6">
-            <div className="admin-unified-product-editor bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-unified-product-editor min-w-0 border space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <div className="min-w-0"><h3 className="font-black text-white text-base flex items-center gap-2.5">
                   <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება'}
