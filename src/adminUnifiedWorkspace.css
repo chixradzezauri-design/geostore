@@ -25,7 +25,7 @@
   border-color: var(--av-border) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #admin-command-title {
-  font-size: clamp(18px, 3vw, 23px) !important;
+  font-size: clamp(18px,var(--admin-vd-titleFontSize-active,22px),26px) !important;
 }
 
 /* Match native controls and readable text to the workspace palette. */
@@ -74,7 +74,7 @@
   font-size: clamp(18px,var(--admin-vd-titleFontSize-active,22px),28px) !important;
   line-height: 1.35 !important;
   margin: 0 !important;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-section-context {
   color: var(--av-muted) !important;
@@ -114,11 +114,11 @@
   }
 }
 @media (min-width: 1440px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"]:has(> .admin-pro-header-actions) {
     grid-template-columns: minmax(0,1fr) minmax(0,auto);
     align-items: center !important;
   }
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions { justify-content: flex-end; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions { width: auto !important; justify-content: flex-end; }
 }
 
 /* Workspace chrome and operational overview. Keep the permission-filtered
@@ -2132,9 +2132,9 @@
   box-sizing: border-box;
   gap: 8px !important;
   min-inline-size: 0;
-  font-size: 12px !important;
+  font-size: max(12px,var(--admin-vd-bodyFontSize-active,14px)) !important;
   line-height: 1.45;
-  color: var(--av-text) !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > span {
   grid-column: 1;
@@ -2155,9 +2155,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong {
   min-inline-size: 0;
   overflow-wrap: anywhere;
-  font-size: clamp(22px,5vw,30px) !important;
-  line-height: 1.2;
-  color: var(--av-text) !important;
+  font-size: clamp(22px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.25),30px) !important;
+  line-height: 1.25 !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
   -webkit-text-fill-color: currentColor !important;
   font-variant-numeric: tabular-nums;
 }

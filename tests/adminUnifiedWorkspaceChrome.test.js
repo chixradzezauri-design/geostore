@@ -149,3 +149,14 @@ test('Atelier narrow dashboard keeps explicit label and icon tracks and one colu
  assert.match(css,/\.admin-command-kpi > span:first-child > svg\s*\{[^}]*grid-column: 2;/);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('320px dashboard has one readable KPI column'));
 });
+
+
+test('deep audit uses active title and KPI typography and tests actual header separation',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ assert.ok(css.includes('clamp(18px,var(--admin-vd-titleFontSize-active,22px),26px)'));
+ assert.ok(css.includes('clamp(22px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.25),30px)'));
+ assert.ok(css.includes(':has(> .admin-pro-header-actions)'));
+ const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(smoke.includes('header regions stay separated'));
+ assert.ok(smoke.includes('header identity/action collision'));
+});

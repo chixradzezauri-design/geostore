@@ -918,7 +918,7 @@
 /* Workspace audit 01 — grouped navigation and context-aware header.
    Existing layout tokens and permission-filtered module list stay authoritative. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
-  display:none; color:var(--av-nav-text)!important; font-size:11px!important;
+  display:none; color:var(--av-nav-text)!important;
   font-weight:600!important; line-height:1.5!important; letter-spacing:normal!important;
   white-space:normal; overflow-wrap:break-word; padding:10px 6px 3px; margin:0!important;
 }
@@ -1222,7 +1222,7 @@
   border:1px solid currentColor!important;min-width:20px;text-align:center;line-height:1.3;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-section-context {
-  display:block;color:var(--av-muted)!important;font-size:11px!important;
+  display:block;color:var(--av-muted)!important;
   font-weight:600;line-height:1.4;margin-bottom:3px;overflow-wrap:anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-page-identity h2 {
@@ -1242,7 +1242,6 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions {justify-content:flex-end}
 }
 @media(max-width:767px){
- .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-section-context {font-size:10px!important}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-access-state {padding-block:5px!important}
 }
 
@@ -1273,7 +1272,6 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong {
  color:var(--admin-vd-cardTitleText-active,var(--av-text))!important;
- font-size:clamp(20px,calc(var(--admin-vd-titleFontSize-active,18px) * 1.35),34px)!important;
  font-weight:700!important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:last-child {

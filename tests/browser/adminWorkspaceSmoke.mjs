@@ -420,6 +420,24 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
               assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');
             }
+            const headerIssues = await shell.locator('.admin-workspace-main > [data-admin-visual-header="true"]').evaluate(header => {
+              const boundary=header.getBoundingClientRect();
+              const identity=header.querySelector('.admin-pro-page-identity');
+              const actions=header.querySelector('.admin-pro-header-actions');
+              const issues=[];
+              const fits=rect=>rect.left>=boundary.left-2 && rect.right<=boundary.right+2 && rect.top>=boundary.top-2 && rect.bottom<=boundary.bottom+2;
+              const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+              if(!identity || !fits(identity.getBoundingClientRect())) issues.push('header identity bounds');
+              if(actions){
+                const area=actions.getBoundingClientRect();
+                if(!fits(area) || (identity && overlaps(identity.getBoundingClientRect(),area))) issues.push('header identity/action collision');
+                const buttons=[...actions.querySelectorAll(':scope > button')].map(b=>b.getBoundingClientRect());
+                for(const rect of buttons) if(!fits(rect) || rect.height<43.5) issues.push('header action bounds');
+                for(let i=0;i<buttons.length;i++) for(let j=i+1;j<buttons.length;j++) if(overlaps(buttons[i],buttons[j])) issues.push('header action collision');
+              }
+              return issues;
+            });
+            assert.deepEqual(headerIssues,[],engine+' '+targetWidth+'px '+tab+': header regions stay separated');
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
