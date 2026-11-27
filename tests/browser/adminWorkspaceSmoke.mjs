@@ -497,9 +497,11 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 const logout=sidebar.querySelector('.admin-video-logout').getBoundingClientRect();
                 const picker=sidebar.querySelector('.admin-mobile-section-picker').getBoundingClientRect();
                 const bounds=sidebar.getBoundingClientRect();
-                return {sameRow:Math.min(brand.bottom,logout.bottom)>Math.max(brand.top,logout.top),pickerBelow:picker.top>=Math.max(brand.bottom,logout.bottom)-2,compact:bounds.height<=220};
+                const style=getComputedStyle(sidebar);
+                return {sameRow:Math.min(brand.bottom,logout.bottom)>Math.max(brand.top,logout.top),pickerBelow:picker.top>=Math.max(brand.bottom,logout.bottom)-2,compact:bounds.height<=220,geometry:{height:bounds.height,brandHeight:brand.height,logoutHeight:logout.height,pickerHeight:picker.height,rows:style.gridTemplateRows,paddingTop:style.paddingTop,paddingBottom:style.paddingBottom}};
               });
-              assert.deepEqual(chrome,{sameRow:true,pickerBelow:true,compact:true},engine+' '+targetWidth+'px: compact mobile navigation');
+              const {geometry,...chromeChecks}=chrome;
+              assert.deepEqual(chromeChecks,{sameRow:true,pickerBelow:true,compact:true},engine+' '+targetWidth+'px: compact mobile navigation '+JSON.stringify(geometry));
             }
             const headerIssues = await shell.locator('.admin-workspace-main > [data-admin-visual-header="true"]').evaluate(header => {
               const boundary=header.getBoundingClientRect();

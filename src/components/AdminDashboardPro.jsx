@@ -834,7 +834,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
       {staffListError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{staffListError}</div>}
       {staffListNotice && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">{staffListNotice}</div>}
 
-      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
+      <section className="admin-staff-panel min-w-0 border space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
         <form onSubmit={handleAddExistingUser} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3">
           <span className="admin-pro-native-control-boundary">
@@ -851,7 +851,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
         </form>
       </section>
 
-      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
+      <section className="admin-staff-panel min-w-0 border space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> {visualContent.staffInviteTitle || 'ახალი თანამშრომლის მოწვევა'}</h3>
         <form onSubmit={handleInviteStaff} aria-label="ახალი თანამშრომლის მოწვევა" className="admin-staff-create-form space-y-4 text-xs">
           <div className="admin-staff-create-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -905,7 +905,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
         </section>
       )}
 
-      <section className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-3">
+      <section className="admin-staff-list-panel min-w-0 border space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-black text-white text-base">{visualContent.staffListTitle || 'სერვერზე დაკავშირებული თანამშრომლები'} ({staffListReady ? staffList.length : '—'})</h3>
           <button type="button" onClick={() => refreshStaffList()} disabled={staffListLoading || staffActionBusy} className="rounded-xl border border-emerald-500/25 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">
@@ -6882,7 +6882,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'support' || adminContentTab === 'support') && (
-          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-support-panel min-w-0 border space-y-4">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.supportTitle} ({supportTicketsReady ? supportTickets.length : "—"})
             </h3>
@@ -6906,7 +6906,7 @@ export default function AdminDashboardPro({
                 <p data-admin-pro-feedback={supportTicketsLoading ? "loading" : supportTicketsError ? "error" : !supportTicketsReady ? "pending" : "empty"} className="text-slate-500 text-xs py-8 text-center">{supportTicketsLoading ? 'მოთხოვნები იტვირთება…' : supportTicketsError ? 'მოთხოვნების სია ვერ განახლდა. სცადეთ ხელახლა.' : !supportTicketsReady ? 'სია დასადასტურებელია.' : supportTickets.length ? 'ფილტრებით მოთხოვნა ვერ მოიძებნა.' : adminVisualDesign.content.supportEmptyLabel}</p>
               ) : (
                 visibleSupportTickets.map(t => (
-                  <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-3 sm:p-4 rounded-2xl border border-slate-700 space-y-3 text-xs shadow-inner">
+                  <div key={t.id} className="admin-support-ticket min-w-0 border space-y-3 text-xs">
                     <div className="admin-support-ticket-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                       <div className="admin-support-ticket-meta flex items-center gap-3 flex-wrap">
                         <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
@@ -6933,13 +6933,13 @@ export default function AdminDashboardPro({
 
                     <div className="admin-support-ticket-content space-y-1.5">
                       <div className="admin-unified-support-customer"><span>მომხმარებელი</span><b>{t.customerName}</b><span>{t.email}</span></div>
-                      <p className="admin-support-ticket-message text-slate-200 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 mt-2">
+                      <p className="admin-support-ticket-message border mt-2">
                         <b className="text-emerald-400 block mb-1">მომხმარებლის შეტყობინება</b> {t.message}
                       </p>
                     </div>
 
                     {t.reply && (
-                      <div className="admin-support-ticket-reply bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-1 shadow">
+                      <div className="admin-support-ticket-reply border space-y-1">
                         <b className="text-emerald-400 block text-xs">ადმინისტრატორის პასუხი:</b>
                         <p className="text-slate-200">{t.reply}</p>
                       </div>
@@ -7456,7 +7456,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'messages' || adminContentTab === 'messages') && (
-          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-support-panel min-w-0 border space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -7482,7 +7482,7 @@ export default function AdminDashboardPro({
               <div className="space-y-3">
                 {filteredLegacyMessages.length === 0 && <p className="text-xs text-slate-400">ჩატვირთულ ჩანაწერებში შედეგი ვერ მოიძებნა.</p>}
                 {filteredLegacyMessages.map((message) => (
-                  <article key={message.id} className="admin-legacy-message-card rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 sm:p-5 space-y-2">
+                  <article key={message.id} className="admin-legacy-message-card min-w-0 border space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>
                       <span className="text-[10px] text-slate-400">{message.created_at ? new Date(message.created_at).toLocaleString('ka-GE') : (message.time || '')}</span>
@@ -7665,7 +7665,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'broadcasts' || adminContentTab === 'broadcasts') && (
-          <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-broadcasts-panel min-w-0 border space-y-4">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
@@ -8130,7 +8130,7 @@ export default function AdminDashboardPro({
                   const canEdit = canEditCrmCustomer(u) && !crmSaving;
 
                   return (
-                    <div key={uId} className={`admin-crm-user-card bg-slate-950/60 p-3 sm:p-4 rounded-2xl border transition space-y-3 shadow-inner ${u.isBlocked ? 'border-rose-500/40 bg-rose-950/10' : 'border-emerald-500/20'}`}>
+                    <div key={uId} className="admin-crm-user-card min-w-0 border space-y-3">
                       <div className="admin-unified-crm-card-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div className="admin-unified-crm-identity">
                           <div className="flex items-center gap-2.5 flex-wrap">

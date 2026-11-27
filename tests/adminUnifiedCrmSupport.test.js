@@ -21,3 +21,19 @@ test('CRM and support share readable status typography without duplicate heading
  assert.ok(smoke.includes('account status captions remain readable'));
  assert.ok(smoke.includes('support status or thread caption too small'));
 });
+
+
+test('video CRM and correspondence cards no longer retain conflicting dark utility surfaces',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css');
+ for(const cls of ['admin-crm-user-card','admin-support-panel','admin-support-ticket','admin-support-ticket-message','admin-support-ticket-reply','admin-legacy-message-card','admin-broadcasts-panel','admin-staff-list-panel']){
+  const classes=[...app.matchAll(/className="([^"]+)"/g)].map(m=>m[1]).filter(s=>s.split(/\s+/).includes(cls));
+  assert.ok(classes.length,cls);
+  assert.ok(classes.every(s=>!/(?:bg-slate-9|bg-emerald-950|shadow-)/.test(s)),cls);
+ }
+ assert.ok(css.includes('.admin-crm-user-card:has([data-admin-pro-crm-badge="restricted"])'));
+ assert.ok(css.includes('/* Video redesign stage 6:'));
+ assert.ok(css.includes('data-admin-pro-delivery-disabled'));
+ const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(smoke.includes('compact:bounds.height<=220'));
+ assert.ok(smoke.includes('JSON.stringify(geometry)'));
+});

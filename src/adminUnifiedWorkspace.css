@@ -3505,3 +3505,49 @@
   color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
   overflow-wrap: anywhere; min-inline-size: 0; line-height: 1.5;
 }
+
+/* Video redesign stage 6: intrinsic mobile chrome and communication surfaces. */
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+    box-sizing: border-box !important;
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    block-size: auto !important; min-block-size: 0 !important; max-block-size: none !important;
+    align-self: start !important; align-content: start !important;
+    grid-template-rows: auto auto !important; grid-auto-rows: auto !important;
+    padding: clamp(8px,var(--admin-vd-video-mobile-cardPadding,12px),14px) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > :is(.admin-pro-brand,.admin-video-logout,.admin-mobile-section-picker) {
+    min-block-size: 0; max-inline-size: 100%; margin: 0 !important;
+    align-self: center !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand :is(h3,p) {
+    line-height: 1.4 !important; white-space: normal !important; overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker {
+    min-height: 0 !important; height: auto !important; align-content: start !important;
+  }
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-support-panel,.admin-broadcasts-panel,.admin-staff .admin-staff-panel,.admin-staff .admin-staff-list-panel) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  color: var(--av-text) !important; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-panel .admin-crm-user-card,.admin-support-panel .admin-support-ticket,.admin-support-panel .admin-legacy-message-card) {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel :is(.admin-crm-edit-panel,.admin-workspace-crm-filters) label:not(.sr-only),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form label:not(.sr-only) {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  line-height: 1.5; overflow-wrap: anywhere; min-inline-size: 0;
+}
