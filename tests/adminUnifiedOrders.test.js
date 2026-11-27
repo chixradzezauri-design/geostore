@@ -18,3 +18,13 @@ test('order presentation scopes all changes to the admin shell and preserves edi
  assert.doesNotMatch(card,/padding|border-radius|background-color/);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('order and stock presentation uses readable status labels and active typography',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css');
+ assert.ok(css.includes('font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px))'));
+ assert.ok(css.includes('clamp(20px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.15),30px)'));
+ assert.match(video,/\.admin-order-status-badge\[data-admin-order-status\] \{[^}]*font-size:12px!important/);
+ assert.match(video,/\[data-admin-pro-replenishment-status\] \{[^}]*font-size:12px!important[^}]*max-inline-size:100%/);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('stock captions remain readable and bounded'));
+});

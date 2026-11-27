@@ -292,7 +292,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters > button {
   min-height: 44px !important; padding: 6px 8px !important;
-  font-size: 12px !important; line-height: 1.4; overflow-wrap: break-word;
+  font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important; line-height: 1.4; overflow-wrap: anywhere !important;
   background-image: none !important; box-shadow: none !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters > button[aria-pressed="false"] {
@@ -389,7 +389,7 @@
   border-color: var(--av-border) !important; padding: 4px !important; gap: 4px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button {
-  font-size: 12px !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
   background-image: none !important; box-shadow: none !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[aria-pressed="false"] {
@@ -638,7 +638,7 @@
   gap: 8px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead { background: var(--av-inset) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead th { color: var(--av-text) !important; font-size: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead th { color: var(--admin-vd-tableHeaderText-active,var(--av-text)) !important; font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] tbody tr { background: var(--av-surface) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] tbody tr:nth-child(even) { background: var(--av-inset) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row {
@@ -2930,7 +2930,7 @@
   overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div > strong {
-  font-size: 24px !important;
+  font-size: clamp(20px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.15),30px) !important;
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
   -webkit-text-fill-color: currentColor !important;
@@ -2952,7 +2952,7 @@
   border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric > :is(label,span) {
-  font-size: 12px !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
   line-height: 1.5;
   color: var(--av-muted) !important;
   overflow-wrap: anywhere;

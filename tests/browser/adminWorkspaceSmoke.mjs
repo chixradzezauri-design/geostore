@@ -327,6 +327,18 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(supplyIssues,[],engine+' '+targetWidth+'px: inventory and supply controls stay inside their regions');
+              if(tab==='inventory'||tab==='replenishment'){
+                const labelIssues=await shell.evaluate((root,module)=>{
+                  const area=root.querySelector('[data-admin-inventory-view="'+(module==='inventory'?'history':'planning')+'"]');
+                  const issues=[];
+                  for(const el of area.querySelectorAll('[data-admin-pro-inventory-summary] > div > p,[data-admin-pro-replenishment-status]')){
+                    const box=el.getBoundingClientRect(), parent=el.parentElement.getBoundingClientRect();
+                    if(box.width&&box.height&&(parseFloat(getComputedStyle(el).fontSize)<12||box.left<parent.left-2||box.right>parent.right+2))issues.push('inventory caption or status bounds');
+                  }
+                  return issues;
+                },tab);
+                assert.deepEqual(labelIssues,[],engine+' '+targetWidth+'px '+tab+': stock captions remain readable and bounded');
+              }
             }
             if (tab === 'orders') {
               const filterIssues = await shell.locator('.admin-orders-toolbar').evaluate(toolbar => {
