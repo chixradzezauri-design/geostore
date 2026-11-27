@@ -6510,21 +6510,21 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'ai_analyst' || adminContentTab === 'ai_analyst') && (
-          <div className="admin-ai-analyst bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-ai-analyst min-w-0 border space-y-4">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Sparkles className="w-5 h-5 text-emerald-400" /> AI ბიზნეს ასისტენტი & ანალიტიკოსი
             </h3>
             <p className="text-xs text-slate-300">წესებზე დაფუძნებული ასისტენტი — გარე AI მოდელი დაკავშირებული არ არის. პასუხები ეფუძნება არჩეულ პერიოდსა და დადასტურებულ მონაცემებს.</p>
             <div className="flex flex-wrap gap-2" aria-label="სწრაფი კითხვები">{['შემოსავალი','წმინდა მოგება','ხარჯები','გაუქმებული შეკვეთები','დამატებითი მომსახურება'].map(question => <button key={question} type="button" disabled={isAiThinking} onClick={() => setAiQuery(question)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200">{question}</button>)}</div>
-            <div role="log" aria-label="ფინანსური ასისტენტის პასუხები" aria-live="polite" className="admin-ai-chat bg-slate-950/80 border border-emerald-500/20 p-5 rounded-3xl space-y-4 max-h-[400px] overflow-y-auto text-xs shadow-inner">
+            <div role="log" aria-label="ფინანსური ასისტენტის პასუხები" aria-live="polite" className="admin-ai-chat min-w-0 border space-y-3 max-h-[400px] overflow-y-auto text-xs">
               {aiChatLogs.map((log, idx) => (
                 <div key={idx} className={`admin-ai-message flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div data-admin-pro-assistant-role={log.role === "user" ? "user" : "assistant"} className={`admin-ai-bubble max-w-[85%] p-4 rounded-2xl ${log.role === 'user' ? 'bg-emerald-500 text-slate-950 font-bold shadow' : 'bg-slate-900 text-slate-200 border border-emerald-500/20'}`}>
+                  <div data-admin-pro-assistant-role={log.role === "user" ? "user" : "assistant"} className="admin-ai-bubble min-w-0 border">
                     {log.text}
                   </div>
                 </div>
               ))}
-              {isAiThinking && <div className="text-emerald-400 italic text-[11px]">მზადდება ფინანსური პასუხი…</div>}
+              {isAiThinking && <div className="admin-ai-thinking text-xs" role="status">მზადდება ფინანსური პასუხი…</div>}
             </div>
             <form onSubmit={handleAiAsk} className="admin-ai-composer flex gap-3">
               <input type="text" aria-label="ფინანსური კითხვა" maxLength={500} placeholder="დასვით კითხვა (მაგ: რა არის ჩვენი სუფთა მოგება?)..." value={aiQuery} onChange={e => setAiQuery(e.target.value)} className="flex-1 bg-slate-950 border border-emerald-500/25 p-4 rounded-2xl text-xs text-white outline-none shadow-inner" />
@@ -7784,7 +7784,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'categories' || adminContentTab === 'categories') && (
           <div className="admin-category-manager space-y-4">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+            <div className="admin-category-entry-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <FolderTree className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.categoriesCreateTitle}
               </h3>
@@ -7809,7 +7809,7 @@ export default function AdminDashboardPro({
                 </div>
                 <p className="admin-unified-category-help">{selectedParentId ? "ახალი ჩანაწერი დაემატება არჩეული მთავარი კატეგორიის ქვეშ." : "ახალი ჩანაწერი დაემატება მთავარ კატეგორიად."}</p>
 
-                <div className="admin-unified-category-photo-field space-y-2 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
+                <div className="admin-unified-category-photo-field min-w-0 space-y-2 border">
                   <label htmlFor="admin-category-create-photo" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> კატეგორიის ფოტო ან ბანერი
                   </label>
@@ -7837,7 +7837,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+            <div className="admin-category-list-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.categoriesTreeTitle}</h3>
               <p className="admin-unified-category-publication text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
               <div className="admin-workspace-category-toolbar grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] items-end">
