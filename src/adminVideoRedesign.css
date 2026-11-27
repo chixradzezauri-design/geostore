@@ -1263,7 +1263,9 @@
  box-shadow:none!important;gap:4px;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi:hover {
- border-color:var(--admin-vd-cardHoverBorder-active,var(--av-accent))!important;
+ /* Preserve the semantic top accent, including when the pointer rests on a card. */
+ border-inline-color:var(--admin-vd-cardHoverBorder-active,var(--av-accent))!important;
+ border-block-end-color:var(--admin-vd-cardHoverBorder-active,var(--av-accent))!important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child {
  color:var(--admin-vd-cardTitleText-active,var(--av-text))!important;

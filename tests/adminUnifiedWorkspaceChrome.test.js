@@ -135,6 +135,11 @@ test('Atelier cascade uses one primary product edit treatment and preserves KPI 
  const rule=css.split('/* Atelier dashboard:')[1].match(/\.admin-command-kpi\s*\{[^}]+\}/)[0];
  assert.ok(rule.indexOf('border-color:')<rule.indexOf('border-block-start: 3px solid'));
  const video=read('src/adminVideoRedesign.css');
+ const hover=video.match(/\.admin-command-kpi:hover\s*\{([^}]+)\}/);
+ assert.ok(hover,'dashboard KPI hover rule exists');
+ assert.match(hover[1],/border-inline-color:/);
+ assert.match(hover[1],/border-block-end-color:/);
+ assert.doesNotMatch(hover[1],/\bborder-color:|\bborder-block-start(?:-color)?:|\bborder-top(?:-color)?:/);
  for(const tone of ['primary','warning','danger'])assert.ok(video.includes('[data-admin-command-status="'+tone+'"],[data-admin-kpi-tone="'+tone+'"]'));
  assert.equal((css.match(/\.admin-product-controls > \.admin-video-edit\s*\{/g)||[]).length,1);
  assert.ok(!css.includes('background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset))'));

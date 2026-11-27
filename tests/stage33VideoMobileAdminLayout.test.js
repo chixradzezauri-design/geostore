@@ -28,7 +28,15 @@ test('mobile-only post-design-system stylesheet compacts the welcome without hid
   const main=readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');
   assert.ok(main.indexOf("import './videoAuditMobileAdmin.css'") > main.indexOf("import './designSystemV2.css'"));
   assert.match(rules,/@media \(max-width: 767px\)/);
-  assert.match(rules,/grid-template-rows: auto auto/);
+  // The intrinsic mobile column must not reserve a second row when actions are absent.
+  const unified=readFileSync(new URL('../src/adminUnifiedWorkspace.css',import.meta.url),'utf8');
+  const mobileHeader=unified.match(/@media \(max-width: 767px\)\s*\{\s*\/\* A single intrinsic column[^]*?\[data-admin-visual-header="true"\]\s*\{([^}]+)\}/);
+  assert.ok(mobileHeader,'mobile header has a scoped intrinsic layout');
+  assert.match(mobileHeader[1],/display: flex !important/);
+  assert.match(mobileHeader[1],/flex-direction: column !important/);
+  assert.match(mobileHeader[1],/height: auto !important/);
+  assert.match(rules,/grid-template-rows: none/);
+  assert.doesNotMatch(rules,/grid-template-rows: auto auto/);
   assert.match(rules,/height: auto !important/);
   assert.match(rules,/font-size: 16px !important/);
   assert.match(admin,/onSaveStorefrontDraft\(\)/);
