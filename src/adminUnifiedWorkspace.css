@@ -3799,3 +3799,16 @@
   color: #9c2538 !important; background: #fce5e8 !important; border-color: #e4b4bf !important;
   -webkit-text-fill-color: currentColor !important; min-height: 44px !important;
 }
+
+/* Visual review stage 14 — actual 1440px screenshot showed pale inventory alert text. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback {
+  border-radius: 8px !important; padding: 10px 12px !important; font-size: 13px !important;
+  line-height: 1.6 !important; word-break: normal !important; overflow-wrap: break-word;
+  min-inline-size: 0; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-error,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback-error {background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-warning {background: #fff0cc !important; color: #754300 !important; border-color: #d9b96e !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-pending {background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback-success {background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;}

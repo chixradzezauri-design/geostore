@@ -831,8 +831,8 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualCont
         მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
       </div>
 
-      {staffListError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{staffListError}</div>}
-      {staffListNotice && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">{staffListNotice}</div>}
+      {staffListError && <div role="alert" className="admin-staff-feedback admin-staff-feedback-error border p-3 text-xs">{staffListError}</div>}
+      {staffListNotice && <div role="status" className="admin-staff-feedback admin-staff-feedback-success border p-3 text-xs">{staffListNotice}</div>}
 
       <section className="admin-staff-panel min-w-0 border space-y-3">
         <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
@@ -5862,9 +5862,9 @@ export default function AdminDashboardPro({
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი (ჩატვირთული)</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">სულ შესავსები ერთეულები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{replenishmentSummaryVerified ? replenishmentPositions.reduce((sum, position) => sum + position.suggestedQuantity, 0) : "—"}</strong></div>
             </div>
-            {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">{replenishmentError}</div>}
-            {replenishmentLoading && <p role="status" className="rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">შევსების პარამეტრები იტვირთება…</p>}
-            {!replenishmentSettingsReady && !replenishmentLoading && <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">სერვერის პარამეტრების ჩატვირთვა ჯერ არ დადასტურებულა. რედაქტირება დროებით შეზღუდულია — სცადეთ „განახლება“.</p>}
+            {replenishmentError && <div role="alert" className="admin-stock-feedback admin-stock-feedback-error border p-3 text-xs leading-5">{replenishmentError}</div>}
+            {replenishmentLoading && <p role="status" className="admin-stock-feedback admin-stock-feedback-pending border p-3 text-xs">შევსების პარამეტრები იტვირთება…</p>}
+            {!replenishmentSettingsReady && !replenishmentLoading && <p role="status" className="admin-stock-feedback admin-stock-feedback-warning border p-3 text-xs leading-5">სერვერის პარამეტრების ჩატვირთვა ჯერ არ დადასტურებულა. რედაქტირება დროებით შეზღუდულია — სცადეთ „განახლება“.</p>}
             <div className="space-y-3">
               {filteredReplenishmentPositions.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center"><Truck className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 text-sm font-black text-white">შესაბამისი მარაგის პოზიცია ვერ მოიძებნა</p><p className="mt-1 text-xs text-slate-400">შეამოწმეთ ძიება ან დაამატეთ პროდუქტის მარაგი.</p></div>
