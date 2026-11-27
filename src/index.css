@@ -16649,14 +16649,14 @@ select, textarea)::placeholder {
   font-size: 12px !important;
   line-height: 1.6;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions {
   min-width: 0;
   gap: 9px !important;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button {
   min-height: 43px;
   border-radius: 13px !important;
   padding: 11px 15px !important;
@@ -16665,30 +16665,30 @@ select, textarea)::placeholder {
   white-space: normal;
   transition: transform .18s ease,filter .18s ease,box-shadow .18s ease;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button:first-child {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button:first-child {
   border: 1px solid rgba(148,163,184,.2) !important;
   background: rgba(51,65,85,.72) !important;
   color: #e2e8f0 !important;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button:last-of-type {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button:last-of-type {
   border: 1px solid rgba(110,231,183,.35) !important;
   background: linear-gradient(135deg,#34d399,#10b981 60%,#059669) !important;
   color: #022c22 !important;
   box-shadow: 0 9px 22px rgba(16,185,129,.17),inset 0 1px 0 rgba(255,255,255,.25) !important;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button:hover:not(:disabled) {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.06);
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button:focus-visible {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button:focus-visible {
   outline: 3px solid rgba(110,231,183,.5);
   outline-offset: 3px;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button:disabled {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button:disabled {
   cursor: wait !important;
   filter: saturate(.65);
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > div {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > div {
   min-height: 42px;
   border: 1px solid rgba(16,185,129,.22) !important;
   border-radius: 13px !important;
@@ -16697,7 +16697,7 @@ select, textarea)::placeholder {
   color: #cbd5e1 !important;
   line-height: 1.4;
 }
-.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > div > span:first-child {
+.admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > div > span:first-child {
   box-shadow: 0 0 12px rgba(52,211,153,.45);
 }
 @media (max-width: 720px) {
@@ -16706,19 +16706,19 @@ select, textarea)::placeholder {
     padding: 18px !important;
     border-radius: 21px !important;
   }
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions {
     display: grid;
     grid-template-columns: repeat(2,minmax(0,1fr));
     width: 100%;
   }
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button,
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > div {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button,
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > div {
     width: 100%;
     min-width: 0;
     justify-content: center;
     text-align: center;
   }
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > div {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > div {
     grid-column: 1 / -1;
   }
 }
@@ -16730,18 +16730,18 @@ select, textarea)::placeholder {
   .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) h2 {
     font-size: 16px !important;
   }
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions {
     grid-template-columns: minmax(0,1fr);
   }
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > div {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > div {
     grid-column: auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button {
     transition: none !important;
   }
-  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > div:last-child > button:hover:not(:disabled) {
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child:has(h2) > .admin-pro-header-actions > button:hover:not(:disabled) {
     transform: none !important;
   }
 }
@@ -18807,21 +18807,21 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
    The earlier warm sidebar button surface survived later dark-theme text overrides,
    producing pale text on a light button (insufficient contrast). Keep this scoped to
    inactive navigation buttons; active state, tab actions, counts and data are unchanged. */
-.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) {
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[data-admin-visual-nav-active="false"] {
   background: #17263b !important;
   color: #dbe6f2 !important;
   border-color: #3b506a !important;
   box-shadow: none !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]):hover {
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[data-admin-visual-nav-active="false"]:hover {
   background: #223650 !important;
   color: #ffffff !important;
   border-color: #7890aa !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) > div:first-child > svg {
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[data-admin-visual-nav-active="false"] > div:first-child > svg {
   color: #d6b58a !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) > span {
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[data-admin-visual-nav-active="false"] > span {
   background: #263b54 !important;
   color: #f1f5f9 !important;
   border-color: #536982 !important;

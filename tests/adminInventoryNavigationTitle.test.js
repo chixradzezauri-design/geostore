@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+const unified = readFileSync(new URL('../src/adminUnifiedWorkspace.css', import.meta.url), 'utf8');
 
 test('inventory tab uses configured title rather than a literal template placeholder', () => {
   assert.equal(dashboard.includes("label: '📚 {adminVisualDesign.content.inventoryTitle}'"), false);
@@ -17,12 +18,13 @@ test('command center visibility condition avoids redundant nested checks', () =>
 test('admin navigation keeps long Georgian labels readable and focus visible', () => {
   assert.match(dashboard, /className="flex min-w-0 items-center gap-2\.5"/);
   assert.match(dashboard, /className="min-w-0 break-words">\{adminWorkspaceNavigationLabel\(tab\.label\)\}/);
-  assert.match(dashboard, /focus-visible:outline-emerald-300/);
+  assert.match(unified, /data-admin-visual-nav-item="true"\]:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--av-nav-text\)/);
   assert.match(dashboard, /shrink-0 px-2 py-0\.5 rounded-full/);
 });
 
 test('compact mobile admin header preserves draft save publish and access status', () => {
-  assert.match(dashboard, /data-admin-visual-header="true" className="flex w-full min-w-0 flex-col justify-start lg:flex-row/);
+  assert.match(dashboard, /data-admin-visual-header="true" className="w-full min-w-0 border rounded-xl/);
+  assert.match(unified, /data-admin-visual-header="true"\]\s*\{[^}]*grid-template-columns: minmax\(0,1fr\)/);
   assert.match(dashboard, /grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex/);
   assert.match(dashboard, /onSaveStorefrontDraft\(\)/);
   assert.match(dashboard, /onPublishStorefront\(\)/);
@@ -32,7 +34,7 @@ test('compact mobile admin header preserves draft save publish and access status
 
 test('command center shows four compact KPI cards in two columns on mobile', () => {
   assert.match(dashboard, /admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3/);
-  assert.match(dashboard, /admin-command-hero admin-pro-overview-intro rounded-2xl border border-emerald-400\/25 p-3 sm:p-5/);
+  assert.match(dashboard, /admin-command-hero admin-pro-overview-intro rounded-xl border p-3 sm:p-4/);
   assert.match(dashboard, /admin-command-kpi group min-w-0 text-left rounded-xl/);
   for (const section of ['orders', 'support', 'replenishment', 'discounts']) {
     assert.match(dashboard, new RegExp("onClick=\\{\\(\\) => setAdminTab\\('" + section + "'\\)\\}"));

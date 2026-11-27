@@ -7086,7 +7086,7 @@ export default function AdminDashboardPro({
                   </div>
                   <label className="admin-workspace-product-featured flex items-center gap-2"><input type="checkbox" checked={Boolean(productForm.isFeatured)} onChange={e => setProductForm(prev => ({ ...prev, isFeatured: e.target.checked }))} /> გამორჩეული პროდუქტი</label>
                 </section>
-                <div className="admin-product-attributes bg-slate-950 p-5 rounded-3xl border border-emerald-500/30 space-y-4 shadow-inner">
+                <div className="admin-product-attributes min-w-0 border rounded-xl p-3 space-y-3">
                   <h4 className="font-black text-amber-400 text-sm flex items-center gap-2">
                     <Sparkles className="w-4 h-4" /> 
                     <span>კატეგორიის მახასიათებლები: {productForm.category}</span>
@@ -7175,7 +7175,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 {(isClothing || isShoes) && (
-                  <div className="admin-size-color-stock-editor bg-slate-950 p-5 rounded-3xl border border-cyan-500/30 space-y-3">
+                  <div className="admin-size-color-stock-editor min-w-0 border rounded-xl p-3 space-y-3">
                     <h4 className="text-cyan-300 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ზომისა და ფერის მიხედვით მარაგი</h4>
                     <p className="text-slate-400 text-xs leading-relaxed">თითოეულ კომბინაციას აქვს დამოუკიდებელი რაოდენობა. 0 ნიშნავს, რომ ეს ზომა/ფერი მყიდველისთვის მიუწვდომელია. ძველი საერთო მარაგი ავტომატურად არ ნაწილდება.</p>
                     {sizeColorStock.length === 0 ? (
@@ -7202,7 +7202,7 @@ export default function AdminDashboardPro({
                   </div>
                 )}
 
-                <div id="admin-unified-product-variants" tabIndex={-1} className="admin-product-variants-editor bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                <div id="admin-unified-product-variants" tabIndex={-1} className="admin-product-variants-editor min-w-0 border rounded-xl p-3 space-y-3">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ინდივიდუალური ვარიანტები</h4>
                   <p className="text-slate-400 text-xs leading-relaxed">თითოეულ ვარიანტს აქვს საკუთარი ფასი და მარაგი. შეკვეთისას ორივე სერვერზე მოწმდება.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
@@ -7223,7 +7223,7 @@ export default function AdminDashboardPro({
                   ))}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
                 </div>
 
-                <div id="admin-unified-product-gallery" tabIndex={-1} className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
+                <div id="admin-unified-product-gallery" tabIndex={-1} className="admin-product-gallery min-w-0 space-y-3 border rounded-xl p-3">
                   <label htmlFor="admin-workspace-product-gallery" className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
@@ -7297,7 +7297,7 @@ export default function AdminDashboardPro({
                     {(productSearchQuery || productCategoryFilter !== "ყველა") && <button type="button" className="admin-workspace-product-reset" onClick={() => { setProductSearchQuery(""); setProductCategoryFilter("ყველა"); setProductPage(1); }}>ფილტრების გასუფთავება</button>}
                   </div>
                 ) : paginatedProducts.map(p => (
-                  <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
+                  <div key={p.id} className="admin-product-row min-w-0 border rounded-xl p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                     <div className="admin-product-identity flex min-w-0 items-center gap-3.5">
                       {p.image ? <AdminThumbnail data-admin-pro-product-image="true" src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div data-admin-pro-product-image="true" className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
@@ -7858,7 +7858,7 @@ export default function AdminDashboardPro({
                     const displayImage = parentCat.image || parentCat.img;
 
                     return (
-                      <div key={parentCat.id} data-admin-category-level="parent" className="admin-category-card bg-slate-950/60 border border-slate-700 rounded-2xl p-3 sm:p-4 space-y-3 shadow-inner">
+                      <div key={parentCat.id} data-admin-category-level="parent" className="admin-category-card min-w-0 border rounded-xl p-3 sm:p-4 space-y-3">
                         <div className="admin-video-category-row flex justify-between items-center flex-wrap gap-3">
                           <div className="admin-video-category-identity flex items-center gap-3">
                             {displayImage ? (
@@ -7941,7 +7941,7 @@ export default function AdminDashboardPro({
                               const isEditingSub = editingCatId === sub.id;
                               const subImg = sub.image || sub.img;
                               return (
-                                <div key={sub.id} data-admin-category-level="child" className="admin-subcategory-card bg-slate-950 p-3 rounded-xl border border-slate-700 space-y-2">
+                                <div key={sub.id} data-admin-category-level="child" className="admin-subcategory-card min-w-0 p-3 rounded-lg border space-y-2">
                                   <div className="admin-video-category-row flex justify-between items-center text-xs gap-2">
                                     <div className="admin-video-category-identity admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />

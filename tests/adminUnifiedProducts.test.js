@@ -22,3 +22,12 @@ test('catalogue text follows active design tokens and status labels retain reada
  assert.match(video,/:is\(\[data-admin-pro-publication\],\[data-admin-pro-stock\]\) \{[^}]*font-size:12px!important[^}]*max-inline-size:100%/);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('catalogue status or field label geometry'));
 });
+
+
+test('catalogue removes legacy dark paint without removing its operational controls',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css');
+ for(const cls of ['admin-product-attributes','admin-size-color-stock-editor','admin-product-variants-editor','admin-product-gallery','admin-product-row','admin-category-card','admin-subcategory-card'])assert.ok(app.includes(cls+' min-w-0'),cls);
+ assert.ok(css.includes('Catalogue form typography'));
+ assert.ok(app.includes('onSubmit={handleSaveProduct}'));
+ assert.ok(app.includes('onSubmit={handleAddCategory}'));
+});

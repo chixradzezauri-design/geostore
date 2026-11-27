@@ -84,7 +84,15 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
   display: grid !important;
   grid-template-columns: minmax(0,1fr);
-  align-items: center !important;
+  grid-auto-rows: auto !important;
+  align-content: start !important;
+  align-items: start !important;
+  justify-items: stretch !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
   gap: 12px !important;
   min-inline-size: 0;
   border-inline-start: 3px solid var(--av-accent) !important;
@@ -886,6 +894,10 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-card { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
 /* Atelier categories: preserve the editor-owned colors and existing sibling order. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-category-card {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+  box-shadow: none !important;
   border-inline-start: 3px solid var(--av-accent) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px) !important;
   min-inline-size: 0;
@@ -3399,4 +3411,16 @@
   font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
   min-inline-size: 0; max-inline-size: 100%; line-height: 1.5;
   white-space: normal; overflow-wrap: anywhere;
+}
+
+/* Catalogue form typography: keep semantic stock and publication status colors. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-form,.admin-category-form) label:not(.sr-only) {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  line-height: 1.5; min-inline-size: 0; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-gallery-thumbnail {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  box-shadow: none !important; border-radius: 10px !important;
 }
