@@ -30,6 +30,14 @@ export async function collectAdminVisualBaseline(shell,module){
   const clippedText=textNodes.filter(el=>el.clientWidth>0 && el.scrollWidth-el.clientWidth>2);
   const tinyText=textNodes.filter(el=>parseFloat(getComputedStyle(el).fontSize)<12);
   const narrowControls=touch.filter(el=>el.getBoundingClientRect().width<43.5);
+  // Fixed region vocabulary and element tags only, never arbitrary class names or content.
+  const region=el=>el.closest('.gs-visual-preview-frame,.gs-character-preview,.geostore-fashion-store')?'preview':el.closest('.admin-studio-group,.gs-visual-editor-controls')?'editor-controls':el.closest('.gs-character-admin')?'character-controls':el.closest('.admin-delivery-settings,.admin-global-settings')?'settings-form':el.closest('table')?'table':el.closest('[data-admin-visual-header="true"]')?'header':'workspace';
+  const signalGroups=nodes=>{
+   const counts={};
+   for(const el of nodes){const key=region(el)+':'+el.tagName.toLowerCase();counts[key]=(counts[key]||0)+1;}
+   return Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  };
+  const issueGroups={overflow:signalGroups(clippedText),small:signalGroups(tinyText),narrow:signalGroups(narrowControls),short:signalGroups(touch.filter(el=>el.getBoundingClientRect().height<43.5))};
   const tables=[...main.querySelectorAll('table')].filter(visible);
   const images=[...main.querySelectorAll('img')].filter(visible);
   const metrics=element=>({width:rounded(element.getBoundingClientRect().width),scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,overflow:Math.max(0,element.scrollWidth-element.clientWidth)});
@@ -41,7 +49,7 @@ export async function collectAdminVisualBaseline(shell,module){
    controls:controls.length,shortControls:touch.filter(el=>el.getBoundingClientRect().height<43.5).length,
    buttonColors:countBy(buttons,'backgroundColor'),
    textElements:textNodes.length, horizontallyOverflowingText:clippedText.length,
-   smallTextElements:tinyText.length, narrowControls:narrowControls.length,
+   smallTextElements:tinyText.length, narrowControls:narrowControls.length, issueGroups,
    tables:tables.length,images:images.length,
    imageLoadFailures:images.filter(el=>el.complete&&el.naturalWidth===0).length
   };

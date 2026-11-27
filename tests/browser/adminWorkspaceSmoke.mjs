@@ -504,11 +504,32 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               return issues;
             });
             assert.deepEqual(headerIssues,[],engine+' '+targetWidth+'px '+tab+': header regions stay separated');
+            // Inspect an expanded palette at both viewport extremes, even in layout-only WebKit.
+            // Opening details changes only local disclosure state, not design values.
+            if(tab==='admin_visual_editor'&&(targetWidth===320||targetWidth===1920)){
+              const palette=shell.locator('.admin-visual-editor-panel > [data-admin-studio-group="palette"]');
+              const wasOpen=await palette.evaluate(el=>el.open);
+              try{
+                await palette.evaluate(el=>{el.open=true;});
+                const issues=await palette.evaluate(group=>{
+                  const result=[];
+                  const controls=[...group.querySelectorAll('input[type="color"]')].filter(el=>el.getBoundingClientRect().height>0);
+                  if(!controls.length)result.push('expanded palette has no visible color inputs');
+                  for(const el of controls){
+                    const rect=el.getBoundingClientRect(),label=el.closest('label')?.getBoundingClientRect();
+                    if(rect.width<43.5||rect.height<43.5||!label||rect.left<label.left-2||rect.right>label.right+2)result.push('expanded palette color geometry');
+                  }
+                  return result;
+                });
+                assert.deepEqual(issues,[],engine+' '+targetWidth+'px: expanded palette controls stay bounded');
+              }finally{await palette.evaluate((el,open)=>{el.open=open;},wasOpen);}
+              assert.deepEqual(writes,[],'Expanded palette geometry check never writes settings');
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
-            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,narrowControls:sample.narrowControls,textElements:sample.textElements,horizontallyOverflowingText:sample.horizontallyOverflowingText,smallTextElements:sample.smallTextElements,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
+            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,narrowControls:sample.narrowControls,textElements:sample.textElements,horizontallyOverflowingText:sample.horizontallyOverflowingText,smallTextElements:sample.smallTextElements,issueGroups:sample.issueGroups,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
             if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1 || newControlIssues.length) {
               // Diagnostic geometry only, from the isolated synthetic fixture.
               // Do not log text, input values, URLs or customer identifiers.

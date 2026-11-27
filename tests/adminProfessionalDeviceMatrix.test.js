@@ -58,3 +58,13 @@ test('deep visual audit retains geometry-only diagnostic counts at every device 
  for(const forbidden of ['.textContent','.innerText','.innerHTML','.value','localStorage','fetch('])assert.ok(!helper.includes(forbidden),forbidden);
  assert.equal(JSON.parse(read('vercel.json')).git.deploymentEnabled['internal-admin-deep-audit-2026-11-27'],false);
 });
+
+
+test('visual diagnostics identify fixed regions and expanded editor controls without logging content',()=>{
+ const helper=read('tests/browser/adminVisualBaseline.mjs'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ for(const term of ['issueGroups','signalGroups','editor-controls','character-controls','settings-form','el.tagName.toLowerCase()'])assert.ok(helper.includes(term),term);
+ assert.ok(smoke.includes('issueGroups:sample.issueGroups'));
+ assert.ok(smoke.includes('expanded palette controls stay bounded'));
+ assert.ok(smoke.includes('Expanded palette geometry check never writes settings'));
+ assert.ok(smoke.includes('targetWidth===320||targetWidth===1920'));
+});
