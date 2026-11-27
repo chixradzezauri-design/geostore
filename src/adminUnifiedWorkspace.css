@@ -3852,3 +3852,18 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker > label { display: block !important; color: var(--av-nav-text) !important; font-size: 12px !important; }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker > select { display: block !important; width: 100%; min-width: 0; min-height: 44px !important; font-size: 16px !important; }
 }
+
+/* Stage 17: tablet diagnostic text-size follow-up. Scope to operational controls;
+   preserve storefront and character preview typography and larger owner settings. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(.admin-crm-panel,.admin-visual-editor-panel,.admin-audit-logs-panel) label:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *, .sr-only, .sr-only *)) {
+    font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+    min-inline-size: 0; line-height: 1.5; overflow-wrap: break-word;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-products-panel button:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *, .sr-only, .sr-only *)) {
+    font-size: max(12px,var(--admin-vd-buttonFontSize-active,12px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-analytics button:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *, .sr-only, .sr-only *)) {
+    min-height: 44px !important;
+  }
+}
