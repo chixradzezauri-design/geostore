@@ -144,6 +144,35 @@
   min-inline-size: 0;
   max-inline-size: 100%;
 }
+@media (max-width: 767px) {
+  /* A single intrinsic column, not an explicit two-row grid with an absent second child. */
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main > [data-admin-visual-header="true"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    height: auto !important;
+    block-size: auto !important;
+    min-block-size: 0 !important;
+    max-block-size: none !important;
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main > [data-admin-visual-header="true"] > :is(.admin-pro-page-identity,.admin-pro-header-actions) {
+    flex: 0 0 auto !important;
+    position: static !important;
+    transform: none !important;
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: auto !important;
+    block-size: auto !important;
+    max-block-size: none !important;
+    min-block-size: 0 !important;
+    margin: 0 !important;
+  }
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions > button:nth-child(2) {
   background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
   color: var(--admin-vd-primaryButtonText-active,#fff) !important;
@@ -368,7 +397,13 @@
 
 /* Stage 05 — orders. Existing editor-owned card radius, color and padding
    are retained; only internal layout, action roles and presentation change. */
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-panel { container-type: inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-panel {
+  container-type: inline-size;
+  background: var(--admin-vd-ordersSectionBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-ordersSectionBorder-active,var(--av-border)) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header > div { min-width: 0; max-width: 100%; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header h3 { line-height: 1.45; overflow-wrap: anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header h3 svg { flex-shrink: 0; }
@@ -699,6 +734,8 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-inventory-view],.admin-vendors-panel,.admin-purchase-workspace,.admin-supplier-workspace) { container-type: inline-size; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] {
   background-image: none !important; box-shadow: none !important; backdrop-filter: none !important;
+  background-color: var(--admin-vd-inventorySectionBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-inventorySectionBorder-active,var(--av-border)) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] {
   display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 8px !important;

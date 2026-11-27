@@ -28,3 +28,15 @@ test('order and stock presentation uses readable status labels and active typogr
  assert.match(video,/\[data-admin-pro-replenishment-status\] \{[^}]*font-size:12px!important[^}]*max-inline-size:100%/);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('stock captions remain readable and bounded'));
 });
+
+
+test('order and inventory surfaces drop decorative classes and retain mutations',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css');
+ assert.ok(app.includes('admin-orders-panel min-w-0 border rounded-xl'));
+ assert.ok(app.includes('admin-order-card min-w-0 p-3 rounded-xl'));
+ assert.ok(app.includes('admin-inventory-panel min-w-0 space-y-4 rounded-xl'));
+ assert.ok(css.includes('--admin-vd-ordersSectionBackground-active,var(--av-surface)'));
+ assert.ok(css.includes('--admin-vd-inventorySectionBackground-active,var(--av-surface)'));
+ assert.ok(css.includes('A single intrinsic column'));
+ assert.ok(app.includes('validateReplenishmentSaveResponse'));
+});

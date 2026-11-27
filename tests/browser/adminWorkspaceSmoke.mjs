@@ -508,7 +508,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               const issues=[];
               const fits=rect=>rect.left>=boundary.left-2 && rect.right<=boundary.right+2 && rect.top>=boundary.top-2 && rect.bottom<=boundary.bottom+2;
               const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
-              if(!identity || !fits(identity.getBoundingClientRect())) issues.push('header identity bounds');
+              if(!identity || !fits(identity.getBoundingClientRect())) issues.push({issue:'header identity bounds',header:boundary.toJSON(),identity:identity?.getBoundingClientRect().toJSON(),headerDisplay:getComputedStyle(header).display,headerHeight:getComputedStyle(header).height});
               if(identity){
                 const style=getComputedStyle(identity);
                 if(style.display!=='flex'||style.flexDirection!=='column') issues.push('header identity must stack');

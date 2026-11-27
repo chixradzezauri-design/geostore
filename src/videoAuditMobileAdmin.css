@@ -64,7 +64,7 @@
        buttons below the phone viewport. No design values are erased. */
     display: grid !important;
     grid-template-columns: minmax(0,1fr);
-    grid-template-rows: auto auto;
+    grid-template-rows: none;
     align-content: start !important;
     justify-content: start !important;
     justify-items: stretch !important;
