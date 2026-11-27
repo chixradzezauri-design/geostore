@@ -29,3 +29,13 @@ test('staff, flash promotions and design sync captions retain explicit contrast 
   assertContrast(bg,fg,selector);
  }
 });
+
+
+test('final responsive refinement preserves preview boundaries and accessible hidden labels',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),helper=read('tests/browser/adminVisualBaseline.mjs'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.match(css,/\.gs-character-admin label:not\(:where\(\.gs-character-preview \*\)\) \{[^}]*font-size:12px !important/);
+ assert.match(css,/\.gs-visual-editor-controls button \{[^}]*min-inline-size:44px/);
+ assert.ok(helper.includes("allTextNodes.filter(el=>!el.closest('.sr-only'))"));
+ assert.ok(smoke.includes('srOnlyTextElements:sample.srOnlyTextElements'));
+ assert.ok(smoke.includes('character settings labels stay readable'));
+});

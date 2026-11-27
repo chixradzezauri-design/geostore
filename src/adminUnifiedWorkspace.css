@@ -925,6 +925,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > :is(button,select) {
   flex: 1 1 140px; max-inline-size: 100%; white-space: normal !important;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > button {
+  min-height:44px !important; flex-shrink:0; overflow-wrap:anywhere;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading h3 { font-size: 16px !important; line-height: 1.5; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading p { font-size: 12px !important; line-height: 1.6; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-actions > :is(button,select) { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
@@ -1873,6 +1876,13 @@
   color: var(--av-text) !important;
   box-shadow: none !important;
   min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin label:not(:where(.gs-character-preview *)) {
+  font-size:12px !important; min-inline-size:0; max-inline-size:100%;
+  line-height:1.5; white-space:normal; overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin label > :is(select,textarea,input:not([type="checkbox"]):not([type="radio"])):not(:where(.gs-character-preview *)) {
+  min-inline-size:0 !important; max-inline-size:100%; box-sizing:border-box;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(label.text-slate-100,details.gs-character-admin-section > summary) {
   color: var(--av-text) !important;
@@ -3212,6 +3222,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group :is(button,summary),
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls :is(button,summary) {
   min-height:44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls button {
+  min-inline-size:44px; max-inline-size:100%; box-sizing:border-box;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:has(> input[type="color"]),
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls .gs-visual-color-control {

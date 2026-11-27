@@ -26,7 +26,11 @@ export async function collectAdminVisualBaseline(shell,module){
   const touch=controls.filter(el=>!el.matches('input[type="checkbox"],input[type="radio"],input[type="range"]'));
   // Diagnostic counts only: native controls and intentional truncation can
   // produce overflow, so investigate these signals before enforcing a gate.
-  const textNodes=[...main.querySelectorAll('h1,h2,h3,h4,label,button,th,td')].filter(visible);
+  // Screen-reader-only labels remain accessible; their deliberately clipped
+  // geometry is not a visible typography defect. Report their count separately.
+  const allTextNodes=[...main.querySelectorAll('h1,h2,h3,h4,label,button,th,td')].filter(visible);
+  const srOnlyTextElements=allTextNodes.filter(el=>el.closest('.sr-only')).length;
+  const textNodes=allTextNodes.filter(el=>!el.closest('.sr-only'));
   const clippedText=textNodes.filter(el=>el.clientWidth>0 && el.scrollWidth-el.clientWidth>2);
   const tinyText=textNodes.filter(el=>parseFloat(getComputedStyle(el).fontSize)<12);
   const narrowControls=touch.filter(el=>el.getBoundingClientRect().width<43.5);
@@ -48,7 +52,7 @@ export async function collectAdminVisualBaseline(shell,module){
    labelSizes:countBy(labels,'fontSize'),buttonSizes:countBy(buttons,'fontSize'),
    controls:controls.length,shortControls:touch.filter(el=>el.getBoundingClientRect().height<43.5).length,
    buttonColors:countBy(buttons,'backgroundColor'),
-   textElements:textNodes.length, horizontallyOverflowingText:clippedText.length,
+   textElements:textNodes.length, srOnlyTextElements, horizontallyOverflowingText:clippedText.length,
    smallTextElements:tinyText.length, narrowControls:narrowControls.length, issueGroups,
    tables:tables.length,images:images.length,
    imageLoadFailures:images.filter(el=>el.complete&&el.naturalWidth===0).length

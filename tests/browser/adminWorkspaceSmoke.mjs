@@ -225,6 +225,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(editorIssues,[],engine+' '+targetWidth+'px: editor tools remain bounded and publication actions unique');
+              if(tab==='settings'){
+                const smallLabels=await shell.evaluate(root=>[...root.querySelectorAll('.admin-settings-panel .gs-character-admin label:not(:where(.gs-character-preview *))')].filter(el=>{const r=el.getBoundingClientRect();return r.width&&r.height&&!el.closest('[hidden],[aria-hidden="true"],.sr-only')&&parseFloat(getComputedStyle(el).fontSize)<12;}).length);
+                assert.equal(smallLabels,0,engine+' '+targetWidth+'px: character settings labels stay readable');
+              }
               if(tab==='visual_editor'||tab==='admin_visual_editor'){
                 const colorIssues=await shell.evaluate((root,module)=>{
                   const selector=module==='visual_editor'?'.gs-visual-editor-controls input[type="color"]':'.admin-visual-editor-panel > .admin-studio-group input[type="color"]';
@@ -529,7 +533,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
-            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,narrowControls:sample.narrowControls,textElements:sample.textElements,horizontallyOverflowingText:sample.horizontallyOverflowingText,smallTextElements:sample.smallTextElements,issueGroups:sample.issueGroups,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
+            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,narrowControls:sample.narrowControls,textElements:sample.textElements,horizontallyOverflowingText:sample.horizontallyOverflowingText,smallTextElements:sample.smallTextElements,issueGroups:sample.issueGroups,srOnlyTextElements:sample.srOnlyTextElements,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
             if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1 || newControlIssues.length) {
               // Diagnostic geometry only, from the isolated synthetic fixture.
               // Do not log text, input values, URLs or customer identifiers.
