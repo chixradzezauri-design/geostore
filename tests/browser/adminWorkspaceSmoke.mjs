@@ -471,11 +471,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   const c = count?.getBoundingClientRect();
                   return rect.height < 43.5 || l.left < i.right - 2 || l.right > rect.right + 2 || (c && l.right > c.left + 2) ? ['navigation track collision'] : [];
                 });
-                return {rail:visible(rail),picker:visible(picker),groups:groups.filter(visible).length,issues};
+                return {rail:visible(rail),picker:visible(picker),groups:groups.filter(visible).length,optionCount:picker.options.length,buttonCount:buttons.length,optionGroups:picker.querySelectorAll('optgroup').length,issues};
               });
-              assert.equal(navigation.rail,targetWidth >= 768,'Only the appropriate navigation control is visible');
-              assert.equal(navigation.picker,targetWidth < 768,'Native phone module selector stays visible');
-              if(targetWidth >= 768) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
+              assert.equal(navigation.rail,targetWidth >= 1024,'Full rail visible only when sidebar fits alongside content');
+              assert.equal(navigation.picker,targetWidth < 1024,'Native phone and portrait tablet module selector stays visible');
+              assert.equal(navigation.optionCount,navigation.buttonCount,'Compact picker retains every authorized navigation item');
+              assert.equal(navigation.optionGroups,5,'Compact picker retains all five authorized groups');
+              if(targetWidth >= 1024) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
               assert.deepEqual(navigation.issues,[],engine+' '+targetWidth+'px: menu tracks do not collide');
               const overviewIssues = await shell.locator('.admin-command-center').evaluate(node => {
                 const cards = [...node.querySelectorAll('.admin-command-kpi')];
@@ -503,7 +505,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
               assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');
             }
-            if(targetWidth<768){
+            if(targetWidth<1024){
               const chrome=await shell.evaluate(root=>{
                 const sidebar=root.querySelector(':scope > [data-admin-sidebar="true"]');
                 const brand=sidebar.querySelector('.admin-pro-brand').getBoundingClientRect();

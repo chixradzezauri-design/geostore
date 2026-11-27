@@ -3828,3 +3828,27 @@
   min-inline-size: 0 !important; max-inline-size: 100%; overflow-wrap: break-word; word-break: normal;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-concierge-preset-controls > label > select {width: 100%; min-inline-size: 0 !important;}
+
+/* Stage 16: portrait-tablet screenshots showed clipped, 400px-tall stacked navigation.
+   Reuse the authorized native module picker until the sidebar fits beside content. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child {
+    display: grid !important; grid-template-columns: minmax(0,1fr) max-content !important;
+    grid-template-rows: auto auto !important; grid-auto-rows: auto !important;
+    width: 100% !important; min-inline-size: 0 !important; max-inline-size: 100% !important;
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    block-size: auto !important; min-block-size: 0 !important; max-block-size: none !important;
+    align-items: center !important; align-content: start !important; align-self: start !important;
+    gap: 8px 12px !important; padding: 12px !important; box-sizing: border-box !important;
+    overflow: visible !important; position: static !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > #geostore-admin-desktop-modules { display: none !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand { grid-area: 1 / 1; min-inline-size: 0; border-bottom: 0 !important; padding-block-end: 0 !important; margin: 0 !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-video-logout { grid-area: 1 / 2; width: auto !important; min-height: 44px !important; margin: 0 !important; padding: 8px 12px !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker {
+    display: grid !important; grid-area: 2 / 1 / 3 / -1; gap: 4px; min-inline-size: 0;
+    max-inline-size: 100%; height: auto !important; min-height: 0 !important; margin: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker > label { display: block !important; color: var(--av-nav-text) !important; font-size: 12px !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker > select { display: block !important; width: 100%; min-width: 0; min-height: 44px !important; font-size: 16px !important; }
+}
