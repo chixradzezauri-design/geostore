@@ -936,7 +936,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div.grid > div { min-width: 0; background: var(--av-inset) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div.grid > div > strong { color: var(--av-text) !important; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars { gap: 6px !important; padding-block-start: 12px; height: 180px !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] { gap: 5px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] { gap: 5px !important; flex: 1 0 56px !important; min-inline-size: 56px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-chart-column {
   flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: flex-end;
   border-bottom: 1px solid var(--av-border); background: repeating-linear-gradient(to top,var(--av-border) 0px,var(--av-border) 1px,transparent 1px,transparent 25%);
@@ -974,6 +974,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid :is(label,input) {
   min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid label {font-size:max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;line-height:1.5;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid input {
   box-sizing: border-box; min-height: 44px !important; width: 100% !important;
   font-variant-numeric: tabular-nums;
@@ -1001,7 +1002,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field :is(input,select) {
   box-sizing: border-box; width: 100% !important; min-height: 44px !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field label {line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field label {font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses :is(#admin-expense-description-help,#admin-expense-amount-help),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator #admin-calculator-units-help {font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;color:var(--av-muted) !important;line-height:1.5;overflow-wrap:anywhere;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-submit {
   background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
   color: var(--admin-vd-primaryButtonText-active,#fff) !important;
@@ -2433,14 +2436,14 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-pro-finance-kpi] > p:first-child {
   min-height: 0;
-  color: var(--av-text) !important;
-  font-size: 12px !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  font-size: clamp(12px,var(--admin-vd-bodyFontSize-active,14px),16px) !important;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-pro-finance-kpi] .admin-analytics-value {
   font-variant-numeric: tabular-nums;
-  font-size: clamp(18px,calc(var(--admin-vd-titleFontSize-active,18px) * 1.2),30px) !important;
+  font-size: clamp(18px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.2),30px) !important;
   line-height: 1.25;
   overflow-wrap: anywhere;
   -webkit-text-fill-color: currentColor !important;

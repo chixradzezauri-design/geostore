@@ -16,3 +16,14 @@ test('financial presentation uses responsive grids and a zero-based chart, witho
  for(const term of ['admin-unified-chart-column','@container (min-width: 400px)','@container (min-width: 850px)','data-admin-unified-net="loss"','data-admin-unified-expense-state="verified"'])assert.ok(css.includes(term),term);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('finance chart and captions use bounded readable presentation without changing values',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.match(css,/\.admin-analytics-trend-bars \[role="listitem"\] \{[^}]*flex: 1 0 56px !important; min-inline-size: 56px/);
+ assert.ok(css.includes('clamp(12px,var(--admin-vd-bodyFontSize-active,14px),16px)'));
+ assert.doesNotMatch(video,/\.admin-analytics-value \{[^}]*font-size:clamp\(20px,calc\(var\(--admin-vd-titleFontSize-active,18px\)/);
+ assert.ok(css.includes('#admin-expense-description-help,#admin-expense-amount-help'));
+ assert.ok(smoke.includes('financial form help too small'));
+ assert.ok(smoke.includes('finance chart column too narrow'));
+});

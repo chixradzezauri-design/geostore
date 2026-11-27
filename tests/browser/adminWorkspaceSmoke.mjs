@@ -292,8 +292,19 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   for(const card of cards){
                     const outer=card.getBoundingClientRect();
                     for(const el of card.querySelectorAll(':scope > p,:scope > span'))if(!fits(el.getBoundingClientRect(),outer))issues.push('KPI content outside card');
+                    const caption=card.querySelector('p:first-child');
+                    if(caption&&parseFloat(getComputedStyle(caption).fontSize)<12)issues.push('financial KPI caption too small');
+                  }
+                  const scroll=scope.querySelector('.admin-analytics-trend-scroll');
+                  if(scroll){
+                    if(getComputedStyle(scroll).overflowX!=='auto')issues.push('finance chart scroll lost');
+                    for(const item of scroll.querySelectorAll('[role="listitem"]')){
+                      const rect=item.getBoundingClientRect();
+                      if(rect.width>0&&rect.width<55.5)issues.push('finance chart column too narrow');
+                    }
                   }
                 }else{
+                  for(const el of scope.querySelectorAll('#admin-expense-description-help,#admin-expense-amount-help,#admin-calculator-units-help'))if(el.getBoundingClientRect().width>0&&parseFloat(getComputedStyle(el).fontSize)<12)issues.push('financial form help too small');
                   const groups=scope.querySelectorAll(module==='calculator'?'.admin-calculator-field-grid > div,.admin-calculator-results > div':'.admin-expense-field');
                   for(const group of groups){
                     const outer=group.getBoundingClientRect();
