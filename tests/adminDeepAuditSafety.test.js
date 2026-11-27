@@ -47,3 +47,14 @@ test('remaining measured admin form captions have bounded readable typography',(
  assert.ok(css.includes('font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important'));
  assert.ok(css.includes('overflow-wrap: anywhere'));
 });
+
+
+test('video follow-up separates header identity from action controls and removes mobile hero empty flex space',()=>{
+ const unified=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css'),mobile=read('src/videoAuditMobileAdmin.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(!video.includes('[data-admin-visual-header="true"] > div:last-child'));
+ assert.ok(!mobile.includes('[data-admin-visual-header="true"] > div:last-child'));
+ assert.ok(unified.includes('flex-direction: column !important'));
+ assert.ok(unified.includes('.admin-pro-page-identity > :is(h2,p,span)'));
+ assert.ok(smoke.includes('header text must stack in reading order'));
+ assert.ok(smoke.includes('mobile hero must not reserve empty flex space'));
+});

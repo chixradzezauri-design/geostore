@@ -85,14 +85,14 @@
     margin: 0 !important;
   }
   .admin-dashboard-pro.admin-dashboard-shell
-    > div:nth-child(2) > [data-admin-visual-header="true"] > div:last-child {
+    > div:nth-child(2) > [data-admin-visual-header="true"] > .admin-pro-header-actions {
     align-self: start;
     align-content: start;
     grid-auto-rows: auto;
     gap: 7px !important;
   }
   .admin-dashboard-pro.admin-dashboard-shell
-    > div:nth-child(2) > [data-admin-visual-header="true"] > div:last-child > button {
+    > div:nth-child(2) > [data-admin-visual-header="true"] > .admin-pro-header-actions > button {
     min-height: 44px !important;
     padding: 9px 8px !important;
     font-size: 11px !important;

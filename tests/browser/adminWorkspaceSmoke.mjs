@@ -498,6 +498,24 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               const fits=rect=>rect.left>=boundary.left-2 && rect.right<=boundary.right+2 && rect.top>=boundary.top-2 && rect.bottom<=boundary.bottom+2;
               const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
               if(!identity || !fits(identity.getBoundingClientRect())) issues.push('header identity bounds');
+              if(identity){
+                const style=getComputedStyle(identity);
+                if(style.display!=='flex'||style.flexDirection!=='column') issues.push('header identity must stack');
+                const items=[...identity.children].map(el=>el.getBoundingClientRect());
+                const identityRect=identity.getBoundingClientRect();
+                for(let i=0;i<items.length;i++){
+                  if(items[i].width<identityRect.width-3||!fits(items[i])) issues.push('header text must use full identity width');
+                  if(i&&items[i].top<items[i-1].bottom-2) issues.push('header text must stack in reading order');
+                }
+              }
+              const hero=header.parentElement.querySelector('.admin-command-hero');
+              if(hero&&window.innerWidth<640){
+                const inner=hero.firstElementChild,copy=inner?.firstElementChild,button=inner?.querySelector('button');
+                if(copy&&button){
+                  const gap=button.getBoundingClientRect().top-copy.getBoundingClientRect().bottom;
+                  if(getComputedStyle(copy).flexBasis!=='auto'||gap>24||gap< -2)issues.push('mobile hero must not reserve empty flex space');
+                }
+              }
               if(actions){
                 const area=actions.getBoundingClientRect();
                 if(!fits(area) || (identity && overlaps(identity.getBoundingClientRect(),area))) issues.push('header identity/action collision');
