@@ -243,6 +243,24 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(promoIssues,[],engine+' '+targetWidth+'px: promotion controls stay within their regions');
+              if(tab==='discounts'){
+                const captionIssues=await shell.evaluate(root=>{
+                  const issues=[];
+                  for(const el of root.querySelectorAll('.admin-unified-flash-price-pair > span,.admin-unified-flash-price-pair > small,.gs-admin-flash-schedule-status,.admin-unified-flash-metrics > div > span')){
+                    const rect=el.getBoundingClientRect();
+                    if(!rect.width||!rect.height)continue;
+                    const style=getComputedStyle(el),outer=el.parentElement.getBoundingClientRect();
+                    if(parseFloat(style.fontSize)<12||rect.left<outer.left-2||rect.right>outer.right+2)issues.push('promotion caption bounds');
+                    if(el.matches('.admin-unified-flash-price-pair > span:nth-child(2)')){
+                      const risk=el.closest('[data-admin-flash-price-risk]')?.dataset.adminFlashPriceRisk;
+                      const expected=risk==='increase'?'rgb(117, 67, 0)':'rgb(20, 89, 74)';
+                      if(style.color!==expected)issues.push('promotion price contrast pair');
+                    }
+                  }
+                  return issues;
+                });
+                assert.deepEqual(captionIssues,[],engine+' '+targetWidth+'px: promotion price and status captions remain readable');
+              }
             }
             if (['support','messages','broadcasts'].includes(tab)) {
               const communicationIssues=await shell.evaluate((root,module)=>{

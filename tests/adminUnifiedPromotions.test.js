@@ -13,3 +13,12 @@ test('promotion layouts preserve responsive controls and contrast for status',()
  for(const term of ['admin-unified-flash-price-pair','gs-admin-flash-schedule-status[data-status="pending"]','admin-unified-banner-actions','@container (min-width: 480px)','@container (min-width: 760px)','min-height: 44px'])assert.ok(css.includes(term),term);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('flash price captions use explicit readable contrast and bounded typography',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.match(css,/\[data-admin-flash-price-risk="normal"\] \.admin-unified-flash-price-pair > span:nth-child\(2\) \{[^}]*background: #dff3eb !important;[^}]*color: #14594a !important/);
+ assert.match(css,/\[data-admin-flash-price-risk="increase"\] \.admin-unified-flash-price-pair > span:nth-child\(2\) \{[^}]*background: #fff0cc !important;[^}]*color: #754300 !important/);
+ assert.match(css,/\.gs-admin-flash-schedule-status \{[^}]*font-size:12px !important/);
+ assert.ok(smoke.includes('promotion price and status captions remain readable'));
+});
