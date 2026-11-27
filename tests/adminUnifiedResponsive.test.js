@@ -11,7 +11,7 @@ test('responsive workspace keeps native navigation and existing permission-filte
 });
 test('device audit checks visible new controls and harmless editor navigation with no writes',()=>{
  const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
- for(const term of ['newControlIssues.length','rect.height < 43.5','bounds.right + 2','newControlIssues,offenders','Shortcut opens existing palette','Opening editor sections never writes settings','Object.freeze([320, 360, 390, 430, 768, 1024, 1440])'])assert.ok(smoke.includes(term),term);
+ for(const term of ['newControlIssues.length','rect.height < 43.5','bounds.right + 2','newControlIssues,offenders','Shortcut opens existing palette','Opening editor sections never writes settings','Object.freeze([320, 360, 390, 430, 768, 1024, 1440, 1920])'])assert.ok(smoke.includes(term),term);
 });
 
 test('measured header touch targets override the legacy compact selector without changing publication logic',()=>{
@@ -24,4 +24,12 @@ test('measured header touch targets override the legacy compact selector without
  const app=read('src/components/AdminDashboardPro.jsx');
  assert.ok(app.includes("typeof onSaveStorefrontDraft === 'function'"));
  assert.ok(app.includes("typeof onPublishStorefront === 'function'"));
+});
+
+
+test('workspace typography retains a single readable trend-label size and visible navigation groups',()=>{
+ const unified=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css');
+ assert.match(unified,/\.admin-analytics-trend-bars \[role="listitem"\] > span \{\s*font-size: max\(12px,var\(--admin-vd-tableHeaderFontSize-active,12px\)\) !important;/);
+ assert.doesNotMatch(video,/\.admin-analytics-trend-bars \[role="listitem"\] > span \{[^}]*font-size:/);
+ assert.match(unified,/\.admin-workspace-nav-group \{\s*grid-column: 1 \/ -1;\s*color: var\(--av-nav-text\) !important;\s*font-size: 12px !important;/);
 });

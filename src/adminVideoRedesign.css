@@ -1469,7 +1469,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-finance-kpi] .admin-analytics-note {display:block;color:var(--admin-vd-cardMutedText-active,var(--av-muted))!important;background:transparent!important;font-size:12px!important;line-height:1.5;padding:0!important;white-space:normal!important;overflow-wrap:anywhere}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-scroll {max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [data-admin-pro-finance-bar] {background:var(--av-accent)!important;min-width:0}
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] > span {color:var(--av-muted)!important;font-size:10px!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] > span {color:var(--av-muted)!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-finance-breakdown-row,.admin-finance-recent-row,.admin-expense-actions) {font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-amount {background:#fce5e8!important;color:#9c2538!important;border-radius:6px;padding:5px 8px;font-size:13px!important;white-space:normal!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-description {font-size:14px!important;line-height:1.5}

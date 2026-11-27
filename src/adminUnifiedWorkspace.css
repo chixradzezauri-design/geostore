@@ -143,7 +143,6 @@
   outline-color: var(--av-nav-active-text) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="false"]:hover {
-  background: var(--av-nav-bg) !important;
   border-color: var(--av-nav-text) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout {
@@ -2240,7 +2239,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
   grid-column: 1 / -1;
   color: var(--av-nav-text) !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   line-height: 1.5;
   opacity: 1;
   letter-spacing: normal;
@@ -2497,7 +2496,7 @@
   outline-offset: 2px;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-trend-bars [role="listitem"] > span {
-  font-size: 11px !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
   line-height: 1.4;
   max-inline-size: 100%;
   white-space: normal !important;
