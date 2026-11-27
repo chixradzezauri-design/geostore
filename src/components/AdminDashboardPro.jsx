@@ -7604,7 +7604,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'logs' || adminContentTab === 'logs') && (
-          <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-audit-logs-panel min-w-0 border space-y-4">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
             </h3>
@@ -8254,6 +8254,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'settings' || adminContentTab === 'settings') && (
           <div className="admin-settings-panel space-y-4">
+            {visibleAdminTab === 'settings' && <nav className="admin-settings-jumps" aria-label="პარამეტრების სწრაფი გადასვლები">{[['security','ანგარიშის დაცვა'],['delivery','მიწოდების ტარიფები'],['global','საიტის პარამეტრები'],...(hasSettingsPermission?[['characters','პერსონაჟები']]:[])].map(([key,label])=><button key={key} type="button" onClick={event=>{const target=event.currentTarget.closest('.admin-settings-panel')?.querySelector('[data-admin-settings-target="'+key+'"]');target?.scrollIntoView({block:'start',behavior:'auto'});target?.focus({preventScroll:true});}}>{label}</button>)}</nav>}
             {hasSettingsPermission && visibleAdminTab === 'settings' && <React.Suspense fallback={<AdminSectionLoading/>}><AdminCharacterStudio siteSettings={siteSettings} publishedSettings={publishedCharacterSettings} onTestPublishedCharacter={onTestPublishedCharacter} actualMobile={characterMobile} setSiteSettings={setSiteSettings} busy={storefrontDraftBusy || storefrontPublishBusy} lang={currentLang}/></React.Suspense>}
 
             {SYSTEM_HISTORY_ENABLED && ADMIN_MFA_ROLLOUT_ENABLED && isOwner && adminLoggedIn && adminUserId && visibleAdminTab==='settings' && (
@@ -8261,7 +8262,7 @@ export default function AdminDashboardPro({
                 <SystemMonitoringPanel key={adminUserId+':'+adminSessionVersion.current} enabled read={readSystemHistory} lang={currentLang}/>
               </React.Suspense>
             )}
-            <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-4 sm:p-5 rounded-2xl space-y-3 shadow-lg">
+            <div data-admin-settings-target="security" tabIndex={-1} className="admin-security-notice min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
               <div className="admin-unified-security-summary"><span>სერვერული ავტორიზაცია</span><strong>Supabase Auth</strong></div>
               <p className="text-xs text-slate-300 leading-6">
@@ -8274,20 +8275,20 @@ export default function AdminDashboardPro({
               </p>
             </div>
 
-            <div className="admin-delivery-settings bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-5 shadow-lg">
+            <div data-admin-settings-target="delivery" tabIndex={-1} className="admin-delivery-settings min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
               </h3>
               <div className="admin-delivery-fee-fields grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
+                <div className="admin-delivery-fee-card min-w-0 border space-y-1.5">
                   <label htmlFor="admin-workspace-delivery-tbilisi" className="text-slate-300 font-bold">🏙️ თბილისი / რუსთავი (₾):</label>
                   <input id="admin-workspace-delivery-tbilisi" type="number" inputMode="decimal" disabled={deliveryFeeSaving} value={(deliveryFeeDraft || deliveryFees)?.tbilisi ?? 0} min="0" step="0.01" onChange={e => { const value = e.target.value; setDeliveryFeeDraft(previous => ({ ...(previous || deliveryFees), tbilisi: value })); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
-                <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
+                <div className="admin-delivery-fee-card min-w-0 border space-y-1.5">
                   <label htmlFor="admin-workspace-delivery-bigCities" className="text-slate-300 font-bold">🌆 დიდი ქალაქები (₾):</label>
                   <input id="admin-workspace-delivery-bigCities" type="number" inputMode="decimal" disabled={deliveryFeeSaving} value={(deliveryFeeDraft || deliveryFees)?.bigCities ?? 10} min="0" step="0.01" onChange={e => { const value = e.target.value; setDeliveryFeeDraft(previous => ({ ...(previous || deliveryFees), bigCities: value })); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
-                <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
+                <div className="admin-delivery-fee-card min-w-0 border space-y-1.5">
                   <label htmlFor="admin-workspace-delivery-other" className="text-slate-300 font-bold">🏔️ სხვა რეგიონები (₾):</label>
                   <input id="admin-workspace-delivery-other" type="number" inputMode="decimal" disabled={deliveryFeeSaving} value={(deliveryFeeDraft || deliveryFees)?.other ?? 15} min="0" step="0.01" onChange={e => { const value = e.target.value; setDeliveryFeeDraft(previous => ({ ...(previous || deliveryFees), other: value })); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
@@ -8301,7 +8302,7 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            <div className="admin-global-settings bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-5 shadow-lg">
+            <div data-admin-settings-target="global" tabIndex={-1} className="admin-global-settings min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
               </h3>

@@ -84,12 +84,12 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
   },[preview]);
   useEffect(()=>{if(!eventPreview)return;const id=setTimeout(()=>setEventPreview(null),(eventPreview.settings.delay+eventPreview.settings.duration)*1000);return()=>clearTimeout(id);},[eventPreview]);
   const choose=(key,title)=><label className="min-w-0 space-y-1 block"><span className="text-xs font-semibold text-slate-300">{title}</span><select aria-label={title} className={field} value={s[key]} disabled={busy} onChange={e=>update({[key]:e.target.value})}>{choices[key].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>;
-  return <section data-character-studio className="gs-character-admin rounded-2xl border border-emerald-500/30 bg-slate-900 p-3 sm:p-4 space-y-3 min-w-0">
+  return <section data-character-studio data-admin-settings-target="characters" tabIndex={-1} className="gs-character-admin border space-y-3 min-w-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h3 className="text-base font-black text-white">Character Studio</h3><p className="text-xs text-slate-300">12 პერსონაჟი · რჩევები · შეთავაზებები</p></div>
       <label className="flex items-center gap-2 text-sm text-slate-100"><input type="checkbox" checked={s.enabled} disabled={busy} onChange={e=>update({enabled:e.target.checked})}/> საიტზე ჩართვა</label>
     </div>
-    <div data-character-publish-status data-admin-pro-character-state={!publishedKnown?"unknown":draftDiffers?"draft":"published"} role="status" className="rounded-lg border border-slate-600 bg-slate-950 p-3 text-xs text-slate-200 space-y-1">
+    <div data-character-publish-status data-admin-pro-character-state={!publishedKnown?"unknown":draftDiffers?"draft":"published"} role="status" className="admin-character-publish-card border p-3 text-xs space-y-1">
       <p className="font-bold">{publishedKnown?(publishedSettings.enabled?'საჯარო საიტზე: ჩართულია':'საჯარო საიტზე: გამორთულია'):'საჯარო ვერსია ჯერ ვერ დადასტურდა'}</p>
       {draftDiffers?<p className="text-amber-300">მონახაზი განსხვავდება გამოქვეყნებული ვერსიისგან. ზედა ღილაკით „ცვლილებების გამოქვეყნება“ გაააქტიურეთ საიტზე.</p>:<p>საიტზე გამოჩნდება მხოლოდ დადასტურებული გამოქვეყნებული პარამეტრები. ადმინისტრატორსაც შეუძლია საჯარო გვერდზე ნახვა.</p>}
       <p>ახალი გამოქვეყნებული პარამეტრები ხილულ გვერდზე ავტომატურად მოწმდება ყოველ 30 წამში და ჩანართზე დაბრუნებისას.</p>
@@ -103,7 +103,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       <div><span>სცენარები</span><strong>{enabledScenarios}/{Object.keys(CHARACTER_SCENARIOS).length}</strong></div>
       <div><span>დაგეგმილი ღონისძიებები</span><strong>{s.calendarEnabled?enabledEvents:'გამორთული'}</strong></div>
     </div>
-    {s.enabled&&!s.mobile&&!s.desktop&&<p role="status" className="rounded-lg border border-amber-500/50 bg-amber-950/40 p-2 text-xs text-amber-200">პერსონაჟი არ გამოჩნდება: ჩართეთ მინიმუმ ერთი ტიპის მოწყობილობა.</p>}
+    {s.enabled&&!s.mobile&&!s.desktop&&<p role="status" className="admin-character-device-warning border p-2 text-xs">პერსონაჟი არ გამოჩნდება: ჩართეთ მინიმუმ ერთი ტიპის მოწყობილობა.</p>}
     <div className="gs-concierge-presets" data-character-presets>
       <div><h4>მზა მართვის რეჟიმები</h4><p>აირჩიე რეჟიმი და გამოიყენე მონახაზზე. გამოქვეყნება ცალკე მოქმედებაა.</p></div>
       <div className="gs-concierge-preset-controls">
@@ -112,7 +112,7 @@ export default function AdminCharacterStudio({siteSettings,publishedSettings=nul
       </div>
       <p>{CONCIERGE_PRESETS[presetKey].description}</p>
       <div className="gs-character-complete-setup"><strong>სრული დამხმარე</strong><p>ერთი მოქმედებით გამოიყენე 12 როლი და ახალი შესაძლებლობები. არსებული ჩართული პროფილები და საკუთარი ტექსტები შენარჩუნდება.</p><button type="button" data-character-complete-setup disabled={busy} onClick={()=>applyPreset('complete')}>სრული რეჟიმის გამოყენება</button></div>
-      {presetUndo&&JSON.stringify(s)===presetUndo.applied&&<div role="status" className="flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-200"><span>რეჟიმი გამოყენებულია მონახაზზე.</span><button type="button" data-character-undo-preset disabled={busy} onClick={undoPreset} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">გაუქმება</button></div>}
+      {presetUndo&&JSON.stringify(s)===presetUndo.applied&&<div role="status" className="admin-character-preset-notice flex flex-wrap items-center justify-between gap-2 text-xs"><span>რეჟიმი გამოყენებულია მონახაზზე.</span><button type="button" data-character-undo-preset disabled={busy} onClick={undoPreset} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-white">გაუქმება</button></div>}
       <div className="gs-concierge-summary" aria-label="აქტიური ფუნქციები">{[['რჩევები',s.advice.enabled,()=>update({advice:{...s.advice,enabled:!s.advice.enabled}})],['პროდუქტები',s.recommendProducts,()=>update({recommendProducts:!s.recommendProducts})],['აქციები',s.saleGuide,()=>update({saleGuide:!s.saleGuide})],['ინტერაქცია',s.interactiveGuide,()=>update({interactiveGuide:!s.interactiveGuide})],['საახალწლო',s.winterCelebration,()=>update({winterCelebration:!s.winterCelebration})],['მინიშნებები',s.guideLinks,()=>update({guideLinks:!s.guideLinks})]].map(([label,on,toggle])=><button type="button" key={label} disabled={busy} data-enabled={on?'true':'false'} aria-label={label+(on?' — გამორთვა':' — ჩართვა')} onClick={toggle}>{on?'✓':'–'} {label}</button>)}</div>
       <div className="gs-character-extra-controls"><button type="button" aria-pressed={s.helpChoices&&s.interactiveGuide} disabled={busy||!s.interactiveGuide} onClick={()=>update({helpChoices:!s.helpChoices})}>არჩევითი დახმარება: {s.helpChoices&&s.interactiveGuide?'ჩართული':'გამორთული'}</button><button type="button" aria-pressed={s.blackFridayBoost&&s.saleGuide} disabled={busy||!s.saleGuide} onClick={()=>update({blackFridayBoost:!s.blackFridayBoost})}>შავი პარასკევი: {s.blackFridayBoost&&s.saleGuide?'ჩართული':'გამორთული'}</button></div>
       <p>ფუნქციის ღილაკზე დაჭერით პირდაპირ შეცვლი მის ჩართვას.</p>

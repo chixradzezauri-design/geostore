@@ -3606,3 +3606,51 @@
   color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
   font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; line-height: 1.5; overflow-wrap: anywhere;
 }
+
+/* Video stage 8 — settings navigation and editor chrome, not preview content. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-settings-panel > .admin-security-notice,.admin-settings-panel > .admin-delivery-settings,.admin-settings-panel > .admin-global-settings,.admin-settings-panel > .gs-character-admin,.admin-audit-logs-panel,.admin-visual-editor-panel,.gs-storefront-visual-editor > .admin-unified-editor-header) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  color: var(--av-text) !important; padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel > .admin-settings-jumps {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,145px),1fr)); gap: 8px;
+  min-inline-size: 0; padding: 10px; border: 1px solid var(--av-border);
+  border-radius: var(--admin-vd-cardRadius-active,12px); background: var(--av-surface);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-jumps > button {
+  min-height: 44px !important; min-inline-size: 0; padding: 8px; border: 1px solid var(--av-border) !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important; background: var(--av-inset) !important;
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important;
+  line-height: 1.5; white-space: normal; overflow-wrap: break-word; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-jumps > button:focus-visible, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel > [data-admin-settings-target]:focus-visible {outline: 2px solid var(--av-focus,var(--av-accent)); outline-offset: 2px;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel > [data-admin-settings-target] {scroll-margin-block-start: 16px;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-delivery-fee-card {padding: 12px !important; border-radius: 8px !important; background: var(--av-inset) !important; border-color: var(--av-border) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-global-settings-form label, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-fee-fields label {
+  display: block; color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-unified-editor-actions] {
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important; background: var(--av-inset) !important;
+  border-color: var(--av-border) !important; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group > summary, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls > details > summary {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  padding-block: 8px; font-size: 14px !important; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:not(:where(.gs-visual-preview-frame *, .geostore-fashion-store *)), .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls label {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > .admin-character-device-warning {
+  background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
+  -webkit-text-fill-color: currentColor !important; border-radius: 8px; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice {
+  background: #dff3eb !important; color: #14594a !important; padding: 8px; border-radius: 8px;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice > span {color: #14594a !important; -webkit-text-fill-color: currentColor !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice > button {background: #f8fafc !important; color: #243448 !important; border-color: #b8c5d4 !important; -webkit-text-fill-color: currentColor !important; min-height: 44px;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > .admin-character-publish-card > p:first-child {color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important; line-height: 1.6;}
