@@ -37,7 +37,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
     if(!captureDir)return;
     try{
       await page.evaluate(()=>window.scrollTo(0,0));
-      await page.screenshot({path:join(captureDir,engine+'-'+width+'-'+tab+'.png'),fullPage:true,animations:'disabled',timeout:10000});
+      await page.screenshot({path:join(captureDir,engine+'-'+width+'-'+tab+'.png'),fullPage:width!==768&&width!==1024,animations:'disabled',timeout:10000});
     }catch(error){console.warn('ADMIN_VISUAL_CAPTURE_UNAVAILABLE '+engine+' '+width+' '+tab+' '+error.name);}
   };
   for (const width of widths) {
@@ -580,7 +580,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.equal(controls.find(x=>x.tag==='SELECT')?.appearance,'none', 'Finance select avoids native dark paint');
             }
             const sample = await collectAdminVisualBaseline(shell, tab);
-            if(targetWidth===1440 && width!==1440)await capture(page,tab,targetWidth);
+            if((targetWidth===1440 && width!==1440) || (engine==='webkit' && [768,1024].includes(targetWidth)))await capture(page,tab,targetWidth);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
@@ -664,6 +664,8 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           const selectedCharacter=studio.locator('.gs-character-roster > button[aria-pressed="true"]');
           assert.equal(await selectedCharacter.count(),1,'Exactly one roster selection');
+          assert.match(await selectedCharacter.innerText(),/Mini Robot/,'Clicked character is the actual selected roster item');
+          assert.equal(await selectedCharacter.evaluate(el=>getComputedStyle(el).transitionDuration),'0s','Roster selection cannot defer the semantic palette through a transition');
           const selectedPalette=await selectedCharacter.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
           assert.deepEqual(selectedPalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Selected character retains a readable paired palette');
           const securityWarning=shell.locator('[data-admin-pro-security-warning]');

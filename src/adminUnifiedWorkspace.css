@@ -3812,3 +3812,19 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-warning {background: #fff0cc !important; color: #754300 !important; border-color: #d9b96e !important;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-pending {background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback-success {background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;}
+
+/* Stage 15 — roster selection is an immediate state change, not an animated color transition. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed] {
+  transition: none !important; animation: none !important; min-inline-size: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed="true"] {
+  background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;
+  -webkit-text-fill-color: currentColor !important; outline: 2px solid #14594a; outline-offset: -2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed] > span {
+  transition: none !important; color: inherit !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-concierge-preset-controls > label {
+  min-inline-size: 0 !important; max-inline-size: 100%; overflow-wrap: break-word; word-break: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-concierge-preset-controls > label > select {width: 100%; min-inline-size: 0 !important;}
