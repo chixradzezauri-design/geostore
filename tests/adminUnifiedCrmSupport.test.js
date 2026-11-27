@@ -11,3 +11,13 @@ test('customer and support interfaces retain responsive action and text layout w
  for(const term of ['admin-unified-crm-contact','admin-support-status-actions','@container (min-width: 520px)','@container (min-width: 850px)','min-height: 44px'])assert.ok(css.includes(term),term);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('CRM and support share readable status typography without duplicate heading rules',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.match(css,/\.admin-unified-crm-identity h4 \{font-size: clamp\(14px,var\(--admin-vd-bodyFontSize-active,15px\),18px\)/);
+ assert.doesNotMatch(video,/\.admin-crm-user-card h4 \{font-size:15px!important/);
+ assert.match(video,/:is\(\[data-admin-pro-crm-badge\],\[data-admin-pro-ticket-status\]\) \{[^}]*font-size:12px!important/);
+ assert.ok(smoke.includes('account status captions remain readable'));
+ assert.ok(smoke.includes('support status or thread caption too small'));
+});

@@ -1497,7 +1497,6 @@
 
 /* Admin PRO 10 — CRM, support and historical correspondence. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-summary],[data-admin-pro-support-summary]) {background:var(--av-inset)!important;color:var(--av-text)!important;border:1px solid var(--av-border);border-radius:8px;padding:10px 12px;font-size:12px!important;line-height:1.6;overflow-wrap:anywhere}
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-card h4 {font-size:15px!important;line-height:1.45}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-contact-line {color:var(--av-muted)!important;font-size:12px!important;line-height:1.55;overflow-wrap:anywhere}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-edit-panel h5 {font-size:14px!important;line-height:1.5}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-badge="vip"],[data-admin-pro-ticket-status="resolved"]) {--admin-contact-bg:#dff3eb;--admin-contact-fg:#14594a}
@@ -1505,15 +1504,15 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-badge="discount"],[data-admin-pro-ticket-status="working"]) {--admin-contact-bg:#fff0cc;--admin-contact-fg:#754300}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-badge="server"],[data-admin-pro-ticket-status="open"]) {--admin-contact-bg:#e4eefc;--admin-contact-fg:#254b8a}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-badge="local"],[data-admin-pro-crm-badge="order"],[data-admin-pro-ticket-status="unknown"]) {--admin-contact-bg:#e7edf3;--admin-contact-fg:#39495a}
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-badge],[data-admin-pro-ticket-status]) {display:inline-flex;align-items:center;gap:4px;background:var(--admin-contact-bg)!important;color:var(--admin-contact-fg)!important;-webkit-text-fill-color:currentColor!important;border:0!important;border-radius:6px!important;font-size:11px!important;font-weight:600!important;padding:4px 7px!important;line-height:1.4;white-space:normal!important;overflow-wrap:anywhere;max-width:100%}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-pro-crm-badge],[data-admin-pro-ticket-status]) {display:inline-flex;align-items:center;gap:4px;background:var(--admin-contact-bg)!important;color:var(--admin-contact-fg)!important;-webkit-text-fill-color:currentColor!important;border:0!important;border-radius:6px!important;font-size:12px!important;font-weight:600!important;padding:4px 7px!important;line-height:1.4;white-space:normal!important;overflow-wrap:anywhere;min-inline-size:0;max-width:100%;box-sizing:border-box}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-meta {min-width:0;gap:6px 10px!important;align-items:baseline}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-meta > span:nth-child(2) {font-size:15px!important;line-height:1.45}
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-support-ticket-message,.admin-support-ticket-reply) {white-space:pre-wrap;line-height:1.65!important;font-size:13px!important;overflow-wrap:anywhere}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-support-ticket-message,.admin-support-ticket-reply) {white-space:pre-wrap;line-height:1.65!important;font-size:clamp(13px,var(--admin-vd-bodyFontSize-active,14px),16px)!important;overflow-wrap:anywhere}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-thread-role] {min-width:0;overflow-wrap:anywhere;line-height:1.6;background:var(--av-inset)!important;border-color:var(--av-border)!important;border-inline-start-width:3px!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-thread-role="admin"] {border-inline-start-color:var(--av-accent)!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-thread-role] p {color:var(--av-text)!important;font-size:13px!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-thread-role] b {color:var(--av-text)!important;font-size:12px!important}
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-thread-role] span {color:var(--av-muted)!important;font-size:11px!important}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-thread-role] span {color:var(--av-muted)!important;font-size:12px!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-legacy-sender] {color:var(--av-muted)!important;text-transform:none!important;letter-spacing:normal!important;font-size:12px!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-legacy-message-card {box-shadow:none!important}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-reply-input {line-height:1.6}

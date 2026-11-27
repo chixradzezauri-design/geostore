@@ -1094,7 +1094,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid > label:focus-within { outline: 2px solid var(--av-focus); outline-offset: 2px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-list-panel > div:first-child { flex-wrap: wrap; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-email { overflow-wrap: anywhere; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-auth { display: inline-flex; font-size: 12px; line-height: 1.5; border-radius: 6px; padding: 4px 7px; margin-block-start: 6px; max-width: 100%; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-auth { display: inline-flex; font-size: 12px !important; line-height: 1.5; border-radius: 6px; padding: 4px 7px; margin-block-start: 6px; min-inline-size:0; max-width: 100%; white-space:normal !important; overflow-wrap: anywhere; box-sizing:border-box; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="confirmed"] { background: #dff3eb !important; color: #14594a !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="pending"] { background: #fff0cc !important; color: #754300 !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="missing"] { background: #fce5e8 !important; color: #9c2538 !important; }
@@ -1142,7 +1142,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity > div:first-child {
   min-inline-size: 0; align-items: center; gap: 6px !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {font-size: 15px !important; line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {font-size: clamp(14px,var(--admin-vd-bodyFontSize-active,15px),18px) !important; line-height: 1.5; overflow-wrap: anywhere;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity [data-admin-pro-crm-badge] {max-inline-size: 100%; overflow-wrap: anywhere; white-space: normal !important;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions {
   border-block-start: 1px solid var(--av-border); padding-block-start: 10px;
@@ -2875,7 +2875,7 @@
   background: var(--av-inset); border: 1px solid var(--av-border);
   border-radius: 8px; padding: 8px; gap: 8px 12px;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > span { color: var(--av-muted) !important; font-size: 12px; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > span { color: var(--av-muted) !important; font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; line-height: 1.5; min-inline-size:0; overflow-wrap:anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > b {
   color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
   font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
@@ -2899,7 +2899,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="admin"] > div > span { color: #365c4b !important; -webkit-text-fill-color: currentColor !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="customer"] > div > span { color: var(--av-muted) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role] > div > :is(b,span) { min-inline-size: 0; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role] > div > :is(b,span) { min-inline-size: 0; max-inline-size:100%; overflow-wrap: anywhere; font-size:12px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread > div:first-child > b { color: var(--av-text) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread > div:first-child > button { color: var(--av-text) !important; min-height: 44px; padding-inline: 8px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread [role="alert"] { background: #fce5e8 !important; color: #9c2538 !important; border-radius: 8px; padding: 10px; }

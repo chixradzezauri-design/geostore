@@ -256,6 +256,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                     if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('communication element outside group');
                   }
                 }
+                for(const el of scope.querySelectorAll('[data-admin-pro-ticket-status],[data-admin-pro-thread-role] > div > span')){
+                  const rect=el.getBoundingClientRect();
+                  if(rect.width&&rect.height&&parseFloat(getComputedStyle(el).fontSize)<12)issues.push('support status or thread caption too small');
+                }
                 if(module==='support'&&!scope.querySelector('.admin-support-reply-form'))issues.push('support composer missing');
                 if(module==='broadcasts'&&!scope.querySelector('[data-admin-pro-delivery-disabled]'))issues.push('delivery limitation missing');
                 return issues;
@@ -280,6 +284,8 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(identityIssues,[],engine+' '+targetWidth+'px: staff and CRM controls remain bounded');
+              const statusIssues=await shell.evaluate(root=>Array.from(root.querySelectorAll('[data-admin-pro-crm-badge],.admin-unified-staff-auth')).filter(el=>{const rect=el.getBoundingClientRect();return rect.width&&rect.height&&parseFloat(getComputedStyle(el).fontSize)<12;}).length);
+              assert.equal(statusIssues,0,engine+' '+targetWidth+'px: account status captions remain readable');
             }
             if (['analytics','calculator','expenses'].includes(tab)) {
               const financeIssues=await shell.evaluate((root,module)=>{
