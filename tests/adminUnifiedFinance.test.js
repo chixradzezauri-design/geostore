@@ -27,3 +27,20 @@ test('finance chart and captions use bounded readable presentation without chang
  assert.ok(smoke.includes('financial form help too small'));
  assert.ok(smoke.includes('finance chart column too narrow'));
 });
+
+
+test('finance video follow-up owns operational surfaces and separates error from neutral progress',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css');
+ for(const cls of ['admin-analytics-card','admin-analytics-toolbar','admin-finance-sources-panel','admin-finance-expenses-panel','admin-finance-products-panel','admin-finance-vendors-panel','admin-profit-calculator','admin-calculator-results','admin-expense-entry-panel','admin-local-vendor-entry-panel','admin-local-vendor-list-panel']){
+   const classes=[...app.matchAll(/className="([^"]+)"/g)].map(m=>m[1]).filter(s=>s.split(/\s+/).includes(cls));
+   assert.ok(classes.length>0,cls);
+   assert.ok(classes.every(s=>!/(?:bg-slate-9|shadow-|backdrop-blur|rounded-\[2\.5rem\])/.test(s)),cls);
+ }
+ assert.ok(app.includes('admin-finance-reconciliation-warning'));
+ const stage=css.split('/* Finance video follow-up:')[1];
+ assert.match(stage,/admin-expense-mutation-notice\[role="alert"\][^}]+background: #fce5e8 !important; color: #9c2538/);
+ assert.match(stage,/admin-expense-mutation-notice\[role="status"\][^}]+background: var\(--av-inset\) !important; color: var\(--av-text\)/);
+ assert.ok(stage.includes('admin-local-vendor-list-panel'));
+ assert.ok(app.includes('onSubmit={handleAddExpense}'));
+ assert.ok(app.includes('onSubmit={handleAddVendor}'));
+});

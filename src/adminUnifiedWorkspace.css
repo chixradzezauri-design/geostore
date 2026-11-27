@@ -46,7 +46,7 @@
 }
 
 /* Neutral operational surfaces own their paint; no legacy dark utility classes on these roots. */
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-history-panel,.admin-vendors-panel .admin-purchase-workspace,.admin-vendors-panel .admin-supplier-workspace,.admin-crm-panel,.admin-discounts-panel) {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-history-panel,.admin-expenses .admin-expense-entry-panel,.admin-vendors-panel .admin-local-vendor-entry-panel,.admin-vendors-panel .admin-local-vendor-list-panel,.admin-vendors-panel .admin-purchase-workspace,.admin-vendors-panel .admin-supplier-workspace,.admin-crm-panel,.admin-discounts-panel) {
   background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
   color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
   border: 1px solid var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
@@ -1082,7 +1082,7 @@
   border-bottom: 1px solid var(--av-border); background: repeating-linear-gradient(to top,var(--av-border) 0px,var(--av-border) 1px,transparent 1px,transparent 25%);
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-chart-column > [data-admin-pro-finance-bar] { max-height: 100%; flex-shrink: 0; background: var(--av-accent) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-finance-orders-warning,.admin-finance-data-warning) {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-finance-orders-warning,.admin-finance-data-warning,.admin-finance-reconciliation-warning) {
   background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-breakdown-row, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-recent-row {
@@ -3460,4 +3460,48 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-gallery-thumbnail {
   background: var(--av-inset) !important; border-color: var(--av-border) !important;
   box-shadow: none !important; border-radius: 10px !important;
+}
+
+/* Finance video follow-up: neutral cards, explicit evidence and mutation states. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-analytics-toolbar,.admin-finance-sources-panel,.admin-finance-expenses-panel,.admin-finance-products-panel,.admin-finance-vendors-panel),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-reconciliation-warning {
+  border-radius: 8px; overflow-wrap: anywhere; line-height: 1.6;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-data-warning .admin-finance-retry,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-orders-warning .admin-finance-retry {
+  background: #fff0cc !important; color: #754300 !important;
+  border-color: #d4a65e !important; min-height: 44px; white-space: normal;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  justify-content: flex-start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses :is(.admin-expense-mutation-notice[role="alert"],.admin-expense-load-error) {
+  background: #fce5e8 !important; color: #9c2538 !important;
+  border-color: #e4b4bf !important; -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-mutation-notice[role="status"] {
+  background: var(--av-inset) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important; -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-error-retry {
+  color: #9c2538 !important; -webkit-text-fill-color: currentColor !important;
+  min-height: 44px; white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel :is(.admin-local-vendor-entry-panel,.admin-local-vendor-list-panel,.admin-supplier-workspace,.admin-purchase-workspace) label:not(.sr-only) {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere; min-inline-size: 0; line-height: 1.5;
 }
