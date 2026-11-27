@@ -3640,7 +3640,7 @@
   color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
   padding-block: 8px; font-size: 14px !important; line-height: 1.5;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:not(:where(.gs-visual-preview-frame *, .geostore-fashion-store *)), .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls label {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)), .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls label {
   color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > .admin-character-device-warning {
@@ -3654,3 +3654,30 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice > span {color: #14594a !important; -webkit-text-fill-color: currentColor !important;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice > button {background: #f8fafc !important; color: #243448 !important; border-color: #b8c5d4 !important; -webkit-text-fill-color: currentColor !important; min-height: 44px;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > .admin-character-publish-card > p:first-child {color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important; line-height: 1.6;}
+
+/* Video stage 9 — intrinsic narrow phone chrome; keep the Georgian brand legible. */
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child {
+    padding-block: 10px !important; padding-inline: 10px !important;
+    grid-template-columns: minmax(0,1fr) max-content !important;
+    gap: 8px !important; align-content: start !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand {
+    min-width: 0 !important; min-height: 0 !important; padding: 0 !important;
+    border: 0 !important; gap: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand > .admin-pro-brand-mark {
+    display: none !important; /* Decorative shield only; keep both brand labels and all controls. */
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand > div:last-child {
+    min-width: 0 !important; flex: 1 1 auto; padding: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand :is(h3,p) {
+    margin: 0 !important; letter-spacing: normal !important; text-transform: none !important;
+    word-break: normal !important; overflow-wrap: break-word !important; line-height: 1.4 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-video-logout {
+    width: auto !important; min-width: 44px !important; min-height: 44px !important;
+    padding-inline: 8px !important; white-space: nowrap !important;
+  }
+}

@@ -37,3 +37,11 @@ test('editor controls have readable text and full size color pickers without tou
  assert.ok(rules.includes('font-size:12px !important'));
  assert.ok(smoke.includes('editor color controls remain usable'));
 });
+
+
+test('legacy visual design generic selectors cannot recolor storefront or character preview descendants',()=>{
+ const css=read('src/adminPanelVisualDesign.css');
+ const root='.admin-dashboard-pro[data-admin-visual-design="enabled"] ';
+ const exclusion=':not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))';
+ for(const selector of [':is(h1, h2, h3, h4)',':is(p, label, td, th, small, input, textarea, select)','.text-white','.text-slate-300','.text-emerald-400','.bg-emerald-500','button:not([data-admin-visual-nav-item="true"])','select','textarea',':is(input, textarea)'])assert.ok(css.includes(root+selector+exclusion),selector);
+});

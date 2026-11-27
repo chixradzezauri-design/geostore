@@ -215,12 +215,12 @@
   font-family: var(--admin-vd-fontFamily-active);
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(h1, h2, h3, h4) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(h1, h2, h3, h4):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   font-size: var(--admin-vd-titleFontSize-active);
   font-weight: var(--admin-vd-headingFontWeight-active);
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(p, label, td, th, small, input, textarea, select) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(p, label, td, th, small, input, textarea, select):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   font-size: var(--admin-vd-bodyFontSize-active);
   font-weight: var(--admin-vd-bodyFontWeight-active);
 }
@@ -282,16 +282,16 @@
   border-color: var(--admin-vd-cardHoverBorder-active) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/80,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/90 {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/80:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/90:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   background-color: var(--admin-vd-panel-active) !important;
   border-color: var(--admin-vd-border-active) !important;
   border-radius: var(--admin-vd-cardRadius-active) !important;
   padding: var(--admin-vd-cardPadding-active) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-950\/60,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-950\/70 {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-950\/60:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-950\/70:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   background-color: var(--admin-vd-surface-active) !important;
 }
 
@@ -346,27 +346,27 @@
   border-width: var(--admin-vd-coupons-borderWidth-active) !important;
   box-shadow: 0 0 var(--admin-vd-coupons-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   color: var(--admin-vd-text-active) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-slate-300,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-slate-400 {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-slate-300:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-slate-400:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   color: var(--admin-vd-muted-active) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-emerald-400,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-emerald-300 {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-emerald-400:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-emerald-300:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   color: var(--admin-vd-accent-active) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/30,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/20,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/10 {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/30:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/20:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/10:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   border-color: var(--admin-vd-border-active) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-emerald-500 {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-emerald-500:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   background-color: var(--admin-vd-accent-active) !important;
 }
 
@@ -392,7 +392,7 @@
   color: currentColor !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] button:not([data-admin-visual-nav-item="true"]) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] button:not([data-admin-visual-nav-item="true"]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   font-size: var(--admin-vd-buttonFontSize-active) !important;
   font-weight: var(--admin-vd-buttonFontWeight-active) !important;
   border-radius: var(--admin-vd-buttonRadius-active) !important;
@@ -424,11 +424,11 @@
   box-shadow: 0 12px var(--admin-vd-cardShadowBlur-active) rgba(0, 0, 0, 0.28) !important;
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead { background-color: var(--admin-vd-tableHeaderBackground-active) !important; }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPaddingY-active) var(--admin-vd-tableCellPadding-active) !important; font-size: var(--admin-vd-tableHeaderFontSize-active) !important; font-weight: var(--admin-vd-tableHeaderFontWeight-active) !important; }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody td { padding: var(--admin-vd-tableCellPaddingY-active) var(--admin-vd-tableCellPadding-active) !important; font-size: var(--admin-vd-tableRowFontSize-active) !important; }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr { background-color: var(--admin-vd-tableRowBackground-active); min-height: var(--admin-vd-tableRowMinHeight-active); }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr:hover { background-color: var(--admin-vd-tableRowHover-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) { background-color: var(--admin-vd-tableHeaderBackground-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPaddingY-active) var(--admin-vd-tableCellPadding-active) !important; font-size: var(--admin-vd-tableHeaderFontSize-active) !important; font-weight: var(--admin-vd-tableHeaderFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody td:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) { padding: var(--admin-vd-tableCellPaddingY-active) var(--admin-vd-tableCellPadding-active) !important; font-size: var(--admin-vd-tableRowFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) { background-color: var(--admin-vd-tableRowBackground-active); min-height: var(--admin-vd-tableRowMinHeight-active); }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr:hover:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) { background-color: var(--admin-vd-tableRowHover-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-product-list-filters { gap: var(--admin-vd-filterGap-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-product-list-filters :is(input, select) {
   background-color: var(--admin-vd-filterBackground-active) !important;
@@ -436,14 +436,14 @@
   border-color: var(--admin-vd-filterBorder-active) !important;
   min-height: var(--admin-vd-filterControlHeight-active) !important;
 }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(form button[type="submit"], .admin-flash-sale-submit) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(form button[type="submit"], .admin-flash-sale-submit):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   background-color: var(--admin-vd-primaryButtonBackground-active) !important;
   color: var(--admin-vd-primaryButtonText-active) !important;
   border-color: var(--admin-vd-primaryButtonBorder-active) !important;
 }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
-.admin-dashboard-pro[data-admin-visual-design="enabled"] select,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] textarea {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] select:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] textarea:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   min-height: var(--admin-vd-inputHeight-active);
   font-size: var(--admin-vd-inputFontSize-active) !important;
   font-weight: var(--admin-vd-inputFontWeight-active) !important;
@@ -452,13 +452,13 @@
   background-color: var(--admin-vd-inputBackground-active) !important;
   color: var(--admin-vd-inputText-active) !important;
 }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(input, textarea)::placeholder {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(input, textarea):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))::placeholder {
   color: var(--admin-vd-inputPlaceholder-active) !important;
   opacity: 1;
 }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] input:focus,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] select:focus,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] textarea:focus {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] input:focus:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] select:focus:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] textarea:focus:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   border-color: var(--admin-vd-inputFocus-active) !important;
   outline-color: var(--admin-vd-inputFocus-active) !important;
   box-shadow: 0 0 0 var(--admin-vd-inputFocusRingWidth-active) color-mix(in srgb, var(--admin-vd-inputFocus-active), transparent 68%) !important;
@@ -849,7 +849,7 @@
 
 
 /* Admin visual editor: native selection controls */
-.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(input[type="checkbox"], input[type="radio"]) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(input[type="checkbox"], input[type="radio"]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
   accent-color: var(--admin-vd-accent-active);
   width: 1rem;
   height: 1rem;
@@ -2210,9 +2210,9 @@
  * Preserve per-device editor sizes above 16px; only enforce the mobile
  * accessibility floor for text-entry controls (not radio/checkbox/range/file). */
 @media (max-width: 640px) {
-  .admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
-  .admin-dashboard-pro[data-admin-visual-design="enabled"] select,
-  .admin-dashboard-pro[data-admin-visual-design="enabled"] textarea {
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] select:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] textarea:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
     font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
   }
 }
