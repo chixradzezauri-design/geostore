@@ -7510,7 +7510,7 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
             </h3>
-            {visibleAdminTab==='discounts'&&isOwner&&<div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-3" data-gs-flash-workspace="true">
+            {visibleAdminTab==='discounts'&&isOwner&&<div className="admin-flash-workspace-panel min-w-0 border space-y-3" data-gs-flash-workspace="true">
               <div className="min-w-0"><p className="admin-unified-promo-eyebrow text-xs">აქციების მართვა</p><h4 className="text-sm font-black text-white break-words">{siteSettings?.visualDesign?.copy?.flashSaleTitle||'ფლეშ აქციის მართვა'}</h4><p className="text-xs text-slate-300">სახელი, დიზაინი, პროდუქტები და განრიგი ერთ განყოფილებაში.</p></div>
               <div className="grid grid-cols-2 gap-2" role="group" aria-label="აქციის სამუშაო სივრცე">
                 <button type="button" aria-pressed={flashWorkspaceTab==='pricing'} onClick={()=>setFlashWorkspaceTab('pricing')} className="min-h-11 rounded-lg border border-slate-600 px-2 py-2 text-xs font-bold text-slate-200 aria-pressed:bg-emerald-400 aria-pressed:text-slate-950">ფასები და განრიგი</button>
@@ -7585,7 +7585,7 @@ export default function AdminDashboardPro({
               <button type="submit" disabled={isApplyingFlashSale || Boolean(flashSalePlannedStart) || (Array.isArray(flashSaleForm.selectedIds)&&!selectedFlashRows(previewFlashPrices(products,flashSaleForm),flashSaleForm.selectedIds))} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : (Array.isArray(flashSaleForm.selectedIds)?'მონიშნული პროდუქტების აქციის გააქტიურება':'ფასდაკლების მასობრივად გააქტიურება')}
               </button>
-              <p className="admin-flash-sale-expiry-note text-[11px] leading-relaxed text-emerald-100/70">
+              <p className="admin-flash-sale-expiry-note text-xs leading-relaxed">
                 აქციის დასრულებისას სისტემა ავტომატურად დააბრუნებს პროდუქტების წინა ფასებს. დრო ბაზაში ინახება და გვერდის განახლება ათვლას აღარ გაანულებს.
               </p>
             </form>
@@ -7738,7 +7738,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'banners' || adminContentTab === 'banners') && (
           <div className="admin-banners space-y-4">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+            <div className="admin-banners-entry-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Megaphone className="w-5 h-5 text-emerald-400" /> {editingBannerId !== null ? "ბანერის რედაქტირება" : adminVisualDesign.content.bannersCreateTitle}
               </h3>
@@ -7755,13 +7755,13 @@ export default function AdminDashboardPro({
                 </div>
               </form>
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+            <div className="admin-banners-list-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.bannersListTitle} ({bannersList?.length || 0})</h3>
               <p className="text-xs text-slate-300">თანმიმდევრობა და რედაქტირება შეინახეთ საერთო მონახაზით, შემდეგ გამოაქვეყნეთ.</p>
               {!(bannersList || []).length && <p className="text-xs text-slate-400">ბანერები ჯერ არ არის.</p>}
               <div className="admin-banner-list grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(bannersList || []).map((b, index) => (
-                  <div key={b.id} className="admin-banner-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col items-stretch text-xs gap-3">
+                  <div key={b.id} className="admin-banner-card min-w-0 border flex flex-col items-stretch text-xs gap-3">
                     <div className="flex items-center gap-3.5">
                       <AdminThumbnail data-admin-pro-banner-image src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
@@ -8020,7 +8020,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'coupons' || adminContentTab === 'coupons') && (
           <div className="admin-coupons-panel space-y-4">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+            <div className="admin-coupons-panel-entry-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Tag className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.couponsCreateTitle}
               </h3>
@@ -8031,14 +8031,14 @@ export default function AdminDashboardPro({
                 <button type="submit" disabled={couponBusy} aria-busy={couponBusy} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{couponBusy ? "მუშავდება…" : adminVisualDesign.content.couponsSubmitLabel}</button>
               </form>
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+            <div className="admin-coupons-panel-list-surface min-w-0 border space-y-4">
               <h3 className="font-black text-white text-base">{adminVisualDesign.content.couponsListTitle} ({coupons?.length || 0})</h3>
               <p className="text-xs text-slate-300">ნაჩვენებია ჩატვირთული აქტიური კუპონები. მინიმუმი ეხება პროდუქციის ჯამს.</p>
               <div className="flex flex-wrap gap-2 items-end"><div className="min-w-0 flex-1"><label htmlFor="admin-workspace-coupon-search" className="block text-xs text-slate-300 mb-1">კუპონის კოდი</label><input id="admin-workspace-coupon-search" type="search" value={couponSearch} onChange={e => setCouponSearch(e.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-white text-xs" placeholder="კოდის ძიება" /></div>{couponSearch && <button type="button" onClick={() => setCouponSearch('')} className="rounded-xl bg-slate-800 px-3 text-xs text-slate-200">გასუფთავება</button>}</div>
               {!(coupons || []).some(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())) && <p role="status" className="text-xs text-slate-400">{couponSearch.trim() ? "კუპონი ვერ მოიძებნა." : "აქტიური კუპონები ჯერ არ არის."}</p>}
               <div className="admin-coupon-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(coupons || []).filter(c => String(c.code || '').toLowerCase().includes(couponSearch.trim().toLowerCase())).map(c => (
-                  <div key={c.id} className="admin-coupon-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
+                  <div key={c.id} className="admin-coupon-card min-w-0 border flex justify-between items-center text-xs">
                     <div>
                       <h4 data-admin-pro-coupon-code className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
                       <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: <strong data-admin-pro-coupon-value>{c.discountPercent}%</strong></p>

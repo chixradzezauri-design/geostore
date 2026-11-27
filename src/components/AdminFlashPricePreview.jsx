@@ -11,13 +11,13 @@ export default function AdminFlashPricePreview({products,form,scheduled,disabled
  const chosen=selectedFlashRows(result,ids);
  const toggle=id=>onSelectionChange(ids.includes(id)?ids.filter(x=>x!==id):ids.length<MAX_FLASH_SELECTION?[...ids,id]:ids);
  const filtered=useMemo(()=>result?.rows.filter(r=>(!onlyRisk||r.raisesPrice)&&[r.name,r.category,r.id].some(v=>v.toLocaleLowerCase('ka-GE').includes(query.trim().toLocaleLowerCase('ka-GE'))))??[],[result,query,onlyRisk]);
- return <section className="admin-unified-flash-preview min-w-0 rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-3" aria-label="ფასების წინასწარი გამოთვლა">
+ return <section className="admin-unified-flash-preview min-w-0 border p-3 space-y-3" aria-label="ფასების წინასწარი გამოთვლა">
   <h4 className="font-bold text-white">ფასების წინასწარი გამოთვლა</h4>
   <p className="text-slate-300 leading-relaxed">{scheduled?'დაგეგმილი აქცია: ამჟამად ფასდაკლებული ან აქციის ვადიანი პროდუქტები გამოტოვებულია. გაშვებისას პირობები თავიდან მოწმდება.':'დაუყოვნებელი აქცია: პროცენტი ითვლება თავდაპირველი ფასიდან; არსებული ფასდაკლება შეიძლება ჩანაცვლდეს.'} მონაცემები მხოლოდ ჩატვირთულ პროდუქტებს ასახავს. საბოლოო შედეგს სერვერი განსაზღვრავს.</p>
   <fieldset disabled={disabled} className="min-w-0 rounded-lg border border-slate-700 p-2 space-y-2">
    <legend className="px-1 font-bold">აქციის პროდუქტები</legend>
-   <label className="flex items-center gap-2 min-h-11"><input type="radio" name="flash-product-scope" checked={!selected} onChange={()=>onSelectionChange(null)}/> მთელი არჩეული კატეგორია</label>
-   <label className="flex items-center gap-2 min-h-11"><input type="radio" name="flash-product-scope" checked={selected} onChange={()=>onSelectionChange([])}/> მხოლოდ მონიშნული პროდუქტები</label>
+   <label className="flex items-center gap-2 min-h-11"><input type="radio" name="flash-product-scope" checked={!selected} onChange={()=>onSelectionChange(null)}/><span className="admin-flash-scope-caption">მთელი არჩეული კატეგორია</span></label>
+   <label className="flex items-center gap-2 min-h-11"><input type="radio" name="flash-product-scope" checked={selected} onChange={()=>onSelectionChange([])}/><span className="admin-flash-scope-caption">მხოლოდ მონიშნული პროდუქტები</span></label>
    {selected&&<><p className="text-slate-300">მონიშნულია {ids.length} / {MAX_FLASH_SELECTION}. მონიშვნები შენარჩუნდება ძიებისას. განრიგშიც მხოლოდ მონიშნული პროდუქტები ჩაიწერება.</p><button type="button" className="min-h-11 rounded-lg border border-slate-600 px-3" onClick={()=>onSelectionChange([])}>მონიშვნების გასუფთავება</button>{ids.length>0&&!chosen&&<p role="alert" className="text-amber-200">ზოგი მონიშნული პროდუქტი აღარ შეესაბამება პირობებს. გაასუფთავეთ არჩევანი და მონიშნეთ თავიდან.</p>}</>}
   </fieldset>
   {!result?<p className="text-slate-400">შეიყვანეთ სწორი ფასდაკლების პროცენტი.</p>:<>
