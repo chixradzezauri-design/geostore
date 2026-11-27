@@ -574,6 +574,11 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               }finally{await palette.evaluate((el,open)=>{el.open=open;},wasOpen);}
               assert.deepEqual(writes,[],'Expanded palette geometry check never writes settings');
             }
+            if(targetWidth<640 && tab==='analytics'){
+              const controls=await shell.locator('.admin-analytics-actions').evaluate(el=>[...el.querySelectorAll('select,button')].map(node=>({tag:node.tagName,height:node.getBoundingClientRect().height,appearance:getComputedStyle(node).appearance})));
+              assert.ok(controls.every(x=>x.height>=43.5&&x.height<=80),engine+' '+targetWidth+'px: finance actions must be compact, not 140px tall: '+JSON.stringify(controls));
+              assert.equal(controls.find(x=>x.tag==='SELECT')?.appearance,'none', 'Finance select avoids native dark paint');
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
             if(targetWidth===1440 && width!==1440)await capture(page,tab,targetWidth);
             const selected = await picker.inputValue();

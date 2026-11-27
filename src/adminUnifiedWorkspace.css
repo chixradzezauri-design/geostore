@@ -3749,3 +3749,35 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison {padding: clamp(10px,var(--admin-vd-cardPadding-active,16px),20px) !important;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread {padding: 12px !important; border-radius: var(--admin-vd-cardRadius-active,12px) !important;}
+
+/* Visual review 12 — WebKit actual screenshots: native dark select paint and tall analytics actions. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {
+  -webkit-appearance: none !important; appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23818e9b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 10px center !important; background-size: 16px 16px !important;
+  padding-inline-end: 32px !important; min-inline-size: 0; text-overflow: ellipsis;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+  background-color: var(--admin-vd-inputBackground-active,var(--av-inset)) !important;
+  color: var(--admin-vd-inputText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-color: var(--admin-vd-inputBorder-active,var(--av-border)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {
+  background-color: var(--av-nav-bg) !important; color: var(--av-nav-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions {
+    display: grid !important; grid-template-columns: minmax(0,1fr); align-items: stretch; gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > :is(button,select) {
+    flex: none !important; min-height: 44px !important; height: auto !important; padding-block: 10px !important;
+    line-height: 1.5 !important; width: 100% !important; box-sizing: border-box;
+  }
+}
+@media (forced-colors: active) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {appearance: auto !important; -webkit-appearance: auto !important; background-image: none !important;}
+}
