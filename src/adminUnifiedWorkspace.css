@@ -3292,3 +3292,12 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button:last-child { grid-column: 1 / -1; }
 }
+
+/* Final measured caption follow-up; admin forms only. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-history-filters label,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-control,.admin-custom-variant-stock),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel label {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  min-inline-size: 0; max-inline-size: 100%; line-height: 1.5;
+  white-space: normal; overflow-wrap: anywhere;
+}

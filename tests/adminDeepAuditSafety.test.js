@@ -39,3 +39,11 @@ test('final responsive refinement preserves preview boundaries and accessible hi
  assert.ok(smoke.includes('srOnlyTextElements:sample.srOnlyTextElements'));
  assert.ok(smoke.includes('character settings labels stay readable'));
 });
+
+
+test('remaining measured admin form captions have bounded readable typography',()=>{
+ const css=read('src/adminUnifiedWorkspace.css').split('/* Final measured caption follow-up;')[1];
+ for(const selector of ['.admin-expenses .admin-expense-history-filters label','.admin-product-form :is(.admin-size-color-stock-control,.admin-custom-variant-stock)','.admin-crm-panel .admin-crm-edit-panel label'])assert.ok(css.includes(selector),selector);
+ assert.ok(css.includes('font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important'));
+ assert.ok(css.includes('overflow-wrap: anywhere'));
+});
