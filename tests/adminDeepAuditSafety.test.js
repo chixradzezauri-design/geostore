@@ -58,3 +58,13 @@ test('video follow-up separates header identity from action controls and removes
  assert.ok(smoke.includes('header text must stack in reading order'));
  assert.ok(smoke.includes('mobile hero must not reserve empty flex space'));
 });
+
+
+test('video redesign removes obsolete dark roots without changing operational event handlers',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),app=read('src/components/AdminDashboardPro.jsx');
+ for(const cls of ['admin-expense-history-panel','admin-expense-row','admin-vendor-card','admin-crm-panel','admin-crm-edit-panel','admin-discounts-panel'])assert.doesNotMatch(app,new RegExp(cls+' bg-slate'));
+ for(const [file,cls] of [['AdminPurchaseWorkspace.jsx','admin-purchase-workspace'],['AdminSupplierWorkspace.jsx','admin-supplier-workspace']])assert.ok(read('src/components/'+file).includes(cls+' min-w-0 space-y-4'));
+ assert.ok(css.includes('Neutral operational surfaces own their paint'));
+ assert.ok(app.includes('onSubmit={handleAddExpense}'));
+ assert.ok(app.includes('onSubmit={handleApplyFlashSale}'));
+});

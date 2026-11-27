@@ -6425,7 +6425,7 @@ export default function AdminDashboardPro({
                 <p role={expenseMutationNotice.type === 'error' ? 'alert' : 'status'} aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs leading-relaxed text-slate-200">{expenseMutationNotice.text}</p>
               )}
             </div>
-            <div className="admin-expense-history-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-expense-history-panel min-w-0 space-y-4">
               {expenseMutationBusy.startsWith('delete:') && (
                 <p role="status" aria-live="polite" className="admin-expense-mutation-notice rounded-xl border border-emerald-500/20 px-3 py-3 text-xs text-slate-300">მიმდინარეობს ხარჯის წაშლის დადასტურება სერვერზე…</p>
               )}
@@ -6474,7 +6474,7 @@ export default function AdminDashboardPro({
                   <p className="text-slate-500 text-xs text-center py-4">{!expensesReady && expenses.length === 0 ? (expensesLoading ? 'ხარჯების ისტორია იტვირთება…' : 'ხარჯების ისტორია ჯერ არ არის დადასტურებული.') : expenses.length === 0 ? 'ხარჯები ჯერ არ არის დამატებული.' : 'მითითებული ფილტრებით ხარჯი ვერ მოიძებნა.'}</p>
                 ) : (
                   paginatedExpenses.map(exp => (
-                    <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 text-xs shadow-inner">
+                    <div key={exp.id} className="admin-expense-row min-w-0 p-3 rounded-xl border text-xs">
                       <div className="admin-expense-details min-w-0">
                         <div className="admin-expense-heading flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
                           <b className="admin-expense-description text-white break-words">{exp.description || 'ხარჯი'}</b>
@@ -7510,7 +7510,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'discounts' || adminContentTab === 'discounts') && (
-          <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-discounts-panel min-w-0 space-y-4">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
             </h3>
@@ -8082,7 +8082,7 @@ export default function AdminDashboardPro({
               {!(vendorsList || []).some(v => String(v.name || '').toLocaleLowerCase().includes(vendorSearch.trim().toLocaleLowerCase())) && <p className="text-xs text-slate-400">მომწოდებელი ვერ მოიძებნა.</p>}
               <div className="admin-vendor-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(vendorsList || []).filter(v => String(v.name || '').toLocaleLowerCase().includes(vendorSearch.trim().toLocaleLowerCase())).map(v => (
-                  <div key={v.id} className="admin-vendor-card bg-slate-950/60 p-3 rounded-2xl border border-slate-700 flex flex-col gap-2 text-xs shadow-inner">
+                  <div key={v.id} className="admin-vendor-card min-w-0 p-3 rounded-xl border flex flex-col gap-2 text-xs">
                     <div>
                       <h4 className="font-bold text-white text-sm">{v.name}</h4>
                       <p className="text-emerald-400 font-bold mt-0.5">კომისია: {v.commission}%</p>
@@ -8100,7 +8100,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'users' || adminContentTab === 'users') && (
-          <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 rounded-2xl space-y-4 shadow-lg">
+          <div className="admin-crm-panel min-w-0 space-y-4">
             {isOwner && visibleAdminTab === 'users' && <React.Suspense fallback={<AdminSectionLoading />}><AdminMarketingSegments key={adminUserId} adminUserId={adminUserId} loadSession={()=>supabase.auth.getSession()} supabaseUrl={SUPABASE_URL} apiKey={SUPABASE_ANON_KEY}/></React.Suspense>}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -8200,7 +8200,7 @@ export default function AdminDashboardPro({
                       </div>
 
                       {isEditing && (
-                        <div className="admin-crm-edit-panel bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
+                        <div className="admin-crm-edit-panel min-w-0 p-3 rounded-xl border space-y-3">
                           <h5 className="font-black text-amber-400 text-xs">პერსონალური CRM პარამეტრები კლიენტისთვის: {u.name}</h5>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>

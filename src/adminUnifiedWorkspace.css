@@ -45,6 +45,30 @@
   opacity: 1;
 }
 
+/* Neutral operational surfaces own their paint; no legacy dark utility classes on these roots. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-history-panel,.admin-vendors-panel .admin-purchase-workspace,.admin-vendors-panel .admin-supplier-workspace,.admin-crm-panel,.admin-discounts-panel) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  border: 1px solid var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row .admin-expense-description,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields label {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-history-panel,.admin-purchase-workspace,.admin-supplier-workspace,.admin-crm-edit-panel,.admin-flash-sale-form) label:not(.sr-only) {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+}
+
 /* Unified workspace foundation: remove decorative gradients from operational
    surfaces, without changing user-selected backgrounds, status colors or
    individual element geometry. Never select storefront/editor preview content. */
@@ -79,10 +103,16 @@
   text-align: start !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-page-identity > :is(h2,p,span) {
+  display: block !important;
+  box-sizing: border-box !important;
   width: 100% !important;
+  inline-size: 100% !important;
   min-inline-size: 0;
-  max-inline-size: 100%;
+  max-inline-size: 100% !important;
+  max-width: 100% !important;
+  align-self: stretch !important;
   flex: 0 0 auto !important;
+  margin: 0 !important;
   text-align: start !important;
   word-break: normal !important;
   white-space: normal !important;
@@ -696,7 +726,7 @@
   background: #fff0cc !important; color: #754300 !important; border: 1px solid #d4a65e;
   border-radius: 8px; padding: 10px; line-height: 1.6;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card { background-image: none !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card { background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important; box-shadow: none !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-purchase-draft,.admin-unified-supplier-form,.admin-unified-purchase-detail) {
   background: var(--av-inset) !important; border: 1px solid var(--av-border) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px); padding: 12px; min-width: 0;
@@ -973,7 +1003,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-field { min-width: 0; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-field :is(input,select) { min-width: 0; max-width: 100%; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-submit { min-height: 44px !important; box-shadow: none !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row { background-image: none !important; box-shadow: none !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row { background: var(--av-inset) !important; color: var(--av-text) !important; box-shadow: none !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-history-heading h3 { line-height: 1.5; overflow-wrap: anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-expense-summary {
   background: var(--av-inset); border: 1px solid var(--av-border); padding: 10px; border-radius: 8px;
@@ -1191,7 +1221,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-actions > button { width: 100% !important; min-width: 0; min-height: 44px !important; white-space: normal !important; box-shadow: none !important; background: var(--av-surface) !important; color: var(--av-text) !important; border: 1px solid var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="vip"][aria-pressed="true"] { background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="restrict"][aria-pressed="true"], .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="delete-local"] { background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-edit-panel { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-edit-panel { background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="save"] { background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important; color: var(--admin-vd-primaryButtonText-active,#fff) !important; min-height: 44px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-header { display: grid !important; grid-template-columns: minmax(0,1fr); gap: 10px !important; border-color: var(--av-border) !important; }
 /* Atelier correspondence: separate ticket identity, status, message and composer. */

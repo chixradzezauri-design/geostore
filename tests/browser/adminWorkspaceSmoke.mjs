@@ -503,8 +503,9 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 if(style.display!=='flex'||style.flexDirection!=='column') issues.push('header identity must stack');
                 const items=[...identity.children].map(el=>el.getBoundingClientRect());
                 const identityRect=identity.getBoundingClientRect();
+                const innerWidth=identity.clientWidth-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0);
                 for(let i=0;i<items.length;i++){
-                  if(items[i].width<identityRect.width-3||!fits(items[i])) issues.push('header text must use full identity width');
+                  if(items[i].width<innerWidth-3||!fits(items[i])) issues.push({issue:'header text must use full identity width',tag:identity.children[i].tagName,width:Math.round(items[i].width),available:Math.round(innerWidth),identityWidth:Math.round(identityRect.width)});
                   if(i&&items[i].top<items[i-1].bottom-2) issues.push('header text must stack in reading order');
                 }
               }
