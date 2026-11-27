@@ -13,3 +13,12 @@ test('product layout uses actual container width, retains accessible fields and 
  for(const token of ['@container (min-width: 480px)','@container (min-width: 700px)','@container (min-width: 900px)','@media (max-width: 359px)','admin-product-controls input[type="number"]','admin-workspace-gallery-card:first-child','min-height: 44px'])assert.ok(css.includes(token),token);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('catalogue text follows active design tokens and status labels retain readable bounds',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css');
+ assert.ok(css.includes('clamp(13px,var(--admin-vd-bodyFontSize-active,14px),18px)'));
+ assert.doesNotMatch(video,/\.admin-product-identity h4 \{font-size:14px!important/);
+ assert.match(video,/:is\(\[data-admin-pro-publication\],\[data-admin-pro-stock\]\) \{[^}]*font-size:12px!important[^}]*max-inline-size:100%/);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('catalogue status or field label geometry'));
+});

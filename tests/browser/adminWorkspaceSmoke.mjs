@@ -353,6 +353,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   if(!group || !identity) continue;
                   const boundary=row.getBoundingClientRect();
                   if(overlaps(identity.getBoundingClientRect(),group.getBoundingClientRect())) issues.push('identity/action overlap');
+                  for(const label of row.querySelectorAll('[data-admin-pro-publication],[data-admin-pro-stock],.admin-unified-product-field-label')) {
+                    const box=label.getBoundingClientRect();
+                    if(box.width && box.height && (parseFloat(getComputedStyle(label).fontSize)<12 || box.left<boundary.left-2 || box.right>boundary.right+2)) issues.push('catalogue status or field label geometry');
+                  }
                   for(const button of group.querySelectorAll(':scope > button')) {
                     const box=button.getBoundingClientRect();
                     if(box.height<43.5 || box.left<boundary.left-2 || box.right>boundary.right+2) issues.push('catalog action geometry');
