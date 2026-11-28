@@ -44,6 +44,8 @@ import '../adminPanelVisualDesign.css';
 import '../adminVideoRedesign.css';
 import '../adminUnifiedWorkspace.css';
 import {resolveAdminWorkspaceAppearance} from '../utils/adminProfessionalDesign.js';
+import {resolveAdminStudioAppearance} from '../utils/adminStudioDesign.js';
+import '../adminStudioWorkspace.css';
 import { groupAdminWorkspaceNavigation, adminWorkspaceNavigationLabel } from '../utils/adminWorkspaceNavigation.js';
 import AdminFlashSchedule from './AdminFlashSchedule.jsx';
 import AdminFlashPricePreview from './AdminFlashPricePreview.jsx';
@@ -1080,6 +1082,8 @@ export default function AdminDashboardPro({
   useEffect(() => { if (adminTab !== 'admin_visual_editor' && adminTab !== 'visual_editor' && canAccessAdminTab(adminTab)) setAdminVisualPreviewTab(adminTab); }, [adminTab, adminAccess]);
   const [adminVisualDesign, setAdminVisualDesign] = useState(() => normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN));
   const [adminVisualDesignReady, setAdminVisualDesignReady] = useState(false);
+  // New workspace is the default; saved custom appearance remains available.
+  const [adminAppearanceMode, setAdminAppearanceMode] = useState('studio');
   const [adminVisualSyncStatus, setAdminVisualSyncStatus] = useState('idle');
   const [adminVisualReloadKey, setAdminVisualReloadKey] = useState(0);
   const adminVisualSkipNextSaveRef = useRef(false);
@@ -1102,10 +1106,11 @@ export default function AdminDashboardPro({
   const retryAdminVisualSave = () => {
     handleAdminVisualDesignChange({ ...adminVisualDesign });
   };
-  const effectiveAdminVisualDesign = useMemo(() => resolveAdminWorkspaceAppearance(adminVisualDesign), [adminVisualDesign]);
+  const savedAdminAppearance = useMemo(() => resolveAdminWorkspaceAppearance(adminVisualDesign), [adminVisualDesign]);
+  const effectiveAdminVisualDesign = useMemo(() => adminAppearanceMode === 'saved' ? savedAdminAppearance : resolveAdminStudioAppearance(adminVisualDesign), [adminVisualDesign, adminAppearanceMode, savedAdminAppearance]);
   const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(effectiveAdminVisualDesign), [effectiveAdminVisualDesign]);
   // Staff receive a presentation-only default; never load or save owner design on their behalf.
-  const staffWorkspaceVisualStyle = useMemo(() => buildAdminPanelVisualStyle(resolveAdminWorkspaceAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN)), []);
+  const staffWorkspaceVisualStyle = useMemo(() => buildAdminPanelVisualStyle(resolveAdminStudioAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN)), []);
 
   useEffect(() => {
     let active = true;
@@ -5443,17 +5448,17 @@ export default function AdminDashboardPro({
   const showStorefrontActions = hasSettingsPermission && ['banners', 'settings', 'visual_editor', 'discounts'].includes(visibleAdminTab);
 
   return (
-    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle} data-admin-visual-design="enabled" data-admin-video-layout="v1">
+    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : staffWorkspaceVisualStyle} data-admin-visual-design="enabled" data-admin-video-layout="v1" data-admin-appearance={isOwner && adminAppearanceMode === 'saved' ? 'saved' : 'studio'}>
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
-      <div data-admin-sidebar="true" className="w-full lg:w-72 min-w-0 border rounded-xl p-3 sm:p-4 space-y-3 shrink-0">
+      <div data-admin-sidebar="true" className="admin-studio-sidebar w-full lg:w-72 min-w-0 border shrink-0">
         <div className="admin-pro-brand flex items-center gap-2.5 pb-3 border-b">
           <div className="admin-pro-brand-mark shrink-0">
-            <Shield className="w-5 h-5 text-emerald-400" />
+            <Shield className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-black text-white text-sm">GEOSTORE Admin PRO</h3>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">მართვის პანელი</p>
+            <h3 className="font-bold text-sm">GEOSTORE Admin PRO</h3>
+            <p className="text-xs">მართვის პანელი</p>
           </div>
         </div>
 
@@ -5506,7 +5511,7 @@ export default function AdminDashboardPro({
         <button type="button"
           onClick={() => { if (typeof handleLogout === 'function') handleLogout(); }} 
           aria-label="სისტემიდან გასვლა"
-          className="admin-video-logout w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-4"
+          className="admin-video-logout w-full border px-4 py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
         >
           <LogOut className="w-4 h-4 shrink-0" /> <span>გასვლა</span>
         </button>
@@ -5515,7 +5520,7 @@ export default function AdminDashboardPro({
       {/* 🖥️ MAIN CONTENT AREA */}
       <div className="admin-workspace-main flex-1 w-full min-w-0 space-y-4">
 
-        <div data-admin-visual-header="true" className="w-full min-w-0 border rounded-xl p-3 sm:p-4 gap-3">
+        <div data-admin-visual-header="true" className="admin-studio-page-header w-full min-w-0 border gap-3">
           <div className="admin-pro-page-identity">
             {currentAdminNavigationGroup && <span className="admin-pro-section-context">{currentAdminNavigationGroup.label}</span>}
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
@@ -5573,7 +5578,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
           <section className="admin-command-center space-y-3 sm:space-y-5" aria-labelledby="admin-command-title">
-            <div className="admin-command-hero admin-pro-overview-intro rounded-xl border p-3 sm:p-4">
+            <div className="admin-command-hero admin-pro-overview-intro admin-studio-overview-intro">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div className="min-w-0">
                   
@@ -7714,12 +7719,19 @@ export default function AdminDashboardPro({
         {visibleAdminTab === 'admin_visual_editor' && isOwner && (
           adminVisualDesignReady ? (
             <React.Suspense fallback={<AdminSectionLoading />}>
+            <div className="admin-studio-appearance-control" role="group" aria-label="ადმინპანელის გარეგნობა">
+              <div><strong>სამუშაო სივრცის დიზაინი</strong><p>ახალი დიზაინი არ ცვლის შენახულ პარამეტრებს. შენახული დიზაინის რედაქტირება შესაძლებელია ცალკე.</p></div>
+              <div className="admin-studio-appearance-options">
+                <button type="button" aria-pressed={adminAppearanceMode === 'studio'} onClick={() => setAdminAppearanceMode('studio')}>ახალი Studio</button>
+                <button type="button" aria-pressed={adminAppearanceMode === 'saved'} onClick={() => setAdminAppearanceMode('saved')}>შენახული დიზაინი</button>
+              </div>
+            </div>
             <AdminPanelVisualEditor
               previewTab={adminVisualPreviewTab}
               onPreviewTabChange={setAdminVisualPreviewTab}
-              design={effectiveAdminVisualDesign}
+              design={savedAdminAppearance}
               syncStatus={adminVisualSyncStatus}
-              onChange={handleAdminVisualDesignChange}
+              onChange={value => { setAdminAppearanceMode('saved'); handleAdminVisualDesignChange(value); }}
               onRetrySave={retryAdminVisualSave}
               onReloadRemote={() => setAdminVisualReloadKey(value => value + 1)}
             />

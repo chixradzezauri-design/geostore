@@ -1,0 +1,69 @@
+/* GEOSTORE Studio — isolated new shell. Shared operational layout and security
+   contracts remain in the existing workspace. No storefront preview selectors. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] {
+  background: var(--admin-vd-canvas-active,#f6f5f1) !important;
+  gap: 20px !important; align-items: start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child {
+  background: var(--admin-vd-navInactiveBackground-active,#fff) !important;
+  border: 1px solid #d6dcd6 !important; border-radius: 10px !important;
+  padding: 12px !important; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand {padding: 6px 4px 14px !important; gap: 10px !important; border-color: #d6dcd6 !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child .admin-pro-brand-mark {
+  background: #155e55 !important; border: 0 !important; color: #fff !important;
+  border-radius: 8px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child .admin-pro-brand-mark > svg {color: #fff !important; -webkit-text-fill-color: currentColor !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child .admin-pro-brand h3 {color: #182338 !important; font-size: 15px !important; font-weight: 700 !important; letter-spacing: normal !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child .admin-pro-brand p {color: #52605c !important; font-size: 12px !important; text-transform: none !important; letter-spacing: normal !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > .admin-workspace-nav-group {
+  color: #52605c !important; border: 0 !important; font-size: 12px !important; font-weight: 600 !important;
+  padding: 12px 9px 4px !important; margin: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > button[data-admin-visual-nav-item="true"] {
+  min-height: 44px !important; border: 1px solid transparent !important;
+  border-radius: 7px !important; padding: 8px 10px !important; box-shadow: none !important;
+  font-size: 13px !important; font-weight: 500 !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > button[data-admin-visual-nav-active="false"] {background: transparent !important; color: #3d4c47 !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > button[data-admin-visual-nav-active="false"]:hover {background: #efefea !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > button[data-admin-visual-nav-active="true"] {background: #dceee9 !important; color: #14594a !important; font-weight: 700 !important; border-color: #a9cfc3 !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > button[data-admin-visual-nav-item="true"] :is(svg,span) {color: inherit !important; -webkit-text-fill-color: currentColor !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child #geostore-admin-desktop-modules > button[data-admin-visual-nav-item="true"] > span {background: #e5ebe7 !important; color: #14594a !important; border: 0 !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child > .admin-video-logout {background: transparent !important; color: #9c2538 !important; border: 1px solid #e4b4bf !important; border-radius: 7px !important; box-shadow: none !important; min-height: 44px !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child > .admin-video-logout :is(svg,span) {color: inherit !important; -webkit-text-fill-color: currentColor !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-workspace-main > .admin-studio-page-header {
+  background: transparent !important; border: 0 !important; border-bottom: 1px solid #d6dcd6 !important;
+  border-radius: 0 !important; box-shadow: none !important; padding: 4px 0 14px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-studio-page-header .admin-pro-section-context {color: #52605c !important; font-weight: 600 !important; text-transform: none !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-studio-page-header .admin-pro-page-identity > h2 {font-size: clamp(20px,2.2vw,28px) !important; font-weight: 700 !important; letter-spacing: -.02em !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-studio-page-header .admin-pro-access-caption {font-size: 12px !important; color: #52605c !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-command-center .admin-studio-overview-intro {
+  background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-command-center .admin-studio-overview-intro > div > button {
+  background: #fff !important; color: #155e55 !important; border: 1px solid #788780 !important; border-radius: 7px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-command-center .admin-command-kpi {box-shadow: none !important; border-radius: 10px !important; transform: none !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-command-center .admin-command-panel {box-shadow: none !important; border-radius: 10px !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-command-center .admin-command-kpi > strong {font-weight: 700 !important;}
+.admin-studio-appearance-control {display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 12px; border: 1px solid #d6dcd6; border-radius: 8px; background: #fff; color: #182338;}
+.admin-studio-appearance-control > div:first-child {flex: 1 1 220px; min-width: 0;}
+.admin-studio-appearance-control p {font-size: 12px; line-height: 1.5; margin-block: 4px 0;}
+.admin-studio-appearance-options {display: flex; flex-wrap: wrap; gap: 8px; min-width: 0;}
+.admin-studio-appearance-options > button {min-height: 44px; padding: 8px 12px; border: 1px solid #788780 !important; border-radius: 7px; background: #fff !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important;}
+.admin-studio-appearance-options > button[aria-pressed="true"] {background: #dceee9 !important; color: #14594a !important; border-color: #155e55 !important; font-weight: 700;}
+@media (min-width: 1024px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child {position: sticky !important; top: 12px; max-height: calc(100dvh - 24px) !important; overflow-y: auto !important; scrollbar-width: thin;}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child > #geostore-admin-desktop-modules {display: flex !important; flex-direction: column; gap: 2px !important;}
+}
+@media (max-width: 1023px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] {gap: 12px !important;}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand {padding: 0 !important; border: 0 !important;}
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-workspace-main > .admin-studio-page-header {padding: 4px 0 10px !important;}
+}
+@media (max-width:359px) {
+ .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child .admin-pro-brand h3 {font-size: 13px !important;}
+}
