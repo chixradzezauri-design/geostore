@@ -132,3 +132,6 @@ Refine category hierarchy, search, photo input, edit panels, name wrapping and c
 
 ## Studio — staff and account security
 Continue from prepared categories/coupons commit 64af592. Refine staff invitation, existing account connection, module permission selection, directory and account security notice. Keep status and destructive/recovery semantics, disabled states, role guards and all Auth, RLS/RPC, MFA and session logic unchanged. Studio-only CSS with static regression coverage. No deployment or access changes. Prior browser check must finish before advancing PR; exact-head CI and screenshots required.
+
+## Studio — settings, audit logs and promotion browser regression
+Prior e2c2886 browser run 46140391750 failed at an exact-color assertion expecting legacy green for the active flash workspace mode; observed Studio white on indigo. Retain strict expected palettes per appearance and add computed WCAG AA contrast assertion, not a skip or tolerance. Refine delivery fees, global draft settings/version history and audit log hierarchy in Studio only; no JSX, API, data, Auth or publication changes. Carry the prepared categories and staff commits into the same draft PR for exact-head CI. No deployment; visual review and successful full browser/MFA run still required.

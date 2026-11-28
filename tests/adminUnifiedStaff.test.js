@@ -27,3 +27,16 @@ test('Studio staff and security stay scoped and preserve visible permission and 
  assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
  assert.doesNotMatch(css,/\[data-admin-staff-auth=|\[data-admin-pro-staff-state=|\[data-admin-pro-permission=|\[data-admin-staff-action="(?:revoke|reactivate)"\]/);
 });
+
+
+test('Studio settings and audit logs remain scoped and retain draft and restore actions',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — settings and audit logs.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-delivery-fee-card input','[data-admin-pro-settings-draft]','.admin-global-settings-form','.admin-audit-log-row','[data-admin-pro-log-time]'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const term of ['onClick={handleSaveDeliveryFees}','onSubmit={handleSaveSettings}','handleRestoreStorefrontVersion(version)','fetchActivityLogs()'])assert.ok(app.includes(term),term);
+});

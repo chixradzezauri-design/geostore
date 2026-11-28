@@ -974,7 +974,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           const modePalette=await workspace.locator('button[aria-pressed="true"]').evaluate(el=>{
             const style=getComputedStyle(el);return [style.color,style.backgroundColor];
           });
-          assert.deepEqual(modePalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Active promotion mode uses a readable paired palette');
+          const appearance=await shell.getAttribute('data-admin-appearance');
+          const expectedModePalette=appearance==='studio'?['rgb(255, 255, 255)','rgb(80, 66, 166)']:['rgb(20, 89, 74)','rgb(223, 243, 235)'];
+          assert.deepEqual(modePalette,expectedModePalette,'Active promotion mode uses the readable paired palette for the current appearance');
+          const luminance=rgb=>rgb.match(/\d+/g).slice(0,3).map(Number).map(value=>value/255).map(value=>value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4).reduce((sum,value,index)=>sum+value*[0.2126,0.7152,0.0722][index],0);
+          const [textLuminance,backgroundLuminance]=modePalette.map(luminance);
+          assert.ok((Math.max(textLuminance,backgroundLuminance)+0.05)/(Math.min(textLuminance,backgroundLuminance)+0.05)>=4.5,'Active promotion mode text meets WCAG AA contrast');
           const controls=editor.locator('[data-gs-campaign-controls="true"]');
           const name=controls.getByPlaceholder('მაგ. შავი პარასკევი');
           await name.waitFor({state:'visible'});
