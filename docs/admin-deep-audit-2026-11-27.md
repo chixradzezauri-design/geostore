@@ -138,3 +138,6 @@ Prior e2c2886 browser run 46140391750 failed at an exact-color assertion expecti
 
 ## Studio — visual editors and character management chrome
 Refine admin editor, storefront/campaign editor and Character Studio management chrome only: headings, search, accordion controls, save/publish buttons, device tools and character directory. Preserve preview artwork, character behavior, selected-character semantic palette, warning and sync states, native picker behavior, existing draft/publication and authorization handlers. Add scoped regression coverage. Exact-head CI and screenshot review required. No deployment.
+
+## Studio — product catalogue and Georgian typography
+The formerly described catalogue changes were not on the branch; implement explicit Studio-only product form and list treatment here. Flatten nested quick-edit frames, preserve the original responsive grid and stock/publish/deletion semantics, keep native controls, 44px targets, clear names and Georgian wrapping. Existing shared typography already normalizes headings/labels outside previews. No product mutation, gallery or API changes. Static regression coverage added; computed cascade and screenshots must still be checked on the exact combined head. No deployment.

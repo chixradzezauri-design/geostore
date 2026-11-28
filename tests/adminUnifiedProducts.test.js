@@ -31,3 +31,15 @@ test('catalogue removes legacy dark paint without removing its operational contr
  assert.ok(app.includes('onSubmit={handleSaveProduct}'));
  assert.ok(app.includes('onSubmit={handleAddCategory}'));
 });
+
+
+test('Studio product catalogue removes nested decorative frames and retains editable fields and status semantics',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — product catalogue.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-product-identity h4','.admin-product-controls > div','.admin-product-controls input[type="number"]','.admin-video-edit','.admin-product-list-filters'])assert.ok(css.includes(term),term);
+ assert.match(css,/\.admin-product-controls > div \{[^}]*border: 0 !important/);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)|word-break:\s*break-all|\[data-admin-pro-stock=|\[data-admin-pro-publication=/);
+});

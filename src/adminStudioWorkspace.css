@@ -936,3 +936,81 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > .admin-unified-editor-header {padding: 10px !important;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel > .gs-character-admin {padding: 10px !important;}
 }
+
+/* Studio — product catalogue. Flatten duplicate frames; preserve stock and publication semantics, native inputs and responsive tracks. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel > :is(.admin-unified-product-editor,div:has(> .admin-products-list)) {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel > :is(.admin-unified-product-editor,div:has(> .admin-products-list)) > div:first-child {
+  border-color: #d9dce4 !important; padding-block-end: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel :is(.admin-unified-product-editor > div:first-child h3,.admin-product-inventory-title) {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-unified-product-editor > div:first-child > button {
+  border-color: #737887 !important; border-radius: 6px !important; background: #fff !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; min-height: 44px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-unified-product-jumps {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 7px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-unified-product-jumps > button {
+  border-radius: 6px !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-form > :is(.admin-product-attributes,.admin-size-color-stock-editor,.admin-product-variants-editor,.admin-product-gallery,.admin-workspace-product-content) {
+  background: #f7f8fa !important; border: 1px solid #d9dce4 !important; border-radius: 7px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-form :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),select,textarea) {
+  border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-form > button[type="submit"] {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important; font-weight: 600 !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-list-filters :is(input,select) {
+  border-radius: 6px !important; min-height: 44px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-pro-product-helper {
+  font-size: 12px !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; line-height: 1.55 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-workspace-product-reset {
+  min-height: 44px !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-products-list > .admin-product-row {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-identity > [data-admin-pro-product-image] {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-identity h4 {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 15px !important; line-height: 1.5 !important; font-weight: 700 !important; word-break: normal !important; overflow-wrap: anywhere !important; letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-unified-product-meta {
+  font-size: 12px !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-controls {
+  border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-controls > div {
+  background: transparent !important; border: 0 !important; padding: 4px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-controls .admin-unified-product-field-label {
+  font-size: 12px !important; line-height: 1.5 !important; font-weight: 500 !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; word-break: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-controls input[type="number"] {
+  background: #fff !important; border-color: #737887 !important; border-radius: 6px !important; min-height: 44px !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-controls > :is(.admin-video-publish,.admin-video-edit,.admin-video-delete) {
+  border-radius: 6px !important; min-height: 44px !important; font-size: 12px !important; font-weight: 600 !important; white-space: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-controls > .admin-video-edit {
+  background: #5042a6 !important; border-color: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-pagination button {
+  min-height: 44px !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-product-pagination button[aria-current="page"] {
+  background: #5042a6 !important; border-color: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important;
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel > :is(.admin-unified-product-editor,div:has(> .admin-products-list)) {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-products-panel .admin-products-list > .admin-product-row {padding: 10px !important;}
+}
