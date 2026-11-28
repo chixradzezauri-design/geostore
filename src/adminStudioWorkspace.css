@@ -110,3 +110,119 @@
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] > div[data-admin-sidebar="true"]:first-child {padding: 10px !important;}
  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-command-center .admin-command-kpi {padding: 10px !important;}
 }
+
+/* Studio — order and finance workspaces. Only the independent Studio appearance;
+   preserve existing status colors, verification notices, native controls and handlers. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-orders-header {
+  gap: 12px !important; padding-block-end: 12px !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-orders-header h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-orders-toolbar {
+  gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-status-filters {
+  background: #f2f3f6 !important; border-radius: 7px !important; border-color: #d9dce4 !important; gap: 4px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-status-filters > button {
+  border-radius: 5px !important; font-size: 13px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-status-filters > button[aria-pressed="true"] {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-orders-list {
+  display: grid !important; gap: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-orders-list > .admin-order-card {
+  margin: 0 !important; background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; gap: 10px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-heading {
+  padding-block-end: 10px !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-heading > div:last-child {
+  background: transparent !important; border: 0 !important; padding: 0 !important; border-radius: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel [data-admin-pro-order-number="true"] {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 15px !important; font-weight: 700 !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel [data-admin-pro-order-date="true"] {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-size: 12px !important; margin-inline-start: 0 !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel [data-admin-pro-order-total="true"] {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 21px !important; font-weight: 700 !important; font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-customer {
+  gap: 10px 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-customer > p > b {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-customer > p > .admin-unified-order-field-value {
+  font-size: 13px !important; line-height: 1.55 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-footer {
+  padding-block-start: 10px !important; border-color: #d9dce4 !important; gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-actions > [data-admin-order-action] {
+  border-radius: 6px !important; min-height: 44px !important; font-weight: 600 !important; justify-content: center !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-status-actions {
+  background: #f2f3f6 !important; border-radius: 7px !important; border-color: #d9dce4 !important; gap: 4px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-status-actions > button {
+  border-radius: 5px !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-analytics-toolbar {
+  background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 14px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-analytics-heading h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-analytics-actions > :is(button,select) {
+  border-radius: 6px !important; font-size: 13px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi] {
+  background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; gap: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi="net"] {
+  border-inline-start: 3px solid #5042a6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics [data-admin-pro-finance-kpi] > p:first-child {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important; line-height: 1.5 !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics [data-admin-pro-finance-kpi] > p:first-child > svg {
+  color: #555b6b !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics [data-admin-pro-finance-kpi]:not([data-admin-pro-finance-kpi="net"]) > .admin-analytics-value {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; background: transparent !important; padding: 0 !important; font-size: clamp(20px,2vw,26px) !important; font-weight: 700 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics [data-admin-pro-finance-kpi] > .admin-analytics-note {
+  background: transparent !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; border: 0 !important; padding: 0 !important; font-size: 12px !important; font-weight: 500 !important; line-height: 1.55 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics :is(.admin-business-comparison,.admin-finance-sources-panel,.admin-finance-expenses-panel,.admin-finance-products-panel,.admin-finance-vendors-panel) {
+  background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-business-comparison > div.grid > div {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics :is(.admin-finance-breakdown-row,.admin-finance-recent-row,.admin-profitability-row) {
+  border-color: #d9dce4 !important; padding-block-end: 9px !important; line-height: 1.55 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics :is(.admin-finance-breakdown-row,.admin-finance-recent-row) > :last-child {
+  font-variant-numeric: tabular-nums; text-align: end; overflow-wrap: anywhere; min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-unified-chart-column > [data-admin-pro-finance-bar] {
+  background: #5042a6 !important;
+}
+@container (min-width: 880px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-order-card-footer {grid-template-columns: minmax(120px,1fr) minmax(0,3fr); align-items: start !important;}
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-orders-panel .admin-orders-list > .admin-order-card {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-analytics .admin-analytics-kpis > [data-admin-pro-finance-kpi] {padding: 10px !important;}
+}
