@@ -803,6 +803,20 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if(tab==='admin_visual_editor'){
           assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
           const editor=shell.locator('.admin-visual-editor-panel');
+          const appearanceControl=shell.getByRole('group',{name:'ადმინპანელის გარეგნობა',exact:true});
+          const studioButton=appearanceControl.getByRole('button',{name:'ახალი Studio',exact:true});
+          const savedButton=appearanceControl.getByRole('button',{name:'შენახული დიზაინი',exact:true});
+          assert.equal(await shell.getAttribute('data-admin-appearance'),'studio');
+          const beforeAppearance=await shell.evaluate(node=>getComputedStyle(node).getPropertyValue('--admin-vd-primaryButtonBackground-active').trim());
+          await savedButton.click();
+          assert.equal(await shell.getAttribute('data-admin-appearance'),'saved');
+          assert.equal(await savedButton.getAttribute('aria-pressed'),'true');
+          assert.equal(await studioButton.getAttribute('aria-pressed'),'false');
+          await studioButton.click();
+          assert.equal(await shell.getAttribute('data-admin-appearance'),'studio');
+          assert.equal(await studioButton.getAttribute('aria-pressed'),'true');
+          assert.equal(await shell.evaluate(node=>getComputedStyle(node).getPropertyValue('--admin-vd-primaryButtonBackground-active').trim()),beforeAppearance,'Returning to Studio restores the original palette token');
+          assert.deepEqual(writes,[],'Appearance switching never persists or publishes a design');
           const jumps=editor.locator('.admin-unified-editor-jumps');
           await jumps.getByRole('button',{name:'ფერები / PRO',exact:true}).click();
           const palette=editor.locator('[data-admin-studio-group="palette"]');
