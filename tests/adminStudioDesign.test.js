@@ -7,8 +7,8 @@ test('Studio is a complete appearance projection, not a destructive migration',(
  const snapshot=structuredClone(raw), studio=resolveAdminStudioAppearance(raw);
  assert.deepEqual(raw,snapshot);
  assert.equal(studio.theme.canvas,ADMIN_STUDIO_PALETTE.canvas);
- assert.equal(studio.theme.navInactiveBackground,'#ffffff');
- assert.equal(studio.theme.primaryButtonBackground,'#155e55');
+ assert.equal(studio.theme.navInactiveBackground,'#23242b');
+ assert.equal(studio.theme.primaryButtonBackground,'#5042a6');
  assert.equal(studio.components.orders.backgroundColor,'#ffffff');
  assert.equal(studio.elementStyles.orderCard.backgroundColor,'#ffffff');
  assert.equal(studio.content.ordersTitle,raw.content.ordersTitle);

@@ -1095,6 +1095,7 @@ export default function AdminDashboardPro({
   const adminVisualHasLocalChangesRef = useRef(false);
   adminVisualSyncStatusRef.current = adminVisualSyncStatus;
   const handleAdminVisualDesignChange = (value) => {
+    setAdminAppearanceMode('saved');
     const normalized = normalizeAdminPanelVisualDesign(value);
     adminVisualSaveVersionRef.current += 1;
     adminVisualHasLocalChangesRef.current = true;
@@ -5520,7 +5521,7 @@ export default function AdminDashboardPro({
       {/* 🖥️ MAIN CONTENT AREA */}
       <div className="admin-workspace-main flex-1 w-full min-w-0 space-y-4">
 
-        <div data-admin-visual-header="true" className="admin-studio-page-header w-full min-w-0 border gap-3">
+        <div data-admin-visual-header="true" className="w-full min-w-0 border rounded-xl admin-studio-page-header gap-3">
           <div className="admin-pro-page-identity">
             {currentAdminNavigationGroup && <span className="admin-pro-section-context">{currentAdminNavigationGroup.label}</span>}
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
@@ -5578,7 +5579,7 @@ export default function AdminDashboardPro({
 
         {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
           <section className="admin-command-center space-y-3 sm:space-y-5" aria-labelledby="admin-command-title">
-            <div className="admin-command-hero admin-pro-overview-intro admin-studio-overview-intro">
+            <div className="admin-command-hero admin-pro-overview-intro rounded-xl border p-3 sm:p-4 admin-studio-overview-intro">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                 <div className="min-w-0">
                   
@@ -5592,22 +5593,22 @@ export default function AdminDashboardPro({
             </div>
 
             <div className="admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3" aria-label="მთავარი ოპერაციული მაჩვენებლები">
-              <button type="button" onClick={() => setAdminTab('orders')} data-admin-kpi-tone="primary" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-emerald-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
+              <button type="button" onClick={() => setAdminTab('orders')} data-admin-kpi-tone="primary" className="admin-command-kpi group min-w-0 text-left rounded-xl border p-3 sm:p-4">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-4 w-4 shrink-0 text-emerald-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{ordersVerifiedForReports ? commandCenterNewOrders.length : "—"}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{ordersVerifiedForReports ? `მოლოდინში: ${commandCenterPendingOrders.length} შეკვეთა` : "მონაცემები ჯერ არ დადასტურებულა"}</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('support')} data-admin-kpi-tone="warning" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-amber-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-amber-300/60">
+              <button type="button" onClick={() => setAdminTab('support')} data-admin-kpi-tone="warning" className="admin-command-kpi group min-w-0 text-left rounded-xl border p-3 sm:p-4">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>ვადაგადაცილებული მოთხოვნები</span><HelpCircle className="h-4 w-4 shrink-0 text-amber-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{commandCenterSupportVerified ? commandCenterOverdueTickets.length : "—"}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{supportTicketsError ? "ჩატვირთვის შეცდომა" : !commandCenterSupportVerified ? "მონაცემები დასადასტურებელია" : "ღიაა 24 საათზე მეტხანს"}</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('replenishment')} data-admin-kpi-tone="danger" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-rose-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-rose-300/60">
+              <button type="button" onClick={() => setAdminTab('replenishment')} data-admin-kpi-tone="danger" className="admin-command-kpi group min-w-0 text-left rounded-xl border p-3 sm:p-4">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-4 w-4 shrink-0 text-rose-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{replenishmentSettingsReady && !replenishmentError ? commandCenterLowStockPositions.length : "—"}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">{replenishmentSettingsReady && !replenishmentError ? "შესავსები პოზიციები" : "პარამეტრები დასადასტურებელია"}</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('discounts')} data-admin-kpi-tone="info" className="admin-command-kpi group min-w-0 text-left rounded-xl border border-sky-400/25 bg-slate-900/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:border-sky-300/60">
+              <button type="button" onClick={() => setAdminTab('discounts')} data-admin-kpi-tone="info" className="admin-command-kpi group min-w-0 text-left rounded-xl border p-3 sm:p-4">
                 <span className="flex min-w-0 items-start justify-between gap-1.5 text-[11px] leading-4 font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-4 w-4 shrink-0 text-sky-300" /></span>
                 <strong className="mt-2 block text-2xl sm:text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
                 <span className="mt-1 block break-words text-[10px] leading-4 text-slate-400">მომდევნო 24 საათში</span>
@@ -5615,7 +5616,7 @@ export default function AdminDashboardPro({
             </div>
 
             <div className="admin-command-panels grid grid-cols-1 xl:grid-cols-2 gap-2.5 sm:gap-4">
-              <div className="admin-command-panel min-w-0 rounded-2xl border border-emerald-400/20 bg-slate-900/75 p-3 sm:p-5">
+              <div className="admin-command-panel min-w-0 rounded-2xl border p-3 sm:p-5">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">შეკვეთების რიგი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">ახალი და დამუშავების პროცესში მყოფი შეკვეთები</p></div>
                   <button type="button" onClick={() => setAdminTab('orders')} className="shrink-0 rounded-lg border border-emerald-400/25 px-3 py-2 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10">ყველა</button>
@@ -5636,7 +5637,7 @@ export default function AdminDashboardPro({
                 )}
               </div>
 
-              <div className="admin-command-panel min-w-0 rounded-2xl border border-amber-400/20 bg-slate-900/75 p-3 sm:p-5">
+              <div className="admin-command-panel min-w-0 rounded-2xl border p-3 sm:p-5">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">მხარდაჭერის პრიორიტეტები</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">ღია მოთხოვნები და 24 საათზე ძველი ტიკეტები</p></div>
                   <button type="button" onClick={() => setAdminTab('support')} className="shrink-0 rounded-lg border border-amber-400/25 px-3 py-2 text-[11px] font-bold text-amber-200 hover:bg-amber-400/10">ყველა</button>
@@ -5662,7 +5663,7 @@ export default function AdminDashboardPro({
                 )}
               </div>
 
-              <div className="admin-command-panel min-w-0 rounded-2xl border border-rose-400/20 bg-slate-900/75 p-3 sm:p-5">
+              <div className="admin-command-panel min-w-0 rounded-2xl border p-3 sm:p-5">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">შევსების ინდივიდუალური ზღვრების მიხედვით</p></div>
                   <button type="button" onClick={() => setAdminTab('replenishment')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">შევსების გეგმა</button>
@@ -5683,7 +5684,7 @@ export default function AdminDashboardPro({
                 )}
               </div>
 
-              <div className="admin-command-panel min-w-0 rounded-2xl border border-sky-400/20 bg-slate-900/75 p-3 sm:p-5">
+              <div className="admin-command-panel min-w-0 rounded-2xl border p-3 sm:p-5">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">ბოლო მოვლენები</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">შეკვეთებისა და მხარდაჭერის უახლესი ჩანაწერები</p></div>
                   <Activity className="h-5 w-5 text-sky-300" />
@@ -7731,7 +7732,7 @@ export default function AdminDashboardPro({
               onPreviewTabChange={setAdminVisualPreviewTab}
               design={savedAdminAppearance}
               syncStatus={adminVisualSyncStatus}
-              onChange={value => { setAdminAppearanceMode('saved'); handleAdminVisualDesignChange(value); }}
+              onChange={handleAdminVisualDesignChange}
               onRetrySave={retryAdminVisualSave}
               onReloadRemote={() => setAdminVisualReloadKey(value => value + 1)}
             />

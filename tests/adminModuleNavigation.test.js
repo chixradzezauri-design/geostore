@@ -49,6 +49,6 @@ test('Atelier admin preview remains owner-only and its appearance is separate fr
  assert.match(source,/admin_visual_editor:\s*'owner'/);
  assert.ok(source.includes("visibleAdminTab === 'admin_visual_editor' && isOwner && ("));
  assert.ok(source.includes('if (!adminLoggedIn || !isOwner || !adminVisualDesignReady) return;'));
- assert.ok(source.includes('buildAdminPanelVisualStyle(resolveAdminWorkspaceAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))'));
+ assert.ok(source.includes('buildAdminPanelVisualStyle(resolveAdminStudioAppearance(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))'));
  assert.ok(!source.includes('saveAdminPanelVisualDesignToCloud(effectiveAdminVisualDesign'));
 });
