@@ -57,3 +57,15 @@ test('Studio editor and character chrome remains isolated from artwork and prese
  assert.doesNotMatch(css,/\.gs-visual-preview-frame|\.gs-character-preview(?:\s|[.:>])|\.geostore-fashion-store|\.gs-character-roster-art|display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
  assert.doesNotMatch(css,/\.gs-character-roster-card\[aria-pressed/);
 });
+
+
+test('owner appearance switch is the only new exception to real admin preview event guard',()=>{
+ const editor=read('src/components/AdminPanelVisualEditor.jsx'),app=read('src/components/AdminDashboardPro.jsx');
+ for(const mode of ['studio','saved'])assert.ok(app.includes('type="button" data-admin-appearance-choice="'+mode+'"'));
+ assert.ok(editor.includes('.admin-studio-appearance-options > button[type="button"]:is([data-admin-appearance-choice="studio"],[data-admin-appearance-choice="saved"])'));
+ assert.ok(editor.includes('isWorkspaceNavigation(target) || isAppearanceSwitch(target)'));
+ assert.ok(editor.includes('isWorkspaceNavigation(event.target) || isAppearanceSwitch(event.target)'));
+ const submit=editor.slice(editor.indexOf('const handlePreviewSubmit'),editor.indexOf('const handlePreviewKeydown'));
+ assert.ok(submit.includes('event.preventDefault()'));
+ assert.ok(!submit.includes('isAppearanceSwitch'));
+});

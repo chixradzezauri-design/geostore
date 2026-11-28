@@ -809,10 +809,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           assert.equal(await shell.getAttribute('data-admin-appearance'),'studio');
           const beforeAppearance=await shell.evaluate(node=>getComputedStyle(node).getPropertyValue('--admin-vd-primaryButtonBackground-active').trim());
           await savedButton.click();
+          await page.waitForFunction(()=>document.querySelector('.admin-dashboard-shell')?.getAttribute('data-admin-appearance')==='saved');
           assert.equal(await shell.getAttribute('data-admin-appearance'),'saved');
           assert.equal(await savedButton.getAttribute('aria-pressed'),'true');
           assert.equal(await studioButton.getAttribute('aria-pressed'),'false');
-          await studioButton.click();
+          await studioButton.focus();
+          await studioButton.press('Enter');
+          await page.waitForFunction(()=>document.querySelector('.admin-dashboard-shell')?.getAttribute('data-admin-appearance')==='studio');
           assert.equal(await shell.getAttribute('data-admin-appearance'),'studio');
           assert.equal(await studioButton.getAttribute('aria-pressed'),'true');
           assert.equal(await shell.evaluate(node=>getComputedStyle(node).getPropertyValue('--admin-vd-primaryButtonBackground-active').trim()),beforeAppearance,'Returning to Studio restores the original palette token');

@@ -7723,8 +7723,8 @@ export default function AdminDashboardPro({
             <div className="admin-studio-appearance-control" role="group" aria-label="ადმინპანელის გარეგნობა">
               <div><strong>სამუშაო სივრცის დიზაინი</strong><p>ახალი დიზაინი არ ცვლის შენახულ პარამეტრებს. შენახული დიზაინის რედაქტირება შესაძლებელია ცალკე.</p></div>
               <div className="admin-studio-appearance-options">
-                <button type="button" aria-pressed={adminAppearanceMode === 'studio'} onClick={() => setAdminAppearanceMode('studio')}>ახალი Studio</button>
-                <button type="button" aria-pressed={adminAppearanceMode === 'saved'} onClick={() => setAdminAppearanceMode('saved')}>შენახული დიზაინი</button>
+                <button type="button" data-admin-appearance-choice="studio" aria-pressed={adminAppearanceMode === 'studio'} onClick={() => setAdminAppearanceMode('studio')}>ახალი Studio</button>
+                <button type="button" data-admin-appearance-choice="saved" aria-pressed={adminAppearanceMode === 'saved'} onClick={() => setAdminAppearanceMode('saved')}>შენახული დიზაინი</button>
               </div>
             </div>
             <AdminPanelVisualEditor

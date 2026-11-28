@@ -541,10 +541,15 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       target instanceof Element && Boolean(target.closest(
         '[data-admin-sidebar="true"] [data-admin-visual-nav-item="true"], [data-admin-sidebar="true"] #geostore-admin-mobile-section'
       ));
+    // The owner appearance switch is editor chrome, not a preview mutation.
+    // Exempt only the two explicit non-submit controls, never their parent.
+    const isAppearanceSwitch = target => target instanceof Element && Boolean(target.closest(
+      '.admin-dashboard-shell .admin-studio-appearance-options > button[type="button"]:is([data-admin-appearance-choice="studio"],[data-admin-appearance-choice="saved"])'
+    ));
     const handlePreviewClick = event => {
       const target = event.target;
       if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
-      if (!target.closest('.admin-dashboard-shell') || isWorkspaceNavigation(target)) return;
+      if (!target.closest('.admin-dashboard-shell') || isWorkspaceNavigation(target) || isAppearanceSwitch(target)) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
@@ -565,7 +570,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       }
     };
     const handlePreviewKeydown = event => {
-      if (isWorkspaceNavigation(event.target) || event.key === 'Tab') return;
+      if (isWorkspaceNavigation(event.target) || isAppearanceSwitch(event.target) || event.key === 'Tab') return;
       if (event.target instanceof Element && event.target.closest('.admin-dashboard-shell') && !event.target.closest('.admin-visual-editor-panel')) {
         event.preventDefault();
         event.stopPropagation();
