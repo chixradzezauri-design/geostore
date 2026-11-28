@@ -45,3 +45,15 @@ test('legacy visual design generic selectors cannot recolor storefront or charac
  const exclusion=':not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *))';
  for(const selector of [':is(h1, h2, h3, h4)',':is(p, label, td, th, small, input, textarea, select)','.text-white','.text-slate-300','.text-emerald-400','.bg-emerald-500','button:not([data-admin-visual-nav-item="true"])','select','textarea',':is(input, textarea)'])assert.ok(css.includes(root+selector+exclusion),selector);
 });
+
+
+test('Studio editor and character chrome remains isolated from artwork and preserves native controls',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — editor and character chrome.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-unified-editor-header','.admin-studio-group > summary','[data-admin-unified-editor-actions] > button','.gs-visual-color-control','.admin-unified-preview-toolbar','.gs-character-admin-section > summary'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/\.gs-visual-preview-frame|\.gs-character-preview(?:\s|[.:>])|\.geostore-fashion-store|\.gs-character-roster-art|display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ assert.doesNotMatch(css,/\.gs-character-roster-card\[aria-pressed/);
+});

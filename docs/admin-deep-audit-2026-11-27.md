@@ -135,3 +135,6 @@ Continue from prepared categories/coupons commit 64af592. Refine staff invitatio
 
 ## Studio — settings, audit logs and promotion browser regression
 Prior e2c2886 browser run 46140391750 failed at an exact-color assertion expecting legacy green for the active flash workspace mode; observed Studio white on indigo. Retain strict expected palettes per appearance and add computed WCAG AA contrast assertion, not a skip or tolerance. Refine delivery fees, global draft settings/version history and audit log hierarchy in Studio only; no JSX, API, data, Auth or publication changes. Carry the prepared categories and staff commits into the same draft PR for exact-head CI. No deployment; visual review and successful full browser/MFA run still required.
+
+## Studio — visual editors and character management chrome
+Refine admin editor, storefront/campaign editor and Character Studio management chrome only: headings, search, accordion controls, save/publish buttons, device tools and character directory. Preserve preview artwork, character behavior, selected-character semantic palette, warning and sync states, native picker behavior, existing draft/publication and authorization handlers. Add scoped regression coverage. Exact-head CI and screenshot review required. No deployment.

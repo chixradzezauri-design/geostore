@@ -831,3 +831,108 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel > :is(.admin-delivery-settings,.admin-global-settings) {padding: 10px !important;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-audit-logs-panel {padding: 10px !important;}
 }
+
+/* Studio — editor and character chrome. Explicit tool surfaces only; do not style rendered artwork or preview contents. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > .admin-unified-editor-header {
+  background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 16px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > .admin-unified-editor-header h2 {
+  font-size: 19px !important; font-weight: 700 !important; line-height: 1.45 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > .admin-unified-editor-header > div:first-child > p:first-child {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-size: 12px !important; letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor > .admin-unified-editor-header > div:first-child > div:first-child > p:first-child {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-size: 12px !important; letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > .admin-unified-editor-header button {
+  border-radius: 6px !important; min-height: 44px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > [data-admin-pro-editor-preview-tools] > div > :is(button, label > select) {
+  border-radius: 6px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > [data-admin-pro-editor-devices] > button {
+  border-radius: 6px !important; min-height: 44px !important; font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > .admin-unified-editor-search {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > .admin-unified-editor-search input {
+  background: #fff !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > .admin-unified-editor-jumps > button {
+  background: #fff !important; border-color: #d9dce4 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > .admin-studio-group {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 10px 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > .admin-studio-group > summary {
+  font-size: 14px !important; font-weight: 650 !important; line-height: 1.5 !important; padding-inline: 8px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-visual-editor-panel > .admin-studio-group[open] > summary {
+  background: #efedf8 !important; border-radius: 5px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor > [data-admin-unified-editor-actions] {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor > [data-admin-unified-editor-actions] > button {
+  border-radius: 6px !important; min-height: 44px !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor > [data-admin-unified-editor-actions] > button:first-child {
+  background: #f2f3f6 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor > [data-admin-unified-editor-actions] > button:last-child {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-color: #5042a6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor .gs-visual-editor-controls .gs-visual-color-control {
+  border-radius: 6px !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor .gs-visual-editor-preview-column > .admin-unified-preview-toolbar {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-storefront-visual-editor .gs-visual-editor-preview-column > .admin-unified-preview-toolbar [data-admin-pro-editor-devices] > button {
+  border-radius: 6px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel > .gs-character-admin {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > div:first-child > div:first-child > h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-admin-status > div {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important; padding: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-admin-status > div > span {
+  font-size: 12px !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > :is(.gs-concierge-presets,.gs-concierge-demo-panel,.gs-character-admin-section) {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-admin-section > summary {
+  font-size: 14px !important; font-weight: 650 !important; min-height: 44px !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-admin-section[open] > summary {
+  border-block-end: 1px solid #d9dce4; padding-block-end: 8px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-roster > .gs-character-roster-card {
+  border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-roster > .gs-character-roster-card > span {
+  line-height: 1.5 !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-concierge-presets .gs-concierge-preset-controls > button {
+  min-height: 44px !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-character-admin > .gs-character-admin-save {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-size: 12px !important; line-height: 1.6 !important;
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-visual-editor-panel,.gs-storefront-visual-editor) > .admin-unified-editor-header {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel > .gs-character-admin {padding: 10px !important;}
+}
