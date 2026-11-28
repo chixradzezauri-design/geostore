@@ -43,7 +43,7 @@ test('order and inventory surfaces drop decorative classes and retain mutations'
 
 
 test('Studio stock and supply presentation preserves status colors and table scrolling',()=>{
- const css=read('src/adminStudioWorkspace.css').split('/* Studio — inventory and supply.')[1];
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — inventory and supply.')[1].split('/* Studio — ')[0];
  assert.ok(css);
  const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
  const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));

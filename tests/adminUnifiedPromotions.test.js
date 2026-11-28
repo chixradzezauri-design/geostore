@@ -22,3 +22,15 @@ test('flash price captions use explicit readable contrast and bounded typography
  assert.match(css,/\.gs-admin-flash-schedule-status \{[^}]*font-size:12px !important/);
  assert.ok(smoke.includes('promotion price and status captions remain readable'));
 });
+
+
+test('Studio promotion and banner controls remain scoped, visible and preserve risk semantics',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — promotions and banners.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-flash-workspace-panel > [role="group"] > button[aria-pressed="true"]','.admin-unified-flash-price-row','.gs-admin-flash-schedule-create','.admin-banner-form button[type="submit"]','.admin-unified-banner-actions > button'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ assert.doesNotMatch(css,/\[data-admin-flash-price-risk=|\[data-status=|\[data-admin-pro-promotion-state=|data-gs-flash-design/);
+});

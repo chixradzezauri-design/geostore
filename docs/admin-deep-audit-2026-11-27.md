@@ -123,3 +123,6 @@ Prepare a Studio-only visual refinement on top of order/finance commit e93a23b. 
 
 ## Studio — inventory and supply workspace refinement
 Continue from prepared CRM/support commit 560714f. Refine inventory history, replenishment planning, purchase and supplier surfaces with graphite/indigo Studio typography, compact neutral metrics, readable ledger table and native inputs. No JSX or business logic changes; retain existing semantic status and verification warnings, ledger scroll, permission and concurrency controls. Add static source coverage. No preview or production deployment. Await prior browser completion before advancing PR; new exact-head CI and screenshot review are required.
+
+## Studio — promotions and banners
+Prior order/finance head e93a23b passed all five workflows, including responsive browser. Prepare CRM, supply and this promotion change as one fast-forward to the draft branch. Refine pricing/design tabs, form and price review hierarchy, scheduling controls and banner cards with scoped Studio neutral/indigo styling. Preserve all semantic price-risk/status warnings, original artwork, pricing/scheduling mutations and draft/publication contracts. Add regression source coverage and bound prior section-specific tests to their own blocks. No production deployment; exact-head CI and screenshot review required.

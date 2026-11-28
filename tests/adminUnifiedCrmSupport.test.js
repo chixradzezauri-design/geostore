@@ -40,7 +40,7 @@ test('video CRM and correspondence cards no longer retain conflicting dark utili
 
 
 test('Studio CRM and support rules are scoped, preserve semantic status controls and retain usable actions',()=>{
- const css=read('src/adminStudioWorkspace.css').split('/* Studio — CRM and support workspaces.')[1];
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — CRM and support workspaces.')[1].split('/* Studio — ')[0];
  assert.ok(css);
  const selectorLines=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
  assert.ok(selectorLines.length>20);

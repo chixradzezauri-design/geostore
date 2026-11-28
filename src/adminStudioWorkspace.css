@@ -444,3 +444,111 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-row {padding: 10px !important;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-metric {padding: 8px !important;}
 }
+
+/* Studio — promotions and banners. Pricing and publication contracts and storefront artwork are untouched. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-discounts-panel > h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important; border-color: #d9dce4 !important; padding-block-end: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-discounts-panel > .admin-flash-workspace-panel {
+  background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-workspace-panel > div:first-child > h4 {
+  font-size: 16px !important; font-weight: 700 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-workspace-panel > [role="group"] {
+  gap: 6px !important; padding: 4px; border-radius: 7px; background: #f2f3f6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-workspace-panel > [role="group"] > button {
+  border-radius: 5px !important; min-height: 44px !important; font-size: 12px !important; font-weight: 600 !important; white-space: normal !important; overflow-wrap: anywhere; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-workspace-panel > [role="group"] > button[aria-pressed="false"] {
+  background: #fff !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-workspace-panel > [role="group"] > button[aria-pressed="true"] {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-color: #5042a6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-discounts-panel [data-gs-flash-pricing] .admin-flash-sale-form {
+  background: #fff !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-sale-form .admin-unified-promo-heading {
+  font-size: 16px !important; font-weight: 700 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-sale-form .admin-flash-sale-fields > div {
+  gap: 5px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-sale-fields :is(input,select) {
+  border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-sale-form [data-admin-pro-flash-window] {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 7px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-sale-form .admin-unified-flash-time {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-flash-sale-form .admin-unified-flash-preview {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-unified-flash-preview > h4 {
+  font-size: 15px !important; font-weight: 700 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-unified-flash-preview > fieldset {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-unified-flash-preview .admin-unified-flash-metrics > div {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important; padding: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-unified-flash-preview .admin-unified-flash-price-row {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important; padding: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-unified-flash-price-row > label > span {
+  font-size: 13px !important; font-weight: 600 !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-unified-flash-price-pair > span {
+  border-radius: 5px !important; padding: 6px 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-discounts-panel .admin-flash-sale-submit {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important; min-height: 44px !important; font-weight: 600 !important; white-space: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-discounts-panel .gs-admin-flash-schedule {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-admin-flash-schedule :is(.gs-admin-flash-schedule-summary > span,.gs-admin-flash-history-metrics > button,.gs-admin-flash-history-metrics > div,.gs-admin-flash-schedule-list > li) {
+  border-color: #d9dce4 !important; border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-admin-flash-schedule .gs-admin-flash-schedule-create {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .gs-admin-flash-schedule .gs-admin-flash-history-filters :is(input,select) {
+  border-radius: 6px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners > :is(.admin-banners-entry-surface,.admin-banners-list-surface) {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners > :is(.admin-banners-entry-surface,.admin-banners-list-surface) > h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-banner-form input {
+  border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-unified-promo-note {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-banner-form button[type="submit"] {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-banner-list > .admin-banner-card {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-banner-card h4 {
+  font-size: 15px !important; font-weight: 700 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-banner-card > div:first-child p {
+  font-size: 12px !important; line-height: 1.5 !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners .admin-unified-banner-actions > button {
+  border-radius: 6px !important; min-height: 44px !important;
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-discounts-panel [data-gs-flash-pricing] .admin-flash-sale-form {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-banners > :is(.admin-banners-entry-surface,.admin-banners-list-surface) {padding: 10px !important;}
+}
