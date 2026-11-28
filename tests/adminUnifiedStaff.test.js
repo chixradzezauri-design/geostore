@@ -15,3 +15,15 @@ test('staff security visual states and adaptive controls are scoped to admin',()
  for(const term of ['data-admin-staff-auth="confirmed"','data-admin-staff-auth="pending"','data-admin-staff-auth="missing"','@container (min-width: 460px)','@container (min-width: 700px)','min-height: 44px'])assert.ok(css.includes(term),term);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('Studio staff and security stay scoped and preserve visible permission and access semantics',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — staff and security.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-staff-permission-grid > label:has(input:checked)','.admin-staff-permission-grid > label:focus-within','[data-admin-pro-staff-card]','.admin-unified-staff-permission-summary > span','.admin-security-notice'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ assert.doesNotMatch(css,/\[data-admin-staff-auth=|\[data-admin-pro-staff-state=|\[data-admin-pro-permission=|\[data-admin-staff-action="(?:revoke|reactivate)"\]/);
+});

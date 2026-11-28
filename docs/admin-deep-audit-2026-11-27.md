@@ -129,3 +129,6 @@ Prior order/finance head e93a23b passed all five workflows, including responsive
 
 ## Studio — categories and coupons
 Refine category hierarchy, search, photo input, edit panels, name wrapping and compact child indentation plus coupon forms, codes and amounts. Preserve all existing JSX, category sibling ordering, draft/publish rules, upload handling, coupon validation and destructive actions. Studio only; add scoped static regression coverage. Exact-head CI and screenshot review remain required. No preview or production deployment.
+
+## Studio — staff and account security
+Continue from prepared categories/coupons commit 64af592. Refine staff invitation, existing account connection, module permission selection, directory and account security notice. Keep status and destructive/recovery semantics, disabled states, role guards and all Auth, RLS/RPC, MFA and session logic unchanged. Studio-only CSS with static regression coverage. No deployment or access changes. Prior browser check must finish before advancing PR; exact-head CI and screenshots required.

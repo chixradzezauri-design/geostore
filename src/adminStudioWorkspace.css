@@ -662,3 +662,100 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-category-manager .admin-subcategory-list {padding-inline-start: 6px !important;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-coupons-panel > :is(.admin-coupons-panel-entry-surface,.admin-coupons-panel-list-surface) {padding: 10px !important;}
 }
+
+/* Studio — staff and security. Presentation only; never alter authorization, warning or access state semantics. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-context {
+  background: #f2f3f6 !important; color: #555b6b !important; border: 1px solid #d9dce4 !important; border-radius: 8px !important; padding: 12px !important; line-height: 1.65 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-context > strong {
+  font-size: 14px !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff > :is(.admin-staff-panel,.admin-staff-list-panel) {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-panel > h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-list-panel > div:first-child > h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important; min-width: 0; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-list-panel > div:first-child > button {
+  min-height: 44px !important; border-radius: 6px !important; background: #fff !important; border-color: #737887 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff :is(.admin-staff-existing-form,.admin-staff-create-fields,.admin-unified-staff-permissions) :is(input:not([type="checkbox"]),select) {
+  border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff :is(.admin-staff-existing-form > button,.admin-staff-create-submit,[data-admin-staff-action="save"]) {
+  background: #5042a6 !important; color: #fff !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important; font-weight: 600 !important; min-height: 44px !important; white-space: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-permissions {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-permission-grid > label {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important; font-size: 13px !important; line-height: 1.5 !important; color: #182338 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-permission-grid > label:has(input:checked) {
+  background: #efedf8 !important; border-color: #5042a6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-permission-grid > label:focus-within {
+  outline: 2px solid #5042a6 !important; outline-offset: 2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-staff-permission-grid > label > input[type="checkbox"] {
+  accent-color: #5042a6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-summary > div {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-summary > div > strong {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 24px !important; font-weight: 700 !important; line-height: 1.35 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-workspace-staff-filters :is(input,select,button) {
+  min-height: 44px !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff [data-admin-pro-staff-card] {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff [data-admin-pro-staff-card] > div:first-child > div:first-child > div:first-child > strong {
+  font-size: 16px !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-weight: 700 !important; line-height: 1.5 !important; overflow-wrap: anywhere; min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-email {
+  font-size: 13px !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-actions > button {
+  border-radius: 6px !important; font-weight: 600 !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-actions > button[aria-expanded] {
+  background: #efedf8 !important; color: #5042a6 !important; -webkit-text-fill-color: currentColor !important; border-color: #d4cfee !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-permission-summary {
+  padding-block-start: 10px; border-block-start: 1px solid #d9dce4; gap: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-permission-summary > span {
+  border-radius: 5px !important; font-size: 12px !important; line-height: 1.5 !important; white-space: normal !important; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-permissions > div:last-child:has([data-admin-staff-action="save"]) {
+  flex-wrap: wrap;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-permissions > div:last-child:has([data-admin-staff-action="save"]) > button {
+  min-height: 44px !important; border-radius: 6px !important; flex: 1 1 120px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel .admin-security-notice {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel .admin-security-notice > h3 {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel .admin-unified-security-summary {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel .admin-unified-security-summary > strong {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 15px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-settings-panel .admin-security-notice > p:not([data-admin-pro-security-warning]) {
+  font-size: 13px !important; line-height: 1.65 !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important;
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff > :is(.admin-staff-panel,.admin-staff-list-panel) {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff [data-admin-pro-staff-card] {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-staff .admin-unified-staff-permissions {padding: 8px !important;}
+}
