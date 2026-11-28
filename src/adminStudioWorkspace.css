@@ -344,3 +344,103 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-support-panel .admin-support-list > .admin-support-ticket {padding: 10px !important;}
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-crm-panel .admin-crm-list > .admin-crm-user-card {padding: 10px !important;}
 }
+
+/* Studio — inventory and supply. Presentation only; retain ledger, status, stock and purchasing contracts. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] {
+  background-color: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] > div:first-child {
+  border-color: #d9dce4 !important; padding-block-end: 12px !important; gap: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] > div:first-child > div:first-child > p:first-child {
+  font-size: 12px !important; font-weight: 600 !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important; text-transform: none !important; letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] :is(#admin-inventory-title,#admin-replenishment-title) {
+  font-size: 18px !important; font-weight: 700 !important; line-height: 1.45 !important; color: #182338 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-inventory-history-toolbar > :is(input,button) {
+  min-height: 44px !important; border-radius: 6px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-stock-refresh {
+  background: #fff !important; border-color: #737887 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div > p {
+  font-size: 13px !important; line-height: 1.5 !important; font-weight: 500 !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div > strong {
+  font-size: 26px !important; font-weight: 700 !important; line-height: 1.3 !important; font-variant-numeric: tabular-nums; color: #182338 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-inventory-table-scroll {
+  border-color: #d9dce4 !important; border-radius: 7px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-table] thead {
+  background: #e9ebf0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-table] thead th {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-weight: 600 !important; font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-table] tbody tr {
+  background: #fff !important; border-color: #d9dce4 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-table] tbody tr:nth-child(even) {
+  background: #f7f8fa !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-pro-inventory-table] tbody tr:hover {
+  background: #efedf8 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-row {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; box-shadow: none !important; gap: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-product > strong {
+  color: #182338 !important; -webkit-text-fill-color: currentColor !important; font-size: 15px !important; font-weight: 700 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-product > span:not([data-admin-pro-replenishment-status]) {
+  font-size: 12px !important; color: #555b6b !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-metric {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 6px !important; padding: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-metric > :is(label,span) {
+  color: #555b6b !important; -webkit-text-fill-color: currentColor !important; font-size: 12px !important; line-height: 1.5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] [data-admin-replenishment-metric="recommended"] {
+  background: #efedf8 !important; border-color: #d4cfee !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-metric > input {
+  border-radius: 6px !important; min-height: 44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-save > button {
+  border-radius: 6px !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-save > div > button {
+  min-height: 44px !important; font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] :is(.admin-purchase-workspace,.admin-supplier-workspace) .admin-unified-supply-context {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-purchase-workspace :is(.admin-unified-purchase-draft,.admin-unified-purchase-detail), .admin-supplier-workspace .admin-unified-supplier-form {
+  background: #f2f3f6 !important; border-color: #d9dce4 !important; border-radius: 8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-purchase-workspace .admin-unified-purchase-line {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-purchase-workspace [data-admin-pro-supply-metric] {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-purchase-workspace .admin-pro-purchase-total {
+  background: #fff !important; border-color: #d9dce4 !important; border-inline-start-color: #5042a6 !important; border-radius: 6px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-supplier-workspace .admin-supplier-card {
+  background: #fff !important; border-color: #d9dce4 !important; border-radius: 8px !important; padding: 14px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] .admin-supplier-workspace .admin-supplier-card > h4 {
+  font-size: 15px !important; font-weight: 700 !important; color: #182338 !important; -webkit-text-fill-color: currentColor !important;
+}
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-row {padding: 10px !important;}
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] [data-admin-inventory-view] .admin-replenishment-metric {padding: 8px !important;}
+}

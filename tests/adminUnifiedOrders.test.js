@@ -40,3 +40,16 @@ test('order and inventory surfaces drop decorative classes and retain mutations'
  assert.ok(css.includes('A single intrinsic column'));
  assert.ok(app.includes('validateReplenishmentSaveResponse'));
 });
+
+
+test('Studio stock and supply presentation preserves status colors and table scrolling',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — inventory and supply.')[1];
+ assert.ok(css);
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['[data-admin-pro-inventory-summary]','[data-admin-pro-inventory-table]','.admin-replenishment-metric > input','.admin-replenishment-save > button','.admin-unified-purchase-line','.admin-supplier-card'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ assert.doesNotMatch(css,/\[data-admin-pro-replenishment-status=/);
+});

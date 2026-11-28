@@ -120,3 +120,6 @@ Owner rejected green direction. Replace palette with graphite navigation, neutra
 
 ## Studio — CRM and support workspace refinement
 Prepare a Studio-only visual refinement on top of order/finance commit e93a23b. Flatten CRM directory and ticket surfaces, clarify customer identity/contact and edit actions, separate customer/admin message surfaces with neutral and indigo colors, maintain native filters and 44px action targets. Existing status badge colors, all JSX, permissions, server-readiness checks, real delivery semantics and handlers remain unchanged. Add source regression coverage; exact-head CI and screenshot review remain required. No production or preview deployment. Do not advance PR during active prior browser checks.
+
+## Studio — inventory and supply workspace refinement
+Continue from prepared CRM/support commit 560714f. Refine inventory history, replenishment planning, purchase and supplier surfaces with graphite/indigo Studio typography, compact neutral metrics, readable ledger table and native inputs. No JSX or business logic changes; retain existing semantic status and verification warnings, ledger scroll, permission and concurrency controls. Add static source coverage. No preview or production deployment. Await prior browser completion before advancing PR; new exact-head CI and screenshot review are required.
