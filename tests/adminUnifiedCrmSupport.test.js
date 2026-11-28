@@ -37,3 +37,15 @@ test('video CRM and correspondence cards no longer retain conflicting dark utili
  assert.ok(smoke.includes('compact:bounds.height<=220'));
  assert.ok(smoke.includes('JSON.stringify(geometry)'));
 });
+
+
+test('Studio CRM and support rules are scoped, preserve semantic status controls and retain usable actions',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — CRM and support workspaces.')[1];
+ assert.ok(css);
+ const selectorLines=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectorLines.length>20);
+ for(const line of selectorLines)assert.ok(line.startsWith('.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] '),line);
+ for(const selector of ['.admin-crm-user-card','.admin-crm-contact-line > b','.admin-crm-edit-panel [data-admin-crm-action="save"]','.admin-support-ticket-header','[data-admin-pro-thread-role="customer"]','[data-admin-pro-thread-role="admin"]','.admin-support-reply-form > textarea:focus-visible','.admin-support-reply-form > button'])assert.ok(css.includes(selector),selector);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ assert.doesNotMatch(css,/\[data-admin-pro-(?:crm-badge|ticket-status)(?:[=\]])/);
+});
