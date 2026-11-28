@@ -13,3 +13,38 @@ test('promotion layouts preserve responsive controls and contrast for status',()
  for(const term of ['admin-unified-flash-price-pair','gs-admin-flash-schedule-status[data-status="pending"]','admin-unified-banner-actions','@container (min-width: 480px)','@container (min-width: 760px)','min-height: 44px'])assert.ok(css.includes(term),term);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('flash price captions use explicit readable contrast and bounded typography',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.match(css,/\[data-admin-flash-price-risk="normal"\] \.admin-unified-flash-price-pair > span:nth-child\(2\) \{[^}]*background: #dff3eb !important;[^}]*color: #14594a !important/);
+ assert.match(css,/\[data-admin-flash-price-risk="increase"\] \.admin-unified-flash-price-pair > span:nth-child\(2\) \{[^}]*background: #fff0cc !important;[^}]*color: #754300 !important/);
+ assert.match(css,/\.gs-admin-flash-schedule-status \{[^}]*font-size:12px !important/);
+ assert.ok(smoke.includes('promotion price and status captions remain readable'));
+});
+
+
+test('Studio promotion and banner controls remain scoped, visible and preserve risk semantics',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — promotions and banners.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-flash-workspace-panel > [role="group"] > button[aria-pressed="true"]','.admin-unified-flash-price-row','.gs-admin-flash-schedule-create','.admin-banner-form button[type="submit"]','.admin-unified-banner-actions > button'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
+ assert.doesNotMatch(css,/\[data-admin-flash-price-risk=|\[data-status=|\[data-admin-pro-promotion-state=|data-gs-flash-design/);
+});
+
+
+test('Studio categories and coupons stay scoped and retain visible management actions',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — categories and coupons.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-subcategory-list','.admin-video-category-identity h4','.admin-video-category-actions > button','[data-admin-category-action="save"]','.admin-coupon-form button[type="submit"]','[data-admin-pro-coupon-value]','.admin-coupon-card > button'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)|word-break:\s*break-all/);
+ assert.doesNotMatch(css,/aria-label\$="წაშლა"/);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const term of ['onSubmit={handleAddCategory}','moveCategory(parentCat.id, -1)','moveCategory(sub.id, 1)','handleDeleteCategory(sub.id, sub.name)','onSubmit={handleCreateCoupon}','handleDeleteCoupon(c.id)'])assert.ok(app.includes(term),term);
+});

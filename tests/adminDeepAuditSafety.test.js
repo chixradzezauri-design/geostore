@@ -1,0 +1,82 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const luminance=hex=>hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);
+function assertContrast(bg,fg,label){
+ const a=luminance(bg),b=luminance(fg);
+ assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,label+' normal text contrast');
+}
+test('admin semantic status palettes keep readable fixed foreground/background pairs',()=>{
+ const css=read('src/adminVideoRedesign.css');
+ const groups=new Map();
+ for(const [,name,bg,fg] of css.matchAll(/--(admin-(?:pro-order|product-status|stock|contact))-bg:\s*(#[0-9a-f]{6});\s*--\1-fg:\s*(#[0-9a-f]{6})/gi)){
+  assertContrast(bg,fg,name);
+  groups.set(name,(groups.get(name)||0)+1);
+ }
+ for(const [name,min] of [['admin-pro-order',5],['admin-product-status',3],['admin-stock',4],['admin-contact',5]])assert.ok((groups.get(name)||0)>=min,name+' palette coverage');
+});
+test('staff, flash promotions and design sync captions retain explicit contrast independently of theme',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ const rules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+ for(const selector of ['[data-admin-staff-auth="confirmed"]','[data-admin-staff-auth="pending"]','[data-admin-staff-auth="missing"]','.gs-admin-flash-schedule-status[data-status="pending"]','.gs-admin-flash-schedule-status[data-status="started"]','[data-admin-flash-price-risk="normal"] .admin-unified-flash-price-pair > span:nth-child(2)','[data-admin-flash-price-risk="increase"] .admin-unified-flash-price-pair > span:nth-child(2)','[data-admin-pro-editor-sync="saved"]',':is([data-admin-pro-editor-sync="loading"],[data-admin-pro-editor-sync="saving"])',':is([data-admin-pro-editor-sync="error"],[data-admin-pro-editor-sync="conflict"])']){
+  const matches=rules.filter(m=>m[1].trim().endsWith(selector));
+  assert.equal(matches.length,1,selector+' has one semantic rule');
+  const body=matches[0][2];
+  const bg=body.match(/(?:^|;)\s*background:\s*(#[0-9a-f]{6})\s*!important/i)?.[1];
+  const fg=body.match(/(?:^|;)\s*color:\s*(#[0-9a-f]{6})\s*!important/i)?.[1];
+  assert.ok(bg&&fg,selector+' requires a fixed color pair');
+  assertContrast(bg,fg,selector);
+ }
+});
+
+
+test('final responsive refinement preserves preview boundaries and accessible hidden labels',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),helper=read('tests/browser/adminVisualBaseline.mjs'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.match(css,/\.gs-character-admin label:not\(:where\(\.gs-character-preview \*\)\) \{[^}]*font-size:12px !important/);
+ assert.match(css,/\.gs-visual-editor-controls button \{[^}]*min-inline-size:44px/);
+ assert.ok(helper.includes("allTextNodes.filter(el=>!el.closest('.sr-only'))"));
+ assert.ok(smoke.includes('srOnlyTextElements:sample.srOnlyTextElements'));
+ assert.ok(smoke.includes('character settings labels stay readable'));
+});
+
+
+test('remaining measured admin form captions have bounded readable typography',()=>{
+ const css=read('src/adminUnifiedWorkspace.css').split('/* Final measured caption follow-up;')[1];
+ for(const selector of ['.admin-expenses .admin-expense-history-filters label','.admin-product-form :is(.admin-size-color-stock-control,.admin-custom-variant-stock)','.admin-crm-panel .admin-crm-edit-panel label'])assert.ok(css.includes(selector),selector);
+ assert.ok(css.includes('font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important'));
+ assert.ok(css.includes('overflow-wrap: anywhere'));
+});
+
+
+test('video follow-up separates header identity from action controls and removes mobile hero empty flex space',()=>{
+ const unified=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css'),mobile=read('src/videoAuditMobileAdmin.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(!video.includes('[data-admin-visual-header="true"] > div:last-child'));
+ assert.ok(!mobile.includes('[data-admin-visual-header="true"] > div:last-child'));
+ assert.ok(unified.includes('flex-direction: column !important'));
+ assert.ok(unified.includes('.admin-pro-page-identity > :is(h2,p,span)'));
+ assert.ok(smoke.includes('header text must stack in reading order'));
+ assert.ok(smoke.includes('mobile hero must not reserve empty flex space'));
+});
+
+
+test('video redesign removes obsolete dark roots without changing operational event handlers',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),app=read('src/components/AdminDashboardPro.jsx');
+ for(const cls of ['admin-expense-history-panel','admin-expense-row','admin-vendor-card','admin-crm-panel','admin-crm-edit-panel','admin-discounts-panel'])assert.doesNotMatch(app,new RegExp(cls+' bg-slate'));
+ for(const [file,cls] of [['AdminPurchaseWorkspace.jsx','admin-purchase-workspace'],['AdminSupplierWorkspace.jsx','admin-supplier-workspace']])assert.ok(read('src/components/'+file).includes(cls+' min-w-0 space-y-4'));
+ assert.ok(css.includes('Neutral operational surfaces own their paint'));
+ assert.ok(app.includes('onSubmit={handleAddExpense}'));
+ assert.ok(app.includes('onSubmit={handleApplyFlashSale}'));
+});
+
+
+test('mobile navigation uses compact token-owned surfaces rather than legacy decorative utilities',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(app.includes('className="admin-workspace-nav-button'));
+ assert.ok(app.includes('onClick={() => setAdminTab(tab.id)}'));
+ assert.ok(app.includes('onChange={(event) => setAdminTab(event.target.value)}'));
+ assert.ok(!app.includes('admin-pro-overview-eyebrow text-xs'));
+ assert.ok(css.includes('grid-template-rows: auto auto !important'));
+ assert.ok(smoke.includes('compact mobile navigation'));
+ assert.ok(smoke.includes("'rgb(24, 35, 56)'"));
+});

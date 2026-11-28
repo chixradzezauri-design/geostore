@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { stage49FixtureProductRows } from './stage46PurchaseScenarios.mjs';
 import { collectAdminVisualBaseline } from './adminVisualBaseline.mjs';
 
@@ -24,10 +26,20 @@ const modules = {
   staff: '.admin-staff', logs: '.admin-audit-logs-panel', settings: '.admin-settings-panel'
 };
 
-export const ADMIN_AUDIT_WIDTHS = Object.freeze([320, 360, 390, 430, 768, 1024, 1440]);
+export const ADMIN_AUDIT_WIDTHS = Object.freeze([320, 360, 390, 430, 768, 1024, 1440, 1920]);
 export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 1440], auditWidths = ADMIN_AUDIT_WIDTHS, layoutOnly = false } = {}) {
   const engine = browser.browserType().name();
   const layoutFailures = [];
+  // Only this fully intercepted synthetic workspace may produce visual evidence.
+  const captureDir=process.env.ADMIN_VISUAL_CAPTURE_DIR;
+  if(captureDir)await mkdir(captureDir,{recursive:true});
+  const capture=async(page,tab,width)=>{
+    if(!captureDir)return;
+    try{
+      await page.evaluate(()=>window.scrollTo(0,0));
+      await page.screenshot({path:join(captureDir,engine+'-'+width+'-'+tab+'.png'),fullPage:width!==768&&width!==1024,animations:'disabled',timeout:10000});
+    }catch(error){console.warn('ADMIN_VISUAL_CAPTURE_UNAVAILABLE '+engine+' '+width+' '+tab+' '+error.name);}
+  };
   for (const width of widths) {
     const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width, height: 850 }, reducedMotion: 'reduce' });
     const errors = [];
@@ -124,11 +136,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         assert.deepEqual(errors, [], width + 'px ' + tab + ': uncaught browser error');
         // Capture the untouched module before any fixture edits or interactions.
         visualBaseline.push(await collectAdminVisualBaseline(shell,tab));
+        if(width===390 || width===1440)await capture(page,tab,width);
         assert.equal(await shell.locator('.admin-pro-header-actions').count(), ['banners','settings','visual_editor','discounts'].includes(tab) ? 1 : 0);
         if (['command','expenses'].includes(tab)) {
           const heading = shell.locator(tab === 'command' ? '#admin-command-title' : '#admin-expense-add-title');
           const ink = await heading.evaluate(node => getComputedStyle(node).webkitTextFillColor);
-          assert.equal(ink, 'rgb(37, 34, 56)', 'Workspace headings use the active foreground on light cards');
+          assert.equal(ink, 'rgb(24, 35, 56)', 'Workspace headings use the active foreground on light cards');
         }
         if (tab === 'orders' && width < 480) {
           const statusPicker = shell.getByLabel('შეკვეთის სტატუსი', { exact: true });
@@ -225,6 +238,25 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(editorIssues,[],engine+' '+targetWidth+'px: editor tools remain bounded and publication actions unique');
+              if(tab==='settings'){
+                const smallLabels=await shell.evaluate(root=>[...root.querySelectorAll('.admin-settings-panel .gs-character-admin label:not(:where(.gs-character-preview *))')].filter(el=>{const r=el.getBoundingClientRect();return r.width&&r.height&&!el.closest('[hidden],[aria-hidden="true"],.sr-only')&&parseFloat(getComputedStyle(el).fontSize)<12;}).length);
+                assert.equal(smallLabels,0,engine+' '+targetWidth+'px: character settings labels stay readable');
+              }
+              if(tab==='visual_editor'||tab==='admin_visual_editor'){
+                const colorIssues=await shell.evaluate((root,module)=>{
+                  const selector=module==='visual_editor'?'.gs-visual-editor-controls input[type="color"]':'.admin-visual-editor-panel > .admin-studio-group input[type="color"]';
+                  const issues=[];
+                  for(const el of root.querySelectorAll(selector)){
+                    const rect=el.getBoundingClientRect();
+                    if(!rect.width||!rect.height)continue;
+                    if(rect.width<43.5||rect.height<43.5)issues.push('editor color target too small');
+                    const label=el.closest('label');
+                    if(label){const outer=label.getBoundingClientRect();if(rect.left<outer.left-2||rect.right>outer.right+2)issues.push('editor color target outside label');}
+                  }
+                  return issues;
+                },tab);
+                assert.deepEqual(colorIssues,[],engine+' '+targetWidth+'px: editor color controls remain usable');
+              }
             }
             if (['discounts','coupons','banners','users'].includes(tab)) {
               const promoIssues=await shell.evaluate((root,module)=>{
@@ -243,6 +275,24 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(promoIssues,[],engine+' '+targetWidth+'px: promotion controls stay within their regions');
+              if(tab==='discounts'){
+                const captionIssues=await shell.evaluate(root=>{
+                  const issues=[];
+                  for(const el of root.querySelectorAll('.admin-unified-flash-price-pair > span,.admin-unified-flash-price-pair > small,.gs-admin-flash-schedule-status,.admin-unified-flash-metrics > div > span')){
+                    const rect=el.getBoundingClientRect();
+                    if(!rect.width||!rect.height)continue;
+                    const style=getComputedStyle(el),outer=el.parentElement.getBoundingClientRect();
+                    if(parseFloat(style.fontSize)<12||rect.left<outer.left-2||rect.right>outer.right+2)issues.push('promotion caption bounds');
+                    if(el.matches('.admin-unified-flash-price-pair > span:nth-child(2)')){
+                      const risk=el.closest('[data-admin-flash-price-risk]')?.dataset.adminFlashPriceRisk;
+                      const expected=risk==='increase'?'rgb(117, 67, 0)':'rgb(20, 89, 74)';
+                      if(style.color!==expected)issues.push('promotion price contrast pair');
+                    }
+                  }
+                  return issues;
+                });
+                assert.deepEqual(captionIssues,[],engine+' '+targetWidth+'px: promotion price and status captions remain readable');
+              }
             }
             if (['support','messages','broadcasts'].includes(tab)) {
               const communicationIssues=await shell.evaluate((root,module)=>{
@@ -255,6 +305,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                     const rect=el.getBoundingClientRect();
                     if(rect.height>0&&(rect.left<outer.left-2||rect.right>outer.right+2))issues.push('communication element outside group');
                   }
+                }
+                for(const el of scope.querySelectorAll('[data-admin-pro-ticket-status],[data-admin-pro-thread-role] > div > span')){
+                  const rect=el.getBoundingClientRect();
+                  if(rect.width&&rect.height&&parseFloat(getComputedStyle(el).fontSize)<12)issues.push('support status or thread caption too small');
                 }
                 if(module==='support'&&!scope.querySelector('.admin-support-reply-form'))issues.push('support composer missing');
                 if(module==='broadcasts'&&!scope.querySelector('[data-admin-pro-delivery-disabled]'))issues.push('delivery limitation missing');
@@ -280,6 +334,8 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(identityIssues,[],engine+' '+targetWidth+'px: staff and CRM controls remain bounded');
+              const statusIssues=await shell.evaluate(root=>Array.from(root.querySelectorAll('[data-admin-pro-crm-badge],.admin-unified-staff-auth')).filter(el=>{const rect=el.getBoundingClientRect();return rect.width&&rect.height&&parseFloat(getComputedStyle(el).fontSize)<12;}).length);
+              assert.equal(statusIssues,0,engine+' '+targetWidth+'px: account status captions remain readable');
             }
             if (['analytics','calculator','expenses'].includes(tab)) {
               const financeIssues=await shell.evaluate((root,module)=>{
@@ -292,8 +348,19 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   for(const card of cards){
                     const outer=card.getBoundingClientRect();
                     for(const el of card.querySelectorAll(':scope > p,:scope > span'))if(!fits(el.getBoundingClientRect(),outer))issues.push('KPI content outside card');
+                    const caption=card.querySelector('p:first-child');
+                    if(caption&&parseFloat(getComputedStyle(caption).fontSize)<12)issues.push('financial KPI caption too small');
+                  }
+                  const scroll=scope.querySelector('.admin-analytics-trend-scroll');
+                  if(scroll){
+                    if(getComputedStyle(scroll).overflowX!=='auto')issues.push('finance chart scroll lost');
+                    for(const item of scroll.querySelectorAll('[role="listitem"]')){
+                      const rect=item.getBoundingClientRect();
+                      if(rect.width>0&&rect.width<55.5)issues.push('finance chart column too narrow');
+                    }
                   }
                 }else{
+                  for(const el of scope.querySelectorAll('#admin-expense-description-help,#admin-expense-amount-help,#admin-calculator-units-help'))if(el.getBoundingClientRect().width>0&&parseFloat(getComputedStyle(el).fontSize)<12)issues.push('financial form help too small');
                   const groups=scope.querySelectorAll(module==='calculator'?'.admin-calculator-field-grid > div,.admin-calculator-results > div':'.admin-expense-field');
                   for(const group of groups){
                     const outer=group.getBoundingClientRect();
@@ -327,6 +394,18 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                 return issues;
               },tab);
               assert.deepEqual(supplyIssues,[],engine+' '+targetWidth+'px: inventory and supply controls stay inside their regions');
+              if(tab==='inventory'||tab==='replenishment'){
+                const labelIssues=await shell.evaluate((root,module)=>{
+                  const area=root.querySelector('[data-admin-inventory-view="'+(module==='inventory'?'history':'planning')+'"]');
+                  const issues=[];
+                  for(const el of area.querySelectorAll('[data-admin-pro-inventory-summary] > div > p,[data-admin-pro-replenishment-status]')){
+                    const box=el.getBoundingClientRect(), parent=el.parentElement.getBoundingClientRect();
+                    if(box.width&&box.height&&(parseFloat(getComputedStyle(el).fontSize)<12||box.left<parent.left-2||box.right>parent.right+2))issues.push('inventory caption or status bounds');
+                  }
+                  return issues;
+                },tab);
+                assert.deepEqual(labelIssues,[],engine+' '+targetWidth+'px '+tab+': stock captions remain readable and bounded');
+              }
             }
             if (tab === 'orders') {
               const filterIssues = await shell.locator('.admin-orders-toolbar').evaluate(toolbar => {
@@ -353,6 +432,10 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   if(!group || !identity) continue;
                   const boundary=row.getBoundingClientRect();
                   if(overlaps(identity.getBoundingClientRect(),group.getBoundingClientRect())) issues.push('identity/action overlap');
+                  for(const label of row.querySelectorAll('[data-admin-pro-publication],[data-admin-pro-stock],.admin-unified-product-field-label')) {
+                    const box=label.getBoundingClientRect();
+                    if(box.width && box.height && (parseFloat(getComputedStyle(label).fontSize)<12 || box.left<boundary.left-2 || box.right>boundary.right+2)) issues.push('catalogue status or field label geometry');
+                  }
                   for(const button of group.querySelectorAll(':scope > button')) {
                     const box=button.getBoundingClientRect();
                     if(box.height<43.5 || box.left<boundary.left-2 || box.right>boundary.right+2) issues.push('catalog action geometry');
@@ -388,11 +471,13 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
                   const c = count?.getBoundingClientRect();
                   return rect.height < 43.5 || l.left < i.right - 2 || l.right > rect.right + 2 || (c && l.right > c.left + 2) ? ['navigation track collision'] : [];
                 });
-                return {rail:visible(rail),picker:visible(picker),groups:groups.filter(visible).length,issues};
+                return {rail:visible(rail),picker:visible(picker),groups:groups.filter(visible).length,optionCount:picker.options.length,buttonCount:buttons.length,optionGroups:picker.querySelectorAll('optgroup').length,issues};
               });
-              assert.equal(navigation.rail,targetWidth >= 768,'Only the appropriate navigation control is visible');
-              assert.equal(navigation.picker,targetWidth < 768,'Native phone module selector stays visible');
-              if(targetWidth >= 768) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
+              assert.equal(navigation.rail,targetWidth >= 1024,'Full rail visible only when sidebar fits alongside content');
+              assert.equal(navigation.picker,targetWidth < 1024,'Native phone and portrait tablet module selector stays visible');
+              assert.equal(navigation.optionCount,navigation.buttonCount,'Compact picker retains every authorized navigation item');
+              assert.equal(navigation.optionGroups,5,'Compact picker retains all five authorized groups');
+              if(targetWidth >= 1024) assert.equal(navigation.groups,5,'All authorized module groups have visible headings');
               assert.deepEqual(navigation.issues,[],engine+' '+targetWidth+'px: menu tracks do not collide');
               const overviewIssues = await shell.locator('.admin-command-center').evaluate(node => {
                 const cards = [...node.querySelectorAll('.admin-command-kpi')];
@@ -420,11 +505,88 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
               assert.deepEqual(toneBorders.map(x=>x.color),['rgb(20, 89, 74)','rgb(117, 67, 0)','rgb(156, 37, 56)','rgb(37, 75, 138)'],'KPI semantic borders survive card border-color shorthand');
               assert.ok(toneBorders.every(x=>x.width>=3),'All four KPI semantic border accents remain visible');
             }
+            if(targetWidth<1024){
+              const chrome=await shell.evaluate(root=>{
+                const sidebar=root.querySelector(':scope > [data-admin-sidebar="true"]');
+                const brand=sidebar.querySelector('.admin-pro-brand').getBoundingClientRect();
+                const logout=sidebar.querySelector('.admin-video-logout').getBoundingClientRect();
+                const picker=sidebar.querySelector('.admin-mobile-section-picker').getBoundingClientRect();
+                const bounds=sidebar.getBoundingClientRect();
+                const style=getComputedStyle(sidebar);
+                return {sameRow:Math.min(brand.bottom,logout.bottom)>Math.max(brand.top,logout.top),pickerBelow:picker.top>=Math.max(brand.bottom,logout.bottom)-2,compact:bounds.height<=220,geometry:{height:bounds.height,brandHeight:brand.height,logoutHeight:logout.height,pickerHeight:picker.height,rows:style.gridTemplateRows,paddingTop:style.paddingTop,paddingBottom:style.paddingBottom}};
+              });
+              const {geometry,...chromeChecks}=chrome;
+              assert.deepEqual(chromeChecks,{sameRow:true,pickerBelow:true,compact:true},engine+' '+targetWidth+'px: compact mobile navigation '+JSON.stringify(geometry));
+            }
+            const headerIssues = await shell.locator('.admin-workspace-main > [data-admin-visual-header="true"]').evaluate(header => {
+              const boundary=header.getBoundingClientRect();
+              const identity=header.querySelector('.admin-pro-page-identity');
+              const actions=header.querySelector('.admin-pro-header-actions');
+              const issues=[];
+              const fits=rect=>rect.left>=boundary.left-2 && rect.right<=boundary.right+2 && rect.top>=boundary.top-2 && rect.bottom<=boundary.bottom+2;
+              const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2;
+              if(!identity || !fits(identity.getBoundingClientRect())) issues.push({issue:'header identity bounds',header:boundary.toJSON(),identity:identity?.getBoundingClientRect().toJSON(),headerDisplay:getComputedStyle(header).display,headerHeight:getComputedStyle(header).height});
+              if(identity){
+                const style=getComputedStyle(identity);
+                if(style.display!=='flex'||style.flexDirection!=='column') issues.push('header identity must stack');
+                const items=[...identity.children].map(el=>el.getBoundingClientRect());
+                const identityRect=identity.getBoundingClientRect();
+                const innerWidth=identity.clientWidth-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0);
+                for(let i=0;i<items.length;i++){
+                  if(items[i].width<innerWidth-3||!fits(items[i])) issues.push({issue:'header text must use full identity width',tag:identity.children[i].tagName,width:Math.round(items[i].width),available:Math.round(innerWidth),identityWidth:Math.round(identityRect.width)});
+                  if(i&&items[i].top<items[i-1].bottom-2) issues.push('header text must stack in reading order');
+                }
+              }
+              const hero=header.parentElement.querySelector('.admin-command-hero');
+              if(hero&&window.innerWidth<640){
+                const inner=hero.firstElementChild,copy=inner?.firstElementChild,button=inner?.querySelector('button');
+                if(copy&&button){
+                  const gap=button.getBoundingClientRect().top-copy.getBoundingClientRect().bottom;
+                  if(getComputedStyle(copy).flexBasis!=='auto'||gap>24||gap< -2)issues.push('mobile hero must not reserve empty flex space');
+                }
+              }
+              if(actions){
+                const area=actions.getBoundingClientRect();
+                if(!fits(area) || (identity && overlaps(identity.getBoundingClientRect(),area))) issues.push('header identity/action collision');
+                const buttons=[...actions.querySelectorAll(':scope > button')].map(b=>b.getBoundingClientRect());
+                for(const rect of buttons) if(!fits(rect) || rect.height<43.5) issues.push('header action bounds');
+                for(let i=0;i<buttons.length;i++) for(let j=i+1;j<buttons.length;j++) if(overlaps(buttons[i],buttons[j])) issues.push('header action collision');
+              }
+              return issues;
+            });
+            assert.deepEqual(headerIssues,[],engine+' '+targetWidth+'px '+tab+': header regions stay separated');
+            // Inspect an expanded palette at both viewport extremes, even in layout-only WebKit.
+            // Opening details changes only local disclosure state, not design values.
+            if(tab==='admin_visual_editor'&&(targetWidth===320||targetWidth===1920)){
+              const palette=shell.locator('.admin-visual-editor-panel > [data-admin-studio-group="palette"]');
+              const wasOpen=await palette.evaluate(el=>el.open);
+              try{
+                await palette.evaluate(el=>{el.open=true;});
+                const issues=await palette.evaluate(group=>{
+                  const result=[];
+                  const controls=[...group.querySelectorAll('input[type="color"]')].filter(el=>el.getBoundingClientRect().height>0);
+                  if(!controls.length)result.push('expanded palette has no visible color inputs');
+                  for(const el of controls){
+                    const rect=el.getBoundingClientRect(),label=el.closest('label')?.getBoundingClientRect();
+                    if(rect.width<43.5||rect.height<43.5||!label||rect.left<label.left-2||rect.right>label.right+2)result.push('expanded palette color geometry');
+                  }
+                  return result;
+                });
+                assert.deepEqual(issues,[],engine+' '+targetWidth+'px: expanded palette controls stay bounded');
+              }finally{await palette.evaluate((el,open)=>{el.open=open;},wasOpen);}
+              assert.deepEqual(writes,[],'Expanded palette geometry check never writes settings');
+            }
+            if(targetWidth<640 && tab==='analytics'){
+              const controls=await shell.locator('.admin-analytics-actions').evaluate(el=>[...el.querySelectorAll('select,button')].map(node=>({tag:node.tagName,height:node.getBoundingClientRect().height,appearance:getComputedStyle(node).appearance})));
+              assert.ok(controls.every(x=>x.height>=43.5&&x.height<=80),engine+' '+targetWidth+'px: finance actions must be compact, not 140px tall: '+JSON.stringify(controls));
+              assert.equal(controls.find(x=>x.tag==='SELECT')?.appearance,'none', 'Finance select avoids native dark paint');
+            }
             const sample = await collectAdminVisualBaseline(shell, tab);
+            if((targetWidth===1440 && width!==1440) || (engine==='webkit' && [768,1024].includes(targetWidth)))await capture(page,tab,targetWidth);
             const selected = await picker.inputValue();
             const moduleVisible = await shell.locator(selector).first().isVisible();
             const activeCount = await activeNav.count();
-            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
+            matrix.push({module:tab,width:targetWidth,documentOverflow:sample.documentOverflow,workspaceOverflow:sample.main.overflow,shortControls:sample.shortControls,narrowControls:sample.narrowControls,textElements:sample.textElements,horizontallyOverflowingText:sample.horizontallyOverflowingText,smallTextElements:sample.smallTextElements,issueGroups:sample.issueGroups,srOnlyTextElements:sample.srOnlyTextElements,imageLoadFailures:sample.imageLoadFailures,selected,moduleVisible,activeCount});
             if (sample.documentOverflow > 2 || sample.main.overflow > 2 || selected !== tab || !moduleVisible || activeCount !== 1 || newControlIssues.length) {
               // Diagnostic geometry only, from the isolated synthetic fixture.
               // Do not log text, input values, URLs or customer identifiers.
@@ -504,6 +666,8 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await studio.getByRole('button',{name:/Mini Robot/}).click();
           const selectedCharacter=studio.locator('.gs-character-roster > button[aria-pressed="true"]');
           assert.equal(await selectedCharacter.count(),1,'Exactly one roster selection');
+          assert.match(await selectedCharacter.innerText(),/Mini Robot/,'Clicked character is the actual selected roster item');
+          assert.equal(await selectedCharacter.evaluate(el=>getComputedStyle(el).transitionDuration),'0s','Roster selection cannot defer the semantic palette through a transition');
           const selectedPalette=await selectedCharacter.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
           assert.deepEqual(selectedPalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Selected character retains a readable paired palette');
           const securityWarning=shell.locator('[data-admin-pro-security-warning]');
@@ -639,6 +803,23 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
         if(tab==='admin_visual_editor'){
           assert.ok(moduleRequests.has('AdminPanelVisualEditor'),'Admin editor loads on entering its section');
           const editor=shell.locator('.admin-visual-editor-panel');
+          const appearanceControl=shell.getByRole('group',{name:'ადმინპანელის გარეგნობა',exact:true});
+          const studioButton=appearanceControl.getByRole('button',{name:'ახალი Studio',exact:true});
+          const savedButton=appearanceControl.getByRole('button',{name:'შენახული დიზაინი',exact:true});
+          assert.equal(await shell.getAttribute('data-admin-appearance'),'studio');
+          const beforeAppearance=await shell.evaluate(node=>getComputedStyle(node).getPropertyValue('--admin-vd-primaryButtonBackground-active').trim());
+          await savedButton.click();
+          await page.waitForFunction(()=>document.querySelector('.admin-dashboard-shell')?.getAttribute('data-admin-appearance')==='saved');
+          assert.equal(await shell.getAttribute('data-admin-appearance'),'saved');
+          assert.equal(await savedButton.getAttribute('aria-pressed'),'true');
+          assert.equal(await studioButton.getAttribute('aria-pressed'),'false');
+          await studioButton.focus();
+          await studioButton.press('Enter');
+          await page.waitForFunction(()=>document.querySelector('.admin-dashboard-shell')?.getAttribute('data-admin-appearance')==='studio');
+          assert.equal(await shell.getAttribute('data-admin-appearance'),'studio');
+          assert.equal(await studioButton.getAttribute('aria-pressed'),'true');
+          assert.equal(await shell.evaluate(node=>getComputedStyle(node).getPropertyValue('--admin-vd-primaryButtonBackground-active').trim()),beforeAppearance,'Returning to Studio restores the original palette token');
+          assert.deepEqual(writes,[],'Appearance switching never persists or publishes a design');
           const jumps=editor.locator('.admin-unified-editor-jumps');
           await jumps.getByRole('button',{name:'ფერები / PRO',exact:true}).click();
           const palette=editor.locator('[data-admin-studio-group="palette"]');
@@ -791,7 +972,7 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           await metric.waitFor({state:'visible'});
           assert.equal(await metric.count(),1,'VIP filter shows one segment');
           const metricInk=await metric.evaluate(el=>getComputedStyle(el).color);
-          assert.equal(metricInk,'rgb(37, 34, 56)','Segment number uses readable workspace foreground');
+          assert.equal(metricInk,'rgb(24, 35, 56)','Segment number uses readable workspace foreground');
           const warning=segments.locator('.admin-marketing-campaigns > p.text-amber-200').first();
           const warningPalette=await warning.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor];});
           assert.deepEqual(warningPalette,['rgb(117, 67, 0)','rgb(255, 240, 204)'],'Sending restriction remains readable on a paired warning surface');
@@ -810,7 +991,12 @@ export async function runAdminWorkspaceSmoke(browser, host, { widths = [390, 144
           const modePalette=await workspace.locator('button[aria-pressed="true"]').evaluate(el=>{
             const style=getComputedStyle(el);return [style.color,style.backgroundColor];
           });
-          assert.deepEqual(modePalette,['rgb(20, 89, 74)','rgb(223, 243, 235)'],'Active promotion mode uses a readable paired palette');
+          const appearance=await shell.getAttribute('data-admin-appearance');
+          const expectedModePalette=appearance==='studio'?['rgb(255, 255, 255)','rgb(80, 66, 166)']:['rgb(20, 89, 74)','rgb(223, 243, 235)'];
+          assert.deepEqual(modePalette,expectedModePalette,'Active promotion mode uses the readable paired palette for the current appearance');
+          const luminance=rgb=>rgb.match(/\d+/g).slice(0,3).map(Number).map(value=>value/255).map(value=>value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4).reduce((sum,value,index)=>sum+value*[0.2126,0.7152,0.0722][index],0);
+          const [textLuminance,backgroundLuminance]=modePalette.map(luminance);
+          assert.ok((Math.max(textLuminance,backgroundLuminance)+0.05)/(Math.min(textLuminance,backgroundLuminance)+0.05)>=4.5,'Active promotion mode text meets WCAG AA contrast');
           const controls=editor.locator('[data-gs-campaign-controls="true"]');
           const name=controls.getByPlaceholder('მაგ. შავი პარასკევი');
           await name.waitFor({state:'visible'});

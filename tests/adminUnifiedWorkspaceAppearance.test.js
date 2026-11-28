@@ -21,10 +21,13 @@ test('custom desktop and responsive appearance are preserved',()=>{
   assert.deepEqual(resolveAdminWorkspaceAppearance(raw),raw);
  }
 });
-test('the owner editor and shell use the same projected appearance, not automatic save',()=>{
+test('Studio shell is independent of owner saved editor; only explicit editing changes saved appearance',()=>{
  const app=readFileSync(new URL('../src/components/AdminDashboardPro.jsx',import.meta.url),'utf8');
  assert.ok(app.includes('buildAdminPanelVisualStyle(effectiveAdminVisualDesign)'));
- assert.ok(app.includes('design={effectiveAdminVisualDesign}'));
+ assert.ok(app.includes('design={savedAdminAppearance}'));
+ assert.ok(app.includes("adminAppearanceMode === 'saved' ? savedAdminAppearance : resolveAdminStudioAppearance(adminVisualDesign)"));
+ assert.ok(app.includes("setAdminAppearanceMode('saved');"));
+ assert.ok(app.includes('onChange={handleAdminVisualDesignChange}'));
  assert.ok(app.includes('saveAdminPanelVisualDesignToCloud(adminVisualDesign, adminVisualUpdatedAtRef.current)'));
  assert.ok(!app.includes('saveAdminPanelVisualDesignToCloud(effectiveAdminVisualDesign'));
 });

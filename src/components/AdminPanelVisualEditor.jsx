@@ -541,10 +541,15 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       target instanceof Element && Boolean(target.closest(
         '[data-admin-sidebar="true"] [data-admin-visual-nav-item="true"], [data-admin-sidebar="true"] #geostore-admin-mobile-section'
       ));
+    // The owner appearance switch is editor chrome, not a preview mutation.
+    // Exempt only the two explicit non-submit controls, never their parent.
+    const isAppearanceSwitch = target => target instanceof Element && Boolean(target.closest(
+      '.admin-dashboard-shell .admin-studio-appearance-options > button[type="button"]:is([data-admin-appearance-choice="studio"],[data-admin-appearance-choice="saved"])'
+    ));
     const handlePreviewClick = event => {
       const target = event.target;
       if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
-      if (!target.closest('.admin-dashboard-shell') || isWorkspaceNavigation(target)) return;
+      if (!target.closest('.admin-dashboard-shell') || isWorkspaceNavigation(target) || isAppearanceSwitch(target)) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
@@ -565,7 +570,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       }
     };
     const handlePreviewKeydown = event => {
-      if (isWorkspaceNavigation(event.target) || event.key === 'Tab') return;
+      if (isWorkspaceNavigation(event.target) || isAppearanceSwitch(event.target) || event.key === 'Tab') return;
       if (event.target instanceof Element && event.target.closest('.admin-dashboard-shell') && !event.target.closest('.admin-visual-editor-panel')) {
         event.preventDefault();
         event.stopPropagation();
@@ -1507,7 +1512,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   };
 
   return (
-    <section className="admin-visual-editor-panel min-w-0 max-w-full space-y-5 rounded-3xl border border-emerald-400/25 bg-slate-900/90 p-4 sm:p-6" aria-labelledby="admin-visual-editor-title">
+    <section className="admin-visual-editor-panel min-w-0 max-w-full space-y-4 border" aria-labelledby="admin-visual-editor-title">
       <style>{`
         .admin-dashboard-shell .admin-visual-element-selected {
           outline: 2px solid #34d399 !important;
@@ -1619,7 +1624,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         ))}
       </nav>
 
-      <details hidden={!isPanelGroupVisible('palette')} data-admin-studio-group="palette" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('palette')} data-admin-studio-group="palette" className="admin-studio-group min-w-0 border p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ფერების პალიტრა <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-3">
@@ -1661,7 +1666,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('typography')} data-admin-studio-group="typography" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('typography')} data-admin-studio-group="typography" className="admin-studio-group min-w-0 border p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ტიპოგრაფია და შრიფტები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-3">
@@ -1686,7 +1691,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('layout')} data-admin-studio-group="layout" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('layout')} data-admin-studio-group="layout" className="admin-studio-group min-w-0 border p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">განლაგება და ზომები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-4">
@@ -1715,7 +1720,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('content')} data-admin-studio-group="content" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('content')} data-admin-studio-group="content" className="admin-studio-group min-w-0 border p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">ტექსტები და წარწერები <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-3">
@@ -1740,7 +1745,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details hidden={!isPanelGroupVisible('modules')} data-admin-studio-group="modules" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details hidden={!isPanelGroupVisible('modules')} data-admin-studio-group="modules" className="admin-studio-group min-w-0 border p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">მოდულების ინდივიდუალური დიზაინი <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-4">
@@ -1810,7 +1815,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         </div>
       </details>
 
-      <details ref={elementEditorDetailsRef} hidden={!isPanelGroupVisible('elements')} data-admin-studio-group="elements" className="admin-studio-group min-w-0 rounded-2xl border border-slate-700/80 bg-slate-950/65 p-3 sm:p-4">
+      <details ref={elementEditorDetailsRef} hidden={!isPanelGroupVisible('elements')} data-admin-studio-group="elements" className="admin-studio-group min-w-0 border p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-black text-white">შიდა ელემენტების რედაქტირება <span aria-hidden="true" className="text-emerald-300">⌄</span></summary>
         <div className="mt-3">
       <div className="space-y-4 rounded-2xl border border-emerald-400/20 bg-slate-950/50 p-3 sm:p-4">

@@ -13,3 +13,33 @@ test('product layout uses actual container width, retains accessible fields and 
  for(const token of ['@container (min-width: 480px)','@container (min-width: 700px)','@container (min-width: 900px)','@media (max-width: 359px)','admin-product-controls input[type="number"]','admin-workspace-gallery-card:first-child','min-height: 44px'])assert.ok(css.includes(token),token);
  assert.doesNotMatch(css,/overflow:\s*(hidden|clip)/);
 });
+
+
+test('catalogue text follows active design tokens and status labels retain readable bounds',()=>{
+ const css=read('src/adminUnifiedWorkspace.css'),video=read('src/adminVideoRedesign.css');
+ assert.ok(css.includes('clamp(13px,var(--admin-vd-bodyFontSize-active,14px),18px)'));
+ assert.doesNotMatch(video,/\.admin-product-identity h4 \{font-size:14px!important/);
+ assert.match(video,/:is\(\[data-admin-pro-publication\],\[data-admin-pro-stock\]\) \{[^}]*font-size:12px!important[^}]*max-inline-size:100%/);
+ assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('catalogue status or field label geometry'));
+});
+
+
+test('catalogue removes legacy dark paint without removing its operational controls',()=>{
+ const app=read('src/components/AdminDashboardPro.jsx'),css=read('src/adminUnifiedWorkspace.css');
+ for(const cls of ['admin-product-attributes','admin-size-color-stock-editor','admin-product-variants-editor','admin-product-gallery','admin-product-row','admin-category-card','admin-subcategory-card'])assert.ok(app.includes(cls+' min-w-0'),cls);
+ assert.ok(css.includes('Catalogue form typography'));
+ assert.ok(app.includes('onSubmit={handleSaveProduct}'));
+ assert.ok(app.includes('onSubmit={handleAddCategory}'));
+});
+
+
+test('Studio product catalogue removes nested decorative frames and retains editable fields and status semantics',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — product catalogue.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-product-identity h4','.admin-product-controls > div','.admin-product-controls input[type="number"]','.admin-video-edit','.admin-product-list-filters'])assert.ok(css.includes(term),term);
+ assert.match(css,/\.admin-product-controls > div \{[^}]*border: 0 !important/);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)|word-break:\s*break-all|\[data-admin-pro-stock=|\[data-admin-pro-publication=/);
+});

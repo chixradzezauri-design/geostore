@@ -1060,7 +1060,7 @@ export default function StorefrontVisualEditor({
           </details>);
   return (
     <section data-gs-flash-editor={campaignOnly?'true':undefined} className="gs-storefront-visual-editor space-y-5" aria-labelledby="gs-visual-editor-title">
-      <header className="admin-unified-editor-header rounded-2xl border border-emerald-400/25 bg-slate-900/80 p-4 sm:p-5">
+      <header className="admin-unified-editor-header min-w-0 border">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-300">GEOSTORE / VISUAL STUDIO</p>
@@ -1070,7 +1070,7 @@ export default function StorefrontVisualEditor({
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={undo} disabled={historyIndex <= 0} className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 disabled:opacity-35"><RotateCcw className="mr-1 inline h-3.5 w-3.5" /> გაუქმება</button>
             <button type="button" onClick={redo} disabled={historyIndex >= history.length - 1} className="rounded-xl border border-slate-600 px-3 py-2 text-xs font-bold text-slate-200 disabled:opacity-35"><RotateCw className="mr-1 inline h-3.5 w-3.5" /> გამეორება</button>
-            {!campaignOnly&&<button type="button" onClick={resetDesign} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">ვიზუალური Reset</button>}
+            {!campaignOnly&&<button type="button" onClick={resetDesign} className="admin-storefront-reset rounded-xl border px-3 py-2 text-xs font-bold">ვიზუალური Reset</button>}
           </div>
         </div>
         {heroImagePending && <p role="status" className="mt-2 text-xs text-amber-200">ფოტო იტვირთება — შენახვა დროებით შეჩერებულია.</p>}
@@ -1078,12 +1078,12 @@ export default function StorefrontVisualEditor({
       </header>
 
       {/* Keep save/publish reachable above the long phone preview. Real handlers and server guards are shared. */}
-      <div className="gs-visual-editor-mobile-actions sticky top-2 z-30 grid grid-cols-2 gap-2 rounded-xl border border-emerald-400/30 bg-slate-950/95 p-2 shadow-xl backdrop-blur md:hidden" data-admin-unified-editor-actions="mobile" role="group" aria-label="მობილური მონახაზის მოქმედებები">
+      <div className="gs-visual-editor-mobile-actions sticky top-2 z-30 grid grid-cols-2 gap-2 border p-2 md:hidden" data-admin-unified-editor-actions="mobile" role="group" aria-label="მობილური მონახაზის მოქმედებები">
         <button type="button" onClick={saveDraft} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-400 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" />{storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
         <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-amber-300/50 bg-amber-300 px-2 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" />{storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
       </div>
 
-      <div data-admin-unified-editor-actions="desktop" role="group" aria-label="მონახაზის მოქმედებები" className="hidden md:sticky md:top-2 md:z-20 md:grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-2xl border border-emerald-400/30 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
+      <div data-admin-unified-editor-actions="desktop" role="group" aria-label="მონახაზის მოქმედებები" className="hidden md:sticky md:top-2 md:z-20 md:grid grid-cols-1 sm:grid-cols-2 gap-2 border p-3">
             <button type="button" onClick={saveDraft} disabled={heroImagePending || storefrontDraftBusy || storefrontPublishBusy} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-50"><Save className="h-4 w-4" /> {storefrontDraftBusy ? 'ინახება…' : 'მონახაზის შენახვა'}</button>
             <button type="button" onClick={publish} disabled={heroImagePending || !isOwner || storefrontDraftBusy || storefrontPublishBusy} title={!isOwner ? 'გამოქვეყნება მხოლოდ მთავარ ადმინისტრატორს შეუძლია' : ''} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-300/50 bg-amber-300 px-4 py-3 text-xs font-black text-slate-950 disabled:opacity-40"><Upload className="h-4 w-4" /> {storefrontPublishBusy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
           </div>

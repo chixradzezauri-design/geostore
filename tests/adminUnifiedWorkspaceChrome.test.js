@@ -135,6 +135,11 @@ test('Atelier cascade uses one primary product edit treatment and preserves KPI 
  const rule=css.split('/* Atelier dashboard:')[1].match(/\.admin-command-kpi\s*\{[^}]+\}/)[0];
  assert.ok(rule.indexOf('border-color:')<rule.indexOf('border-block-start: 3px solid'));
  const video=read('src/adminVideoRedesign.css');
+ const hover=video.match(/\.admin-command-kpi:hover\s*\{([^}]+)\}/);
+ assert.ok(hover,'dashboard KPI hover rule exists');
+ assert.match(hover[1],/border-inline-color:/);
+ assert.match(hover[1],/border-block-end-color:/);
+ assert.doesNotMatch(hover[1],/\bborder-color:|\bborder-block-start(?:-color)?:|\bborder-top(?:-color)?:/);
  for(const tone of ['primary','warning','danger'])assert.ok(video.includes('[data-admin-command-status="'+tone+'"],[data-admin-kpi-tone="'+tone+'"]'));
  assert.equal((css.match(/\.admin-product-controls > \.admin-video-edit\s*\{/g)||[]).length,1);
  assert.ok(!css.includes('background: color-mix(in srgb, var(--av-accent) 8%, var(--av-inset))'));
@@ -148,4 +153,15 @@ test('Atelier narrow dashboard keeps explicit label and icon tracks and one colu
  assert.match(css,/\.admin-command-kpi > span:first-child > span\s*\{[^}]*grid-column: 1;[^}]*overflow-wrap: anywhere !important;/);
  assert.match(css,/\.admin-command-kpi > span:first-child > svg\s*\{[^}]*grid-column: 2;/);
  assert.ok(read('tests/browser/adminWorkspaceSmoke.mjs').includes('320px dashboard has one readable KPI column'));
+});
+
+
+test('deep audit uses active title and KPI typography and tests actual header separation',()=>{
+ const css=read('src/adminUnifiedWorkspace.css');
+ assert.ok(css.includes('clamp(18px,var(--admin-vd-titleFontSize-active,22px),26px)'));
+ assert.ok(css.includes('clamp(22px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.25),30px)'));
+ assert.ok(css.includes(':has(> .admin-pro-header-actions)'));
+ const smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ assert.ok(smoke.includes('header regions stay separated'));
+ assert.ok(smoke.includes('header identity/action collision'));
 });

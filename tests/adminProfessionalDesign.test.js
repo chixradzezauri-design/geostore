@@ -14,7 +14,7 @@ test('PRO preset provides a complete compatible light palette and compact design
  assert.equal(after.layout.inputHeight,44);
  assert.equal(after.layout.sidebarWidth,256);
  assert.equal(after.layout.sectionGap,18);
- assert.equal(after.theme.accent,'#694183');
+ assert.equal(after.theme.accent,'#315eba');
  assert.equal(after.components.orders.backgroundColor,'#ffffff');
  assert.equal(after.elementStyles.orderCard.textColor,ADMIN_PRO_PALETTE.text);
  assert.equal(buildAdminPanelVisualStyle(after)['--admin-vd-orders-backgroundColor'],'#ffffff');

@@ -25,7 +25,7 @@
   border-color: var(--av-border) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #admin-command-title {
-  font-size: clamp(18px, 3vw, 23px) !important;
+  font-size: clamp(18px,var(--admin-vd-titleFontSize-active,22px),26px) !important;
 }
 
 /* Match native controls and readable text to the workspace palette. */
@@ -45,6 +45,30 @@
   opacity: 1;
 }
 
+/* Neutral operational surfaces own their paint; no legacy dark utility classes on these roots. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-history-panel,.admin-expenses .admin-expense-entry-panel,.admin-vendors-panel .admin-local-vendor-entry-panel,.admin-vendors-panel .admin-local-vendor-list-panel,.admin-vendors-panel .admin-purchase-workspace,.admin-vendors-panel .admin-supplier-workspace,.admin-crm-panel,.admin-discounts-panel) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  border: 1px solid var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row .admin-expense-description,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields label {
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-expense-history-panel,.admin-purchase-workspace,.admin-supplier-workspace,.admin-crm-edit-panel,.admin-flash-sale-form) label:not(.sr-only) {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+}
+
 /* Unified workspace foundation: remove decorative gradients from operational
    surfaces, without changing user-selected backgrounds, status colors or
    individual element geometry. Never select storefront/editor preview content. */
@@ -60,21 +84,52 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
   display: grid !important;
   grid-template-columns: minmax(0,1fr);
-  align-items: center !important;
+  grid-auto-rows: auto !important;
+  align-content: start !important;
+  align-items: start !important;
+  justify-items: stretch !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
   gap: 12px !important;
   min-inline-size: 0;
   border-inline-start: 3px solid var(--av-accent) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-page-identity {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
   min-width: 0;
   max-width: 100%;
-  gap: 3px;
+  height: auto !important;
+  min-height: 0 !important;
+  gap: 4px !important;
+  text-align: start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-page-identity > :is(h2,p,span) {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  inline-size: 100% !important;
+  min-inline-size: 0;
+  max-inline-size: 100% !important;
+  max-width: 100% !important;
+  align-self: stretch !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  text-align: start !important;
+  word-break: normal !important;
+  white-space: normal !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-page-identity h2 {
   font-size: clamp(18px,var(--admin-vd-titleFontSize-active,22px),28px) !important;
   line-height: 1.35 !important;
   margin: 0 !important;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] .admin-pro-section-context {
   color: var(--av-muted) !important;
@@ -88,6 +143,35 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions {
   min-inline-size: 0;
   max-inline-size: 100%;
+}
+@media (max-width: 767px) {
+  /* A single intrinsic column, not an explicit two-row grid with an absent second child. */
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main > [data-admin-visual-header="true"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    height: auto !important;
+    block-size: auto !important;
+    min-block-size: 0 !important;
+    max-block-size: none !important;
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > .admin-workspace-main > [data-admin-visual-header="true"] > :is(.admin-pro-page-identity,.admin-pro-header-actions) {
+    flex: 0 0 auto !important;
+    position: static !important;
+    transform: none !important;
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: auto !important;
+    block-size: auto !important;
+    max-block-size: none !important;
+    min-block-size: 0 !important;
+    margin: 0 !important;
+  }
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions > button:nth-child(2) {
   background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
@@ -114,11 +198,11 @@
   }
 }
 @media (min-width: 1440px) {
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"]:has(> .admin-pro-header-actions) {
     grid-template-columns: minmax(0,1fr) minmax(0,auto);
     align-items: center !important;
   }
-  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-pro-header-actions { justify-content: flex-end; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main > [data-admin-visual-header="true"] > .admin-pro-header-actions { width: auto !important; justify-content: flex-end; }
 }
 
 /* Workspace chrome and operational overview. Keep the permission-filtered
@@ -126,6 +210,47 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand-mark {
   background-image: none !important;
   border-color: transparent !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand > div:last-child {
+  flex: 1 1 auto; min-inline-size: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand :is(h3,p) {
+  margin: 0 !important;
+  text-align: start !important;
+  word-break: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-pro-brand p {
+  font-size: 12px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-button {
+  transform: none !important;
+  box-shadow: none !important;
+  text-align: start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-button[data-admin-visual-nav-active="true"] {
+  box-shadow: inset 3px 0 currentColor !important;
+}
+@media(max-width:767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-content: start !important;
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand {
+    grid-column:1; grid-row:1; min-inline-size:0; margin:0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout {
+    grid-column:2; grid-row:1; margin:0 !important; width:auto !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker {
+    grid-column:1 / -1; grid-row:2; margin:0 !important;
+  }
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-item="true"] {
   background-image: none !important;
@@ -143,7 +268,6 @@
   outline-color: var(--av-nav-active-text) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > [data-admin-visual-nav-active="false"]:hover {
-  background: var(--av-nav-bg) !important;
   border-color: var(--av-nav-text) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-video-logout {
@@ -273,7 +397,13 @@
 
 /* Stage 05 — orders. Existing editor-owned card radius, color and padding
    are retained; only internal layout, action roles and presentation change. */
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-panel { container-type: inline-size; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-panel {
+  container-type: inline-size;
+  background: var(--admin-vd-ordersSectionBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-ordersSectionBorder-active,var(--av-border)) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header > div { min-width: 0; max-width: 100%; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header h3 { line-height: 1.45; overflow-wrap: anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-orders-header h3 svg { flex-shrink: 0; }
@@ -293,7 +423,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters > button {
   min-height: 44px !important; padding: 6px 8px !important;
-  font-size: 12px !important; line-height: 1.4; overflow-wrap: break-word;
+  font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important; line-height: 1.4; overflow-wrap: anywhere !important;
   background-image: none !important; box-shadow: none !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-filters > button[aria-pressed="false"] {
@@ -390,7 +520,7 @@
   border-color: var(--av-border) !important; padding: 4px !important; gap: 4px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button {
-  font-size: 12px !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  font-size: max(12px,var(--admin-vd-buttonFontSize-active,13px)) !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
   background-image: none !important; box-shadow: none !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-order-status-actions > button[aria-pressed="false"] {
@@ -521,7 +651,7 @@
   font-size: 12px !important; line-height: 1.5; color: var(--av-muted) !important;
   overflow-wrap: anywhere;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-meta > span { color: inherit !important; min-width: 0; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-meta > span { color: inherit !important; min-width: 0; max-inline-size: 100%; overflow-wrap: anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls {
   display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important;
   width: 100% !important; max-width: 100%; gap: 6px !important; align-items: stretch !important;
@@ -532,7 +662,8 @@
   border-radius: var(--admin-vd-inputRadius-active,8px) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-controls .admin-unified-product-field-label {
-  font-size: 12px !important; line-height: 1.45; white-space: normal !important; overflow-wrap: break-word !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; line-height: 1.45; white-space: normal !important; overflow-wrap: anywhere !important;
+  min-inline-size: 0;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-controls input[type="number"] {
   width: 100% !important; min-width: 0 !important; text-align: start !important; box-shadow: none !important;
@@ -603,6 +734,8 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is([data-admin-inventory-view],.admin-vendors-panel,.admin-purchase-workspace,.admin-supplier-workspace) { container-type: inline-size; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] {
   background-image: none !important; box-shadow: none !important; backdrop-filter: none !important;
+  background-color: var(--admin-vd-inventorySectionBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-inventorySectionBorder-active,var(--av-border)) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-summary] {
   display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 8px !important;
@@ -638,7 +771,7 @@
   gap: 8px !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead { background: var(--av-inset) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead th { color: var(--av-text) !important; font-size: 12px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] thead th { color: var(--admin-vd-tableHeaderText-active,var(--av-text)) !important; font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] tbody tr { background: var(--av-surface) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-pro-inventory-table] tbody tr:nth-child(even) { background: var(--av-inset) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-replenishment-row {
@@ -679,7 +812,7 @@
   background: #fff0cc !important; color: #754300 !important; border: 1px solid #d4a65e;
   border-radius: 8px; padding: 10px; line-height: 1.6;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card { background-image: none !important; box-shadow: none !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel .admin-vendor-card { background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important; box-shadow: none !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-unified-purchase-draft,.admin-unified-supplier-form,.admin-unified-purchase-detail) {
   background: var(--av-inset) !important; border: 1px solid var(--av-border) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px); padding: 12px; min-width: 0;
@@ -798,6 +931,10 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-card { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
 /* Atelier categories: preserve the editor-owned colors and existing sibling order. */
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-category-card {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  color: var(--av-text) !important;
+  border-color: var(--av-border) !important;
+  box-shadow: none !important;
   border-inline-start: 3px solid var(--av-accent) !important;
   border-radius: var(--admin-vd-cardRadius-active,12px) !important;
   min-inline-size: 0;
@@ -825,10 +962,10 @@
   flex: 1 1 auto; min-width: 0 !important; max-width: 100% !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity :is(h4,span) {
-  white-space: normal !important; word-break: normal !important; overflow-wrap: break-word !important;
+  white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important;
   line-height: 1.5 !important; letter-spacing: normal !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > span { flex: 1 1 auto; font-size: 13px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-subcategory-identity > span { flex: 1 1 auto; font-size: clamp(13px,var(--admin-vd-bodyFontSize-active,14px),16px) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-placeholder {
   flex: 0 0 48px !important; width: 48px !important; height: 48px !important;
   background: var(--av-inset) !important; border-color: var(--av-border) !important; color: var(--av-muted) !important;
@@ -925,6 +1062,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > :is(button,select) {
   flex: 1 1 140px; max-inline-size: 100%; white-space: normal !important;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > button {
+  min-height:44px !important; flex-shrink:0; overflow-wrap:anywhere;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading h3 { font-size: 16px !important; line-height: 1.5; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-heading p { font-size: 12px !important; line-height: 1.6; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-actions > :is(button,select) { min-height: 44px !important; box-shadow: none !important; min-width: 0; }
@@ -936,13 +1076,13 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div.grid > div { min-width: 0; background: var(--av-inset) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-business-comparison > div.grid > div > strong { color: var(--av-text) !important; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars { gap: 6px !important; padding-block-start: 12px; height: 180px !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] { gap: 5px !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics-trend-bars [role="listitem"] { gap: 5px !important; flex: 1 0 56px !important; min-inline-size: 56px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-chart-column {
   flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: flex-end;
   border-bottom: 1px solid var(--av-border); background: repeating-linear-gradient(to top,var(--av-border) 0px,var(--av-border) 1px,transparent 1px,transparent 25%);
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-chart-column > [data-admin-pro-finance-bar] { max-height: 100%; flex-shrink: 0; background: var(--av-accent) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-finance-orders-warning,.admin-finance-data-warning) {
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-finance-orders-warning,.admin-finance-data-warning,.admin-finance-reconciliation-warning) {
   background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-breakdown-row, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-finance-recent-row {
@@ -953,7 +1093,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-field { min-width: 0; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-field :is(input,select) { min-width: 0; max-width: 100%; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-submit { min-height: 44px !important; box-shadow: none !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row { background-image: none !important; box-shadow: none !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-row { background: var(--av-inset) !important; color: var(--av-text) !important; box-shadow: none !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expense-history-heading h3 { line-height: 1.5; overflow-wrap: anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-expense-summary {
   background: var(--av-inset); border: 1px solid var(--av-border); padding: 10px; border-radius: 8px;
@@ -974,6 +1114,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid :is(label,input) {
   min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid label {font-size:max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;line-height:1.5;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-field-grid input {
   box-sizing: border-box; min-height: 44px !important; width: 100% !important;
   font-variant-numeric: tabular-nums;
@@ -1001,7 +1142,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field :is(input,select) {
   box-sizing: border-box; width: 100% !important; min-height: 44px !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field label {line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-field label {font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses :is(#admin-expense-description-help,#admin-expense-amount-help),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator #admin-calculator-units-help {font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;color:var(--av-muted) !important;line-height:1.5;overflow-wrap:anywhere;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-submit {
   background: var(--admin-vd-primaryButtonBackground-active,var(--av-accent)) !important;
   color: var(--admin-vd-primaryButtonText-active,#fff) !important;
@@ -1091,7 +1234,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-permission-grid > label:focus-within { outline: 2px solid var(--av-focus); outline-offset: 2px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff-list-panel > div:first-child { flex-wrap: wrap; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-email { overflow-wrap: anywhere; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-auth { display: inline-flex; font-size: 12px; line-height: 1.5; border-radius: 6px; padding: 4px 7px; margin-block-start: 6px; max-width: 100%; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-staff-auth { display: inline-flex; font-size: 12px !important; line-height: 1.5; border-radius: 6px; padding: 4px 7px; margin-block-start: 6px; min-inline-size:0; max-width: 100%; white-space:normal !important; overflow-wrap: anywhere; box-sizing:border-box; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="confirmed"] { background: #dff3eb !important; color: #14594a !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="pending"] { background: #fff0cc !important; color: #754300 !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-staff-auth="missing"] { background: #fce5e8 !important; color: #9c2538 !important; }
@@ -1139,7 +1282,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity > div:first-child {
   min-inline-size: 0; align-items: center; gap: 6px !important;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {font-size: 15px !important; line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {font-size: clamp(14px,var(--admin-vd-bodyFontSize-active,15px),18px) !important; line-height: 1.5; overflow-wrap: anywhere;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity [data-admin-pro-crm-badge] {max-inline-size: 100%; overflow-wrap: anywhere; white-space: normal !important;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-user-actions {
   border-block-start: 1px solid var(--av-border); padding-block-start: 10px;
@@ -1168,7 +1311,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-user-actions > button { width: 100% !important; min-width: 0; min-height: 44px !important; white-space: normal !important; box-shadow: none !important; background: var(--av-surface) !important; color: var(--av-text) !important; border: 1px solid var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="vip"][aria-pressed="true"] { background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="restrict"][aria-pressed="true"], .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="delete-local"] { background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-edit-panel { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-edit-panel { background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-crm-action="save"] { background: var(--admin-vd-primaryButtonBackground-active,#126b59) !important; color: var(--admin-vd-primaryButtonText-active,#fff) !important; min-height: 44px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-ticket-header { display: grid !important; grid-template-columns: minmax(0,1fr); gap: 10px !important; border-color: var(--av-border) !important; }
 /* Atelier correspondence: separate ticket identity, status, message and composer. */
@@ -1310,7 +1453,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields > div {
   display: grid; align-content: end; gap: 6px; min-inline-size: 0;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields label {line-height: 1.5; overflow-wrap: anywhere;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields label {font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;line-height: 1.5; overflow-wrap: anywhere;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-fields :is(input,select),
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-flash-window] input {
   box-sizing: border-box; width: 100%; min-inline-size: 0;
@@ -1344,12 +1487,13 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics > div, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-row {
   background: var(--av-surface) !important; border-color: var(--av-border) !important; min-width: 0;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics > div > strong { color: var(--av-text) !important; font-variant-numeric: tabular-nums; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics > div > strong { color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important; font-variant-numeric: tabular-nums; font-size:clamp(18px,var(--admin-vd-titleFontSize-active,22px),26px) !important; line-height:1.3; overflow-wrap:anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-metrics > div > span {display:block; font-size:12px !important; line-height:1.5; color:var(--av-text) !important; overflow-wrap:anywhere;}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-row { grid-template-columns: minmax(0,1fr) !important; gap: 8px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; font-variant-numeric: tabular-nums; min-width: 0; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > span { display: grid; gap: 3px; min-width: 0; color: var(--av-muted); font-size: 12px; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > span { display: grid; gap: 3px; min-width: 0; color: var(--av-muted); font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair strong { color: var(--av-text) !important; font-size: 14px; overflow-wrap: anywhere; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > small { grid-column: 1 / -1; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-price-pair > small { grid-column: 1 / -1; font-size:12px !important; min-inline-size:0; overflow-wrap:anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-flash-price-risk="increase"] .admin-unified-flash-price-warning { background: #fff0cc !important; color: #754300 !important; border-radius: 6px; padding: 4px 7px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-flash-preview [role="alert"] { background: #fff0cc !important; color: #754300 !important; border-radius: 6px; padding: 8px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule :is(.gs-admin-flash-schedule-summary > span,.gs-admin-flash-schedule-list > li,.gs-admin-flash-history-metrics > button,.gs-admin-flash-history-metrics > div,.gs-admin-flash-edit) {
@@ -1357,7 +1501,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-history-metrics > button[aria-pressed="true"] { outline: 2px solid var(--av-accent); outline-offset: -2px; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status { background: #e7edf3 !important; color: #39495a !important; border-color: transparent !important; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status { background: #e7edf3 !important; color: #39495a !important; border-color: transparent !important; font-size:12px !important; line-height:1.5; min-inline-size:0; max-inline-size:100%; white-space:normal !important; overflow-wrap:anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status[data-status="pending"] { background: #e4eefc !important; color: #254b8a !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status[data-status="started"] { background: #dff3eb !important; color: #14594a !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-admin-flash-schedule-status:is([data-status="cancelled"],[data-status="skipped"]) { background: #fce5e8 !important; color: #9c2538 !important; }
@@ -1493,7 +1637,7 @@
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-preview-column > .admin-unified-preview-toolbar [data-admin-pro-editor-devices] {grid-template-columns: minmax(0,1fr);}
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-header > div { min-width: 0; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-header h2 { font-size: 18px !important; line-height: 1.45; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-header h2 { font-size: clamp(18px,var(--admin-vd-titleFontSize-active,22px),26px) !important; line-height: 1.45; overflow-wrap:anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-header p { line-height: 1.6; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-search { background: var(--av-inset) !important; border-color: var(--av-border) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-editor-jumps { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; min-width: 0; }
@@ -1870,6 +2014,13 @@
   box-shadow: none !important;
   min-inline-size: 0;
 }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin label:not(:where(.gs-character-preview *)) {
+  font-size:12px !important; min-inline-size:0; max-inline-size:100%;
+  line-height:1.5; white-space:normal; overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin label > :is(select,textarea,input:not([type="checkbox"]):not([type="radio"])):not(:where(.gs-character-preview *)) {
+  min-inline-size:0 !important; max-inline-size:100%; box-sizing:border-box;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin :is(label.text-slate-100,details.gs-character-admin-section > summary) {
   color: var(--av-text) !important;
   -webkit-text-fill-color: currentColor !important;
@@ -2133,9 +2284,9 @@
   box-sizing: border-box;
   gap: 8px !important;
   min-inline-size: 0;
-  font-size: 12px !important;
+  font-size: max(12px,var(--admin-vd-bodyFontSize-active,14px)) !important;
   line-height: 1.45;
-  color: var(--av-text) !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > span:first-child > span {
   grid-column: 1;
@@ -2156,9 +2307,9 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-kpi > strong {
   min-inline-size: 0;
   overflow-wrap: anywhere;
-  font-size: clamp(22px,5vw,30px) !important;
-  line-height: 1.2;
-  color: var(--av-text) !important;
+  font-size: clamp(22px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.25),30px) !important;
+  line-height: 1.25 !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
   -webkit-text-fill-color: currentColor !important;
   font-variant-numeric: tabular-nums;
 }
@@ -2240,7 +2391,7 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] #geostore-admin-desktop-modules > .admin-workspace-nav-group {
   grid-column: 1 / -1;
   color: var(--av-nav-text) !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   line-height: 1.5;
   opacity: 1;
   letter-spacing: normal;
@@ -2273,6 +2424,17 @@
   }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-panel > div:first-child > button {
     max-inline-size: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div:first-child > div:first-child {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
   }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-command-center .admin-command-hero > div:first-child > button {
     width: 100%;
@@ -2433,14 +2595,14 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-pro-finance-kpi] > p:first-child {
   min-height: 0;
-  color: var(--av-text) !important;
-  font-size: 12px !important;
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  font-size: clamp(12px,var(--admin-vd-bodyFontSize-active,14px),16px) !important;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-kpis [data-admin-pro-finance-kpi] .admin-analytics-value {
   font-variant-numeric: tabular-nums;
-  font-size: clamp(18px,calc(var(--admin-vd-titleFontSize-active,18px) * 1.2),30px) !important;
+  font-size: clamp(18px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.2),30px) !important;
   line-height: 1.25;
   overflow-wrap: anywhere;
   -webkit-text-fill-color: currentColor !important;
@@ -2497,7 +2659,7 @@
   outline-offset: 2px;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-trend-bars [role="listitem"] > span {
-  font-size: 11px !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
   line-height: 1.4;
   max-inline-size: 100%;
   white-space: normal !important;
@@ -2773,14 +2935,18 @@
   padding: 6px;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="normal"] .admin-unified-flash-price-pair > span:nth-child(2) {
-  background: #dff3eb;
+  background: #dff3eb !important;
+  color: #14594a !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="normal"] .admin-unified-flash-price-pair > span:nth-child(2) > strong {
   color: #14594a !important;
   -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="increase"] .admin-unified-flash-price-pair > span:nth-child(2) {
-  background: #fff0cc;
+  background: #fff0cc !important;
+  color: #754300 !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-flash-price-risk="increase"] .admin-unified-flash-price-pair > span:nth-child(2) > strong {
   color: #754300 !important;
@@ -2828,7 +2994,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card [data-admin-pro-coupon-code] {
   letter-spacing: normal !important;
-  font-size: 15px !important;
+  font-size: clamp(14px,var(--admin-vd-bodyFontSize-active,15px),18px) !important;
   line-height: 1.5;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-coupons-panel .admin-coupon-card [data-admin-pro-coupon-value] {
@@ -2872,7 +3038,7 @@
   background: var(--av-inset); border: 1px solid var(--av-border);
   border-radius: 8px; padding: 8px; gap: 8px 12px;
 }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > span { color: var(--av-muted) !important; font-size: 12px; line-height: 1.5; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > span { color: var(--av-muted) !important; font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; line-height: 1.5; min-inline-size:0; overflow-wrap:anywhere; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-contact > p > b {
   color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
   font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
@@ -2896,7 +3062,7 @@
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="admin"] > div > span { color: #365c4b !important; -webkit-text-fill-color: currentColor !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role="customer"] > div > span { color: var(--av-muted) !important; }
-.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role] > div > :is(b,span) { min-inline-size: 0; overflow-wrap: anywhere; }
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel [data-admin-pro-thread-role] > div > :is(b,span) { min-inline-size: 0; max-inline-size:100%; overflow-wrap: anywhere; font-size:12px !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread > div:first-child > b { color: var(--av-text) !important; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread > div:first-child > button { color: var(--av-text) !important; min-height: 44px; padding-inline: 8px; }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread [role="alert"] { background: #fce5e8 !important; color: #9c2538 !important; border-radius: 8px; padding: 10px; }
@@ -2930,7 +3096,7 @@
   overflow-wrap: anywhere;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] [data-admin-pro-inventory-summary] > div > strong {
-  font-size: 24px !important;
+  font-size: clamp(20px,calc(var(--admin-vd-titleFontSize-active,22px) * 1.15),30px) !important;
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
   -webkit-text-fill-color: currentColor !important;
@@ -2952,7 +3118,7 @@
   border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-replenishment-metric > :is(label,span) {
-  font-size: 12px !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
   line-height: 1.5;
   color: var(--av-muted) !important;
   overflow-wrap: anywhere;
@@ -2998,7 +3164,7 @@
   border-inline-start: 3px solid var(--av-border) !important;
 }
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity h4 {
-  font-size: 15px !important;
+  font-size: clamp(14px,var(--admin-vd-bodyFontSize-active,14px),18px) !important;
   color: var(--av-text) !important;
   -webkit-text-fill-color: currentColor !important;
 }
@@ -3194,6 +3360,44 @@
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group[data-admin-studio-group="palette"] label > input[type="color"] {
   flex: 0 0 48px; width: 48px !important; min-height: 44px !important;
 }
+/* Editor control surfaces only: never change the live preview canvas. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group :is(label,button,summary),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls :is(label,button,summary) {
+  min-inline-size:0; max-inline-size:100%; font-size:12px !important;
+  line-height:1.5; white-space:normal !important; overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group > summary {font-size:14px !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group :is(button,summary),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls :is(button,summary) {
+  min-height:44px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls button {
+  min-inline-size:44px; max-inline-size:100%; box-sizing:border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:has(> input[type="color"]),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls .gs-visual-color-control {
+  display:flex !important; flex-wrap:wrap; align-items:center; gap:8px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:has(> input[type="color"]) > span {
+  flex:1 1 110px; min-inline-size:0; overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls .gs-visual-color-control > span:first-child {
+  flex:1 1 110px; min-inline-size:0; overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls .gs-visual-color-control > span:last-child {
+  flex:0 1 auto; min-inline-size:0; max-inline-size:100%; flex-wrap:wrap;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls .gs-visual-color-control code {
+  font-size:12px !important; color:var(--av-muted) !important; overflow-wrap:anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group input[type="color"],
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls input[type="color"] {
+  min-height:44px !important; min-inline-size:44px; max-inline-size:100%; box-sizing:border-box;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel :is(.admin-delivery-fee-fields,.admin-global-settings-form) label {
+  font-size:max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  min-inline-size:0; overflow-wrap:anywhere; line-height:1.5;
+}
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header [data-admin-pro-editor-save][role="alert"],
 .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-pro-editor-history] > div > [role="alert"] {
   color: #9c2538 !important; background: #fce5e8 !important; border-color: #e4b4bf !important;
@@ -3235,4 +3439,431 @@
 @media (max-width: 639px) {
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-unified-editor-header > div:last-child > button:last-child { grid-column: 1 / -1; }
+}
+
+/* Final measured caption follow-up; admin forms only. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-history-filters label,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-product-form :is(.admin-size-color-stock-control,.admin-custom-variant-stock),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel label {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  min-inline-size: 0; max-inline-size: 100%; line-height: 1.5;
+  white-space: normal; overflow-wrap: anywhere;
+}
+
+/* Catalogue form typography: keep semantic stock and publication status colors. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-product-form,.admin-category-form) label:not(.sr-only) {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  line-height: 1.5; min-inline-size: 0; overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel .admin-product-gallery-thumbnail {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  box-shadow: none !important; border-radius: 10px !important;
+}
+
+/* Finance video follow-up: neutral cards, explicit evidence and mutation states. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics :is(.admin-analytics-toolbar,.admin-finance-sources-panel,.admin-finance-expenses-panel,.admin-finance-products-panel,.admin-finance-vendors-panel),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-reconciliation-warning {
+  border-radius: 8px; overflow-wrap: anywhere; line-height: 1.6;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-data-warning .admin-finance-retry,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-finance-orders-warning .admin-finance-retry {
+  background: #fff0cc !important; color: #754300 !important;
+  border-color: #d4a65e !important; min-height: 44px; white-space: normal;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-profit-calculator .admin-calculator-results {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  justify-content: flex-start !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses :is(.admin-expense-mutation-notice[role="alert"],.admin-expense-load-error) {
+  background: #fce5e8 !important; color: #9c2538 !important;
+  border-color: #e4b4bf !important; -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-mutation-notice[role="status"] {
+  background: var(--av-inset) !important; color: var(--av-text) !important;
+  border-color: var(--av-border) !important; -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-expenses .admin-expense-error-retry {
+  color: #9c2538 !important; -webkit-text-fill-color: currentColor !important;
+  min-height: 44px; white-space: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-vendors-panel :is(.admin-local-vendor-entry-panel,.admin-local-vendor-list-panel,.admin-supplier-workspace,.admin-purchase-workspace) label:not(.sr-only) {
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  overflow-wrap: anywhere; min-inline-size: 0; line-height: 1.5;
+}
+
+/* Video redesign stage 6: intrinsic mobile chrome and communication surfaces. */
+@media (max-width: 767px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] {
+    box-sizing: border-box !important;
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    block-size: auto !important; min-block-size: 0 !important; max-block-size: none !important;
+    align-self: start !important; align-content: start !important;
+    grid-template-rows: auto auto !important; grid-auto-rows: auto !important;
+    padding: clamp(8px,var(--admin-vd-video-mobile-cardPadding,12px),14px) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > :is(.admin-pro-brand,.admin-video-logout,.admin-mobile-section-picker) {
+    min-block-size: 0; max-inline-size: 100%; margin: 0 !important;
+    align-self: center !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-pro-brand :is(h3,p) {
+    line-height: 1.4 !important; white-space: normal !important; overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] > .admin-mobile-section-picker {
+    min-height: 0 !important; height: auto !important; align-content: start !important;
+  }
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-support-panel,.admin-broadcasts-panel,.admin-staff .admin-staff-panel,.admin-staff .admin-staff-list-panel) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  color: var(--av-text) !important; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-crm-panel .admin-crm-user-card,.admin-support-panel .admin-support-ticket,.admin-support-panel .admin-legacy-message-card) {
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important;
+  box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-unified-crm-identity h4 {
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel .admin-crm-edit-panel {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-crm-panel :is(.admin-crm-edit-panel,.admin-workspace-crm-filters) label:not(.sr-only),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-broadcasts-panel .admin-unified-broadcast-form label:not(.sr-only) {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+  line-height: 1.5; overflow-wrap: anywhere; min-inline-size: 0;
+}
+
+/* Video stage 7 — contrast pairs for flash scope and feedback; neutral campaign surfaces. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset > label:has(> input[type="radio"]) {
+  display: grid !important; grid-template-columns: auto minmax(0,1fr); align-items: center;
+  min-height: 44px !important; gap: 10px !important; padding: 10px !important;
+  background: #f8fafc !important; color: #243448 !important; border-color: #b8c5d4 !important;
+  opacity: 1 !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset > label:has(> input[type="radio"]:checked) {
+  background: #e4eefc !important; color: #254b8a !important; border-color: #315eba !important;
+  box-shadow: inset 0 0 0 1px #315eba !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset > label > .admin-flash-scope-caption {
+  color: inherit !important; -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important; min-inline-size: 0; font-size: max(13px,var(--admin-vd-bodyFontSize-active,13px)) !important;
+  line-height: 1.5 !important; white-space: normal !important; overflow-wrap: break-word; word-break: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset:disabled > label:has(> input[type="radio"]) {
+  background: #e7edf3 !important; color: #39495a !important; border-color: #b8c5d4 !important; cursor: not-allowed;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-unified-flash-preview fieldset > label > input[type="radio"] {
+  accent-color: #315eba !important; inline-size: 18px; block-size: 18px; margin: 0; opacity: 1;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .admin-flash-sale-expiry-note {
+  background: #dff3eb !important; color: #14594a !important; -webkit-text-fill-color: currentColor !important;
+  border: 1px solid #a7cbbb !important; border-radius: 8px; padding: 10px 12px;
+  font-size: 12px !important; line-height: 1.6; overflow-wrap: anywhere; opacity: 1 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-promotion-state="active"] :is(p,span,strong,summary) {
+  color: #14594a !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel [data-admin-pro-promotion-state="active"] {
+  background: #dff3eb !important; border-color: #a7cbbb !important; color: #14594a !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-discounts-panel .gs-admin-flash-schedule [role="status"] {
+  color: var(--av-text) !important; background: var(--av-inset) !important; -webkit-text-fill-color: currentColor !important;
+  padding: 8px; border-radius: 6px; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banners-entry-surface,.admin-banners-list-surface,.admin-coupons-panel-entry-surface,.admin-coupons-panel-list-surface,.admin-flash-workspace-panel) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  color: var(--av-text) !important; border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banners .admin-banner-card,.admin-coupons-panel .admin-coupon-card) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,14px),20px) !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-banners,.admin-coupons-panel,.admin-discounts-panel) .admin-unified-promo-field > span {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important; line-height: 1.5; overflow-wrap: anywhere;
+}
+
+/* Video stage 8 — settings navigation and editor chrome, not preview content. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-settings-panel > .admin-security-notice,.admin-settings-panel > .admin-delivery-settings,.admin-settings-panel > .admin-global-settings,.admin-settings-panel > .gs-character-admin,.admin-audit-logs-panel,.admin-visual-editor-panel,.gs-storefront-visual-editor > .admin-unified-editor-header) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  color: var(--av-text) !important; padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel > .admin-settings-jumps {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,145px),1fr)); gap: 8px;
+  min-inline-size: 0; padding: 10px; border: 1px solid var(--av-border);
+  border-radius: var(--admin-vd-cardRadius-active,12px); background: var(--av-surface);
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-jumps > button {
+  min-height: 44px !important; min-inline-size: 0; padding: 8px; border: 1px solid var(--av-border) !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important; background: var(--av-inset) !important;
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important;
+  line-height: 1.5; white-space: normal; overflow-wrap: break-word; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-jumps > button:focus-visible, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel > [data-admin-settings-target]:focus-visible {outline: 2px solid var(--av-focus,var(--av-accent)); outline-offset: 2px;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel > [data-admin-settings-target] {scroll-margin-block-start: 16px;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-delivery-fee-card {padding: 12px !important; border-radius: 8px !important; background: var(--av-inset) !important; border-color: var(--av-border) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-global-settings-form label, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .admin-delivery-fee-fields label {
+  display: block; color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > [data-admin-unified-editor-actions] {
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important; background: var(--av-inset) !important;
+  border-color: var(--av-border) !important; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group > summary, .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls > details > summary {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+  padding-block: 8px; font-size: 14px !important; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-visual-editor-panel > .admin-studio-group label:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)), .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor .gs-visual-editor-controls label {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > .admin-character-device-warning {
+  background: #fff0cc !important; color: #754300 !important; border-color: #d4a65e !important;
+  -webkit-text-fill-color: currentColor !important; border-radius: 8px; line-height: 1.6;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice {
+  background: #dff3eb !important; color: #14594a !important; padding: 8px; border-radius: 8px;
+  -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice > span {color: #14594a !important; -webkit-text-fill-color: currentColor !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin .admin-character-preset-notice > button {background: #f8fafc !important; color: #243448 !important; border-color: #b8c5d4 !important; -webkit-text-fill-color: currentColor !important; min-height: 44px;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-character-admin > .admin-character-publish-card > p:first-child {color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important; line-height: 1.6;}
+
+/* Video stage 9 — intrinsic narrow phone chrome; keep the Georgian brand legible. */
+@media (max-width: 359px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child {
+    padding-block: 10px !important; padding-inline: 10px !important;
+    grid-template-columns: minmax(0,1fr) max-content !important;
+    gap: 8px !important; align-content: start !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand {
+    min-width: 0 !important; min-height: 0 !important; padding: 0 !important;
+    border: 0 !important; gap: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand > .admin-pro-brand-mark {
+    display: none !important; /* Decorative shield only; keep both brand labels and all controls. */
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand > div:last-child {
+    min-width: 0 !important; flex: 1 1 auto; padding: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand :is(h3,p) {
+    margin: 0 !important; letter-spacing: normal !important; text-transform: none !important;
+    word-break: normal !important; overflow-wrap: break-word !important; line-height: 1.4 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-video-logout {
+    width: auto !important; min-width: 44px !important; min-height: 44px !important;
+    padding-inline: 8px !important; white-space: nowrap !important;
+  }
+}
+
+/* Video stage 10 — consistent operational card hierarchy and readable actions. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-category-entry-surface,.admin-category-list-surface,.admin-ai-analyst) {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(12px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-category-entry-surface,.admin-category-list-surface,.admin-ai-analyst,.admin-expense-entry-panel,.admin-banners-entry-surface,.admin-banners-list-surface,.admin-coupons-panel-entry-surface,.admin-coupons-panel-list-surface,.admin-local-vendor-entry-panel,.admin-local-vendor-list-panel,.admin-support-panel,.admin-broadcasts-panel,.admin-audit-logs-panel) > h3 {
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: clamp(15px,var(--admin-vd-titleFontSize-active,18px),20px) !important;
+  font-weight: 650 !important; line-height: 1.5 !important; letter-spacing: normal !important;
+  min-inline-size: 0; margin-block: 0 12px; padding-block-end: 10px !important;
+  border-bottom: 1px solid var(--av-border) !important; word-break: normal !important; overflow-wrap: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-category-entry-surface,.admin-ai-analyst,.admin-expense-entry-panel,.admin-banners-entry-surface,.admin-coupons-panel-entry-surface,.admin-local-vendor-entry-panel,.admin-support-panel,.admin-broadcasts-panel,.admin-audit-logs-panel) > h3 > svg {
+  flex: 0 0 18px !important; inline-size: 18px !important; block-size: 18px !important; color: var(--av-accent) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-photo-field {
+  background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  border-radius: 8px !important; padding: 12px !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-unified-category-photo-field > label {
+  color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; font-size: 13px !important; line-height: 1.5;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-category-manager .admin-video-category-identity h4 {
+  word-break: normal !important; overflow-wrap: break-word !important; letter-spacing: normal !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-chat {
+  padding: 12px !important; border-radius: var(--admin-vd-cardRadius-active,12px) !important; background: var(--av-inset) !important; border-color: var(--av-border) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-bubble {white-space: pre-wrap; word-break: normal; overflow-wrap: anywhere; font-weight: 500;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-thinking {color: var(--av-text) !important; -webkit-text-fill-color: currentColor !important; padding: 8px; line-height: 1.5;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [aria-label="სწრაფი კითხვები"] {display: grid !important; grid-template-columns: repeat(auto-fit,minmax(min(100%,140px),1fr)); gap: 8px !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst [aria-label="სწრაფი კითხვები"] > button {font-size: 13px !important; line-height: 1.5; white-space: normal !important; overflow-wrap: break-word;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-ai-analyst .admin-ai-composer > button {min-height: 44px !important; padding: 10px 16px !important; white-space: normal !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] :is(.admin-category-entry-surface,.admin-banners-entry-surface,.admin-coupons-panel-entry-surface) form button[type="submit"] {
+  min-height: 44px !important; padding-block: 10px !important; border-radius: var(--admin-vd-buttonRadius-active,8px) !important;
+  font-weight: 650 !important; line-height: 1.5 !important; white-space: normal !important; box-shadow: none !important;
+}
+
+/* Video stage 11 — finish the remaining product editor and detail surfaces. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-products-panel > .admin-unified-product-editor {
+  background: var(--admin-vd-contentCardBackground-active,var(--av-surface)) !important;
+  border-color: var(--admin-vd-contentCardBorder-active,var(--av-border)) !important;
+  border-radius: var(--admin-vd-cardRadius-active,12px) !important;
+  padding: clamp(10px,var(--admin-vd-cardPadding-active,16px),20px) !important;
+  min-inline-size: 0; box-shadow: none !important; backdrop-filter: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-editor > div:first-child {
+  border-color: var(--av-border) !important; min-inline-size: 0; padding-block-end: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-editor > div:first-child > div {min-inline-size: 0;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-editor > div:first-child h3 {
+  color: var(--admin-vd-cardTitleText-active,var(--av-text)) !important; -webkit-text-fill-color: currentColor !important;
+  font-size: clamp(15px,var(--admin-vd-titleFontSize-active,18px),20px) !important;
+  line-height: 1.5; letter-spacing: normal !important; overflow-wrap: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-unified-product-editor > div:first-child > button {
+  min-height: 44px !important; max-inline-size: 100%; min-inline-size: 0; white-space: normal !important;
+  background: var(--av-inset) !important; border-color: var(--av-border) !important; color: var(--av-text) !important;
+  -webkit-text-fill-color: currentColor !important; box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-business-comparison {padding: clamp(10px,var(--admin-vd-cardPadding-active,16px),20px) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-support-panel .admin-unified-support-thread {padding: 12px !important; border-radius: var(--admin-vd-cardRadius-active,12px) !important;}
+
+/* Visual review 12 — WebKit actual screenshots: native dark select paint and tall analytics actions. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {
+  -webkit-appearance: none !important; appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23818e9b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 10px center !important; background-size: 16px 16px !important;
+  padding-inline-end: 32px !important; min-inline-size: 0; text-overflow: ellipsis;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)) {
+  background-color: var(--admin-vd-inputBackground-active,var(--av-inset)) !important;
+  color: var(--admin-vd-inputText-active,var(--av-text)) !important;
+  -webkit-text-fill-color: currentColor !important;
+  border-color: var(--admin-vd-inputBorder-active,var(--av-border)) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {
+  background-color: var(--av-nav-bg) !important; color: var(--av-nav-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions {
+    display: grid !important; grid-template-columns: minmax(0,1fr); align-items: stretch; gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-analytics .admin-analytics-actions > :is(button,select) {
+    flex: none !important; min-height: 44px !important; height: auto !important; padding-block: 10px !important;
+    line-height: 1.5 !important; width: 100% !important; box-sizing: border-box;
+  }
+}
+@media (forced-colors: active) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main select:not([multiple]):not([size]):not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)),
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > [data-admin-sidebar="true"] .admin-mobile-section-picker select {appearance: auto !important; -webkit-appearance: auto !important; background-image: none !important;}
+}
+
+/* Visual review stage 13: contrast pairs from the actual 390px WebKit captures. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-unified-staff-context {
+  color: #14594a !important; background: #dff3eb !important; border-color: #82b7a1 !important;
+  -webkit-text-fill-color: currentColor !important; border-radius: 10px !important; box-shadow: none !important;
+  font-size: 13px !important; line-height: 1.6 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-unified-staff-context > strong {color: #14594a !important; -webkit-text-fill-color: currentColor !important; font-size: 14px !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] button.admin-stock-refresh {
+  color: var(--av-text) !important; background: var(--av-surface) !important; border-color: var(--av-border) !important;
+  -webkit-text-fill-color: currentColor !important; min-height: 44px !important; box-shadow: none !important;
+  border-radius: var(--admin-vd-buttonRadius-active,8px) !important; font-weight: 600 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] button.admin-stock-refresh:not(:disabled):hover {background: var(--av-inset) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .gs-storefront-visual-editor > .admin-unified-editor-header button.admin-storefront-reset {
+  color: #9c2538 !important; background: #fce5e8 !important; border-color: #e4b4bf !important;
+  -webkit-text-fill-color: currentColor !important; min-height: 44px !important;
+}
+
+/* Visual review stage 14 — actual 1440px screenshot showed pale inventory alert text. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback {
+  border-radius: 8px !important; padding: 10px 12px !important; font-size: 13px !important;
+  line-height: 1.6 !important; word-break: normal !important; overflow-wrap: break-word;
+  min-inline-size: 0; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-error,
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback-error {background: #fce5e8 !important; color: #9c2538 !important; border-color: #e4b4bf !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-warning {background: #fff0cc !important; color: #754300 !important; border-color: #d9b96e !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] [data-admin-inventory-view] .admin-stock-feedback-pending {background: var(--av-inset) !important; color: var(--av-text) !important; border-color: var(--av-border) !important;}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-staff > .admin-staff-feedback-success {background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;}
+
+/* Stage 15 — roster selection is an immediate state change, not an animated color transition. */
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed] {
+  transition: none !important; animation: none !important; min-inline-size: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed="true"] {
+  background: #dff3eb !important; color: #14594a !important; border-color: #82b7a1 !important;
+  -webkit-text-fill-color: currentColor !important; outline: 2px solid #14594a; outline-offset: -2px;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-character-roster > button[aria-pressed] > span {
+  transition: none !important; color: inherit !important; -webkit-text-fill-color: currentColor !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-concierge-preset-controls > label {
+  min-inline-size: 0 !important; max-inline-size: 100%; overflow-wrap: break-word; word-break: normal;
+}
+.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-settings-panel .gs-character-admin .gs-concierge-preset-controls > label > select {width: 100%; min-inline-size: 0 !important;}
+
+/* Stage 16: portrait-tablet screenshots showed clipped, 400px-tall stacked navigation.
+   Reuse the authorized native module picker until the sidebar fits beside content. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child {
+    display: grid !important; grid-template-columns: minmax(0,1fr) max-content !important;
+    grid-template-rows: auto auto !important; grid-auto-rows: auto !important;
+    width: 100% !important; min-inline-size: 0 !important; max-inline-size: 100% !important;
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    block-size: auto !important; min-block-size: 0 !important; max-block-size: none !important;
+    align-items: center !important; align-content: start !important; align-self: start !important;
+    gap: 8px 12px !important; padding: 12px !important; box-sizing: border-box !important;
+    overflow: visible !important; position: static !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > #geostore-admin-desktop-modules { display: none !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-pro-brand { grid-area: 1 / 1; min-inline-size: 0; border-bottom: 0 !important; padding-block-end: 0 !important; margin: 0 !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-video-logout { grid-area: 1 / 2; width: auto !important; min-height: 44px !important; margin: 0 !important; padding: 8px 12px !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker {
+    display: grid !important; grid-area: 2 / 1 / 3 / -1; gap: 4px; min-inline-size: 0;
+    max-inline-size: 100%; height: auto !important; min-height: 0 !important; margin: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker > label { display: block !important; color: var(--av-nav-text) !important; font-size: 12px !important; }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] > div[data-admin-sidebar="true"]:first-child > .admin-mobile-section-picker > select { display: block !important; width: 100%; min-width: 0; min-height: 44px !important; font-size: 16px !important; }
+}
+
+/* Stage 17: tablet diagnostic text-size follow-up. Scope to operational controls;
+   preserve storefront and character preview typography and larger owner settings. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main :is(.admin-crm-panel,.admin-visual-editor-panel,.admin-audit-logs-panel) label:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)):not(:where(.sr-only, .sr-only *)) {
+    font-size: max(12px,var(--admin-vd-tableHeaderFontSize-active,12px)) !important;
+    min-inline-size: 0; line-height: 1.5; overflow-wrap: break-word;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-products-panel button:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)):not(:where(.sr-only, .sr-only *)) {
+    font-size: max(12px,var(--admin-vd-buttonFontSize-active,12px)) !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"] .admin-workspace-main .admin-analytics button:not(:where(.gs-visual-preview-frame *, .gs-character-preview *, .geostore-fashion-store *)):not(:where(.sr-only, .sr-only *)) {
+    min-height: 44px !important;
+  }
 }

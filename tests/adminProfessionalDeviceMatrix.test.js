@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('Admin PRO device matrix covers all planned widths and both engines without removing legacy interactions',()=>{
  const smoke=read('tests/browser/adminWorkspaceSmoke.mjs'), runner=read('tests/browser/realStorefrontSmoke.mjs');
- assert.ok(smoke.includes('Object.freeze([320, 360, 390, 430, 768, 1024, 1440])'));
+ assert.ok(smoke.includes('Object.freeze([320, 360, 390, 430, 768, 1024, 1440, 1920])'));
  for(const term of ['widths = [390, 1440]','page.setViewportSize','matrix.length, Object.keys(modules).length * auditWidths.length','sample.documentOverflow > 2','sample.main.overflow > 2','selected !== tab','!moduleVisible','activeCount !== 1','assert.deepEqual(layoutFailures, []','assert.deepEqual(writes, []','ADMIN_DEVICE_MATRIX'])assert.ok(smoke.includes(term),term);
  assert.ok(runner.includes('await runAdminWorkspaceSmoke(browser, host);'));
  assert.ok(runner.indexOf('await runAdminWorkspaceSmoke(browser,host,{widths:[390],layoutOnly:true});')>runner.indexOf('browser = await webkit.launch'));
@@ -43,4 +43,28 @@ test('WebKit release gate runs before long storefront suite and PRs have separat
  assert.ok(workflow.includes('github.event.pull_request.number || github.ref'));
  assert.ok(workflow.includes('cancel-in-progress: true'));
  assert.ok(workflow.includes('node tests/browser/adminMfaEnabledSmoke.mjs'));
+});
+
+
+test('deep visual audit retains geometry-only diagnostic counts at every device width',()=>{
+ const helper=read('tests/browser/adminVisualBaseline.mjs'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ for(const field of ['narrowControls','textElements','horizontallyOverflowingText','smallTextElements']) {
+  assert.ok(helper.includes(field),field);
+  assert.ok(smoke.includes(field+':sample.'+field),field);
+ }
+ assert.ok(helper.includes('el.scrollWidth-el.clientWidth>2'));
+ assert.ok(helper.includes('parseFloat(getComputedStyle(el).fontSize)<12'));
+ assert.ok(smoke.includes('sample.documentOverflow > 2 || sample.main.overflow > 2'));
+ for(const forbidden of ['.textContent','.innerText','.innerHTML','.value','localStorage','fetch('])assert.ok(!helper.includes(forbidden),forbidden);
+ assert.equal(JSON.parse(read('vercel.json')).git.deploymentEnabled['internal-admin-deep-audit-2026-11-27'],false);
+});
+
+
+test('visual diagnostics identify fixed regions and expanded editor controls without logging content',()=>{
+ const helper=read('tests/browser/adminVisualBaseline.mjs'),smoke=read('tests/browser/adminWorkspaceSmoke.mjs');
+ for(const term of ['issueGroups','signalGroups','editor-controls','character-controls','settings-form','el.tagName.toLowerCase()'])assert.ok(helper.includes(term),term);
+ assert.ok(smoke.includes('issueGroups:sample.issueGroups'));
+ assert.ok(smoke.includes('expanded palette controls stay bounded'));
+ assert.ok(smoke.includes('Expanded palette geometry check never writes settings'));
+ assert.ok(smoke.includes('targetWidth===320||targetWidth===1920'));
 });

@@ -42,7 +42,17 @@ jobs:
       - name: Verify phone, tablet, desktop widths
         run: node tests/browser/responsiveLayout.mjs
       - name: Open the built GEOSTORE SPA and verify navigation across devices
+        env:
+          ADMIN_VISUAL_CAPTURE_DIR: ${{ runner.temp }}/admin-visual-review
         run: node tests/browser/realStorefrontSmoke.mjs
+      - name: Retain isolated admin visual review screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: admin-visual-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/admin-visual-review/*.png
+          if-no-files-found: warn
+          retention-days: 3
 
       - name: Verify enabled MFA panel in isolated browser fixture
         run: node tests/browser/adminMfaEnabledSmoke.mjs

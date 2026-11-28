@@ -69,7 +69,7 @@ export default function AdminSupplierWorkspace({adminUserId,loadSession,supabase
     if(!window.confirm('სერვერზე დაემატოს „'+candidate.name+'“? ადგილობრივი ჩანაწერი უცვლელი დარჩება.'))return;
     void run('saving',api=>api.create(candidate));
   };
-  return <section className="admin-supplier-workspace min-w-0 rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-4" aria-labelledby="admin-supplier-workspace-title" aria-busy={busy}>
+  return <section className="admin-supplier-workspace min-w-0 space-y-4" aria-labelledby="admin-supplier-workspace-title" aria-busy={busy}>
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div className="min-w-0"><h3 id="admin-supplier-workspace-title" className="text-sm font-black text-white">სერვერული მომწოდებლები</h3><p className="text-xs text-slate-400">სხვა მოწყობილობიდან ცვლილებების სანახავად განაახლეთ სია. ადგილობრივი დაგეგმვა ცალკეა.</p></div>
       <button type="button" className={action} disabled={busy} onClick={()=>void run('loading')}>სერვერული სიის განახლება</button>

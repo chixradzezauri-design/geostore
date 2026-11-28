@@ -98,7 +98,7 @@ export default function AdminPurchaseWorkspace({adminUserId,loadSession,supabase
   if(!globalThis.crypto?.randomUUID){setError('უსაფრთხო ID ვერ შეიქმნა.');return;}
   start({type:'receive',orderId:order.id,order,line,quantity:qty,receiptId:crypto.randomUUID()});
  }
- return <section className="admin-purchase-workspace min-w-0 rounded-2xl border border-emerald-500/25 bg-slate-900/80 p-3 sm:p-4 space-y-4" aria-labelledby="admin-purchase-title" aria-busy={busy}>
+ return <section className="admin-purchase-workspace min-w-0 space-y-4" aria-labelledby="admin-purchase-title" aria-busy={busy}>
   <div className="flex flex-wrap justify-between gap-2"><div className="min-w-0"><h3 id="admin-purchase-title" className="text-sm font-black text-white">მომწოდებლების შესყიდვები</h3><p className="text-xs text-slate-400">მონახაზი, დამტკიცება და ნაწილობრივი მიღება · საბაზისო და ვარიანტების მარაგი</p></div><button type="button" className={button} disabled={busy} onClick={()=>void run(pendingRef.current,true)}>შესყიდვების განახლება</button></div>
   <p role="status" data-purchase-state={phase} className="text-xs text-slate-300">{phase==='ready'?'სერვერული ისტორია დადასტურებულია':phase==='loading'?'იტვირთება…':phase==='saving'?'მოქმედება მოწმდება…':'ისტორია ვერ დადასტურდა'}</p>
   {error&&<p role="alert" className="text-xs text-amber-200 break-words">{error}</p>}{notice&&<p role="status" className="text-xs text-emerald-300">{notice}</p>}
