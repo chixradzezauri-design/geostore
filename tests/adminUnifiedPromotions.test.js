@@ -34,3 +34,17 @@ test('Studio promotion and banner controls remain scoped, visible and preserve r
  assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)/);
  assert.doesNotMatch(css,/\[data-admin-flash-price-risk=|\[data-status=|\[data-admin-pro-promotion-state=|data-gs-flash-design/);
 });
+
+
+test('Studio categories and coupons stay scoped and retain visible management actions',()=>{
+ const css=read('src/adminStudioWorkspace.css').split('/* Studio — categories and coupons.')[1].split('/* Studio — ')[0];
+ const prefix='.admin-dashboard-pro.admin-dashboard-shell[data-admin-video-layout="v1"][data-admin-appearance="studio"] ';
+ const selectors=css.split('\n').map(line=>line.trim()).filter(line=>line.startsWith('.'));
+ assert.ok(selectors.length>20);
+ for(const line of selectors)assert.ok(line.startsWith(prefix),line);
+ for(const term of ['.admin-subcategory-list','.admin-video-category-identity h4','.admin-video-category-actions > button','[data-admin-category-action="save"]','.admin-coupon-form button[type="submit"]','[data-admin-pro-coupon-value]','.admin-coupon-card > button'])assert.ok(css.includes(term),term);
+ assert.doesNotMatch(css,/display:\s*none|visibility:\s*hidden|pointer-events\s*:\s*none|overflow\s*:\s*(?:hidden|clip)|word-break:\s*break-all/);
+ assert.doesNotMatch(css,/aria-label\$="წაშლა"/);
+ const app=read('src/components/AdminDashboardPro.jsx');
+ for(const term of ['onSubmit={handleAddCategory}','moveCategory(parentCat.id, -1)','moveCategory(sub.id, 1)','handleDeleteCategory(sub.id, sub.name)','onSubmit={handleCreateCoupon}','handleDeleteCoupon(c.id)'])assert.ok(app.includes(term),term);
+});

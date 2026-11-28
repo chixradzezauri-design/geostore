@@ -126,3 +126,6 @@ Continue from prepared CRM/support commit 560714f. Refine inventory history, rep
 
 ## Studio — promotions and banners
 Prior order/finance head e93a23b passed all five workflows, including responsive browser. Prepare CRM, supply and this promotion change as one fast-forward to the draft branch. Refine pricing/design tabs, form and price review hierarchy, scheduling controls and banner cards with scoped Studio neutral/indigo styling. Preserve all semantic price-risk/status warnings, original artwork, pricing/scheduling mutations and draft/publication contracts. Add regression source coverage and bound prior section-specific tests to their own blocks. No production deployment; exact-head CI and screenshot review required.
+
+## Studio — categories and coupons
+Refine category hierarchy, search, photo input, edit panels, name wrapping and compact child indentation plus coupon forms, codes and amounts. Preserve all existing JSX, category sibling ordering, draft/publish rules, upload handling, coupon validation and destructive actions. Studio only; add scoped static regression coverage. Exact-head CI and screenshot review remain required. No preview or production deployment.
